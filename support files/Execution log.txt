@@ -1,0 +1,143 @@
+Execution log
+7:15:12 PM	Notice	Execution started
+7:15:13 PM	Info	Updater: Starting batch...
+7:15:13 PM	Info	VERBOSE LOGGING DISABLED
+7:15:13 PM	Info	SUPPORTED LANGUAGES MAP UPDATED
+7:15:13 PM	Info	Updater: Processing Trip recGTjnq4X13zaOpG (TripID: 26144, Type: WORDPRESS)
+7:15:14 PM	Info	LANGUAGE RESOLVED: French -> fr
+7:15:14 PM	Info	TRANSLATION LANGUAGES LIST: ["en","fr"]
+7:15:14 PM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recGTjnq4X13zaOpG
+7:15:14 PM	Info	Updater: Found General Improvement record: recc45dBhQ8vkVHJS
+7:15:15 PM	Info	Updater: Found TripDetails record: reckJsl6YGRo3omKm
+7:15:29 PM	Info	Updater: Starting AI classification for Activities...
+7:15:31 PM	Info	Updater: AI suggested activities: ["Desert Safaris","Stargazing"]
+7:15:31 PM	Info	Updater: Starting AI classification for Trip Types...
+7:15:33 PM	Info	Updater: AI suggested trip types: ["Guided Tours","Other Experiences"]
+7:15:33 PM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 7, dMinutes: 0, tourType: single, Title: Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner
+7:15:33 PM	Info	Updater: Language set to: en
+7:15:33 PM	Info	Updater: Found 2 AI Activities. Mapping to payload...
+7:15:33 PM	Info	Updater: Payload.activities set to: [394,398]
+7:15:33 PM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
+7:15:33 PM	Info	Updater: Payload.trip_types set to: [408,410]
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
+7:15:33 PM	Info	Updater: Adding new fact "Duration" (97932390) to template
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
+7:15:33 PM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
+7:15:33 PM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 35550118 for "Transportation"
+7:15:33 PM	Info	Updater: Adding new fact "Transportation" (35550118) to template
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
+7:15:33 PM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
+7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
+7:15:33 PM	Info	Updater: Adding new fact "Meals" (69801669) to template
+7:15:33 PM	Info	Updater: Trip Facts structure ready with 8 fields
+7:15:33 PM	Info	Updater: Updating existing WordPress trip 26144
+7:15:43 PM	Info	Updater: Found 1 packages and 2 prices for Trip recGTjnq4X13zaOpG
+7:15:43 PM	Info	Updater: Single package detected. Linking ALL 2 prices to it.
+7:15:43 PM	Info	Updater: Sending package "Desert Stargazing, Candlelight &#038; BBQ Dinner" to WP...
+7:15:44 PM	Info	Updater: Created Package 29110
+7:15:44 PM	Info	Updater: Package created with ID: 29110. Updating Airtable...
+7:15:45 PM	Info	Updater: Updated Packages table for record recSTJDLWwVcPFrtc
+7:15:45 PM	Info	Updater: Updating 2 prices with new PackageID 29110...
+7:15:45 PM	Info	Updater: Updated Price rec80GZUmKDysWZTY with PackageID 29110
+7:15:45 PM	Info	Updater: Updated Price recGitxRH1TEf01US with PackageID 29110
+7:15:52 PM	Info	Updater: Linked packages 29110 to Trip 26144
+7:15:56 PM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
+7:15:57 PM	Info	Updater: Updated Media 28991 metadata (Title: Yes)
+7:15:58 PM	Info	Updater: Filename ensured for Media 28991
+7:15:59 PM	Info	Updater: Updated Media 28992 metadata (Title: Yes)
+7:16:00 PM	Info	Updater: Filename ensured for Media 28992
+7:16:01 PM	Info	Updater: Updated Media 28995 metadata (Title: Yes)
+7:16:02 PM	Info	Updater: Filename ensured for Media 28995
+7:16:10 PM	Info	Updater: Published Images for Trip 26144 (Featured: None, Gallery: 3)
+7:16:17 PM	Info	TRIP SCHEMA GENERATED (en)
+7:16:17 PM	Info	Updater: Found additional languages: fr
+7:16:17 PM	Info	REUSING CACHED WORDPRESS TRIP INFO
+7:16:17 PM	Info	Updater: Found existing translations map: {"fr":"29098","de":"29095","en":"26144"}
+7:16:17 PM	Info	Updater: languagesToUpdate=["fr"] languagesToCreate=[]
+7:16:17 PM	Info	Updater: Processing translation for language: fr
+7:16:17 PM	Info	PROVIDED SEO KEYWORDS DETECTED (fr)
+7:16:17 PM	Info	Updater: Translating trip data to fr using DeepSeek...
+7:18:50 PM	Info	TRANSLATED SLUG GENERATED: excursion-hurghada-sahl-hasheesh-desert-observation-etoiles-diner-bbq
+7:18:50 PM	Info	AI TRANSLATION COMPLETE (fr)
+7:18:50 PM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 7, dMinutes: 0, tourType: single, Title: excursion hurghada : Tour Désert Sahl Hasheesh Observation des Étoiles & Dîner BBQ
+7:18:50 PM	Info	Updater: Language set to: fr
+7:18:50 PM	Info	Updater: Found 2 AI Activities. Mapping to payload...
+7:18:50 PM	Info	Updater: Payload.activities set to: [394,398]
+7:18:50 PM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
+7:18:50 PM	Info	Updater: Payload.trip_types set to: [408,410]
+7:18:50 PM	Info	TRANSLATED SLUG GENERATED: excursion-hurghada-sahl-hasheesh-desert-observation-etoiles-diner-bbq
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
+7:18:50 PM	Info	Updater: Adding new fact "Duration" (97932390) to template
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
+7:18:50 PM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
+7:18:50 PM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 35550118 for "Transportation"
+7:18:50 PM	Info	Updater: Adding new fact "Transportation" (35550118) to template
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
+7:18:50 PM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
+7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
+7:18:50 PM	Info	Updater: Adding new fact "Meals" (69801669) to template
+7:18:50 PM	Info	Updater: Trip Facts structure ready with 8 fields
+7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28992 -> 29105
+7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28991 -> 29106
+7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28995 -> 29107
+7:18:50 PM	Info	IMAGE MAP SUMMARY (fr): featured: 28992 -> 29105 [cache] | gallery: 28991 -> 29106 [cache], 28995 -> 29107 [cache]
+7:18:59 PM	Info	SEO ASSETS GENERATED (fr)
+7:18:59 PM	Info	LOCALIZED PRIMARY KEYWORD GENERATED (fr): excursion hurghada
+7:18:59 PM	Info	LOCALIZED SECONDARY KEYWORDS GENERATED (fr): excursion depuis hurghada, que faire à hurghada, excursion désert hurghada, mısır turları
+7:18:59 PM	Info	SEO TITLE GENERATED (fr)
+7:18:59 PM	Info	LOCALIZED SEO TITLE GENERATED (fr): Excursion Hurghada : Tour Désert Sahl Hasheesh Observation des Ét
+7:18:59 PM	Info	LOCALIZED SEO TITLE (fr): Excursion Hurghada : Tour Désert Sahl Hasheesh Observation des Ét
+7:18:59 PM	Info	META DESCRIPTION GENERATED (fr)
+7:18:59 PM	Info	LOCALIZED META DESCRIPTION GENERATED (fr): Découvrez notre excursion Hurghada inoubliable. Balade à dos de chameau au coucher du soleil, dîner BBQ et observation guidée des étoiles au télescope dans le d
+7:18:59 PM	Info	LOCALIZED META DESCRIPTION (fr): Découvrez notre excursion Hurghada inoubliable. Balade à dos de chameau au coucher du soleil, dîner BBQ et observation guidée des étoiles au télescope dans le d
+7:18:59 PM	Info	IMAGE ALT GENERATED (fr): Groupe lors d'une excursion Hurghada profitant d'un coucher de soleil à dos de chameau dans le désert près de Sahl Hasheesh
+7:18:59 PM	Info	LOCALIZED SLUG GENERATED (fr): excursion-hurghada-tour-desert-sahl-hasheesh
+7:18:59 PM	Info	HTML SANITIZED (fr)
+7:18:59 PM	Info	UPDATING EXISTING TRANSLATION: fr -> 29098
+7:19:05 PM	Info	Updater: Successfully UPDATED translation 29098
+7:19:06 PM	Info	Updater: Found 1 packages and 2 prices for Trip recGTjnq4X13zaOpG
+7:19:06 PM	Info	Updater: Single package detected. Linking ALL 2 prices to it.
+7:19:06 PM	Info	Updater: Sending package "excursion hurghada : Tour Désert Sahl Hasheesh Observation des Étoiles & Dîner BBQ" to WP...
+7:19:07 PM	Info	Updater: Created Package 29112
+7:19:07 PM	Info	Updater: Package created with ID: 29112. Updating Airtable...
+7:19:13 PM	Info	Updater: Linked packages 29112 to Trip 29098
+7:19:13 PM	Info	Updater: Linked packages for translation (fr) Trip 29098
+7:19:21 PM	Info	TRIP SCHEMA GENERATED (fr)
+7:19:21 PM	Info	TRANSLATED IMAGE SET SUMMARY (fr): trip=29098 featured=29105 gallery_count=2
+7:19:21 PM	Info	TRANSLATING IMAGE METADATA FOR LANGUAGE: fr
+7:19:21 PM	Info	FEATURED IMAGE SEO KEYWORD USED (fr): excursion hurghada
+7:19:29 PM	Info	IMAGE METADATA TRANSLATED (fr): 29105
+7:19:31 PM	Info	Updater: Updated Media 29105 metadata (Title: Yes)
+7:19:34 PM	Info	Updater: Filename ensured for Media 29105
+7:19:34 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29105
+7:19:34 PM	Info	IMAGE ALT UPDATED (fr): 29105
+7:19:34 PM	Info	IMAGE CAPTION UPDATED (fr): 29105
+7:19:34 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29105
+7:19:34 PM	Info	FEATURED IMAGE ALT GENERATED (fr): Voyageur observant les étoiles avec un télescope lors d'une excursion hurghada dans le désert
+7:19:34 PM	Info	GALLERY IMAGE SEO KEYWORD USED (fr): excursion depuis hurghada
+7:19:41 PM	Info	IMAGE METADATA TRANSLATED (fr): 29106
+7:19:42 PM	Info	Updater: Updated Media 29106 metadata (Title: Yes)
+7:19:44 PM	Info	Updater: Filename ensured for Media 29106
+7:19:44 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29106
+7:19:44 PM	Info	IMAGE ALT UPDATED (fr): 29106
+7:19:44 PM	Info	IMAGE CAPTION UPDATED (fr): 29106
+7:19:44 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29106
+7:19:44 PM	Info	GALLERY IMAGE ALT GENERATED (fr): Groupe autour d'un feu de camp lors d'une excursion depuis Hurghada dans le désert égyptien
+7:19:44 PM	Info	GALLERY IMAGE SEO KEYWORD USED (fr): que faire à hurghada
+7:19:52 PM	Info	IMAGE METADATA TRANSLATED (fr): 29107
+7:19:53 PM	Info	Updater: Updated Media 29107 metadata (Title: Yes)
+7:19:53 PM	Info	Updater: Filename ensured for Media 29107
+7:19:53 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29107
+7:19:53 PM	Info	IMAGE ALT UPDATED (fr): 29107
+7:19:53 PM	Info	IMAGE CAPTION UPDATED (fr): 29107
+7:19:53 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29107
+7:19:53 PM	Info	GALLERY IMAGE ALT GENERATED (fr): Couple observant les étoiles avec un télescope lors d'une excursion désert hurghada au coucher du
+7:19:53 PM	Info	Updater: Finalizing translation links on Primary Trip 26144
+7:19:59 PM	Info	Updater: Language map synced to WP: {"fr":"29098","de":"29095","en":"26144"}
+7:20:00 PM	Info	Updater: Updated Airtable Translation_Map.
+7:20:00 PM	Info	Updater: Successfully published Trip recGTjnq4X13zaOpG
+7:20:00 PM	Notice	Execution completed

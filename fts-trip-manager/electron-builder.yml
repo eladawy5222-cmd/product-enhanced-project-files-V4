@@ -1,0 +1,24 @@
+appId: com.ftstravels.trip-manager
+productName: FTS Trip Manager
+directories:
+  output: dist
+files:
+  - main.js
+  - preload.js
+  - .env.example
+  - src/**/*
+  - renderer/**/*
+extraResources:
+  - from: data
+    to: data
+    filter:
+      - '**/*'
+win:
+  target:
+    - nsis
+    - msi
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

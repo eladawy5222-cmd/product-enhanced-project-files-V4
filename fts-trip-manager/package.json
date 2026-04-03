@@ -1,0 +1,30 @@
+{
+  "name": "fts-trip-manager",
+  "version": "1.0.0",
+  "description": "FTS Trip Manager desktop app",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "smoke": "node scripts/smoke.js",
+    "pack": "electron-builder --config electron-builder.yml --dir",
+    "dist": "electron-builder --config electron-builder.yml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "async-mutex": "^0.5.0",
+    "axios": "^1.13.6",
+    "cron-parser": "^4.9.0",
+    "dotenv": "^17.3.1",
+    "node-cron": "^4.2.1",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "electron": "^41.0.4",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {}
+}

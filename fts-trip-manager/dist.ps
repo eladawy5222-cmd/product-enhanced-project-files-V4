@@ -1,0 +1,17 @@
+cd "d:\FTS Projects\product enhanced project files V4\fts-trip-manager"
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\electron-builder\Cache\winCodeSign" -ErrorAction SilentlyContinue
+npm run dist
+npm run dist -- "-c.directories.output=dist2"
+
+
+
+git remote set-url origin https://github.com/eladawy5222-cmd/new-FTS-web-site.git
+git remote -v
+
+
+git config --global user.name "eladawy5222-cmd"
+git config --global user.email "eladawy5222@gmail.com"
+
+
+git remote set-url origin https://github.com/<USER>/<REPO>.git
+git remote -v

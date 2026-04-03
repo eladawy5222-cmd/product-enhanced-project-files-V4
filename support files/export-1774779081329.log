@@ -1,0 +1,56 @@
+{"level":"info","message":"Updater: Starting batch...","timestamp":"2026-03-29T10:09:54.228Z"}
+{"level":"info","message":"VERBOSE LOGGING DISABLED","timestamp":"2026-03-29T10:09:54.228Z"}
+{"level":"info","message":"SUPPORTED LANGUAGES MAP UPDATED","timestamp":"2026-03-29T10:09:54.228Z"}
+{"level":"info","message":"Updater: Processing Trip recQ0aZxx2i5KNom0 (TripID: 25273, Type: WORDPRESS)","timestamp":"2026-03-29T10:09:54.541Z"}
+{"level":"info","message":"LANGUAGE RESOLVED: English -> en","timestamp":"2026-03-29T10:09:54.908Z"}
+{"level":"info","message":"TRANSLATION LANGUAGES LIST: [\"en\"]","timestamp":"2026-03-29T10:09:54.908Z"}
+{"level":"info","message":"REUSING CACHED WORDPRESS TRIP INFO","timestamp":"2026-03-29T10:09:54.908Z"}
+{"level":"info","message":"Updater: Fetching General Improvement using Client-Side ID Check: recQ0aZxx2i5KNom0","timestamp":"2026-03-29T10:09:54.908Z"}
+{"level":"info","message":"Updater: Found General Improvement record: rec9UbTXN1mdqTRrh","timestamp":"2026-03-29T10:09:55.155Z"}
+{"level":"info","message":"Updater: Found TripDetails record: recqOizYtdkjD1U9l","timestamp":"2026-03-29T10:09:55.463Z"}
+{"level":"info","message":"Updater: Starting AI classification for Activities...","timestamp":"2026-03-29T10:09:57.456Z"}
+{"level":"info","message":"Updater: AI suggested activities: [\"Quads & ATVs\",\"Camel Riding\",\"Pyramids & History\"]","timestamp":"2026-03-29T10:09:59.589Z"}
+{"level":"info","message":"Updater: Starting AI classification for Trip Types...","timestamp":"2026-03-29T10:09:59.589Z"}
+{"level":"info","message":"Updater: AI suggested trip types: [\"Adventures\",\"Guided Tours\"]","timestamp":"2026-03-29T10:10:00.868Z"}
+{"level":"info","message":"Updater: Direct Mapping - dUnit: hours, dHours: 3, dMinutes: 10, tourType: single, Title: Quad Bike Adventure: Giza Pyramids & Camel Ride Tour","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Language set to: en","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Found 3 AI Activities. Mapping to payload...","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Payload.activities set to: [395,397,399]","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Found 2 AI Trip Types. Mapping to payload...","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Payload.trip_types set to: [406,408]","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 97932390 for \"Duration\"","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Adding new fact \"Duration\" (97932390) to template","timestamp":"2026-03-29T10:10:00.869Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 69738162 for \"Fitness level\"","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Adding new fact \"Fitness level\" (69738162) to template","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 97950890 for \"Pickup & Drop Off\"","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Adding new fact \"Pickup & Drop Off\" (97950890) to template","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 12647846 for \"Language\"","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Adding new fact \"Language\" (12647846) to template","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 97952084 for \"Tour Type\"","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Adding new fact \"Tour Type\" (97952084) to template","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Using AI_Fact_ID from Airtable: 97941245 for \"Tour Location\"","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Adding new fact \"Tour Location\" (97941245) to template","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Trip Facts structure ready with 8 fields","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Payload.destinations set to: [58,56]","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: PRESERVING existing slug for primary trip: cairo-giza-pyramids-quad-bike-adventure-with","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Updating existing WordPress trip 25273","timestamp":"2026-03-29T10:10:00.870Z"}
+{"level":"info","message":"Updater: Found 1 packages and 5 prices for Trip recQ0aZxx2i5KNom0","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Single package detected. Linking ALL 5 prices to it.","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Skipping category Infant because price is 0 and no valid group pricing","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Skipping category Passengers because price is 0 and no valid group pricing","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Skipping category Student (with ID) because price is 0 and no valid group pricing","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Sending package \"Desert Quad Biking by the Pyramids of Giza\" to WP...","timestamp":"2026-03-29T10:10:11.312Z"}
+{"level":"info","message":"Updater: Created Package 29366","timestamp":"2026-03-29T10:10:12.397Z"}
+{"level":"info","message":"Updater: Package created with ID: 29366. Updating Airtable...","timestamp":"2026-03-29T10:10:12.398Z"}
+{"level":"info","message":"Updater: Updated Packages table for record recGCaOb6bnBZnEY6","timestamp":"2026-03-29T10:10:12.778Z"}
+{"level":"info","message":"Updater: Updating 5 prices with new PackageID 29366...","timestamp":"2026-03-29T10:10:12.778Z"}
+{"level":"info","message":"Updater: Updated Price recHYs7F2GVXSRqVS with PackageID 29366","timestamp":"2026-03-29T10:10:13.146Z"}
+{"level":"info","message":"Updater: Updated Price recU2yxyE2pdeXfKU with PackageID 29366","timestamp":"2026-03-29T10:10:13.958Z"}
+{"level":"info","message":"Updater: Updated Price recVkc38Fm8PAx6qS with PackageID 29366","timestamp":"2026-03-29T10:10:14.742Z"}
+{"level":"info","message":"Updater: Updated Price recaj8NQ17VsORkfQ with PackageID 29366","timestamp":"2026-03-29T10:10:15.534Z"}
+{"level":"info","message":"Updater: Updated Price recudiWJPtOzcSwup with PackageID 29366","timestamp":"2026-03-29T10:10:16.306Z"}
+{"level":"info","message":"Updater: Linked packages 29366 to Trip 25273","timestamp":"2026-03-29T10:10:20.415Z"}
+{"level":"info","message":"IMAGES LOOKUP FIELD USED: SourceTrip","timestamp":"2026-03-29T10:10:20.964Z"}
+{"level":"info","message":"REUSING CACHED WORDPRESS TRIP INFO","timestamp":"2026-03-29T10:10:20.964Z"}
+{"level":"info","message":"TRIP SCHEMA GENERATED (en)","timestamp":"2026-03-29T10:10:25.139Z"}
+{"level":"info","message":"Updater: Successfully published Trip recQ0aZxx2i5KNom0","timestamp":"2026-03-29T10:10:25.634Z"}

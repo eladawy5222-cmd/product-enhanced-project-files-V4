@@ -1,0 +1,2107 @@
+[
+  {
+    "id": 63,
+    "count": 0,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/alexandria/",
+    "name": "Alexandria",
+    "slug": "alexandria",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "14889",
+    "wte-shortdesc-textarea": "Book the best things to do in Alexandria for 2025 – historic landmarks, coastal escapes, cultural tours &amp; more. Top-rated experiences with free cancellation &amp; expert guides.",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "Book the best things to do in Alexandria for 2025 – historic landmarks, coastal escapes, cultural tours & more. Top-rated experiences with free cancellation & expert guides.",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+      "width": 1001,
+      "height": 658,
+      "file": "2025/05/Screenshot-2025-05-23-214341.png",
+      "filesize": 1137476,
+      "sizes": {
+        "medium": {
+          "file": "Screenshot-2025-05-23-214341-300x197.png",
+          "width": 300,
+          "height": 197,
+          "filesize": 115878,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-300x197.png"
+        },
+        "thumbnail": {
+          "file": "Screenshot-2025-05-23-214341-150x150.png",
+          "width": 150,
+          "height": 150,
+          "filesize": 46744,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-150x150.png"
+        },
+        "medium_large": {
+          "file": "Screenshot-2025-05-23-214341-768x505.png",
+          "width": 768,
+          "height": 505,
+          "filesize": 615347,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-768x505.png"
+        },
+        "trip-thumb-size": {
+          "file": "Screenshot-2025-05-23-214341-374x226.png",
+          "width": 374,
+          "height": 226,
+          "filesize": 159647,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-374x226.png"
+        },
+        "destination-thumb-size": {
+          "file": "Screenshot-2025-05-23-214341-600x658.png",
+          "width": 600,
+          "height": 658,
+          "filesize": 630590,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-600x658.png"
+        },
+        "destination-thumb-trip-size": {
+          "file": "Screenshot-2025-05-23-214341-410x250.png",
+          "width": 410,
+          "height": 250,
+          "filesize": 190527,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-410x250.png"
+        },
+        "activities-thumb-size": {
+          "file": "Screenshot-2025-05-23-214341-600x658.png",
+          "width": 600,
+          "height": 658,
+          "filesize": 630590,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-600x658.png"
+        },
+        "trip-single-size": {
+          "file": "Screenshot-2025-05-23-214341-990x490.png",
+          "width": 990,
+          "height": 490,
+          "filesize": 689853,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-990x490.png"
+        },
+        "meafe-featured-page": {
+          "file": "Screenshot-2025-05-23-214341-500x410.png",
+          "width": 500,
+          "height": 410,
+          "filesize": 348592,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-500x410.png"
+        },
+        "meafe-testimonial-two": {
+          "file": "Screenshot-2025-05-23-214341-272x316.png",
+          "width": 272,
+          "height": 316,
+          "filesize": 158503,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-272x316.png"
+        },
+        "meafe-blog-one": {
+          "file": "Screenshot-2025-05-23-214341-370x247.png",
+          "width": 370,
+          "height": 247,
+          "filesize": 173080,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-370x247.png"
+        },
+        "meafe-blog-two": {
+          "file": "Screenshot-2025-05-23-214341-197x278.png",
+          "width": 197,
+          "height": 278,
+          "filesize": 105502,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-197x278.png"
+        },
+        "meafe-category-tab": {
+          "file": "Screenshot-2025-05-23-214341-355x355.png",
+          "width": 355,
+          "height": 355,
+          "filesize": 224821,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-355x355.png"
+        },
+        "meafe-category-grid": {
+          "file": "Screenshot-2025-05-23-214341-370x370.png",
+          "width": 370,
+          "height": 370,
+          "filesize": 241756,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-370x370.png"
+        },
+        "meafe-category-grid-one": {
+          "file": "Screenshot-2025-05-23-214341-570x530.png",
+          "width": 570,
+          "height": 530,
+          "filesize": 481808,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-570x530.png"
+        },
+        "meafe-category-grid-two": {
+          "file": "Screenshot-2025-05-23-214341-270x180.png",
+          "width": 270,
+          "height": 180,
+          "filesize": 96573,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-270x180.png"
+        },
+        "meafe-category-grid-three": {
+          "file": "Screenshot-2025-05-23-214341-570x320.png",
+          "width": 570,
+          "height": 320,
+          "filesize": 311741,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-570x320.png"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "Screenshot-2025-05-23-214341-170x170.png",
+          "width": 170,
+          "height": 170,
+          "filesize": 59015,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-170x170.png"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "Screenshot-2025-05-23-214341-300x300.png",
+          "width": 300,
+          "height": 300,
+          "filesize": 167178,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-300x300.png"
+        },
+        "travel-monster-withsidebar": {
+          "file": "Screenshot-2025-05-23-214341-860x510.png",
+          "width": 860,
+          "height": 510,
+          "filesize": 667611,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-860x510.png"
+        },
+        "travel-monster-blog-grid": {
+          "file": "Screenshot-2025-05-23-214341-415x260.png",
+          "width": 415,
+          "height": 260,
+          "filesize": 200183,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-415x260.png"
+        },
+        "travel-monster-latest-post": {
+          "file": "Screenshot-2025-05-23-214341-970x655.png",
+          "width": 970,
+          "height": 655,
+          "filesize": 923329,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-970x655.png"
+        },
+        "travel-monster-blog-list": {
+          "file": "Screenshot-2025-05-23-214341-300x440.png",
+          "width": 300,
+          "height": 440,
+          "filesize": 228510,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-300x440.png"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "Screenshot-2025-05-23-214341-1001x350.png",
+          "width": 1001,
+          "height": 350,
+          "filesize": 506469,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-1001x350.png"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "Screenshot-2025-05-23-214341-1001x600.png",
+          "width": 1001,
+          "height": 600,
+          "filesize": 930742,
+          "mime_type": "image/png",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341-1001x600.png"
+        },
+        "full": {
+          "file": "Screenshot-2025-05-23-214341.png",
+          "width": 1001,
+          "height": 658,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/Screenshot-2025-05-23-214341.png"
+        }
+      },
+      "image_meta": {
+        "aperture": "0",
+        "credit": "",
+        "camera": "",
+        "caption": "",
+        "created_timestamp": "0",
+        "copyright": "",
+        "focal_length": "0",
+        "iso": "0",
+        "shutter_speed": "0",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/63",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=63"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 64,
+    "count": 5,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/aswan/",
+    "name": "Aswan",
+    "slug": "aswan",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "",
+    "wte-shortdesc-textarea": "",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/64",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=64"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 58,
+    "count": 30,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/cairo/",
+    "name": "Cairo",
+    "slug": "cairo",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "6567",
+    "wte-shortdesc-textarea": "Book the best things to do in Cairo for 2025 – explore the Pyramids, Egyptian Museum, and Nile cruises. Top-rated tours with expert guides &amp; free cancellation.",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "Book the best things to do in Cairo for 2025 – explore the Pyramids, Egyptian Museum, and Nile cruises. Top-rated tours with expert guides & free cancellation.",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+      "width": 1500,
+      "height": 1000,
+      "file": "2025/05/46822-1.jpg",
+      "filesize": 82647,
+      "sizes": {
+        "medium": {
+          "file": "46822-1-300x200.jpg",
+          "width": 300,
+          "height": 200,
+          "filesize": 12067,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-300x200.jpg"
+        },
+        "large": {
+          "file": "46822-1-1024x683.jpg",
+          "width": 1024,
+          "height": 683,
+          "filesize": 76522,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-1024x683.jpg"
+        },
+        "thumbnail": {
+          "file": "46822-1-150x150.jpg",
+          "width": 150,
+          "height": 150,
+          "filesize": 6270,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-150x150.jpg"
+        },
+        "medium_large": {
+          "file": "46822-1-768x512.jpg",
+          "width": 768,
+          "height": 512,
+          "filesize": 48879,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-768x512.jpg"
+        },
+        "trip-thumb-size": {
+          "file": "46822-1-374x226.jpg",
+          "width": 374,
+          "height": 226,
+          "filesize": 15913,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-374x226.jpg"
+        },
+        "destination-thumb-size": {
+          "file": "46822-1-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 55933,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-600x810.jpg"
+        },
+        "destination-thumb-trip-size": {
+          "file": "46822-1-410x250.jpg",
+          "width": 410,
+          "height": 250,
+          "filesize": 18320,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-410x250.jpg"
+        },
+        "activities-thumb-size": {
+          "file": "46822-1-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 55933,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-600x810.jpg"
+        },
+        "trip-single-size": {
+          "file": "46822-1-990x490.jpg",
+          "width": 990,
+          "height": 490,
+          "filesize": 58712,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-990x490.jpg"
+        },
+        "meafe-featured-page": {
+          "file": "46822-1-500x410.jpg",
+          "width": 500,
+          "height": 410,
+          "filesize": 31399,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-500x410.jpg"
+        },
+        "meafe-testimonial-two": {
+          "file": "46822-1-272x316.jpg",
+          "width": 272,
+          "height": 316,
+          "filesize": 16164,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-272x316.jpg"
+        },
+        "meafe-blog-one": {
+          "file": "46822-1-370x247.jpg",
+          "width": 370,
+          "height": 247,
+          "filesize": 16593,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-370x247.jpg"
+        },
+        "meafe-blog-two": {
+          "file": "46822-1-197x278.jpg",
+          "width": 197,
+          "height": 278,
+          "filesize": 11311,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-197x278.jpg"
+        },
+        "meafe-category-tab": {
+          "file": "46822-1-355x355.jpg",
+          "width": 355,
+          "height": 355,
+          "filesize": 21922,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-355x355.jpg"
+        },
+        "meafe-category-grid": {
+          "file": "46822-1-370x370.jpg",
+          "width": 370,
+          "height": 370,
+          "filesize": 23413,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-370x370.jpg"
+        },
+        "meafe-category-grid-one": {
+          "file": "46822-1-570x530.jpg",
+          "width": 570,
+          "height": 530,
+          "filesize": 42513,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-570x530.jpg"
+        },
+        "meafe-category-grid-two": {
+          "file": "46822-1-270x180.jpg",
+          "width": 270,
+          "height": 180,
+          "filesize": 10411,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-270x180.jpg"
+        },
+        "meafe-category-grid-three": {
+          "file": "46822-1-570x320.jpg",
+          "width": 570,
+          "height": 320,
+          "filesize": 27877,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-570x320.jpg"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "46822-1-170x170.jpg",
+          "width": 170,
+          "height": 170,
+          "filesize": 7623,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-170x170.jpg"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "46822-1-300x300.jpg",
+          "width": 300,
+          "height": 300,
+          "filesize": 17005,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-300x300.jpg"
+        },
+        "travel-monster-fullwidth": {
+          "file": "46822-1-1290x670.jpg",
+          "width": 1290,
+          "height": 670,
+          "filesize": 90634,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-1290x670.jpg"
+        },
+        "travel-monster-withsidebar": {
+          "file": "46822-1-860x510.jpg",
+          "width": 860,
+          "height": 510,
+          "filesize": 53908,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-860x510.jpg"
+        },
+        "travel-monster-blog-grid": {
+          "file": "46822-1-415x260.jpg",
+          "width": 415,
+          "height": 260,
+          "filesize": 18790,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-415x260.jpg"
+        },
+        "travel-monster-latest-post": {
+          "file": "46822-1-970x655.jpg",
+          "width": 970,
+          "height": 655,
+          "filesize": 71070,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-970x655.jpg"
+        },
+        "travel-monster-blog-list": {
+          "file": "46822-1-300x440.jpg",
+          "width": 300,
+          "height": 440,
+          "filesize": 20747,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-300x440.jpg"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "46822-1-1500x350.jpg",
+          "width": 1500,
+          "height": 350,
+          "filesize": 67034,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-1500x350.jpg"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "46822-1-1500x600.jpg",
+          "width": 1500,
+          "height": 600,
+          "filesize": 86102,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1-1500x600.jpg"
+        },
+        "full": {
+          "file": "46822-1.jpg",
+          "width": 1500,
+          "height": 1000,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/46822-1.jpg"
+        }
+      },
+      "image_meta": {
+        "aperture": "0",
+        "credit": "",
+        "camera": "",
+        "caption": "",
+        "created_timestamp": "0",
+        "copyright": "",
+        "focal_length": "0",
+        "iso": "0",
+        "shutter_speed": "0",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/58",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=58"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 65,
+    "count": 1,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/dahab/",
+    "name": "Dahab",
+    "slug": "dahab",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "",
+    "wte-shortdesc-textarea": "",
+    "rank_math_title": "",
+    "rank_math_description": "",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/65",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=65"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 56,
+    "count": 141,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/",
+    "name": "Egypt",
+    "slug": "egypt",
+    "taxonomy": "destination",
+    "parent": 0,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "21228",
+    "wte-shortdesc-textarea": "Book the best things to do in Egypt for 2025 – from ancient pyramids to Nile cruises and Red Sea adventures. Top-rated tours with expert guides &amp; free cancellation.",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "Book the best things to do in Egypt for 2025 – from ancient pyramids to Nile cruises and Red Sea adventures. Top-rated tours with expert guides & free cancellation.",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+      "width": 2048,
+      "height": 1356,
+      "file": "2025/10/DSC_0756.jpg",
+      "filesize": 1235567,
+      "sizes": {
+        "medium": {
+          "file": "DSC_0756-300x199.jpg",
+          "width": 300,
+          "height": 199,
+          "filesize": 14751,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-300x199.jpg"
+        },
+        "large": {
+          "file": "DSC_0756-1024x678.jpg",
+          "width": 1024,
+          "height": 678,
+          "filesize": 163029,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-1024x678.jpg"
+        },
+        "thumbnail": {
+          "file": "DSC_0756-150x150.jpg",
+          "width": 150,
+          "height": 150,
+          "filesize": 7295,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-150x150.jpg"
+        },
+        "medium_large": {
+          "file": "DSC_0756-768x509.jpg",
+          "width": 768,
+          "height": 509,
+          "filesize": 86431,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-768x509.jpg"
+        },
+        "trip-thumb-size": {
+          "file": "DSC_0756-374x226.jpg",
+          "width": 374,
+          "height": 226,
+          "filesize": 20857,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-374x226.jpg"
+        },
+        "destination-thumb-size": {
+          "file": "DSC_0756-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 139287,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-600x810.jpg"
+        },
+        "destination-thumb-trip-size": {
+          "file": "DSC_0756-410x250.jpg",
+          "width": 410,
+          "height": 250,
+          "filesize": 24667,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-410x250.jpg"
+        },
+        "activities-thumb-size": {
+          "file": "DSC_0756-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 139287,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-600x810.jpg"
+        },
+        "trip-single-size": {
+          "file": "DSC_0756-990x490.jpg",
+          "width": 990,
+          "height": 490,
+          "filesize": 112421,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-990x490.jpg"
+        },
+        "meafe-featured-page": {
+          "file": "DSC_0756-500x410.jpg",
+          "width": 500,
+          "height": 410,
+          "filesize": 51018,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-500x410.jpg"
+        },
+        "meafe-testimonial-two": {
+          "file": "DSC_0756-272x316.jpg",
+          "width": 272,
+          "height": 316,
+          "filesize": 24638,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-272x316.jpg"
+        },
+        "meafe-blog-one": {
+          "file": "DSC_0756-370x247.jpg",
+          "width": 370,
+          "height": 247,
+          "filesize": 21762,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-370x247.jpg"
+        },
+        "meafe-blog-two": {
+          "file": "DSC_0756-197x278.jpg",
+          "width": 197,
+          "height": 278,
+          "filesize": 16897,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-197x278.jpg"
+        },
+        "meafe-category-tab": {
+          "file": "DSC_0756-355x355.jpg",
+          "width": 355,
+          "height": 355,
+          "filesize": 34440,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-355x355.jpg"
+        },
+        "meafe-category-grid": {
+          "file": "DSC_0756-370x370.jpg",
+          "width": 370,
+          "height": 370,
+          "filesize": 37466,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-370x370.jpg"
+        },
+        "meafe-category-grid-one": {
+          "file": "DSC_0756-570x530.jpg",
+          "width": 570,
+          "height": 530,
+          "filesize": 78134,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-570x530.jpg"
+        },
+        "meafe-category-grid-two": {
+          "file": "DSC_0756-270x180.jpg",
+          "width": 270,
+          "height": 180,
+          "filesize": 12370,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-270x180.jpg"
+        },
+        "meafe-category-grid-three": {
+          "file": "DSC_0756-570x320.jpg",
+          "width": 570,
+          "height": 320,
+          "filesize": 42481,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-570x320.jpg"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "DSC_0756-170x170.jpg",
+          "width": 170,
+          "height": 170,
+          "filesize": 9107,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-170x170.jpg"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "DSC_0756-300x300.jpg",
+          "width": 300,
+          "height": 300,
+          "filesize": 24959,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-300x300.jpg"
+        },
+        "1536x1536": {
+          "file": "DSC_0756-1536x1017.jpg",
+          "width": 1536,
+          "height": 1017,
+          "filesize": 338388,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-1536x1017.jpg"
+        },
+        "travel-monster-fullwidth": {
+          "file": "DSC_0756-1290x670.jpg",
+          "width": 1290,
+          "height": 670,
+          "filesize": 193332,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-1290x670.jpg"
+        },
+        "travel-monster-withsidebar": {
+          "file": "DSC_0756-860x510.jpg",
+          "width": 860,
+          "height": 510,
+          "filesize": 98583,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-860x510.jpg"
+        },
+        "travel-monster-blog-grid": {
+          "file": "DSC_0756-415x260.jpg",
+          "width": 415,
+          "height": 260,
+          "filesize": 25579,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-415x260.jpg"
+        },
+        "travel-monster-latest-post": {
+          "file": "DSC_0756-970x655.jpg",
+          "width": 970,
+          "height": 655,
+          "filesize": 140583,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-970x655.jpg"
+        },
+        "travel-monster-blog-list": {
+          "file": "DSC_0756-300x440.jpg",
+          "width": 300,
+          "height": 440,
+          "filesize": 39248,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-300x440.jpg"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "DSC_0756-1920x350.jpg",
+          "width": 1920,
+          "height": 350,
+          "filesize": 179342,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-1920x350.jpg"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "DSC_0756-1920x600.jpg",
+          "width": 1920,
+          "height": 600,
+          "filesize": 280893,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756-1920x600.jpg"
+        },
+        "full": {
+          "file": "DSC_0756.jpg",
+          "width": 2048,
+          "height": 1356,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/DSC_0756.jpg"
+        }
+      },
+      "image_meta": {
+        "aperture": "11",
+        "credit": "",
+        "camera": "NIKON D5100",
+        "caption": "",
+        "created_timestamp": "1325483532",
+        "copyright": "",
+        "focal_length": "50",
+        "iso": "180",
+        "shutter_speed": "0.002",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=56"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 57,
+    "count": 85,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/hurghada/",
+    "name": "Hurghada",
+    "slug": "hurghada",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "6566",
+    "wte-shortdesc-textarea": "Explore the best Hurghada excursions Egypt has to offer. From thrilling desert safaris and vibrant coral reef diving to historical day tours including the iconic pyramids tour.",
+    "rank_math_title": "Best Hurghada Excursions &amp; Day Tours 2026 | FTS Travels",
+    "rank_math_description": "Discover the best Hurghada excursions for 2026. Book day tours, desert safaris &amp; the iconic pyramids tour. Expert guides &amp; free cancellation.\n",
+    "rank_math_seo_score": "89",
+    "rank_math_focus_keyword": "hurghada excursions,excursion hurghada,hurghada day tours,tours in hurghada,hurghada pyramids tour,egypt hurghada excursions",
+    "rank_math_schema_FAQPage": {
+      "metadata": {
+        "type": "template",
+        "shortcode": "s-6801e96f-35b9-47a3-b820-8d147a5f4080",
+        "isPrimary": "1",
+        "title": "FAQ"
+      },
+      "@type": "FAQPage",
+      "name": "%seo_title%",
+      "url": "%url%",
+      "datePublished": "%date(Y-m-dTH:i:sP)%",
+      "dateModified": "%modified(Y-m-dTH:i:sP)%",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "1. What are the best Hurghada excursions for 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The top-rated Hurghada excursions for 2026 include desert safari adventures by quad bike, boat trips to Orange Bay and Giftun Island, and historical day tours to Luxor and the Pyramids of Giza.\n"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "2. How much do tours in Hurghada cost?",
+          "acceptedAnswer": {
+            "@type": "Answer"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "3. Can I book a Hurghada pyramids tour from my hotel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, FTS Travels offers a comprehensive Hurghada pyramids tour that includes round-trip transfers from all major hotels in Hurghada, expert guides, and entrance fees to the Giza Plateau.\n"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "4. Are there family-friendly excursions in Hurghada?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolutely! Hurghada offers many family-friendly activities, such as glass-bottom boat tours, dolphin house snorkeling trips, and gentle camel rides in the desert, all suitable for children of all ages.\n"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "5. Is it safe to book Egypt Hurghada excursions online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Booking your Egypt Hurghada excursions online with a reputable provider like FTS Travels is safe and convenient. We offer secure payment options and free cancellation up to 24 hours before the tour starts.\n"
+          }
+        }
+      ]
+    },
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "283",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+      "width": 1500,
+      "height": 1000,
+      "file": "2025/05/10652.jpg",
+      "filesize": 144031,
+      "sizes": {
+        "medium": {
+          "file": "10652-300x200.jpg",
+          "width": 300,
+          "height": 200,
+          "filesize": 13291,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-300x200.jpg"
+        },
+        "large": {
+          "file": "10652-1024x683.jpg",
+          "width": 1024,
+          "height": 683,
+          "filesize": 114057,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-1024x683.jpg"
+        },
+        "thumbnail": {
+          "file": "10652-150x150.jpg",
+          "width": 150,
+          "height": 150,
+          "filesize": 6125,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-150x150.jpg"
+        },
+        "medium_large": {
+          "file": "10652-768x512.jpg",
+          "width": 768,
+          "height": 512,
+          "filesize": 68754,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-768x512.jpg"
+        },
+        "trip-thumb-size": {
+          "file": "10652-374x226.jpg",
+          "width": 374,
+          "height": 226,
+          "filesize": 18434,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-374x226.jpg"
+        },
+        "destination-thumb-size": {
+          "file": "10652-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 79422,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-600x810.jpg"
+        },
+        "destination-thumb-trip-size": {
+          "file": "10652-410x250.jpg",
+          "width": 410,
+          "height": 250,
+          "filesize": 21614,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-410x250.jpg"
+        },
+        "activities-thumb-size": {
+          "file": "10652-600x810.jpg",
+          "width": 600,
+          "height": 810,
+          "filesize": 79422,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-600x810.jpg"
+        },
+        "trip-single-size": {
+          "file": "10652-990x490.jpg",
+          "width": 990,
+          "height": 490,
+          "filesize": 88333,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-990x490.jpg"
+        },
+        "meafe-featured-page": {
+          "file": "10652-500x410.jpg",
+          "width": 500,
+          "height": 410,
+          "filesize": 40354,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-500x410.jpg"
+        },
+        "meafe-testimonial-two": {
+          "file": "10652-272x316.jpg",
+          "width": 272,
+          "height": 316,
+          "filesize": 18047,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-272x316.jpg"
+        },
+        "meafe-blog-one": {
+          "file": "10652-370x247.jpg",
+          "width": 370,
+          "height": 247,
+          "filesize": 19124,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-370x247.jpg"
+        },
+        "meafe-blog-two": {
+          "file": "10652-197x278.jpg",
+          "width": 197,
+          "height": 278,
+          "filesize": 12253,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-197x278.jpg"
+        },
+        "meafe-category-tab": {
+          "file": "10652-355x355.jpg",
+          "width": 355,
+          "height": 355,
+          "filesize": 26797,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-355x355.jpg"
+        },
+        "meafe-category-grid": {
+          "file": "10652-370x370.jpg",
+          "width": 370,
+          "height": 370,
+          "filesize": 28616,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-370x370.jpg"
+        },
+        "meafe-category-grid-one": {
+          "file": "10652-570x530.jpg",
+          "width": 570,
+          "height": 530,
+          "filesize": 57525,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-570x530.jpg"
+        },
+        "meafe-category-grid-two": {
+          "file": "10652-270x180.jpg",
+          "width": 270,
+          "height": 180,
+          "filesize": 11068,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-270x180.jpg"
+        },
+        "meafe-category-grid-three": {
+          "file": "10652-570x320.jpg",
+          "width": 570,
+          "height": 320,
+          "filesize": 36222,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-570x320.jpg"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "10652-170x170.jpg",
+          "width": 170,
+          "height": 170,
+          "filesize": 7611,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-170x170.jpg"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "10652-300x300.jpg",
+          "width": 300,
+          "height": 300,
+          "filesize": 19606,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-300x300.jpg"
+        },
+        "travel-monster-fullwidth": {
+          "file": "10652-1290x670.jpg",
+          "width": 1290,
+          "height": 670,
+          "filesize": 140223,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-1290x670.jpg"
+        },
+        "travel-monster-withsidebar": {
+          "file": "10652-860x510.jpg",
+          "width": 860,
+          "height": 510,
+          "filesize": 78025,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-860x510.jpg"
+        },
+        "travel-monster-blog-grid": {
+          "file": "10652-415x260.jpg",
+          "width": 415,
+          "height": 260,
+          "filesize": 22548,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-415x260.jpg"
+        },
+        "travel-monster-latest-post": {
+          "file": "10652-970x655.jpg",
+          "width": 970,
+          "height": 655,
+          "filesize": 105080,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-970x655.jpg"
+        },
+        "travel-monster-blog-list": {
+          "file": "10652-300x440.jpg",
+          "width": 300,
+          "height": 440,
+          "filesize": 26052,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-300x440.jpg"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "10652-1500x350.jpg",
+          "width": 1500,
+          "height": 350,
+          "filesize": 90826,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-1500x350.jpg"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "10652-1500x600.jpg",
+          "width": 1500,
+          "height": 600,
+          "filesize": 150395,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652-1500x600.jpg"
+        },
+        "full": {
+          "file": "10652.jpg",
+          "width": 1500,
+          "height": 1000,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/10652.jpg"
+        }
+      },
+      "image_meta": {
+        "aperture": "0",
+        "credit": "",
+        "camera": "",
+        "caption": "",
+        "created_timestamp": "0",
+        "copyright": "",
+        "focal_length": "0",
+        "iso": "0",
+        "shutter_speed": "0",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/57",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=57"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 59,
+    "count": 8,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/luxor/",
+    "name": "Luxor",
+    "slug": "luxor",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "",
+    "wte-shortdesc-textarea": "",
+    "rank_math_title": "",
+    "rank_math_description": "",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/59",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=59"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 60,
+    "count": 9,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/marsa-alam/",
+    "name": "Marsa Alam",
+    "slug": "marsa-alam",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "14895",
+    "wte-shortdesc-textarea": "Book the best things to do in Marsa Alam for 2025 – diving adventures, dolphin encounters, desert safaris &amp; more. Top-rated tours with free cancellation &amp; expert guides.",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "Book your Egypt travel with FTS Travels. Trusted by over 20,000 travelers for reliable service, tours, and unforgettable experiences.",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": {
+      "meta_description": "Book the best things to do in Marsa Alam for 2025 – diving adventures, dolphin encounters, desert safaris & more. Top-rated tours with free cancellation & expert guides."
+    },
+    "thumbnail": {
+      "width": 1000,
+      "height": 684,
+      "file": "2025/05/2151912777.jpg",
+      "filesize": 785340,
+      "sizes": {
+        "medium": {
+          "file": "2151912777-300x205.jpg",
+          "width": 300,
+          "height": 205,
+          "filesize": 14490,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-300x205.jpg"
+        },
+        "thumbnail": {
+          "file": "2151912777-150x150.jpg",
+          "width": 150,
+          "height": 150,
+          "filesize": 6007,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-150x150.jpg"
+        },
+        "medium_large": {
+          "file": "2151912777-768x525.jpg",
+          "width": 768,
+          "height": 525,
+          "filesize": 71825,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-768x525.jpg"
+        },
+        "trip-thumb-size": {
+          "file": "2151912777-374x226.jpg",
+          "width": 374,
+          "height": 226,
+          "filesize": 19327,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-374x226.jpg"
+        },
+        "destination-thumb-size": {
+          "file": "2151912777-600x684.jpg",
+          "width": 600,
+          "height": 684,
+          "filesize": 73699,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-600x684.jpg"
+        },
+        "destination-thumb-trip-size": {
+          "file": "2151912777-410x250.jpg",
+          "width": 410,
+          "height": 250,
+          "filesize": 22680,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-410x250.jpg"
+        },
+        "activities-thumb-size": {
+          "file": "2151912777-600x684.jpg",
+          "width": 600,
+          "height": 684,
+          "filesize": 73699,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-600x684.jpg"
+        },
+        "trip-single-size": {
+          "file": "2151912777-990x490.jpg",
+          "width": 990,
+          "height": 490,
+          "filesize": 90077,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-990x490.jpg"
+        },
+        "meafe-featured-page": {
+          "file": "2151912777-500x410.jpg",
+          "width": 500,
+          "height": 410,
+          "filesize": 37832,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-500x410.jpg"
+        },
+        "meafe-testimonial-two": {
+          "file": "2151912777-272x316.jpg",
+          "width": 272,
+          "height": 316,
+          "filesize": 16567,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-272x316.jpg"
+        },
+        "meafe-blog-one": {
+          "file": "2151912777-370x247.jpg",
+          "width": 370,
+          "height": 247,
+          "filesize": 20209,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-370x247.jpg"
+        },
+        "meafe-blog-two": {
+          "file": "2151912777-197x278.jpg",
+          "width": 197,
+          "height": 278,
+          "filesize": 11110,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-197x278.jpg"
+        },
+        "meafe-category-tab": {
+          "file": "2151912777-355x355.jpg",
+          "width": 355,
+          "height": 355,
+          "filesize": 23733,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-355x355.jpg"
+        },
+        "meafe-category-grid": {
+          "file": "2151912777-370x370.jpg",
+          "width": 370,
+          "height": 370,
+          "filesize": 25494,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-370x370.jpg"
+        },
+        "meafe-category-grid-one": {
+          "file": "2151912777-570x530.jpg",
+          "width": 570,
+          "height": 530,
+          "filesize": 51029,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-570x530.jpg"
+        },
+        "meafe-category-grid-two": {
+          "file": "2151912777-270x180.jpg",
+          "width": 270,
+          "height": 180,
+          "filesize": 12042,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-270x180.jpg"
+        },
+        "meafe-category-grid-three": {
+          "file": "2151912777-570x320.jpg",
+          "width": 570,
+          "height": 320,
+          "filesize": 37105,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-570x320.jpg"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "2151912777-170x170.jpg",
+          "width": 170,
+          "height": 170,
+          "filesize": 7370,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-170x170.jpg"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "2151912777-300x300.jpg",
+          "width": 300,
+          "height": 300,
+          "filesize": 17689,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-300x300.jpg"
+        },
+        "travel-monster-fullwidth": {
+          "file": "2151912777-1000x670.jpg",
+          "width": 1000,
+          "height": 670,
+          "filesize": 130646,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-1000x670.jpg"
+        },
+        "travel-monster-withsidebar": {
+          "file": "2151912777-860x510.jpg",
+          "width": 860,
+          "height": 510,
+          "filesize": 79562,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-860x510.jpg"
+        },
+        "travel-monster-blog-grid": {
+          "file": "2151912777-415x260.jpg",
+          "width": 415,
+          "height": 260,
+          "filesize": 23333,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-415x260.jpg"
+        },
+        "travel-monster-latest-post": {
+          "file": "2151912777-970x655.jpg",
+          "width": 970,
+          "height": 655,
+          "filesize": 106987,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-970x655.jpg"
+        },
+        "travel-monster-blog-list": {
+          "file": "2151912777-300x440.jpg",
+          "width": 300,
+          "height": 440,
+          "filesize": 22592,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-300x440.jpg"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "2151912777-1000x350.jpg",
+          "width": 1000,
+          "height": 350,
+          "filesize": 83804,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-1000x350.jpg"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "2151912777-1000x600.jpg",
+          "width": 1000,
+          "height": 600,
+          "filesize": 121216,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777-1000x600.jpg"
+        },
+        "full": {
+          "file": "2151912777.jpg",
+          "width": 1000,
+          "height": 684,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/05/2151912777.jpg"
+        }
+      },
+      "image_meta": {
+        "aperture": "0",
+        "credit": "",
+        "camera": "",
+        "caption": "",
+        "created_timestamp": "0",
+        "copyright": "",
+        "focal_length": "0",
+        "iso": "0",
+        "shutter_speed": "0",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/60",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=60"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 61,
+    "count": 59,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/sharm-el-sheikh/",
+    "name": "Sharm el-Sheikh",
+    "slug": "sharm-el-sheikh",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "21191",
+    "wte-shortdesc-textarea": "",
+    "rank_math_title": "Top %term% Tours and Excursions for 2025 - FREE Cancellation | FTS Travels",
+    "rank_math_description": "Trusted FTS Travels agency with top reviews, excellent service, and personalized travel options in Cairo and Sharm El Sheikh.",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": {
+      "term_name": "Sharm el-Sheikh"
+    },
+    "thumbnail": {
+      "width": 1000,
+      "height": 667,
+      "file": "2025/10/194.jpg",
+      "filesize": 877880,
+      "sizes": {
+        "medium": {
+          "file": "194-300x200.jpg",
+          "width": 300,
+          "height": 200,
+          "filesize": 17549,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-300x200.jpg"
+        },
+        "thumbnail": {
+          "file": "194-150x150.jpg",
+          "width": 150,
+          "height": 150,
+          "filesize": 7566,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-150x150.jpg"
+        },
+        "medium_large": {
+          "file": "194-768x512.jpg",
+          "width": 768,
+          "height": 512,
+          "filesize": 89014,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-768x512.jpg"
+        },
+        "trip-thumb-size": {
+          "file": "194-374x226.jpg",
+          "width": 374,
+          "height": 226,
+          "filesize": 24368,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-374x226.jpg"
+        },
+        "destination-thumb-size": {
+          "file": "194-600x667.jpg",
+          "width": 600,
+          "height": 667,
+          "filesize": 100488,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-600x667.jpg"
+        },
+        "destination-thumb-trip-size": {
+          "file": "194-410x250.jpg",
+          "width": 410,
+          "height": 250,
+          "filesize": 28851,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-410x250.jpg"
+        },
+        "activities-thumb-size": {
+          "file": "194-600x667.jpg",
+          "width": 600,
+          "height": 667,
+          "filesize": 100488,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-600x667.jpg"
+        },
+        "trip-single-size": {
+          "file": "194-990x490.jpg",
+          "width": 990,
+          "height": 490,
+          "filesize": 112671,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-990x490.jpg"
+        },
+        "meafe-featured-page": {
+          "file": "194-500x410.jpg",
+          "width": 500,
+          "height": 410,
+          "filesize": 51030,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-500x410.jpg"
+        },
+        "meafe-testimonial-two": {
+          "file": "194-272x316.jpg",
+          "width": 272,
+          "height": 316,
+          "filesize": 22999,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-272x316.jpg"
+        },
+        "meafe-blog-one": {
+          "file": "194-370x247.jpg",
+          "width": 370,
+          "height": 247,
+          "filesize": 25509,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-370x247.jpg"
+        },
+        "meafe-blog-two": {
+          "file": "194-197x278.jpg",
+          "width": 197,
+          "height": 278,
+          "filesize": 15962,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-197x278.jpg"
+        },
+        "meafe-category-tab": {
+          "file": "194-355x355.jpg",
+          "width": 355,
+          "height": 355,
+          "filesize": 33256,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-355x355.jpg"
+        },
+        "meafe-category-grid": {
+          "file": "194-370x370.jpg",
+          "width": 370,
+          "height": 370,
+          "filesize": 35657,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-370x370.jpg"
+        },
+        "meafe-category-grid-one": {
+          "file": "194-570x530.jpg",
+          "width": 570,
+          "height": 530,
+          "filesize": 70634,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-570x530.jpg"
+        },
+        "meafe-category-grid-two": {
+          "file": "194-270x180.jpg",
+          "width": 270,
+          "height": 180,
+          "filesize": 14725,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-270x180.jpg"
+        },
+        "meafe-category-grid-three": {
+          "file": "194-570x320.jpg",
+          "width": 570,
+          "height": 320,
+          "filesize": 47803,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-570x320.jpg"
+        },
+        "meafe-category-grid-lay-three": {
+          "file": "194-170x170.jpg",
+          "width": 170,
+          "height": 170,
+          "filesize": 9379,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-170x170.jpg"
+        },
+        "meafe-post-modules-small-img": {
+          "file": "194-300x300.jpg",
+          "width": 300,
+          "height": 300,
+          "filesize": 24464,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-300x300.jpg"
+        },
+        "travel-monster-withsidebar": {
+          "file": "194-860x510.jpg",
+          "width": 860,
+          "height": 510,
+          "filesize": 101411,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-860x510.jpg"
+        },
+        "travel-monster-blog-grid": {
+          "file": "194-415x260.jpg",
+          "width": 415,
+          "height": 260,
+          "filesize": 29782,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-415x260.jpg"
+        },
+        "travel-monster-latest-post": {
+          "file": "194-970x655.jpg",
+          "width": 970,
+          "height": 655,
+          "filesize": 134706,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-970x655.jpg"
+        },
+        "travel-monster-blog-list": {
+          "file": "194-300x440.jpg",
+          "width": 300,
+          "height": 440,
+          "filesize": 33732,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-300x440.jpg"
+        },
+        "travel-monster-header-bg-img": {
+          "file": "194-1000x350.jpg",
+          "width": 1000,
+          "height": 350,
+          "filesize": 104991,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-1000x350.jpg"
+        },
+        "travel-monster-single-layout-two": {
+          "file": "194-1000x600.jpg",
+          "width": 1000,
+          "height": 600,
+          "filesize": 150165,
+          "mime_type": "image/jpeg",
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194-1000x600.jpg"
+        },
+        "full": {
+          "file": "194.jpg",
+          "width": 1000,
+          "height": 667,
+          "source_url": "https://ftstravels.com/wp-content/uploads/2025/10/194.jpg"
+        }
+      },
+      "image_meta": {
+        "aperture": "0",
+        "credit": "",
+        "camera": "",
+        "caption": "",
+        "created_timestamp": "0",
+        "copyright": "",
+        "focal_length": "0",
+        "iso": "0",
+        "shutter_speed": "0",
+        "title": "",
+        "orientation": "0",
+        "keywords": []
+      }
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/61",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=61"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
+    "id": 62,
+    "count": 0,
+    "description": "",
+    "link": "https://ftstravels.com/destinations/egypt/siwa/",
+    "name": "Siwa",
+    "slug": "siwa",
+    "taxonomy": "destination",
+    "parent": 56,
+    "meta": [],
+    "acf": [],
+    "category-image-id": "",
+    "wte-shortdesc-textarea": "",
+    "rank_math_title": "",
+    "rank_math_description": "",
+    "rank_math_seo_score": "",
+    "rank_math_focus_keyword": "",
+    "rank_math_schema_FAQPage": "",
+    "rank_math_shortcode_schema_s-6801e96f-35b9-47a3-b820-8d147a5f4080": "",
+    "_clickrank_ai_revert_data": "",
+    "thumbnail": {
+
+    },
+    "_links": {
+      "self": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/62",
+          "targetHints": {
+            "allow": [
+              "GET"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/taxonomies/destination"
+        }
+      ],
+      "up": [
+        {
+          "embeddable": true,
+          "href": "https://ftstravels.com/wp-json/wp/v2/destination/56"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://ftstravels.com/wp-json/wp/v2/trip?destination=62"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  }
+]

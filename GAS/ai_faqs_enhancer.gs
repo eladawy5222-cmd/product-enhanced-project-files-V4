@@ -1,0 +1,814 @@
+/************************************************************
+ * AI FAQs Generator (Trip-level Batch)
+ * 
+ * Generates 8-12 customer-focused FAQs per trip
+ * Uses all raw and improved data sources
+ * 
+ * Pattern: Similar to ai_itinerary_enhancer.gs
+ ************************************************************/
+
+var TRIPS_TABLE = 'Trips';
+var IMPROVEMENT_TABLE = 'Improvement With AI';
+var FAQS_IMPROVEMENT_TABLE = 'FAQs Improvement With AI';
+var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
+var ITINERARY_IMPROVEMENT_TABLE = 'Itinerary Improvement With AI';
+var TRIP_INCLUDES_IMPROVEMENT_TABLE = 'TripIncludes Improvement With AI';
+var TRIP_EXCLUDES_IMPROVEMENT_TABLE = 'TripExcludes Improvement With AI';
+var TRIPFACTS_IMPROVEMENT_TABLE = 'TripFacts Improvement With AI';
+
+var FAQS_STATUS_FIELD = 'AI_FAQs_Status';
+var AI_FAQS_BATCH_LIMIT = 1;  // Process one trip at a time
+
+// FAQ count limits
+var MIN_FAQS_COUNT = 8;
+var MAX_FAQS_COUNT = 12;
+
+var CANCELLATION_Q_PATTERN = /cancel/i;
+
+var CANCELLATION_QUESTION = 
+  "What happens if I need to cancel my booking?";
+
+var CANCELLATION_FIXED_ANSWER = 
+  "If you need to cancel your booking, don’t worry—you can cancel at any time. You’ll receive a full refund if you cancel at least 24 hours before the scheduled trip. Please contact our customer service team and we’ll be happy to help you cancel or reschedule.";
+
+var PICKUP_Q_PATTERN = /(pickup|pick up|hotel pickup|where.*pickup|when.*pickup)/i;
+
+var PICKUP_QUESTION = 
+  "Where and when is the hotel pickup for this tour?";
+
+var PICKUP_ANSWER_TEMPLATE_WITH_TIME = 
+  "We provide convenient hotel pickup directly from your hotel lobby at {{TIME}}. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.";
+
+var PICKUP_ANSWER_TEMPLATE_GENERIC = 
+  "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.";
+
+var PYRAMIDS_KEYWORDS_PATTERN = /(pyramid|giza|sphinx|cheops|kheops|khafre|menkaure)/i;
+
+var PYRAMIDS_QUESTION = 
+  "Does this tour include entry inside any pyramid?";
+
+var PYRAMIDS_FIXED_ANSWER = 
+  "Your guided visit includes the main pyramid sites listed in the itinerary with plenty of time for photos and explanations. Entry inside any pyramid requires a separate ticket and is not included unless explicitly stated.";
+
+/************************************************************
+ * MAIN BATCH FUNCTION
+ ************************************************************/
+function runAiFaqsEnhancementBatch() {
+  loadConfigSecrets_();
+  Logger.log('AI FAQs Generator: starting batch...');
+  
+  try {
+    // Fetch trips with AI_FAQs_Status = 'Pending'
+    var formula = "AND({" + FAQS_STATUS_FIELD + "} = 'Pending', {AI_TripFacts_Status} = 'Done')";
+    var params = {
+      filterByFormula: formula,
+      maxRecords: AI_FAQS_BATCH_LIMIT
+    };
+    
+    var res = airtableGet_(TRIPS_TABLE, params);
+    var trips = res && res.records ? res.records : [];
+    
+    if (!trips || !trips.length) {
+      Logger.log('AI FAQs: no trips with ' + FAQS_STATUS_FIELD + " = 'Pending'.");
+      return;
+    }
+    
+    trips.forEach(function(tripRec) {
+      var tripId = tripRec.id;
+      var tripFields = tripRec.fields || {};
+      
+      try {
+        Logger.log('AI FAQs: processing Trip ' + tripId);
+        
+        // 1) Update status to Processing
+        updateTripFaqsStatus_(tripId, 'Processing');
+        
+        // 2) Delete old FAQs for this trip
+        deleteOldFaqsForTrip_(tripId, tripFields.TripID || '');
+        
+        // 3) Build comprehensive context
+        var ctx = buildFaqsContext_(tripFields, tripId);
+        
+        // 4) Build AI prompt
+        var prompt = buildFaqsPrompt_(ctx);
+        
+        // 5) Call AI
+        var aiResult = callAi_(prompt);
+        
+        if (!aiResult || !aiResult.faqs || !Array.isArray(aiResult.faqs)) {
+          throw new Error('Invalid AI result - expected faqs array');
+        }
+        
+        var faqs = aiResult.faqs;
+        
+        // 1) سياسة الإلغاء الثابتة (أو الديناميكية حسب المدة)
+        faqs = upsertCancellationFaq_(faqs, ctx);
+        
+        // 2) وقت الاستقبال (ديناميكي حسب الداتا)
+        faqs = upsertPickupFaq_(faqs, ctx, tripFields);
+
+        // 3) سؤال الأهرامات (إجباري لو الرحلة فيها أهرامات)
+        faqs = upsertPyramidsFaq_(faqs, ctx);
+        
+        // 4) Sanitize & Dedupe
+        faqs = sanitizeFaqs_(faqs);
+        faqs = dedupeFaqs_(faqs);
+
+        // 6) Validate count
+        if (faqs.length < MIN_FAQS_COUNT) {
+          Logger.log('AI FAQs: WARNING - only ' + faqs.length + ' FAQs generated, minimum is ' + MIN_FAQS_COUNT);
+          // Add default FAQs if needed
+          faqs = ensureMinimumFaqs_(faqs, ctx);
+        }
+        
+        if (faqs.length > MAX_FAQS_COUNT) {
+          Logger.log('AI FAQs: trimming from ' + faqs.length + ' to ' + MAX_FAQS_COUNT + ' FAQs');
+          faqs = faqs.slice(0, MAX_FAQS_COUNT);
+        }
+        
+        // 7) Create FAQ records
+        var createdCount = 0;
+        faqs.forEach(function(faq) {
+          try {
+            var question = (faq.question || '').toString().trim();
+            var answer = (faq.answer || '').toString().trim();
+            
+            if (!question || !answer) {
+              Logger.log('AI FAQs: skipping FAQ with empty question or answer');
+              return;
+            }
+            
+            var nowIso = new Date().toISOString();
+            var fieldsCreate = {};
+            fieldsCreate.Trip = [tripId];
+            fieldsCreate.AI_Question = question;
+            fieldsCreate.AI_Answer = answer;
+            fieldsCreate.AI_Status = 'Done';
+            fieldsCreate.AI_LastUpdated = nowIso;
+            
+            airtableCreate_(FAQS_IMPROVEMENT_TABLE, fieldsCreate);
+            createdCount++;
+            
+          } catch (e) {
+            Logger.log('AI FAQs: error creating FAQ — ' + e.message);
+          }
+        });
+        
+        Logger.log('AI FAQs: Trip ' + tripId + ' → created ' + createdCount + ' FAQs');
+        
+        // 8) Update trip status
+        updateTripFaqsStatus_(tripId, 'Done');
+        
+      } catch (e) {
+        Logger.log('AI FAQs: error for Trip ' + tripId + ' — ' + e.message);
+        updateTripFaqsStatus_(tripId, 'Error');
+      }
+    });
+    
+  } catch (e) {
+    Logger.log('AI FAQs: fatal error — ' + e.message);
+  }
+  
+  Logger.log('AI FAQs: batch finished.');
+}
+
+/************************************************************
+ * CONTEXT BUILDING
+ ************************************************************/
+function buildFaqsContext_(tripFields, tripId) {
+  var ctx = {};
+  
+  // Raw trip data
+  ctx.tripTitle = tripFields.Title || '';
+  ctx.tripDuration = tripFields.Duration || '';
+  ctx.tripLocation = Array.isArray(tripFields.Cities) ? tripFields.Cities.join(', ') : '';
+  ctx.tripType = tripFields.Tour_Type || '';
+  ctx.tripCategory = tripFields.Category || '';
+  ctx.groupSize = tripFields.Group_Size || '';
+  ctx.languages = Array.isArray(tripFields.Languages) ? tripFields.Languages.join(', ') : '';
+  var tripNumber = tripFields.TripID || '';
+  
+  // 1) Get improved trip data (Description + SEO)
+  try {
+    var impParams = {
+      filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+      maxRecords: 1
+    };
+    var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
+    if (impRes && impRes.records && impRes.records.length) {
+      var impFields = impRes.records[0].fields || {};
+      ctx.tripDescription = impFields.AI_Trip_Description || '';
+      ctx.tripOverview = impFields.AI_Trip_Overview || '';
+      ctx.seoTitle = impFields.AI_SEO_Title || '';
+      ctx.seoMetaDescription = impFields.AI_SEO_Meta_Description || '';
+      ctx.seoKeywords = impFields.AI_SEO_FocusKeywords || '';
+    }
+  } catch (e) {
+    Logger.log('AI FAQs: error fetching improved data: ' + e.message);
+  }
+
+  var U = buildUnifiedTripContext_(tripId, tripFields);
+  ctx.highlights = U.rawHighlightsArr.concat(U.improvedHighlightsArr);
+
+  ctx.itinerary = U.itineraryArr;
+
+  ctx.includes = U.includesArr;
+  ctx.excludes = U.excludesArr;
+  
+  // 5) Get trip facts
+  ctx.facts = [];
+  try {
+    var factsRecs = fetchRecordsByTripLocal_(TRIPFACTS_IMPROVEMENT_TABLE, 'Trip', tripId, tripNumber, 100);
+    if (factsRecs && factsRecs.length) {
+      factsRecs.forEach(function(rec) {
+        var f = rec.fields || {};
+        if (f.AI_Fact_Label && f.AI_Fact_Value) {
+          ctx.facts.push(f.AI_Fact_Label + ': ' + f.AI_Fact_Value);
+        }
+      });
+    }
+  } catch (e) {
+    Logger.log('AI FAQs: error fetching trip facts: ' + e.message);
+  }
+  
+  // 6) Get images (for visual context)
+  ctx.imageCount = 0;
+  try {
+    var imgRecs = fetchRecordsByTripLocal_('Images Improvement With AI', 'Trip', tripId, tripNumber, 1);
+    if (imgRecs && imgRecs.length) {
+      ctx.imageCount = imgRecs.length;
+    }
+  } catch (e) {
+    Logger.log('AI FAQs: error fetching images: ' + e.message);
+  }
+  
+  // 7) Get pickup locations (if available)
+  ctx.pickupLocations = [];
+  try {
+    var pickupRecs = fetchRecordsByTripLocal_('PickupLocations Improvement With AI', 'Trip', tripId, tripNumber, 100);
+    if (pickupRecs && pickupRecs.length) {
+      pickupRecs.forEach(function(rec) {
+        var f = rec.fields || {};
+        if (f.AI_Location) {
+          ctx.pickupLocations.push(f.AI_Location);
+        }
+      });
+    }
+  } catch (e) {
+    // Table might not exist, skip silently
+  }
+  
+  // 8) Get itinerary steps (meals info)
+  ctx.meals = [];
+  try {
+    var stepsRecs = fetchRecordsByTripLocal_('Itinerary Improvement With AI', 'Trip', tripId, tripNumber, 100);
+    if (stepsRecs && stepsRecs.length) {
+      stepsRecs.forEach(function(rec) {
+        var f = rec.fields || {};
+        var m = f.AI_Meals || f.AI_Meals_Included || '';
+        if (m) ctx.meals.push(m);
+      });
+    }
+  } catch (e) {
+    // Table might not exist, skip silently
+  }
+  
+  return ctx;
+}
+
+/************************************************************
+ * AI PROMPT
+ ************************************************************/
+function buildFaqsPrompt_(ctx) {
+  // Pre-scan for GEM to enforce strict rules
+  var itineraryText = (ctx.itinerary || []).join(' ').toLowerCase();
+  var hasGEM = itineraryText.indexOf('grand egyptian museum') > -1 || itineraryText.indexOf('gem') > -1 || itineraryText.indexOf('new museum') > -1;
+
+  var museumConstraint = "";
+  if (hasGEM) {
+    museumConstraint = 
+      "!!! CRITICAL MUSEUM INSTRUCTION !!!\n" +
+      "The itinerary EXPLICITLY visits the 'Grand Egyptian Museum' (GEM) in Giza.\n" +
+      "1. YOU MUST REFER TO THE 'GRAND EGYPTIAN MUSEUM' (GEM) in all answers about museums.\n" +
+      "2. YOU MUST NOT MENTION the old 'Egyptian Museum in Tahrir Square'. Do not say the tour visits Tahrir.\n" +
+      "3. If a user asks about 'Which museum', answer: 'You will visit the new Grand Egyptian Museum (GEM) in Giza...'\n" +
+      "4. IGNORE any internal knowledge that associates 'Egyptian Museum' with Tahrir. For this trip, it means GEM.\n\n";
+  } else {
+    museumConstraint = 
+      "!!! MUSEUM INSTRUCTION !!!\n" +
+      "If the itinerary mentions 'Egyptian Museum' without specifying GEM/Grand, assume it is the classic museum in Tahrir Square.\n\n";
+  }
+
+  var prompt =
+    "You are an SEO expert and customer service specialist. Create a comprehensive FAQ section that answers user questions, removes booking hesitation, and ranks for long-tail keywords.\n\n" +
+    
+    museumConstraint + 
+
+    "TRIP INFORMATION:\n" +
+    "Title: " + (ctx.tripTitle || 'N/A') + "\n" +
+    "Duration: " + (ctx.tripDuration || 'N/A') + "\n" +
+    "Location: " + (ctx.tripLocation || 'N/A') + "\n" +
+    "Tour Type: " + (ctx.tripType || 'N/A') + "\n" +
+    "Category: " + (ctx.tripCategory || 'N/A') + "\n" +
+    "Group Size: " + (ctx.groupSize || 'N/A') + "\n" +
+    "Languages: " + (ctx.languages || 'N/A') + "\n\n" +
+    
+    "DESCRIPTION:\n" + (ctx.tripDescription || 'N/A') + "\n\n" +
+    
+    "OVERVIEW:\n" + (ctx.tripOverview || 'N/A') + "\n\n" +
+    
+    "SEO CONTEXT:\n" +
+    "SEO Title: " + (ctx.seoTitle || 'N/A') + "\n" +
+    "SEO Description: " + (ctx.seoMetaDescription || 'N/A') + "\n" +
+    "Keywords: " + (ctx.seoKeywords || 'N/A') + "\n\n" +
+    
+    "HIGHLIGHTS (" + ctx.highlights.length + " items):\n" + 
+    (ctx.highlights.length ? ctx.highlights.slice(0, 10).join('\n') : 'N/A') + "\n\n" +
+    
+    "ITINERARY (" + ctx.itinerary.length + " days):\n" + 
+    (ctx.itinerary.length ? ctx.itinerary.slice(0, 10).join('\n') : 'N/A') + "\n\n" +
+    
+    "WHAT'S INCLUDED (" + ctx.includes.length + " items):\n" + 
+    (ctx.includes.length ? ctx.includes.join('\n') : 'N/A') + "\n\n" +
+    
+    "WHAT'S EXCLUDED (" + ctx.excludes.length + " items):\n" + 
+    (ctx.excludes.length ? ctx.excludes.join('\n') : 'N/A') + "\n\n" +
+    
+    "TRIP FACTS (" + ctx.facts.length + " facts):\n" + 
+    (ctx.facts.length ? ctx.facts.join('\n') : 'N/A') + "\n\n" +
+    
+    (ctx.pickupLocations.length ? "PICKUP LOCATIONS:\n" + ctx.pickupLocations.join(', ') + "\n\n" : "") +
+    
+    (ctx.meals.length ? "MEALS INFO:\n" + ctx.meals.slice(0, 5).join(', ') + "\n\n" : "") +
+    
+    "=== USER PSYCHOLOGY ===\n" +
+    "Users read FAQs when they're:\n" +
+    "1. *ALMOST READY TO BOOK* (Removing final doubts) -> Answer objections that stop them from clicking 'Book'\n" +
+    "2. *PLANNING LOGISTICS* (Practical questions) -> Help them prepare for the tour\n" +
+    "3. *COMPARING OPTIONS* (Research mode) -> Show why you're the better choice\n" +
+    "4. *WORRIED ABOUT SOMETHING* (Anxiety reduction) -> Address fears and concerns directly\n\n" +
+
+    "=== FAQ CATEGORIES TO COVER ===\n" +
+    "Generate EXACTLY " + MIN_FAQS_COUNT + "-" + MAX_FAQS_COUNT + " FAQs covering these categories where relevant:\n" +
+    "*CATEGORY 1: BOOKING & PAYMENT* 💳 (How to book, payment methods, instant confirmation)\n" +
+    "*CATEGORY 2: CANCELLATION & CHANGES* 🔄 (Policy, weather issues, sickness)\n" +
+    "*CATEGORY 3: PICKUP & LOGISTICS* 🚐 (Pickup time/location, contact info)\n" +
+    "*CATEGORY 4: PHYSICAL & HEALTH* 💪 (Fitness level, elderly/children, accessibility)\n" +
+    "*CATEGORY 5: WHAT TO BRING* 🎒 (Clothing, items, camera, storage)\n" +
+    "*CATEGORY 6: TOUR EXPERIENCE* ⭐ (Group size, language, free time, customization)\n" +
+    "*CATEGORY 7: FOOD & DIETARY* 🍽️ (Inclusions, restrictions, own food)\n" +
+    "*CATEGORY 8: MONEY & EXTRAS* 💰 (Cash needed, tips, add-ons)\n" +
+    "*CATEGORY 9: SAFETY & CONCERNS* 🛡️ (Safety, insurance, emergencies)\n" +
+    "*CATEGORY 10: SPECIFIC TO TOUR* 🎯 (Tour/Attraction specific questions)\n\n" +
+
+    "=== MUSEUM DISTINCTION & LOGIC (CRITICAL) ===\n" +
+    "1. The Egyptian Museum (Tahrir): Old museum in Tahrir Square.\n" +
+    "2. The Grand Egyptian Museum (GEM): New museum in Giza (Tutankhamun & Mummies).\n" +
+    "3. The National Museum of Egyptian Civilization (NMEC): In Fustat.\n\n" +
+    "RULES:\n" +
+    "- PRIORITY 1 (ITINERARY CHECK): Scan the provided ITINERARY text. If it mentions 'Grand Egyptian Museum', 'GEM', or 'New Museum', you MUST refer to the Grand Egyptian Museum in your answers. DO NOT claim the tour visits Tahrir Museum in this case.\n" +
+    "- PRIORITY 2 (DEFAULT): If the itinerary specifically mentions 'Egyptian Museum' (and NOT GEM), assume it is the Tahrir Museum.\n" +
+    "- IF trip originates from outside Cairo (e.g. Hurghada, Sharm) AND input mentions generic 'Egyptian Museum': REPLACE with 'Grand Egyptian Museum' (GEM).\n" +
+    "- DO NOT replace 'National Museum of Egyptian Civilization' (NMEC) with GEM.\n\n" +
+
+    "=== CONDITIONAL VISIT RULES ===\n" +
+    "- IF the itinerary involves visiting BOTH 'Pyramids' AND 'Grand Egyptian Museum' (GEM):\n" +
+    "  -> The visit to 'Khan el-Khalili' (if present) MUST be marked as conditional.\n" +
+    "  -> Add '(if time permits)' when mentioning Khan el-Khalili.\n" +
+    "  -> Example: 'Khan el-Khalili Market (if time permits)'\n\n" +
+
+    "=== WRITING RULES ===\n" +
+    "1. *QUESTION FORMAT*: Write as users actually search (natural language). e.g., 'What is your cancellation policy?' instead of 'Cancellation Policy'.\n" +
+    "2. *ANSWER LENGTH*: 2-4 sentences max (scannable).\n" +
+    "3. *DIRECT ANSWERS*: First sentence answers the question directly.\n" +
+    "4. *REASSURING TONE*: Calm concerns, don't create new ones.\n" +
+    "5. *KEYWORDS*: Include SEO keywords naturally in Q&A.\n" +
+    "6. *ACTIONABLE*: Tell them what to DO, not just information.\n" +
+    "7. *POSITIVE FRAMING*: Turn negatives into positives.\n\n" +
+
+    "=== QUESTION WRITING TIPS ===\n" +
+    "Write questions as users ACTUALLY search:\n" +
+    "❌ 'Fitness' (Too vague)\n" +
+    "✅ 'What fitness level do I need for this tour?'\n" +
+    "Include long-tail keyword questions.\n\n" +
+
+    "=== ANSWER STRUCTURE ===\n" +
+    "Formula: [Direct Answer] + [Supporting Detail] + [Reassurance/Action]\n" +
+    "Example:\n" +
+    "Q: What is your cancellation policy?\n" +
+    "A: *You can cancel free of charge up to 24 hours before the tour* for a full refund. If you need to cancel within 24 hours, please contact us and we'll do our best to accommodate you. We understand plans change — your flexibility matters to us.\n\n" +
+
+    "=== MANDATORY WRITING RULES (HUMAN TOUCH) ===\n" +
+    "1. Tone & Voice: Natural, conversational, like an experienced guide.\n" +
+    "2. Break AI Patterns: No repetitive structures, no generic openings.\n" +
+    "3. Experience & Trust: Reference real-world experience, highlight concerns.\n" +
+    "4. Structure: Connect with intent -> Direct Answer -> Explanation/Tips -> Insight.\n" +
+    "5. Direct Engagement: Speak to 'you'.\n" +
+    "6. SEO: Focus on search intent, use synonyms.\n\n" +
+
+    "CRITICAL CONSTRAINTS:\n" +
+    "- Use ONLY information from context above (all improved data sources)\n" +
+    "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
+    "- Output in ENGLISH ONLY\n" +
+    "- MUST generate between " + MIN_FAQS_COUNT + " and " + MAX_FAQS_COUNT + " FAQs\n" +
+    "- Try to use the Focus Keyword ('" + (ctx.seoKeywords || '') + "') naturally in 1-2 questions or answers.\n\n" +
+    
+    "OUTPUT FORMAT (JSON ONLY):\n" +
+    "{\n" +
+    "  \"faqs\": [\n" +
+    "    {\n" +
+    "      \"question\": \"How do I book this tour?\",\n" +
+    "      \"answer\": \"You can book this tour through our website or contact our customer service team. We recommend booking in advance to secure your preferred date, especially during peak season.\"\n" +
+    "    },\n" +
+    "    // ... more FAQs\n" +
+    "  ]\n" +
+    "}\n";
+  
+  return prompt;
+}
+
+/************************************************************
+ * HELPER FUNCTIONS
+ ************************************************************/
+
+function upsertCancellationFaq_(faqs, ctx) {
+  if (!Array.isArray(faqs)) return faqs;
+
+  // Determine which policy to use
+  var policyAnswer = CANCELLATION_FIXED_ANSWER; // Default (24h)
+  var isMultiDay = false;
+  var days = 0;
+
+  // Logging for debug
+  var durationRaw = (ctx && ctx.tripDuration) ? ctx.tripDuration.toString() : '';
+  Logger.log('AI FAQs: Checking duration for cancellation policy. Raw Duration: "' + durationRaw + '"');
+
+  // Helper to extract days from text
+  function getDaysFromText(text) {
+    if (!text) return 0;
+    var s = text.toString().toLowerCase();
+    
+    // 🆕 Explicitly check for "Hours" or "Minutes" to avoid false positives in fallbacks
+    if (s.indexOf('hour') !== -1 || s.indexOf('min') !== -1) {
+      Logger.log('AI FAQs: Duration "' + text + '" implies short trip (hours/mins).');
+      return -1; // Special flag for "Definitely Short"
+    }
+
+    // Check Weeks (e.g., "1 week", "2 weeks")
+    if (s.indexOf('week') !== -1) {
+      var m = s.match(/(\d+)\s*week/);
+      if (m && m[1]) return parseInt(m[1], 10) * 7;
+    }
+    
+    // Check Days (e.g., "7 Days", "7-Day", "7 days")
+    var m = s.match(/(\d+)\s*(-|\s)?\s*day/);
+    if (m && m[1]) return parseInt(m[1], 10);
+    
+    return 0;
+  }
+
+  // 1. Check Duration Field
+  days = getDaysFromText(durationRaw);
+
+  // 🆕 1.5 Check Facts if Duration is inconclusive
+  // (Sometimes Duration is just "1" and the unit "Hours" is in facts)
+  if (days === 0 && ctx && Array.isArray(ctx.facts)) {
+     var factsText = ctx.facts.join(' | ');
+     Logger.log('AI FAQs: Checking Facts for duration: ' + factsText);
+     var daysFromFacts = getDaysFromText(factsText);
+     
+     if (daysFromFacts === -1) {
+       days = -1; // Facts say it's short (hours)
+     } else if (daysFromFacts > 0) {
+       days = daysFromFacts; // Facts say it's X days
+     }
+  }
+  
+  // If explicitly short (-1), reset to 0 and skip fallbacks
+  if (days === -1) {
+     days = 0;
+  } else {
+      // 2. Fallback: Check Title if Duration failed (and not explicitly short)
+      if (days === 0 && ctx && ctx.tripTitle) {
+         Logger.log('AI FAQs: Duration field inconclusive, checking Title: "' + ctx.tripTitle + '"');
+         days = getDaysFromText(ctx.tripTitle);
+         if (days === -1) days = 0; // Handle title saying "4 hours"
+      }
+    
+      // 3. Fallback: Check Itinerary length
+      // ONLY if we still have 0 days and didn't find "hours" anywhere
+      if (days === 0 && ctx && Array.isArray(ctx.itinerary) && ctx.itinerary.length > 0) {
+         // 🆕 Safety check: Only count itinerary items if they look like Days? 
+         // For now, let's assume if we reached here, we have NO duration info.
+         // But wait, if durationRaw was "1" (just number), getDaysFromText returned 0 (not -1).
+         // So we risk treating "1 hour" (stored as "1") as 4 days (itinerary).
+         
+         // If durationRaw is a small number (< 24) and no unit, assume hours? Dangerous.
+         // Let's rely on the fact that standard multi-day trips usually have "Day" in duration.
+         
+         Logger.log('AI FAQs: Duration/Title inconclusive, checking Itinerary Items: ' + ctx.itinerary.length);
+         days = ctx.itinerary.length;
+      }
+  }
+
+  if (days > 3) {
+    isMultiDay = true;
+    Logger.log('AI FAQs: Detected multi-day trip (' + days + ' days). Using STRICT policy.');
+  } else {
+    Logger.log('AI FAQs: Detected short trip (' + days + ' days). Using FLEXIBLE policy.');
+  }
+  
+  if (isMultiDay) {
+          policyAnswer = "We understand that travel plans can change, so we try to be as flexible as possible. Please see our cancellation policy below:\n\n" +
+                         "✔ More than 60 days before the tour start date\n" +
+                         "You can cancel your booking free of charge and receive a full refund.\n\n" +
+                         "✔ From 30 to 60 days before the tour start date\n" +
+                         "A 50% cancellation fee will apply, as flight tickets are non-refundable once issued.\n\n" +
+                         "✔ Less than 30 days before the tour start date\n" +
+                         "Unfortunately, no refund can be provided, as hotels, transportation, and other services will already be fully booked and confirmed.\n\n" +
+                         "If you need assistance with cancellation, rescheduling, or have any questions, our customer service team will be happy to help.";
+  }
+
+  var found = false;
+
+  for (var i = 0; i < faqs.length; i++) {
+    var q = (faqs[i].question || '').toString().trim();
+    if (CANCELLATION_Q_PATTERN.test(q)) {
+      faqs[i].question = "What happens if I need to cancel my booking?";
+      faqs[i].answer = policyAnswer;
+      found = true;
+      break;
+    }
+  }
+
+  // لو السؤال مش موجود، أضفه (ويفضل يكون ضمن أول 6 لأنه مهم للتحويل)
+  if (!found) {
+    faqs.unshift({
+      question: "What happens if I need to cancel my booking?",
+      answer: policyAnswer
+    });
+  }
+
+  return faqs;
+}
+
+function extractPickupTimeFromContext_(ctx, tripFields) { 
+  // 1) لو عندك حقل واضح في Trips مثل Pickup_Time / PickupTime / StartTime 
+  var candidates = []; 
+
+  if (tripFields) { 
+    candidates.push(tripFields.Pickup_Time, tripFields.PickupTime, tripFields.StartTime, tripFields.Meeting_Time); 
+  } 
+
+  // 2) Trip Facts (AI_Fact_Label: AI_Fact_Value) 
+  if (ctx && Array.isArray(ctx.facts)) { 
+    candidates = candidates.concat(ctx.facts); 
+  } 
+
+  // 3) Itinerary text 
+  if (ctx && Array.isArray(ctx.itinerary)) { 
+    candidates = candidates.concat(ctx.itinerary); 
+  } 
+
+  // Regex لالتقاط وقت مثل 8:00 AM أو 8 AM أو 18:30 (لو عندك صيغة 24h) 
+  var timeRegex = /\b(\d{1,2})(:\d{2})?\s?(AM|PM)\b/i; 
+  var time24Regex = /\b([01]?\d|2[0-3]):[0-5]\d\b/; // 24-hour format 
+
+  for (var i = 0; i < candidates.length; i++) { 
+    var s = (candidates[i] || '').toString(); 
+    if (!s) continue; 
+
+    var m = s.match(timeRegex); 
+    if (m && m[0]) return m[0].toUpperCase().replace(/\s+/g, ' ').trim(); 
+
+    var m24 = s.match(time24Regex); 
+    if (m24 && m24[0]) return m24[0].trim(); 
+  } 
+
+  return ""; // مش موجود 
+} 
+
+function upsertPickupFaq_(faqs, ctx, tripFields) { 
+  if (!Array.isArray(faqs)) return faqs; 
+
+  var pickupTime = extractPickupTimeFromContext_(ctx, tripFields); 
+  var answer = pickupTime 
+    ? PICKUP_ANSWER_TEMPLATE_WITH_TIME.replace("{{TIME}}", pickupTime) 
+    : PICKUP_ANSWER_TEMPLATE_GENERIC; 
+
+  var found = false; 
+
+  for (var i = 0; i < faqs.length; i++) { 
+    var q = (faqs[i].question || '').toString(); 
+    if (PICKUP_Q_PATTERN.test(q)) { 
+      faqs[i].question = PICKUP_QUESTION; 
+      faqs[i].answer = answer; 
+      found = true; 
+      break; 
+    } 
+  } 
+
+  // لو مش موجود، ضيفه بدري (FAQ مهم للتحويل) 
+  if (!found) { 
+    faqs.unshift({ 
+      question: PICKUP_QUESTION, 
+      answer: answer 
+    }); 
+  } 
+
+  return faqs; 
+} 
+
+function upsertPyramidsFaq_(faqs, ctx) {
+  if (!Array.isArray(faqs)) return faqs;
+
+  // Check if context has pyramid keywords
+  var hasPyramids = false;
+  // Combine fields to search in
+  var textToCheck = [
+    ctx.tripTitle, 
+    ctx.tripDescription, 
+    ctx.tripOverview,
+    (ctx.highlights || []).join(' '), 
+    (ctx.itinerary || []).join(' ')
+  ].join(' ').toLowerCase();
+  
+  if (PYRAMIDS_KEYWORDS_PATTERN.test(textToCheck)) {
+    hasPyramids = true;
+  }
+
+  if (!hasPyramids) return faqs;
+
+  // Remove existing similar question to avoid duplicates (AI might have generated one)
+  var qPattern = /(entry.*inside.*pyramid|inside.*pyramid|enter.*pyramid)/i;
+  for (var i = 0; i < faqs.length; i++) {
+    var q = (faqs[i].question || '').toString();
+    if (qPattern.test(q)) {
+      faqs.splice(i, 1);
+      i--;
+    }
+  }
+
+  // Insert the fixed question (e.g., at index 2, after cancellation and pickup)
+  faqs.splice(2, 0, {
+    question: PYRAMIDS_QUESTION,
+    answer: PYRAMIDS_FIXED_ANSWER
+  });
+
+  return faqs;
+}
+
+function dedupeFaqs_(faqs) { 
+  if (!Array.isArray(faqs)) return faqs; 
+
+  var seen = {}; 
+  var out = []; 
+
+  for (var i = 0; i < faqs.length; i++) { 
+    var q = (faqs[i].question || '').toString().trim().toLowerCase(); 
+    if (!q) continue; 
+
+    // تطبيع بسيط يقلل اختلافات مثل ? و المسافات 
+    var key = q.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim(); 
+    if (seen[key]) continue; 
+
+    seen[key] = true; 
+    out.push(faqs[i]); 
+  } 
+
+  return out; 
+} 
+
+function sanitizeFaqAnswer_(text) { 
+  var s = (text || '').toString(); 
+
+  // أمثلة كلمات/وعود شائعة تسبب مشاكل (عدّل القائمة حسب احتياجك) 
+  var banned = [ 
+    /\bprofessional photographer\b/ig, 
+    /\bhotline\b/ig, 
+    /\bguaranteed\b/ig, 
+    /\b100%\b/ig 
+  ]; 
+
+  banned.forEach(function(rx) { 
+    s = s.replace(rx, ''); 
+  }); 
+
+  // تنظيف مسافات زائدة 
+  s = s.replace(/\s+/g, ' ').replace(/\s+\./g, '.').trim(); 
+  return s; 
+} 
+
+function sanitizeFaqs_(faqs) { 
+  if (!Array.isArray(faqs)) return faqs; 
+  for (var i = 0; i < faqs.length; i++) { 
+    faqs[i].answer = sanitizeFaqAnswer_(faqs[i].answer); 
+  } 
+  return faqs; 
+} 
+
+/**
+ * Delete old FAQ records for a trip
+ */
+function deleteOldFaqsForTrip_(tripId, tripNumber) {
+  if (!tripId) return;
+  Logger.log('AI FAQs: deleting old FAQs for Trip ' + tripId);
+  try {
+    var params1 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'", pageSize: 100 };
+    var res1 = airtableGet_(FAQS_IMPROVEMENT_TABLE, params1);
+    var recs = res1 && res1.records ? res1.records : [];
+    if (!recs.length && tripNumber) {
+      var params2 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripNumber + "'", pageSize: 100 };
+      var res2 = airtableGet_(FAQS_IMPROVEMENT_TABLE, params2);
+      recs = res2 && res2.records ? res2.records : [];
+    }
+    var toDelete = [];
+    for (var i = 0; i < recs.length; i++) {
+      toDelete.push(recs[i].id);
+    }
+    if (toDelete.length > 0) {
+      Logger.log('AI FAQs: deleting ' + toDelete.length + ' old FAQs for Trip ' + tripId);
+      toDelete.forEach(function(id) {
+        try { airtableDelete_(FAQS_IMPROVEMENT_TABLE, id); } catch (e) { Logger.log('AI FAQs: failed to delete FAQ ' + id + ' — ' + e.message); }
+      });
+    }
+  } catch (e) {
+    Logger.log('AI FAQs: error deleting old FAQs for Trip ' + tripId + ': ' + e.message);
+  }
+}
+
+/**
+ * Ensure minimum FAQ count by adding defaults if needed
+ */
+function ensureMinimumFaqs_(faqs, ctx) {
+  if (faqs.length >= MIN_FAQS_COUNT) return faqs;
+  
+  var defaultFaqs = [
+    {
+      question: "How do I book this tour?",
+      answer: "You can book this tour through our website or by contacting our customer service team. We recommend booking in advance to secure your preferred date.",
+      category: "Booking & Logistics"
+    },
+    {
+      question: "What is the cancellation policy?",
+      answer: "Please refer to our cancellation policy for specific terms. Generally, cancellations made well in advance may be eligible for a refund.",
+      category: "Booking & Logistics"
+    },
+    {
+      question: "What is included in the tour price?",
+      answer: ctx.includes.length ? "The tour includes: " + ctx.includes.slice(0, 3).join(', ') + "." : "Please check the tour details for what's included in the price.",
+      category: "What's Included/Excluded"
+    },
+    {
+      question: "What should I bring?",
+      answer: "We recommend bringing comfortable walking shoes, weather-appropriate clothing, sunscreen, and a water bottle. A camera is also recommended to capture the experience.",
+      category: "Practical Information"
+    }
+  ];
+  
+  var needed = MIN_FAQS_COUNT - faqs.length;
+  Logger.log('AI FAQs: adding ' + needed + ' default FAQs to reach minimum');
+  
+  for (var i = 0; i < needed && i < defaultFaqs.length; i++) {
+    faqs.push(defaultFaqs[i]);
+  }
+  
+  return faqs;
+}
+
+function fetchRecordsByTripLocal_(tableName, linkFieldName, tripId, tripNumber, pageSize) {
+  var records = [];
+  try {
+    var p1 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripId + "'", pageSize: pageSize || 100 };
+    var r1 = airtableGet_(tableName, p1);
+    var recs1 = r1 && r1.records ? r1.records : [];
+    records = recs1;
+    if (!records.length && tripNumber) {
+      var p2 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripNumber + "'", pageSize: pageSize || 100 };
+      var r2 = airtableGet_(tableName, p2);
+      records = r2 && r2.records ? r2.records : [];
+    }
+  } catch (e) {}
+  return records;
+}
+
+/**
+ * Update trip FAQs status
+ */
+function updateTripFaqsStatus_(tripId, status) {
+  if (!tripId) return;
+  var fields = {};
+  fields[FAQS_STATUS_FIELD] = status;
+  airtableUpdate_(TRIPS_TABLE, tripId, fields);
+}
+
+/************************************************************
+ * TRIGGER SETUP
+ ************************************************************/
+function createAiFaqsEnhancerTrigger() {
+  ScriptApp.newTrigger('runAiFaqsEnhancementBatch')
+    .timeBased()
+    .everyHours(1)
+    .create();
+  Logger.log('AI FAQs: Trigger created to run every hour.');
+}
