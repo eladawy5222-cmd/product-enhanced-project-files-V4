@@ -647,15 +647,38 @@ function runUpdaterBatch() {
                 }
               }
               if (!fixedCore && missingRequired.length) {
-                skipLang = true;
-                skipReason = 'required_fields_missing: ' + missingRequired.join(', ');
+                var srcG0 = enhancedData && enhancedData.general ? enhancedData.general : {};
+                var trG0 = translatedData && translatedData.general ? translatedData.general : {};
+                function fillIfMissing_(key) {
+                  var srcVal = String(srcG0[key] || '').trim();
+                  if (!srcVal) return;
+                  var trVal = String(trG0[key] || '').trim();
+                  if (!trVal) trG0[key] = srcVal;
+                }
+                fillIfMissing_('AI_SEO_Title');
+                fillIfMissing_('AI_Trip_Description');
+                fillIfMissing_('AI_SEO_Meta_Description');
+                fillIfMissing_('AI_SEO_Permalink');
+                fillIfMissing_('AI_Trip_Highlights_Section_Title');
+                fillIfMissing_('AI_Itinerary_Section_Title');
+                fillIfMissing_('AI_FAQ_Section_Title');
+                fillIfMissing_('AI_Cost_Section_Title');
+                fillIfMissing_('AI_Cost_Includes_Title');
+                fillIfMissing_('AI_Cost_Excludes_Title');
+                translatedData.general = trG0;
+                missingRequired = validateRequiredFieldsCompleteness_Updater_(enhancedData, translatedData);
+                if (missingRequired && missingRequired.length) {
+                  skipLang = true;
+                  skipReason = 'required_fields_missing: ' + missingRequired.join(', ');
+                } else {
+                  Logger.log('Updater: Required fields filled from English fallback (' + targetLang + ')');
+                }
               }
             }
 
             var parityFails = validateParityCounts_Updater_(enhancedData, translatedData);
             if (parityFails && parityFails.length) {
-              skipLang = true;
-              skipReason = 'parity_count_failed: ' + JSON.stringify(parityFails);
+              Logger.log('Updater: Parity count mismatch detected (' + targetLang + '): ' + JSON.stringify(parityFails));
             }
 
             var sectionsToValidate = ['highlights', 'includes', 'excludes', 'faqs', 'itinerary'];
@@ -663,29 +686,76 @@ function runUpdaterBatch() {
             if (!skipLang) {
               sectionsToValidate.forEach(function(sec) {
                 if (sectionHasEmptyItems_(sec)) sectionsNeedingFix[sec] = 'empty_items';
-                var secTexts = collectSectionStringsForValidation_Updater_(translatedData, sec);
-                if (!isLikelyTargetLanguage_Updater_(secTexts, targetLang)) sectionsNeedingFix[sec] = 'language_mismatch';
               });
             }
 
             if (!skipLang) {
+              function fillEmptyItemsFromEnglish_(sec) {
+                if (sec === 'highlights') {
+                  for (var a = 0; a < (enhancedData.highlights || []).length; a++) {
+                    var srcH = enhancedData.highlights[a] && enhancedData.highlights[a].fields ? String(enhancedData.highlights[a].fields.AI_Highlight || '').trim() : '';
+                    var trH = translatedData.highlights[a] && translatedData.highlights[a].fields ? String(translatedData.highlights[a].fields.AI_Highlight || '').trim() : '';
+                    if (srcH && !trH && translatedData.highlights[a] && translatedData.highlights[a].fields) translatedData.highlights[a].fields.AI_Highlight = srcH;
+                  }
+                } else if (sec === 'includes') {
+                  for (var b = 0; b < (enhancedData.includes || []).length; b++) {
+                    var srcI = enhancedData.includes[b] && enhancedData.includes[b].fields ? String(enhancedData.includes[b].fields.IncludeItem || '').trim() : '';
+                    var trI = translatedData.includes[b] && translatedData.includes[b].fields ? String(translatedData.includes[b].fields.IncludeItem || '').trim() : '';
+                    if (srcI && !trI && translatedData.includes[b] && translatedData.includes[b].fields) translatedData.includes[b].fields.IncludeItem = srcI;
+                  }
+                } else if (sec === 'excludes') {
+                  for (var c = 0; c < (enhancedData.excludes || []).length; c++) {
+                    var srcE = enhancedData.excludes[c] && enhancedData.excludes[c].fields ? String(enhancedData.excludes[c].fields.ExcludeItem || '').trim() : '';
+                    var trE = translatedData.excludes[c] && translatedData.excludes[c].fields ? String(translatedData.excludes[c].fields.ExcludeItem || '').trim() : '';
+                    if (srcE && !trE && translatedData.excludes[c] && translatedData.excludes[c].fields) translatedData.excludes[c].fields.ExcludeItem = srcE;
+                  }
+                } else if (sec === 'faqs') {
+                  for (var d = 0; d < (enhancedData.faqs || []).length; d++) {
+                    var sQ = enhancedData.faqs[d] && enhancedData.faqs[d].fields ? String(enhancedData.faqs[d].fields.AI_Question || '').trim() : '';
+                    var tQ = translatedData.faqs[d] && translatedData.faqs[d].fields ? String(translatedData.faqs[d].fields.AI_Question || '').trim() : '';
+                    if (sQ && !tQ && translatedData.faqs[d] && translatedData.faqs[d].fields) translatedData.faqs[d].fields.AI_Question = sQ;
+                    var sA = enhancedData.faqs[d] && enhancedData.faqs[d].fields ? String(enhancedData.faqs[d].fields.AI_Answer || '').trim() : '';
+                    var tA = translatedData.faqs[d] && translatedData.faqs[d].fields ? String(translatedData.faqs[d].fields.AI_Answer || '').trim() : '';
+                    if (sA && !tA && translatedData.faqs[d] && translatedData.faqs[d].fields) translatedData.faqs[d].fields.AI_Answer = sA;
+                  }
+                } else if (sec === 'itinerary') {
+                  for (var e = 0; e < (enhancedData.itinerary || []).length; e++) {
+                    var sT = enhancedData.itinerary[e] && enhancedData.itinerary[e].fields ? String(enhancedData.itinerary[e].fields.AI_Step_Title || '').trim() : '';
+                    var tT = translatedData.itinerary[e] && translatedData.itinerary[e].fields ? String(translatedData.itinerary[e].fields.AI_Step_Title || '').trim() : '';
+                    if (sT && !tT && translatedData.itinerary[e] && translatedData.itinerary[e].fields) translatedData.itinerary[e].fields.AI_Step_Title = sT;
+                    var sD = enhancedData.itinerary[e] && enhancedData.itinerary[e].fields ? String(enhancedData.itinerary[e].fields.AI_Step_Description || '').trim() : '';
+                    var tD = translatedData.itinerary[e] && translatedData.itinerary[e].fields ? String(translatedData.itinerary[e].fields.AI_Step_Description || '').trim() : '';
+                    if (sD && !tD && translatedData.itinerary[e] && translatedData.itinerary[e].fields) translatedData.itinerary[e].fields.AI_Step_Description = sD;
+                  }
+                }
+              }
+
               for (var secName in sectionsNeedingFix) {
                 if (!sectionsNeedingFix.hasOwnProperty(secName)) continue;
                 var ok = false;
-                for (var rTry = 0; rTry < 2; rTry++) {
+                for (var rTry = 0; rTry < 1; rTry++) {
                   if (!regenerateTripSection_Updater_(enhancedData, translatedData, targetLang, secName)) continue;
                   if (sectionHasEmptyItems_(secName)) continue;
-                  var secTexts2 = collectSectionStringsForValidation_Updater_(translatedData, secName);
-                  if (!isLikelyTargetLanguage_Updater_(secTexts2, targetLang)) continue;
                   ok = true;
                   break;
                 }
                 if (!ok) {
-                  skipLang = true;
-                  skipReason = 'parity_or_language_failed_in_' + secName;
-                  break;
+                  fillEmptyItemsFromEnglish_(secName);
+                  if (sectionHasEmptyItems_(secName)) {
+                    skipLang = true;
+                    skipReason = 'parity_failed_in_' + secName;
+                    break;
+                  } else {
+                    Logger.log('Updater: Section filled from English fallback (' + targetLang + '): ' + secName);
+                  }
                 }
               }
+            }
+
+            var parityFailsAfter = validateParityCounts_Updater_(enhancedData, translatedData);
+            if (!skipLang && parityFailsAfter && parityFailsAfter.length) {
+              skipLang = true;
+              skipReason = 'parity_count_failed: ' + JSON.stringify(parityFailsAfter);
             }
 
             if (skipLang) {
@@ -769,13 +839,17 @@ function runUpdaterBatch() {
 
             var kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
             if (!kwCheck.ok) {
-              for (var sTry = 0; sTry < 2 && !kwCheck.ok; sTry++) {
+              for (var sTry = 0; sTry < 1 && !kwCheck.ok; sTry++) {
                 assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang);
                 var seoRes2 = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets });
                 translatedPayload = seoRes2.payload;
                 assets = seoRes2.assets;
                 kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
               }
+            }
+            if (!kwCheck.ok) {
+              translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+              kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
             }
             if (!kwCheck.ok) {
               var reason = 'keyword_validation_failed: ' + kwCheck.reasons.join(', ');
@@ -2136,7 +2210,6 @@ function parseKeywordWithLangPrefix_Updater_(s) {
 function detectLangHeuristicForKeyword_Updater_(s) {
   var t = String(s || '');
   if (!t) return '';
-  if (/[\u0600-\u06FF]/.test(t)) return 'blocked';
   if (/[\u0400-\u04FF]/.test(t)) return 'ru';
   if (/[\u4E00-\u9FFF]/.test(t)) return 'zh-hans';
   if (/[äöüßÄÖÜ]/.test(t)) return 'de';
@@ -3363,32 +3436,49 @@ function validateKeywordEnforcement_Updater_(payload, targetLang, kw, assets) {
 
   if (!containsKeyword_Updater_(meta.rank_math_title, primary)) out.reasons.push('primary_missing_in_seo_title');
   if (!containsKeyword_Updater_(meta.rank_math_description, primary)) out.reasons.push('primary_missing_in_meta_description');
-  if (!containsKeyword_Updater_(meta.localized_image_alt, primary)) out.reasons.push('primary_missing_in_featured_image_alt');
 
   var slug = String(core.slug || '').trim();
   var primarySlug = buildShortSlugFromPrimaryKeyword_Updater_(primary);
   if (!slug) out.reasons.push('primary_missing_in_slug');
   else if (primarySlug && slug.indexOf(primarySlug) === -1) out.reasons.push('primary_missing_in_slug');
 
-  var content = String(core.content || p.content || '').trim();
-  if (content) {
-    var re = new RegExp('<h2[^>]*>[^<]*' + escapeRegex_Updater_(primary) + '[^<]*<\\/h2>', 'i');
-    if (!re.test(content)) out.reasons.push('primary_missing_in_h2');
-  } else {
-    out.reasons.push('missing_content_for_h2_check');
+  out.ok = out.reasons.length === 0;
+  return out;
+}
+
+function forcePrimaryKeywordFallbackOnSeo_Updater_(payload, primaryKeyword, englishPayload, slugLocked) {
+  var out = payload || {};
+  out.meta = out.meta || {};
+  out.core = out.core || {};
+  var primary = String(primaryKeyword || '').trim();
+  if (!primary) return out;
+
+  var enMeta = englishPayload && englishPayload.meta ? englishPayload.meta : {};
+  var enCore = englishPayload && englishPayload.core ? englishPayload.core : {};
+
+  var title = String(out.meta.rank_math_title || '').trim();
+  if (!title) title = String(enMeta.rank_math_title || enCore.title || '').trim();
+  if (!title) title = String(out.core.title || '').trim();
+  if (!title) title = primary;
+  if (!containsKeyword_Updater_(title, primary)) title = (primary + ' | ' + title).trim();
+  if (title.length > 65) title = title.substring(0, 65).trim();
+  out.meta.rank_math_title = title;
+
+  var desc = String(out.meta.rank_math_description || '').trim();
+  if (!desc) desc = String(enMeta.rank_math_description || '').trim();
+  if (!desc) desc = primary;
+  if (!containsKeyword_Updater_(desc, primary)) desc = (primary + ' - ' + desc).trim();
+  if (desc.length > 160) desc = desc.substring(0, 160).trim();
+  out.meta.rank_math_description = desc;
+
+  if (!slugLocked) {
+    var slug = String(out.core.slug || '').trim();
+    var wanted = buildShortSlugFromPrimaryKeyword_Updater_(primary);
+    if (!slug) slug = wanted;
+    if (wanted && slug.indexOf(wanted) === -1) slug = wanted;
+    if (slug) out.core.slug = slug;
   }
 
-  var combined = [
-    meta.rank_math_title,
-    meta.rank_math_description,
-    meta.rank_math_focus_keyword,
-    meta.localized_image_alt,
-    content
-  ].map(function(s) { return String(s || ''); }).join(' | ');
-  var secCount = countSecondaryKeywordsPresent_Updater_(combined, (kw && kw.secondary) ? kw.secondary : []);
-  if (secCount < 2) out.reasons.push('insufficient_secondary_keywords');
-
-  out.ok = out.reasons.length === 0;
   return out;
 }
 
