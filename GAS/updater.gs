@@ -575,6 +575,7 @@ function runUpdaterBatch() {
         if (!enhancedData) {
           enhancedData = fetchCompleteTripData_Updater_(tripId, f, { skipClassification: false });
         }
+        var specConstraints = extractSpecificityConstraintsFromEnglish_Updater_(enhancedData);
         for (var i = 0; i < languagesToProcess.length; i++) {
           var targetLang = languagesToProcess[i];
           Logger.log('Updater: Processing translation for language: ' + targetLang);
@@ -586,7 +587,7 @@ function runUpdaterBatch() {
             }
 
             var translatedData = translateTripData_Updater_(enhancedData, targetLang, providedForLang);
-            var assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang);
+            var assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang, specConstraints, { strict: false });
             if (assets) Logger.log('SEO ASSETS GENERATED (' + targetLang + ')');
 
             function sectionHasEmptyItems_(section) {
@@ -641,7 +642,7 @@ function runUpdaterBatch() {
             if (missingRequired && missingRequired.length) {
               var fixedCore = false;
               for (var cTry = 0; cTry < 2; cTry++) {
-                if (regenerateCoreFields_Updater_(enhancedData, translatedData, targetLang, providedForLang)) {
+                if (regenerateCoreFields_Updater_(enhancedData, translatedData, targetLang, providedForLang, specConstraints)) {
                   missingRequired = validateRequiredFieldsCompleteness_Updater_(enhancedData, translatedData);
                   if (!missingRequired.length) { fixedCore = true; break; }
                 }
@@ -737,7 +738,7 @@ function runUpdaterBatch() {
                 if (!sectionsNeedingFix.hasOwnProperty(secName)) continue;
                 var ok = false;
                 for (var rTry = 0; rTry < 1; rTry++) {
-                  if (!regenerateTripSection_Updater_(enhancedData, translatedData, targetLang, secName)) continue;
+                  if (!regenerateTripSection_Updater_(enhancedData, translatedData, targetLang, secName, specConstraints)) continue;
                   if (sectionHasEmptyItems_(secName)) continue;
                   if (sectionsNeedingFix[secName] === 'not_localized') {
                     if (isSectionSuspiciousNotLocalized_Updater_(enhancedData, translatedData, secName)) continue;
@@ -841,7 +842,7 @@ function runUpdaterBatch() {
               }
             }
 
-            var seoRes = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets });
+            var seoRes = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets, spec: specConstraints, seoOpts: { strict: false } });
             translatedPayload = seoRes.payload;
             assets = seoRes.assets;
             if (translatedPayload.meta && translatedPayload.meta.rank_math_focus_keyword) {
@@ -851,8 +852,8 @@ function runUpdaterBatch() {
             var kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
             if (!kwCheck.ok) {
               for (var sTry = 0; sTry < 1 && !kwCheck.ok; sTry++) {
-                assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang);
-                var seoRes2 = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets });
+                assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang, specConstraints, { strict: false });
+                var seoRes2 = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets, spec: specConstraints, seoOpts: { strict: false } });
                 translatedPayload = seoRes2.payload;
                 assets = seoRes2.assets;
                 kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
@@ -867,6 +868,43 @@ function runUpdaterBatch() {
               Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/keywords): ' + reason);
               translationSkipped.push({ lang: targetLang, message: reason });
               continue;
+            }
+
+            var specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+            if (!specCheck.ok) {
+              Logger.log('Updater: SEO SPECIFICITY FAILED (' + targetLang + '): ' + specCheck.reasons.join(', '));
+
+              assets = generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedForLang, specConstraints, { strict: true });
+              var seoResS = enforceSeoKeywordsOnPayload_Updater_(translatedPayload, translatedData, targetLang, providedForLang, { slugLocked: slugLocked, assets: assets, spec: specConstraints, seoOpts: { strict: true } });
+              translatedPayload = seoResS.payload;
+              assets = seoResS.assets;
+
+              kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+              if (!kwCheck.ok) {
+                translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+                kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+              }
+              if (!kwCheck.ok) {
+                var reasonS0 = 'keyword_validation_failed: ' + kwCheck.reasons.join(', ');
+                Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/keywords): ' + reasonS0);
+                translationSkipped.push({ lang: targetLang, message: reasonS0 });
+                continue;
+              }
+
+              specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+              if (!specCheck.ok) {
+                translatedPayload = applySpecificityFallbackSeo_Updater_(translatedPayload, providedForLang, specConstraints, slugLocked);
+                translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+                kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+                specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+              }
+
+              if (!specCheck.ok) {
+                var reasonS = 'seo_specificity_failed: ' + specCheck.reasons.join(', ');
+                Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/specificity): ' + reasonS);
+                translationSkipped.push({ lang: targetLang, message: reasonS });
+                continue;
+              }
             }
 
             translatedPayload.translation_of = primaryWpId;
@@ -3061,10 +3099,12 @@ function applySeoEnhancementsToOverviewHtml_Updater_(html, seoAssets, lang) {
   return out;
 }
 
-function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedKeywords) {
+function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, providedKeywords, spec, seoOpts) {
   var data = translatedData || {};
   var g = data.general || {};
   var kw = providedKeywords || null;
+  var specObj = spec || null;
+  var strict = !!(seoOpts && seoOpts.strict);
 
   var title = String(g.AI_SEO_Title || '').trim();
   var excerpt = String(g.AI_Excerpt || g.AI_Short_Summary || '').trim();
@@ -3105,6 +3145,25 @@ function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, provide
       (kw.secondary && kw.secondary[2] ? ('- ' + kw.secondary[2] + '\n') : '');
   }
 
+  var specBlock = '';
+  if (specObj && specObj.landmarks && specObj.landmarks.length) {
+    var keep = specObj.landmarks.slice(0, 10).map(function(x) { return '- ' + String(x || '').trim(); }).filter(function(x) { return x.length > 2; }).join('\n');
+    var enTitle = specObj.english_title ? String(specObj.english_title) : '';
+    var enSlug = specObj.english_slug ? String(specObj.english_slug) : '';
+    specBlock =
+      "SPECIFICITY PRESERVATION (CRITICAL):\n" +
+      "- The English source is more specific. Preserve the same level of specificity.\n" +
+      "- Do NOT collapse to a generic city tour/excursion title.\n" +
+      "- Title must preserve the main destination intent and key attractions.\n" +
+      "- Meta description must preserve key landmarks and main selling points (not vague).\n" +
+      "- Slug must remain specific and must not collapse into a generic city-level slug.\n" +
+      "- Preserve these key place/attraction names (keep them as-is; do not drop them):\n" +
+      keep + "\n" +
+      (enTitle ? ("- English reference title (do not translate; use only for specificity): " + enTitle + "\n") : "") +
+      (enSlug ? ("- English reference slug (do not copy literally; use only for intent): " + enSlug + "\n") : "") +
+      (strict ? "- Title must include at least one of the preserved names above when the English title contains multiple landmarks.\n" : "");
+  }
+
   var prompt =
     "You are an expert in Travel SEO and Multilingual Content Localization.\n\n" +
     "CRITICAL RULES:\n" +
@@ -3124,6 +3183,7 @@ function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, provide
     "- The Primary Keyword MUST appear in: SEO Title, URL Slug, Meta Description, H2 heading, Image alt.\n" +
     "- Secondary Keywords should be natural.\n" +
     "- Do NOT stuff keywords.\n\n" +
+    (specBlock ? (specBlock + "\n") : "") +
     "SAFE OUTPUT:\n" +
     "Return valid structured JSON only. No explanations. No markdown.\n\n" +
     "Target Language: " + String(targetLang || '').toLowerCase() + "\n" +
@@ -3450,6 +3510,330 @@ function isSectionSuspiciousNotLocalized_Updater_(sourceData, translatedData, se
   return equalCount >= threshold;
 }
 
+function normalizeForSpecMatch_Updater_(s) {
+  var t = stripHtmlForLiteralCheck_Updater_(s);
+  t = t.toLowerCase();
+  t = t.replace(/[^a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\s]+/g, ' ');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+function extractSpecificityConstraintsFromEnglish_Updater_(sourceData) {
+  var data = sourceData || {};
+  var g = data.general || {};
+  var title = String(g.AI_SEO_Title || '').trim();
+  var meta = String(g.AI_SEO_Meta_Description || '').trim();
+  var slug = sanitizeTranslatedSlug_(String(g.AI_SEO_Permalink || title || '').trim());
+  var desc = stripHtmlForLiteralCheck_Updater_(String(g.AI_Trip_Description || '').trim());
+  if (desc.length > 800) desc = desc.substring(0, 800);
+
+  var highlights = (data.highlights || []).map(function(h) {
+    var f = h && h.fields ? h.fields : {};
+    return String(f.AI_Highlight || '').trim();
+  }).filter(function(s) { return !!s; }).slice(0, 12).join(' | ');
+
+  var itineraryTitles = (data.itinerary || []).map(function(x) {
+    var f = x && x.fields ? x.fields : {};
+    return String(f.AI_Step_Title || '').trim();
+  }).filter(function(s) { return !!s; }).slice(0, 12).join(' | ');
+
+  var place = '';
+  if (data.tripDetails) {
+    place = String(data.tripDetails.TourLocation || data.tripDetails.Location || data.tripDetails.City || data.tripDetails.Destination || '').trim();
+  }
+
+  var combined = [title, meta, desc, highlights, itineraryTitles, place].filter(function(s) { return !!s; }).join(' ');
+  var combinedLower = combined.toLowerCase();
+
+  var destinationList = ['cairo', 'giza', 'luxor', 'aswan', 'alexandria', 'hurghada', 'sharm', 'sinai', 'egypt'];
+  var placeNorm = place ? normalizeForSpecMatch_Updater_(place) : '';
+  var detectedPlace = '';
+  if (placeNorm) detectedPlace = place;
+  if (!detectedPlace) {
+    for (var di = 0; di < destinationList.length; di++) {
+      if (combinedLower.indexOf(destinationList[di]) !== -1) {
+        detectedPlace = destinationList[di].charAt(0).toUpperCase() + destinationList[di].slice(1);
+        break;
+      }
+    }
+  }
+
+  var candidates = [];
+  var re = /\b[A-Z][A-Za-z’'\-]*(?:\s+(?:&\s+)?[A-Z][A-Za-z’'\-]*)+\b/g;
+  var m;
+  while ((m = re.exec(combined)) !== null) {
+    var phrase = String(m[0] || '').trim();
+    if (phrase) candidates.push(phrase);
+  }
+
+  var keyPhrases = [
+    'Old Cairo',
+    'Khan El Khalili',
+    'Egyptian Museum',
+    'Egyptian Civilization Museum',
+    'National Museum of Egyptian Civilization',
+    'Citadel',
+    'Temple',
+    'Pyramids',
+    'Sphinx',
+    'Bazaar',
+    'Mosque',
+    'Church',
+    'Monastery',
+    'Valley of the Kings',
+    'Nile Cruise'
+  ];
+  for (var kp = 0; kp < keyPhrases.length; kp++) {
+    var ph = keyPhrases[kp];
+    if (combinedLower.indexOf(String(ph).toLowerCase()) !== -1) candidates.push(ph);
+  }
+
+  var seen = {};
+  var landmarks = [];
+  var detectedPlaceNorm = detectedPlace ? normalizeForSpecMatch_Updater_(detectedPlace) : '';
+  candidates.forEach(function(x) {
+    var v = String(x || '').trim();
+    if (!v) return;
+    var norm = normalizeForSpecMatch_Updater_(v);
+    if (!norm) return;
+    if (detectedPlaceNorm && norm === detectedPlaceNorm) return;
+    if (seen[norm]) return;
+    seen[norm] = true;
+    if (norm.length < 4) return;
+    landmarks.push(v);
+  });
+  if (landmarks.length > 12) landmarks = landmarks.slice(0, 12);
+
+  var slugHints = landmarks.map(function(x) {
+    var s = sanitizeTranslatedSlug_(x);
+    if (!s) return '';
+    var parts = s.split('-').filter(function(p) { return !!p; });
+    if (parts.length > 6) parts = parts.slice(0, 6);
+    return parts.join('-');
+  }).filter(function(s) { return !!s; });
+
+  return {
+    english_title: title,
+    english_meta: meta,
+    english_slug: slug,
+    place: detectedPlace,
+    landmarks: landmarks,
+    landmark_slugs: slugHints
+  };
+}
+
+function countLandmarksPresentInText_Updater_(text, spec) {
+  var s = spec || {};
+  var list = s.landmarks && s.landmarks.length ? s.landmarks : [];
+  if (!list.length) return 0;
+  var hay = normalizeForSpecMatch_Updater_(text);
+  if (!hay) return 0;
+  var count = 0;
+  for (var i = 0; i < list.length; i++) {
+    var needle = normalizeForSpecMatch_Updater_(list[i]);
+    if (needle && hay.indexOf(needle) !== -1) count++;
+  }
+  return count;
+}
+
+function countLandmarkSlugsPresent_Updater_(slug, spec) {
+  var s = spec || {};
+  var list = s.landmark_slugs && s.landmark_slugs.length ? s.landmark_slugs : [];
+  var hay = String(slug || '').toLowerCase();
+  if (!hay || !list.length) return 0;
+  var count = 0;
+  for (var i = 0; i < list.length; i++) {
+    var needle = String(list[i] || '').toLowerCase();
+    if (needle && hay.indexOf(needle) !== -1) count++;
+  }
+  return count;
+}
+
+function getGenericTokensForLang_Updater_(lang) {
+  var l = String(lang || '').toLowerCase();
+  var map = {
+    'en': ['tour', 'trip', 'excursion', 'guided tour', 'city tour'],
+    'de': ['ausflug', 'tour', 'reise', 'tagesausflug', 'stadtrundfahrt'],
+    'fr': ['excursion', 'visite', 'tour'],
+    'es': ['excursion', 'excursión', 'tour', 'visita'],
+    'it': ['escursione', 'tour', 'visita'],
+    'nl': ['excursie', 'tour', 'uitstap'],
+    'pl': ['wycieczka', 'zwiedzanie', 'tour'],
+    'tr': ['tur', 'gezi'],
+    'ru': ['экскурсия', 'тур'],
+    'ro': ['excursie', 'tur'],
+    'pt-br': ['excursão', 'excursao', 'passeio', 'tour'],
+    'uk': ['екскурсія', 'тур'],
+    'cs': ['vylet', 'výlet', 'exkurze'],
+    'hu': ['kirandulas', 'kirándulás', 'túra', 'tura'],
+    'ja': ['ツアー'],
+    'ko': ['투어'],
+    'zh-hans': ['游', '之旅', '旅行']
+  };
+  return map[l] || map.en;
+}
+
+function getAttractionConceptTokensForLang_Updater_(lang) {
+  var l = String(lang || '').toLowerCase();
+  var map = {
+    'en': ['museum', 'citadel', 'temple', 'pyramids', 'sphinx', 'bazaar', 'cruise', 'safari', 'desert', 'oasis', 'valley'],
+    'de': ['museum', 'zitadelle', 'festung', 'tempel', 'pyramiden', 'sphinx', 'basar', 'kreuzfahrt', 'safari', 'wüste', 'oase', 'tal'],
+    'fr': ['musée', 'citadelle', 'temple', 'pyramides', 'sphinx', 'bazar', 'croisière', 'safari', 'désert', 'oasis', 'vallée'],
+    'es': ['museo', 'ciudadela', 'templo', 'pirámides', 'piramides', 'esfinge', 'bazar', 'crucero', 'safari', 'desierto', 'oasis', 'valle'],
+    'it': ['museo', 'cittadella', 'tempio', 'piramidi', 'sfinge', 'bazar', 'crociera', 'safari', 'deserto', 'oasi', 'valle'],
+    'nl': ['museum', 'citadel', 'tempel', 'piramides', 'sfinx', 'bazaar', 'cruise', 'safari', 'woestijn', 'oase', 'vallei'],
+    'pl': ['muzeum', 'cytadela', 'świątynia', 'swiatynia', 'piramidy', 'sfinks', 'bazar', 'rejs', 'safari', 'pustynia', 'oaza', 'dolina'],
+    'tr': ['müze', 'muze', 'kale', 'tapınak', 'tapinak', 'piramit', 'sfenks', 'çarşı', 'carsi', 'kruvaziyer', 'safari', 'çöl', 'col', 'vadi'],
+    'ru': ['музей', 'цитадель', 'крепость', 'храм', 'пирамид', 'сфинкс', 'базар', 'круиз', 'сафари', 'пустын', 'оазис', 'долин'],
+    'ro': ['muzeu', 'cetate', 'citadelă', 'citadela', 'templu', 'piramide', 'sfinx', 'bazar', 'croazieră', 'croaziera', 'safari', 'deșert', 'desert', 'oază', 'oaza'],
+    'pt-br': ['museu', 'cidadela', 'templo', 'pirâmides', 'piramides', 'esfinge', 'bazar', 'cruzeiro', 'safari', 'deserto', 'oásis', 'oasis', 'vale'],
+    'uk': ['музей', 'цитадель', 'фортеця', 'храм', 'пірамід', 'сфінкс', 'базар', 'круїз', 'сафарі', 'пустел', 'оазис', 'долин'],
+    'cs': ['muzeum', 'citadela', 'pevnost', 'chrám', 'chram', 'pyramid', 'sfinga', 'bazar', 'plavba', 'safari', 'poušť', 'poust', 'oáza', 'oaza', 'údolí', 'udoli'],
+    'hu': ['múzeum', 'muzeum', 'fellegvár', 'fellegvar', 'templom', 'piram', 'szfinx', 'bazár', 'bazar', 'hajóút', 'hajout', 'safari', 'sivatag', 'oázis', 'oazis', 'völgy', 'volgy'],
+    'ja': ['博物館', '城塞', '要塞', '神殿', 'ピラミッド', 'スフィンクス', 'バザール', 'クルーズ', 'サファリ', '砂漠', 'オアシス', '谷'],
+    'ko': ['박물관', '성채', '요새', '사원', '피라미드', '스핑크스', '바자르', '크루즈', '사파리', '사막', '오아시스', '계곡'],
+    'zh-hans': ['博物馆', '城堡', '要塞', '神庙', '金字塔', '狮身人面像', '集市', '游轮', '沙漠', '绿洲', '山谷']
+  };
+  return map[l] || map.en;
+}
+
+function hasAttractionConceptInText_Updater_(text, targetLang) {
+  var norm = normalizeForSpecMatch_Updater_(text);
+  if (!norm) return false;
+  var tokens = getAttractionConceptTokensForLang_Updater_(targetLang);
+  for (var i = 0; i < tokens.length; i++) {
+    var t = normalizeForSpecMatch_Updater_(tokens[i]);
+    if (t && norm.indexOf(t) !== -1) return true;
+  }
+  return false;
+}
+
+function isGenericTitle_Updater_(title, targetLang, spec) {
+  var t = String(title || '').trim();
+  if (!t) return true;
+  var norm = normalizeForSpecMatch_Updater_(t);
+  var words = norm ? norm.split(/\s+/).filter(function(w) { return !!w; }) : [];
+  var genericTokens = getGenericTokensForLang_Updater_(targetLang);
+  var hasGeneric = false;
+  for (var i = 0; i < genericTokens.length; i++) {
+    var g = normalizeForSpecMatch_Updater_(genericTokens[i]);
+    if (g && norm.indexOf(g) !== -1) { hasGeneric = true; break; }
+  }
+  if (!hasGeneric) return false;
+  if (words.length <= 4) return true;
+
+  var place = spec && spec.place ? normalizeForSpecMatch_Updater_(spec.place) : '';
+  if (place && norm.indexOf(place) !== -1 && words.length <= 5) return true;
+  return false;
+}
+
+function isGenericSlug_Updater_(slug, targetLang, spec) {
+  var s = String(slug || '').trim().toLowerCase();
+  if (!s) return true;
+  var parts = s.split('-').filter(function(p) { return !!p; });
+  var genericTokens = getGenericTokensForLang_Updater_(targetLang).map(function(x) { return buildShortSlugFromPrimaryKeyword_Updater_(x); }).filter(function(x) { return !!x; });
+  var hasGeneric = false;
+  for (var i = 0; i < genericTokens.length; i++) {
+    if (genericTokens[i] && s.indexOf(genericTokens[i]) !== -1) { hasGeneric = true; break; }
+  }
+  if (!hasGeneric) return false;
+  if (parts.length <= 3) return true;
+  var place = spec && spec.place ? sanitizeTranslatedSlug_(spec.place) : '';
+  if (place && s.indexOf(place) !== -1 && parts.length <= 4) return true;
+  return false;
+}
+
+function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLocked) {
+  var out = { ok: true, reasons: [] };
+  var s = spec || {};
+  var p = payload || {};
+  var meta = p.meta || {};
+  var core = p.core || {};
+  var enTitle = String(s.english_title || '').trim();
+  var enMeta = String(s.english_meta || '').trim();
+
+  var title = String(meta.rank_math_title || '').trim();
+  var desc = String(meta.rank_math_description || '').trim();
+  var slug = String(core.slug || '').trim();
+
+  if (enTitle && title && enTitle.length >= 24 && title.length < Math.max(12, Math.floor(enTitle.length * 0.45))) out.reasons.push('title_genericness_failed');
+  if (title && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(title, s) === 0 && !hasAttractionConceptInText_Updater_(title, targetLang)) out.reasons.push('title_genericness_failed');
+  if (title && isGenericTitle_Updater_(title, targetLang, s) && enTitle.length >= 18) out.reasons.push('title_genericness_failed');
+
+  if (desc && enMeta && enMeta.length >= 90 && desc.length < Math.max(60, Math.floor(enMeta.length * 0.55))) out.reasons.push('meta_specificity_failed');
+  if (desc && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(desc, s) === 0 && !hasAttractionConceptInText_Updater_(desc, targetLang)) out.reasons.push('meta_specificity_failed');
+
+  if (slug && slug.length < 12 && String(s.english_slug || '').length >= 18) out.reasons.push('slug_genericness_failed');
+  if (slug && isGenericSlug_Updater_(slug, targetLang, s) && String(s.english_slug || '').length >= 14) out.reasons.push('slug_genericness_failed');
+  if (slug && !slugLocked && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) out.reasons.push('slug_genericness_failed');
+  if (slug && slugLocked && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) out.reasons.push('slug_genericness_failed');
+
+  out.ok = out.reasons.length === 0;
+  return out;
+}
+
+function buildSpecificTitleFallback_Updater_(kw, spec) {
+  var s = spec || {};
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var parts = [];
+  if (primary) parts.push(primary);
+  var names = s.landmarks && s.landmarks.length ? s.landmarks.slice(0, 2).join(' & ') : '';
+  if (names) parts.push(names);
+  else if (s.place) parts.push(String(s.place).trim());
+  var out = parts.join(' - ').trim();
+  if (out.length > 65) out = out.substring(0, 65).trim();
+  return out;
+}
+
+function buildSpecificMetaFallback_Updater_(kw, spec) {
+  var s = spec || {};
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var names = s.landmarks && s.landmarks.length ? s.landmarks.slice(0, 3).join(', ') : '';
+  var out = '';
+  if (primary && names) out = primary + ': ' + names + '.';
+  else if (primary) out = primary + '.';
+  else out = names;
+  out = String(out || '').trim();
+  if (out.length > 160) out = out.substring(0, 160).trim();
+  return out;
+}
+
+function buildSpecificSlugFallback_Updater_(kw, spec) {
+  var s = spec || {};
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var base = buildShortSlugFromPrimaryKeyword_Updater_(primary) || sanitizeTranslatedSlug_(primary);
+  var extras = [];
+  if (s.landmark_slugs && s.landmark_slugs.length) extras = s.landmark_slugs.slice(0, 2);
+  var slug = base;
+  extras.forEach(function(x) {
+    var part = String(x || '').trim();
+    if (!part) return;
+    if (slug && slug.indexOf(part) !== -1) return;
+    slug = (slug ? (slug + '-' + part) : part);
+  });
+  slug = sanitizeTranslatedSlug_(slug);
+  if (slug.length > 80) slug = slug.substring(0, 80).replace(/-+$/g, '');
+  return slug;
+}
+
+function applySpecificityFallbackSeo_Updater_(payload, kw, spec, slugLocked) {
+  var out = payload || {};
+  out.meta = out.meta || {};
+  out.core = out.core || {};
+  var title = buildSpecificTitleFallback_Updater_(kw, spec);
+  var desc = buildSpecificMetaFallback_Updater_(kw, spec);
+  var slug = buildSpecificSlugFallback_Updater_(kw, spec);
+  if (title) out.meta.rank_math_title = title;
+  if (desc) out.meta.rank_math_description = desc;
+  if (!slugLocked && slug) out.core.slug = slug;
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var alt = String(out.meta.localized_image_alt || '').trim();
+  if (!alt) alt = primary;
+  if (primary && alt && alt.toLowerCase().indexOf(primary.toLowerCase()) === -1) alt = (primary + ' - ' + alt).trim();
+  if (alt) out.meta.localized_image_alt = alt;
+  return out;
+}
+
 function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLang, kw, opts) {
   opts = opts || {};
   var slugLocked = !!opts.slugLocked;
@@ -3457,7 +3841,7 @@ function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLan
   out.meta = out.meta || {};
   out.core = out.core || {};
 
-  var assets = (opts && opts.assets) ? opts.assets : (generateLocalizedSEOAssets_Updater_(translatedData, targetLang, kw) || {});
+  var assets = (opts && opts.assets) ? opts.assets : (generateLocalizedSEOAssets_Updater_(translatedData, targetLang, kw, opts.spec, opts.seoOpts) || {});
   assets.primary_keyword = kw && kw.primary ? String(kw.primary).trim() : String(assets.primary_keyword || '').trim();
 
   var focusParts = [];
@@ -3598,16 +3982,22 @@ function forcePrimaryKeywordFallbackOnSeo_Updater_(payload, primaryKeyword, engl
       html = '<h2>' + primary + '</h2>' + html;
       out.core.content = html;
       out.content = html;
+      var wte = out.meta && out.meta.wp_travel_engine_setting;
+      if (wte && wte.tab_content && wte.tab_content['1_wpeditor']) wte.tab_content['1_wpeditor'] = html;
     }
   }
 
   return out;
 }
 
-function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, sectionName) {
+function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, sectionName, spec) {
   var lang = String(targetLang || '').toLowerCase();
   var src = sourceData || {};
   var tr = translatedData || {};
+  var preserveBlock = '';
+  if (spec && spec.landmarks && spec.landmarks.length) {
+    preserveBlock = spec.landmarks.slice(0, 10).map(function(x) { return '- ' + String(x || '').trim(); }).filter(function(x) { return x.length > 2; }).join('\n');
+  }
   if (sectionName === 'highlights') {
     var inArr = (src.highlights || []).map(function(h) { return h && h.fields ? String(h.fields.AI_Highlight || '') : ''; });
     var prompt =
@@ -3619,6 +4009,7 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
       "- Do NOT add/remove/merge/split items.\n" +
       "- Keep numbers, times, prices, locations, and logistics unchanged.\n" +
       "- Preserve any HTML tags exactly as-is.\n" +
+      (preserveBlock ? ("PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT:\n" + preserveBlock + "\n") : "") +
       "Return ONLY valid JSON with this exact shape:\n" +
       "{ \"items\": [\"...\", \"...\" ] }\n\n" +
       "INPUT JSON:\n" + JSON.stringify({ items: inArr });
@@ -3639,6 +4030,7 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
       "- Do NOT add/remove/merge/split items.\n" +
       "- Keep numbers, times, prices, locations, and logistics unchanged.\n" +
       "- Preserve any HTML tags exactly as-is.\n" +
+      (preserveBlock ? ("PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT:\n" + preserveBlock + "\n") : "") +
       "Return ONLY valid JSON: { \"items\": [\"...\", \"...\" ] }\n\n" +
       "INPUT JSON:\n" + JSON.stringify({ items: incIn });
     var resInc = callAiForTargetLangWithRetry_Updater_(pInc, lang);
@@ -3658,6 +4050,7 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
       "- Do NOT add/remove/merge/split items.\n" +
       "- Keep numbers, times, prices, locations, and logistics unchanged.\n" +
       "- Preserve any HTML tags exactly as-is.\n" +
+      (preserveBlock ? ("PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT:\n" + preserveBlock + "\n") : "") +
       "Return ONLY valid JSON: { \"items\": [\"...\", \"...\" ] }\n\n" +
       "INPUT JSON:\n" + JSON.stringify({ items: excIn });
     var resExc = callAiForTargetLangWithRetry_Updater_(pExc, lang);
@@ -3680,6 +4073,7 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
       "- Do NOT add/remove/merge/split items.\n" +
       "- Keep numbers, times, prices, locations, and logistics unchanged.\n" +
       "- Preserve any HTML tags exactly as-is.\n" +
+      (preserveBlock ? ("PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT:\n" + preserveBlock + "\n") : "") +
       "Return ONLY valid JSON with exact shape:\n" +
       "{ \"faqs\": [{\"q\":\"...\",\"a\":\"...\"}] }\n\n" +
       "INPUT JSON:\n" + JSON.stringify({ faqs: faqsIn });
@@ -3707,6 +4101,7 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
       "- Do NOT add/remove/merge/split steps.\n" +
       "- Keep times, durations, pickup points, and logistics unchanged.\n" +
       "- Preserve any HTML tags exactly as-is.\n" +
+      (preserveBlock ? ("PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT:\n" + preserveBlock + "\n") : "") +
       "Return ONLY valid JSON:\n" +
       "{ \"itinerary\": [{\"title\":\"...\",\"desc\":\"...\",\"label\":\"...\"}] }\n\n" +
       "INPUT JSON:\n" + JSON.stringify({ itinerary: itIn });
@@ -3724,10 +4119,11 @@ function regenerateTripSection_Updater_(sourceData, translatedData, targetLang, 
   return false;
 }
 
-function regenerateCoreFields_Updater_(sourceData, translatedData, targetLang, kw) {
+function regenerateCoreFields_Updater_(sourceData, translatedData, targetLang, kw, spec) {
   var lang = String(targetLang || '').toLowerCase();
   var srcG = (sourceData && sourceData.general) ? sourceData.general : {};
   var trG = (translatedData && translatedData.general) ? translatedData.general : {};
+  var specObj = spec || null;
   var input = {
     title: srcG.AI_SEO_Title || '',
     slug: srcG.AI_SEO_Permalink || '',
@@ -3759,6 +4155,19 @@ function regenerateCoreFields_Updater_(sourceData, translatedData, targetLang, k
       (kw.secondary && kw.secondary[2] ? ('- ' + kw.secondary[2] + '\n') : '');
   }
 
+  var specBlock = '';
+  if (specObj && specObj.landmarks && specObj.landmarks.length) {
+    var keep = specObj.landmarks.slice(0, 10).map(function(x) { return '- ' + String(x || '').trim(); }).filter(function(x) { return x.length > 2; }).join('\n');
+    var enTitle = specObj.english_title ? String(specObj.english_title) : '';
+    specBlock =
+      "SPECIFICITY PRESERVATION (CRITICAL):\n" +
+      "- Preserve the same level of specificity as the English source.\n" +
+      "- Do NOT collapse title/slug/meta into a generic city tour.\n" +
+      "- Preserve these key place/attraction names (keep them as-is; do not drop them):\n" +
+      keep + "\n" +
+      (enTitle ? ("- English reference title (do not translate; use only for specificity): " + enTitle + "\n") : "");
+  }
+
   var prompt =
     "Transcreate the following JSON core fields into " + lang.toUpperCase() + ".\n" +
     "RULES:\n" +
@@ -3768,7 +4177,9 @@ function regenerateCoreFields_Updater_(sourceData, translatedData, targetLang, k
     "- Preserve any HTML tags exactly as-is.\n" +
     "- Keep tone natural, local, and professional (no literal translation).\n" +
     "- 'slug' must be URL-friendly (lowercase Latin letters/digits and hyphens only).\n" +
+    "- If the English title is specific, the translated title must remain specific (must not become generic).\n" +
     "- Return ONLY valid JSON.\n\n" +
+    (specBlock ? (specBlock + "\n") : "") +
     (kwBlock ? (kwBlock + "\n") : "") +
     "INPUT JSON:\n" + JSON.stringify(input);
 
