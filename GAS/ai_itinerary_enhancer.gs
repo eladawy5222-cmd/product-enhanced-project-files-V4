@@ -179,6 +179,48 @@ function parseTime_(timeStr) {
   return { hours: hours, minutes: minutes };
 }
 
+function stripTimeRangeFromStepTitle_(title) {
+  var s = String(title || '');
+  if (!s) return '';
+  s = s.replace(/\s*\(?\b\d{1,2}:\d{2}\s*(?:AM|PM)?\s*(?:-|–|—|to)\s*\d{1,2}:\d{2}\s*(?:AM|PM)?\)?\s*/gi, ' ');
+  s = s.replace(/\s*\(?\b\d{1,2}:\d{2}\s*(?:AM|PM)?\)?\s*/gi, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  s = s.replace(/^[\-\–\—\|\:\s]+/, '').replace(/[\-\–\—\|\:\s]+$/, '').trim();
+  return s;
+}
+
+function formatDurationText_(value, unit) {
+  if (value === null || value === undefined || value === '') return '';
+  var v = Number(value);
+  if (!isFinite(v) || v <= 0) return '';
+  var u = String(unit || '').trim();
+  if (!u) return '';
+  return String(v) + ' ' + u;
+}
+
+function ensureStepTitleHasDuration_(title, durationValue, durationUnit) {
+  var s = String(title || '').trim();
+  if (!s) return s;
+  var dur = formatDurationText_(durationValue, durationUnit);
+  if (!dur) return s;
+
+  if (/\(\s*\d+(?:\.\d+)?\s*(?:hours?|hrs?|minutes?|mins?|days?)\s*\)/i.test(s)) return s;
+  if (/\b\d+(?:\.\d+)?\s*(?:hours?|hrs?|minutes?|mins?|days?)\b/i.test(s)) return s;
+
+  var labelRe = /^(Morning|Afternoon|Evening|Night|Day\s*\d+|Stop\s*\d+)\b/i;
+  if (labelRe.test(s)) {
+    return s.replace(labelRe, function(m) { return m + ' (' + dur + ')'; }).trim();
+  }
+
+  if (s.indexOf('|') !== -1) {
+    var parts = s.split('|');
+    parts[0] = String(parts[0] || '').trim() + ' (' + dur + ')';
+    return parts.map(function(p) { return String(p || '').trim(); }).join(' | ').trim();
+  }
+
+  return (s + ' (' + dur + ')').trim();
+}
+
 /************************************************************
  * MAIN GENERATION FOR ONE TRIP
  ************************************************************/
@@ -228,79 +270,72 @@ function generateItineraryStepsForTripWithContext_(trip, imp) {
   var steps = aiResult.steps;
   Logger.log('AI Itinerary Generator: Generated ' + steps.length + ' steps. First step sample: ' + JSON.stringify(steps[0]));
 
-  // --- DURATION CHECK & UPDATE (REGEX BASED) ---
+  // --- DURATION CHECK & UPDATE ---
   if (imp && imp.id && steps.length > 0) {
     try {
-      // 1. Extract times from First and Last steps using Regex
-      // Looks for patterns like "8:00 AM", "12:45 PM", "08:00", etc.
-      var timeRegex = /(\d{1,2}:\d{2})\s*(AM|PM)?/i;
-      
-      var firstStepTitle = steps[0].step_title || '';
-      var lastStepTitle = steps[steps.length - 1].step_title || '';
-      
-      var startMatch = firstStepTitle.match(timeRegex);
-      
-      // 2. For the last step, we want the END time (last time mentioned), not the start time.
-      // Example: "11:00 AM - 11:45 AM" -> We want 11:45 AM.
-      // Use global regex to find all time patterns
-      var allTimesInLastStep = lastStepTitle.match(/(\d{1,2}:\d{2})\s*(AM|PM)?/gi);
-      var endMatch = null;
-      
-      if (allTimesInLastStep && allTimesInLastStep.length > 0) {
-        // Take the last match found
-        var lastTimeStr = allTimesInLastStep[allTimesInLastStep.length - 1];
-        endMatch = lastTimeStr.match(timeRegex);
-      } else {
-        // Fallback to simple match if no multiple times found
-        endMatch = lastStepTitle.match(timeRegex);
+      var calc = null;
+      if (aiResult.calculated_total_duration && typeof aiResult.calculated_total_duration === 'object') {
+        var td = aiResult.calculated_total_duration;
+        var h = Number(td.hours);
+        var m = Number(td.minutes);
+        var u = String(td.unit || '').trim();
+        if (isFinite(h) && isFinite(m) && u) calc = { hours: h, minutes: m, unit: u };
       }
-      
-      if (startMatch && endMatch) {
-        var startObj = parseTime_(startMatch[0]);
-        var endObj = parseTime_(endMatch[0]);
-        
-        if (startObj && endObj) {
-          // Calculate difference in minutes
-          var diffMinutes = (endObj.hours * 60 + endObj.minutes) - (startObj.hours * 60 + startObj.minutes);
-          
-          // Handle day crossover (if end time is earlier than start time, assume next day)
-          if (diffMinutes < 0) {
-            diffMinutes += 24 * 60;
+
+      if (!calc) {
+        var totalMinutes = 0;
+        var hasAny = false;
+        steps.forEach(function(st) {
+          if (!st) return;
+          var v = st.duration_value;
+          var unit = String(st.duration_unit || '').toLowerCase().trim();
+          if (v === null || v === undefined || v === '') return;
+          var n = Number(v);
+          if (!isFinite(n) || n <= 0) return;
+          hasAny = true;
+          if (unit === 'minute' || unit === 'minutes' || unit === 'min' || unit === 'mins') totalMinutes += n;
+          else if (unit === 'hour' || unit === 'hours' || unit === 'hr' || unit === 'hrs') totalMinutes += n * 60;
+          else if (unit === 'day' || unit === 'days') totalMinutes += n * 24 * 60;
+          else totalMinutes += n * 60;
+        });
+
+        if (hasAny) {
+          var calcUnit = 'hours';
+          var calcHours = Math.floor(totalMinutes / 60);
+          var calcMinutes = totalMinutes % 60;
+          if (String(durationUnit || '').toLowerCase() === 'days' || totalMinutes >= 24 * 60) {
+            var days = Math.round(totalMinutes / (24 * 60));
+            if (days >= 1 && Math.abs(days * 24 * 60 - totalMinutes) <= 30) {
+              calcUnit = 'days';
+              calcHours = days;
+              calcMinutes = 0;
+            }
           }
-          
-          // Convert to hours and minutes
-          var calcHours = Math.floor(diffMinutes / 60);
-          var calcMinutes = diffMinutes % 60;
-          var calcUnit = "hours"; // Default for single-day trips
-          
-          // Current values in DB
-          var currentH = Number(f.Duration_Hours) || 0;
-          var currentM = Number(f.Duration_Minutes) || 0;
-          
-          // Allow small tolerance (e.g., +/- 15 mins) to avoid minor updates
-          // But here user wants strict correction if different.
-          var isDifferent = (calcHours !== currentH) || (Math.abs(calcMinutes - currentM) > 5);
-          
-          if (isDifferent) {
-             Logger.log('AI Itinerary Generator: Regex Duration Calculation -> ' + calcHours + 'h ' + calcMinutes + 'm');
-             Logger.log('AI Itinerary Generator: Duration mismatch vs DB (' + currentH + 'h ' + currentM + 'm). Updating...');
-             
-             var updateFields = {
-               Duration_Hours: calcHours,
-               Duration_Minutes: calcMinutes,
-               Duration_Unit: calcUnit
-             };
-             
-             airtableUpdate_(IMPROVEMENTS_TABLE, imp.id, updateFields);
-          } else {
-             Logger.log('AI Itinerary Generator: Duration matches DB (Regex Calc: ' + calcHours + 'h ' + calcMinutes + 'm). No update.');
-          }
+          calc = { hours: calcHours, minutes: calcMinutes, unit: calcUnit };
+        }
+      }
+
+      if (calc) {
+        var currentH = Number(f.Duration_Hours) || 0;
+        var currentM = Number(f.Duration_Minutes) || 0;
+        var currentU = String(f.Duration_Unit || '').trim();
+        var isDifferent = (Number(calc.hours) !== currentH) || (Math.abs(Number(calc.minutes) - currentM) > 5) || (String(calc.unit || '') !== currentU);
+        if (isDifferent) {
+          Logger.log('AI Itinerary Generator: Duration Calculation -> ' + calc.hours + 'h ' + calc.minutes + 'm (' + calc.unit + ')');
+          Logger.log('AI Itinerary Generator: Duration mismatch vs DB (' + currentH + 'h ' + currentM + 'm ' + currentU + '). Updating...');
+          airtableUpdate_(IMPROVEMENTS_TABLE, imp.id, {
+            Duration_Hours: calc.hours,
+            Duration_Minutes: calc.minutes,
+            Duration_Unit: calc.unit
+          });
+        } else {
+          Logger.log('AI Itinerary Generator: Duration matches DB. No update.');
         }
       } else {
-        Logger.log('AI Itinerary Generator: Could not extract start/end times via Regex to verify duration.');
+        Logger.log('AI Itinerary Generator: Could not compute duration from AI output.');
       }
     } catch (e) {
-      Logger.log('AI Itinerary Generator: Error in Regex duration calculation: ' + e.message);
+      Logger.log('AI Itinerary Generator: Error in duration calculation: ' + e.message);
     }
   }
   // -------------------------------
@@ -309,7 +344,11 @@ function generateItineraryStepsForTripWithContext_(trip, imp) {
 
   steps.forEach(function(stepObj, idx) {
     var order       = idx + 1;
-    var title       = stepObj.step_title || '';
+    var title       = ensureStepTitleHasDuration_(
+      stripTimeRangeFromStepTitle_(stepObj.step_title || ''),
+      stepObj.duration_value,
+      stepObj.duration_unit
+    );
     var description = stepObj.step_description || '';
 
     if (!title && !description) return;
@@ -466,11 +505,11 @@ function buildItineraryGeneratorPrompt_(ctx) {
     "- If the trip is multi-day (more than 1 day), each step MUST correspond to ONE FULL DAY. Do NOT split a single day into multiple steps (e.g., Morning/Afternoon). Combine them into one description.\n" +
     "- If the trip is single-day (duration in hours), break it down by activity/time (Morning, Afternoon, etc.) into separate steps.\n" +
     "- USE THE FOCUS KEYWORD ('" + focusKeyword + "') naturally in at least one Step Title or Description if possible.\n" +
-    "- CALCULATE TOTAL DURATION as the full time span: (End Time of Last Step) minus (Start Time of First Step). Do NOT just sum the activity durations.\n\n" +
+    "- CALCULATE TOTAL DURATION by summing the duration_value/duration_unit for all steps.\n\n" +
 
     "=== USER SEARCH INTENT & PSYCHOLOGY ===\n" +
     "When users read an itinerary, they want to know:\n" +
-    "1. \"What time does it start/end?\" (Clear pickup/drop-off)\n" +
+    "1. \"How long does it take?\" (Clear pickup/drop-off duration)\n" +
     "2. \"How long at each place?\" (Duration for each stop)\n" +
     "3. \"What exactly will I do there?\" (Specific activities)\n" +
     "4. \"Will I be rushed or relaxed?\" (Balanced timing)\n" +
@@ -483,7 +522,7 @@ function buildItineraryGeneratorPrompt_(ctx) {
 
     "=== WRITING RULES ===\n" +
     "1. CHRONOLOGICAL: Write in time order from pickup to drop-off\n" +
-    "2. SPECIFIC TIMES: Use actual times or durations (not vague)\n" +
+    "2. DURATIONS (NO CLOCK TIMES IN TITLES): Use realistic durations per step. Do NOT include clock times or time ranges in step_title.\n" +
     "3. DESCRIPTIVE: Each stop needs 2-3 sentences of engaging description\n" +
     "4. KEYWORDS: Include SEO keywords naturally in descriptions\n" +
     "5. SENSORY LANGUAGE: Help users visualize the experience\n" +
@@ -500,10 +539,12 @@ function buildItineraryGeneratorPrompt_(ctx) {
     "Sentence 2: What you'll SEE or EXPERIENCE\n" +
     "Sentence 3: Why it's SPECIAL or MEMORABLE (optional for minor stops)\n\n" +
 
-    "=== TIME FORMATTING ===\n" +
-    "Option A - Specific Times (Best for fixed-schedule tours): \"7:00 AM - Hotel Pickup\"\n" +
-    "Option B - Duration-Based (Best for flexible tours): \"Morning (2 hours) - Pyramids of Giza\"\n" +
-    "Option C - Sequential (Best for adventure tours): \"Stop 1 (30 min) - Colored Canyon\"\n\n" +
+    "=== STEP TITLE RULES (CRITICAL) ===\n" +
+    "- step_title MUST NOT contain any clock time like '8:00 AM' or '08:00'.\n" +
+    "- step_title MUST NOT contain time ranges like '8:00 AM - 10:00 AM' or '08:00–10:00'.\n" +
+    "- step_title SHOULD include the duration in parentheses using duration_value/duration_unit (e.g., 'Morning (2 hours) – ...').\n" +
+    "- Put timing as durations only using duration_value and duration_unit.\n" +
+    "- You MAY include broad labels like 'Morning', 'Afternoon', 'Evening'.\n\n" +
 
     "=== REALISM & SAFETY RULES ===\n" +
     "- You MUST NOT invent transportation types that are not clearly stated in the context.\n" +
@@ -547,7 +588,7 @@ function buildItineraryGeneratorPrompt_(ctx) {
     "    {\n" +
     "      \"step_order\": 1,\n" +
     "      \"step_label\": \"Morning\",\n" +
-    "      \"step_title\": \"Morning (8:00 AM) – Pyramids of Giza | 🏛️ Visit | ⭐ Highlight\",\n" +
+    "      \"step_title\": \"Morning (2 hours) – Pyramids of Giza | 🏛️ Visit | ⭐ Highlight\",\n" +
     "      \"step_description\": \"Marvel at the legendary Great Pyramids...\",\n" +
     "      \"duration_value\": 2,\n" +
     "      \"duration_unit\": \"hours\",\n" +

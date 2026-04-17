@@ -686,6 +686,9 @@ function runUpdaterBatch() {
             if (!skipLang) {
               sectionsToValidate.forEach(function(sec) {
                 if (sectionHasEmptyItems_(sec)) sectionsNeedingFix[sec] = 'empty_items';
+                if (!sectionsNeedingFix[sec] && isSectionSuspiciousNotLocalized_Updater_(enhancedData, translatedData, sec)) {
+                  sectionsNeedingFix[sec] = 'not_localized';
+                }
               });
             }
 
@@ -736,10 +739,18 @@ function runUpdaterBatch() {
                 for (var rTry = 0; rTry < 1; rTry++) {
                   if (!regenerateTripSection_Updater_(enhancedData, translatedData, targetLang, secName)) continue;
                   if (sectionHasEmptyItems_(secName)) continue;
+                  if (sectionsNeedingFix[secName] === 'not_localized') {
+                    if (isSectionSuspiciousNotLocalized_Updater_(enhancedData, translatedData, secName)) continue;
+                  }
                   ok = true;
                   break;
                 }
                 if (!ok) {
+                  if (sectionsNeedingFix[secName] === 'not_localized') {
+                    skipLang = true;
+                    skipReason = 'section_not_localized_' + secName;
+                    break;
+                  }
                   fillEmptyItemsFromEnglish_(secName);
                   if (sectionHasEmptyItems_(secName)) {
                     skipLang = true;
@@ -3352,6 +3363,93 @@ function countSecondaryKeywordsPresent_Updater_(combinedText, secondaryList) {
   return count;
 }
 
+function stripHtmlForLiteralCheck_Updater_(s) {
+  return String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeForLiteralCheck_Updater_(s) {
+  var t = stripHtmlForLiteralCheck_Updater_(s);
+  t = t.toLowerCase();
+  t = t.replace(/\d+/g, ' ');
+  t = t.replace(/[^a-zA-Z\u00C0-\u024F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\s]+/g, ' ');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+function isIgnorableLiteralItem_Updater_(s) {
+  var t = normalizeForLiteralCheck_Updater_(s);
+  if (!t) return true;
+  if (t.length < 25) return true;
+  var words = t.split(/\s+/).filter(function(w) { return !!w; });
+  if (words.length < 4) return true;
+  return false;
+}
+
+function isSectionSuspiciousNotLocalized_Updater_(sourceData, translatedData, sectionName) {
+  var src = sourceData || {};
+  var tr = translatedData || {};
+  var pairs = [];
+
+  function pushPair(a, b) {
+    var s0 = String(a == null ? '' : a).trim();
+    var s1 = String(b == null ? '' : b).trim();
+    if (!s0 || !s1) return;
+    pairs.push({ src: s0, tr: s1 });
+  }
+
+  if (sectionName === 'highlights') {
+    for (var i = 0; i < (src.highlights || []).length; i++) {
+      var sh = src.highlights[i] && src.highlights[i].fields ? src.highlights[i].fields.AI_Highlight : '';
+      var th = tr.highlights[i] && tr.highlights[i].fields ? tr.highlights[i].fields.AI_Highlight : '';
+      pushPair(sh, th);
+    }
+  } else if (sectionName === 'includes') {
+    for (var j = 0; j < (src.includes || []).length; j++) {
+      var si = src.includes[j] && src.includes[j].fields ? src.includes[j].fields.IncludeItem : '';
+      var ti = tr.includes[j] && tr.includes[j].fields ? tr.includes[j].fields.IncludeItem : '';
+      pushPair(si, ti);
+    }
+  } else if (sectionName === 'excludes') {
+    for (var k = 0; k < (src.excludes || []).length; k++) {
+      var se = src.excludes[k] && src.excludes[k].fields ? src.excludes[k].fields.ExcludeItem : '';
+      var te = tr.excludes[k] && tr.excludes[k].fields ? tr.excludes[k].fields.ExcludeItem : '';
+      pushPair(se, te);
+    }
+  } else if (sectionName === 'faqs') {
+    for (var f = 0; f < (src.faqs || []).length; f++) {
+      var sq = src.faqs[f] && src.faqs[f].fields ? src.faqs[f].fields.AI_Question : '';
+      var sa = src.faqs[f] && src.faqs[f].fields ? src.faqs[f].fields.AI_Answer : '';
+      var tq = tr.faqs[f] && tr.faqs[f].fields ? tr.faqs[f].fields.AI_Question : '';
+      var ta = tr.faqs[f] && tr.faqs[f].fields ? tr.faqs[f].fields.AI_Answer : '';
+      pushPair((sq ? (String(sq) + ' ' + String(sa || '')) : sa), (tq ? (String(tq) + ' ' + String(ta || '')) : ta));
+    }
+  } else if (sectionName === 'itinerary') {
+    for (var it = 0; it < (src.itinerary || []).length; it++) {
+      var st = src.itinerary[it] && src.itinerary[it].fields ? src.itinerary[it].fields.AI_Step_Title : '';
+      var sd = src.itinerary[it] && src.itinerary[it].fields ? src.itinerary[it].fields.AI_Step_Description : '';
+      var tt = tr.itinerary[it] && tr.itinerary[it].fields ? tr.itinerary[it].fields.AI_Step_Title : '';
+      var td = tr.itinerary[it] && tr.itinerary[it].fields ? tr.itinerary[it].fields.AI_Step_Description : '';
+      pushPair((st ? (String(st) + ' ' + String(sd || '')) : sd), (tt ? (String(tt) + ' ' + String(td || '')) : td));
+    }
+  } else {
+    return false;
+  }
+
+  var considered = 0;
+  var equalCount = 0;
+  for (var p = 0; p < pairs.length; p++) {
+    var a = pairs[p].src;
+    var b = pairs[p].tr;
+    if (isIgnorableLiteralItem_Updater_(a) || isIgnorableLiteralItem_Updater_(b)) continue;
+    considered++;
+    if (normalizeForLiteralCheck_Updater_(a) === normalizeForLiteralCheck_Updater_(b)) equalCount++;
+  }
+
+  if (considered < 2) return false;
+  var threshold = Math.max(2, Math.ceil(considered * 0.5));
+  return equalCount >= threshold;
+}
+
 function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLang, kw, opts) {
   opts = opts || {};
   var slugLocked = !!opts.slugLocked;
@@ -3436,11 +3534,20 @@ function validateKeywordEnforcement_Updater_(payload, targetLang, kw, assets) {
 
   if (!containsKeyword_Updater_(meta.rank_math_title, primary)) out.reasons.push('primary_missing_in_seo_title');
   if (!containsKeyword_Updater_(meta.rank_math_description, primary)) out.reasons.push('primary_missing_in_meta_description');
+  if (!containsKeyword_Updater_(meta.localized_image_alt, primary)) out.reasons.push('primary_missing_in_featured_image_alt');
 
   var slug = String(core.slug || '').trim();
   var primarySlug = buildShortSlugFromPrimaryKeyword_Updater_(primary);
   if (!slug) out.reasons.push('primary_missing_in_slug');
   else if (primarySlug && slug.indexOf(primarySlug) === -1) out.reasons.push('primary_missing_in_slug');
+
+  var html = String(core.content || p.content || '').trim();
+  if (!html) {
+    out.reasons.push('primary_missing_in_h2');
+  } else {
+    var re = new RegExp('<h2[^>]*>[^<]*' + escapeRegex_Updater_(primary) + '[^<]*<\\/h2>', 'i');
+    if (!re.test(html)) out.reasons.push('primary_missing_in_h2');
+  }
 
   out.ok = out.reasons.length === 0;
   return out;
@@ -3477,6 +3584,21 @@ function forcePrimaryKeywordFallbackOnSeo_Updater_(payload, primaryKeyword, engl
     if (!slug) slug = wanted;
     if (wanted && slug.indexOf(wanted) === -1) slug = wanted;
     if (slug) out.core.slug = slug;
+  }
+
+  var alt = String(out.meta.localized_image_alt || '').trim();
+  if (!alt) alt = primary;
+  if (!containsKeyword_Updater_(alt, primary)) alt = (primary + ' - ' + alt).trim();
+  out.meta.localized_image_alt = alt;
+
+  var html = String(out.core.content || out.content || '').trim();
+  if (html) {
+    var reH2 = new RegExp('<h2[^>]*>[^<]*' + escapeRegex_Updater_(primary) + '[^<]*<\\/h2>', 'i');
+    if (!reH2.test(html)) {
+      html = '<h2>' + primary + '</h2>' + html;
+      out.core.content = html;
+      out.content = html;
+    }
   }
 
   return out;
