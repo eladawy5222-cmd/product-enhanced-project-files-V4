@@ -907,6 +907,46 @@ function runUpdaterBatch() {
               }
             }
 
+            var mixCheck = validateNoEnglishGenericMixingInTitleSlug_Updater_(translatedPayload, targetLang, providedForLang, specConstraints);
+            if (!mixCheck.ok) {
+              Logger.log('Updater: TITLE/SLUG LOCALIZATION FAILED (' + targetLang + '): ' + (mixCheck.found || []).join(', '));
+
+              var ts = regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, translatedData, targetLang, providedForLang, specConstraints, slugLocked, mixCheck);
+              if (ts) {
+                if (ts.title) translatedPayload.meta.rank_math_title = ts.title;
+                if (!slugLocked && ts.slug) {
+                  translatedPayload.core = translatedPayload.core || {};
+                  translatedPayload.core.slug = sanitizeTranslatedSlug_(ts.slug);
+                }
+              }
+
+              translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+              kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+              if (!kwCheck.ok) {
+                var reasonM0 = 'keyword_validation_failed: ' + kwCheck.reasons.join(', ');
+                Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/keywords): ' + reasonM0);
+                translationSkipped.push({ lang: targetLang, message: reasonM0 });
+                continue;
+              }
+
+              specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+              mixCheck = validateNoEnglishGenericMixingInTitleSlug_Updater_(translatedPayload, targetLang, providedForLang, specConstraints);
+              if (!mixCheck.ok) {
+                translatedPayload = applyTitleSlugFallbackNoEnglishMixing_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, slugLocked);
+                translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+                kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+                specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+                mixCheck = validateNoEnglishGenericMixingInTitleSlug_Updater_(translatedPayload, targetLang, providedForLang, specConstraints);
+              }
+
+              if (!mixCheck.ok || !specCheck.ok) {
+                var reasonM = 'localization_failed: ' + (mixCheck.found || []).join(', ');
+                Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/localization): ' + reasonM);
+                translationSkipped.push({ lang: targetLang, message: reasonM });
+                continue;
+              }
+            }
+
             translatedPayload.translation_of = primaryWpId;
 
             var transWpId = null;
@@ -3183,6 +3223,11 @@ function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, provide
     "- The Primary Keyword MUST appear in: SEO Title, URL Slug, Meta Description, H2 heading, Image alt.\n" +
     "- Secondary Keywords should be natural.\n" +
     "- Do NOT stuff keywords.\n\n" +
+    (String(targetLang || '').toLowerCase() !== 'en' ? (
+      "6) NO GENERIC ENGLISH PHRASES\n" +
+      "- For non-English target languages, do NOT keep generic English travel phrasing inside the final title or slug.\n" +
+      "- Keep only necessary proper nouns (place/attraction names) in original form.\n\n"
+    ) : "") +
     (specBlock ? (specBlock + "\n") : "") +
     "SAFE OUTPUT:\n" +
     "Return valid structured JSON only. No explanations. No markdown.\n\n" +
@@ -3769,6 +3814,276 @@ function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLock
   if (slug && slugLocked && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) out.reasons.push('slug_genericness_failed');
 
   out.ok = out.reasons.length === 0;
+  return out;
+}
+
+function normalizeForEnglishPhraseScan_Updater_(text) {
+  var t = String(text || '').toLowerCase();
+  t = t.replace(/[\-_]+/g, ' ');
+  t = t.replace(/[^a-z0-9\s]+/g, ' ');
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+function getDisallowedEnglishGenericPhrasesForNonEnglish_Updater_() {
+  return [
+    'day tour',
+    'day tours',
+    'day trip',
+    'day trips',
+    'guided tour',
+    'city tour',
+    'trips',
+    'travel',
+    'egyptian museum',
+    'civilization museum',
+    'old cairo'
+  ];
+}
+
+function getAllowedEnglishProperNounsForNonEnglish_Updater_(spec) {
+  var s = spec || {};
+  var out = [
+    'cairo',
+    'giza',
+    'luxor',
+    'aswan',
+    'alexandria',
+    'hurghada',
+    'sharm',
+    'sinai',
+    'egypt',
+    'citadel',
+    'khan el khalili',
+    'nile',
+    'nile cruise',
+    'nme c',
+    'nmec'
+  ];
+  if (s.place) out.push(String(s.place));
+  return out.map(function(x) { return normalizeForEnglishPhraseScan_Updater_(x); }).filter(function(x) { return !!x; });
+}
+
+function keywordBlockAllowsPhrase_Updater_(kw, phraseNorm) {
+  var p = String(phraseNorm || '').trim();
+  if (!p) return false;
+  var primary = kw && kw.primary ? normalizeForEnglishPhraseScan_Updater_(kw.primary) : '';
+  if (primary && primary.indexOf(p) !== -1) return true;
+  var sec = kw && kw.secondary && Array.isArray(kw.secondary) ? kw.secondary : [];
+  for (var i = 0; i < sec.length; i++) {
+    var s = normalizeForEnglishPhraseScan_Updater_(sec[i]);
+    if (s && s.indexOf(p) !== -1) return true;
+  }
+  return false;
+}
+
+function validateNoEnglishGenericMixingInTitleSlug_Updater_(payload, targetLang, kw, spec) {
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return { ok: true, reasons: [], found: [] };
+
+  var p = payload || {};
+  var meta = p.meta || {};
+  var core = p.core || {};
+
+  var titleNorm = normalizeForEnglishPhraseScan_Updater_(meta.rank_math_title);
+  var slugNorm = normalizeForEnglishPhraseScan_Updater_(core.slug);
+
+  var allowed = getAllowedEnglishProperNounsForNonEnglish_Updater_(spec);
+  var disallowed = getDisallowedEnglishGenericPhrasesForNonEnglish_Updater_();
+
+  var found = [];
+  for (var i = 0; i < disallowed.length; i++) {
+    var phrase = String(disallowed[i] || '').trim();
+    if (!phrase) continue;
+    var ph = normalizeForEnglishPhraseScan_Updater_(phrase);
+    if (!ph) continue;
+    if (keywordBlockAllowsPhrase_Updater_(kw, ph)) continue;
+    if (allowed.indexOf(ph) !== -1) continue;
+
+    var hit = false;
+    if (titleNorm && titleNorm.indexOf(ph) !== -1) hit = true;
+    if (slugNorm && slugNorm.indexOf(ph) !== -1) hit = true;
+    if (hit) found.push(phrase);
+  }
+
+  if (!found.length) return { ok: true, reasons: [], found: [] };
+  return { ok: false, reasons: ['localization_failed'], found: found };
+}
+
+function localizeForbiddenEnglishPhraseForLang_Updater_(phrase, targetLang) {
+  var lang = String(targetLang || '').toLowerCase();
+  var p = normalizeForEnglishPhraseScan_Updater_(phrase);
+  var map = {
+    'day tour': {
+      'de': 'Tagesausflug', 'fr': 'Excursion à la journée', 'es': 'Excursión de un día', 'it': 'Escursione di un giorno',
+      'nl': 'Dagtocht', 'pl': 'Wycieczka jednodniowa', 'tr': 'Günübirlik tur', 'ru': 'Однодневная экскурсия',
+      'ro': 'Excursie de o zi', 'pt-br': 'Passeio de um dia', 'uk': 'Одноденна екскурсія', 'cs': 'Jednodenní výlet',
+      'hu': 'Egynapos kirándulás', 'ja': '日帰りツアー', 'ko': '당일 투어', 'zh-hans': '一日游'
+    },
+    'day tours': {
+      'de': 'Tagesausflüge', 'fr': 'Excursions à la journée', 'es': 'Excursiones de un día', 'it': 'Escursioni di un giorno',
+      'nl': 'Dagtochten', 'pl': 'Wycieczki jednodniowe', 'tr': 'Günübirlik turlar', 'ru': 'Однодневные экскурсии',
+      'ro': 'Excursii de o zi', 'pt-br': 'Passeios de um dia', 'uk': 'Одноденні екскурсії', 'cs': 'Jednodenní výlety',
+      'hu': 'Egynapos kirándulások', 'ja': '日帰りツアー', 'ko': '당일 투어', 'zh-hans': '一日游'
+    },
+    'day trip': {
+      'de': 'Tagesausflug', 'fr': 'Excursion à la journée', 'es': 'Excursión de un día', 'it': 'Gita di un giorno',
+      'nl': 'Dagtrip', 'pl': 'Wycieczka jednodniowa', 'tr': 'Günübirlik gezi', 'ru': 'Однодневная поездка',
+      'ro': 'Excursie de o zi', 'pt-br': 'Bate-volta', 'uk': 'Одноденна поїздка', 'cs': 'Jednodenní výlet',
+      'hu': 'Egynapos kirándulás', 'ja': '日帰り旅行', 'ko': '당일 여행', 'zh-hans': '一日游'
+    },
+    'day trips': {
+      'de': 'Tagesausflüge', 'fr': 'Excursions à la journée', 'es': 'Excursiones de un día', 'it': 'Gite di un giorno',
+      'nl': 'Dagtrips', 'pl': 'Wycieczki jednodniowe', 'tr': 'Günübirlik geziler', 'ru': 'Однодневные поездки',
+      'ro': 'Excursii de o zi', 'pt-br': 'Bate-voltas', 'uk': 'Одноденні поїздки', 'cs': 'Jednodenní výlety',
+      'hu': 'Egynapos kirándulások', 'ja': '日帰り旅行', 'ko': '당일 여행', 'zh-hans': '一日游'
+    },
+    'guided tour': {
+      'de': 'Geführte Tour', 'fr': 'Visite guidée', 'es': 'Visita guiada', 'it': 'Tour guidato',
+      'nl': 'Rondleiding', 'pl': 'Wycieczka z przewodnikiem', 'tr': 'Rehberli tur', 'ru': 'Экскурсия с гидом',
+      'ro': 'Tur ghidat', 'pt-br': 'Tour guiado', 'uk': 'Екскурсія з гідом', 'cs': 'Prohlídka s průvodcem',
+      'hu': 'Vezetett túra', 'ja': 'ガイド付きツアー', 'ko': '가이드 투어', 'zh-hans': '导览游'
+    },
+    'city tour': {
+      'de': 'Stadtrundfahrt', 'fr': 'Visite de la ville', 'es': 'Tour por la ciudad', 'it': 'Tour della città',
+      'nl': 'Stadstour', 'pl': 'Zwiedzanie miasta', 'tr': 'Şehir turu', 'ru': 'Обзорная экскурсия',
+      'ro': 'Tur de oraș', 'pt-br': 'City tour', 'uk': 'Оглядова екскурсія', 'cs': 'Prohlídka města',
+      'hu': 'Városnézés', 'ja': '市内観光', 'ko': '시티 투어', 'zh-hans': '城市观光'
+    },
+    'old cairo': {
+      'de': 'Alt-Kairo', 'fr': 'Vieux Caire', 'es': 'El Cairo Antiguo', 'it': 'Il Cairo Vecchio', 'nl': 'Oud Caïro',
+      'pl': 'Stare Kair', 'tr': 'Eski Kahire', 'ru': 'Старый Каир', 'ro': 'Cairo Vechi', 'pt-br': 'Cairo Antigo',
+      'uk': 'Старий Каїр', 'cs': 'Staré Káhira', 'hu': 'Ó-Kairó', 'ja': 'オールドカイロ', 'ko': '올드 카이로', 'zh-hans': '老开罗'
+    },
+    'egyptian museum': {
+      'de': 'Ägyptisches Museum', 'fr': 'Musée égyptien', 'es': 'Museo Egipcio', 'it': 'Museo Egizio', 'nl': 'Egyptisch Museum',
+      'pl': 'Muzeum Egipskie', 'tr': 'Mısır Müzesi', 'ru': 'Египетский музей', 'ro': 'Muzeul Egiptean', 'pt-br': 'Museu Egípcio',
+      'uk': 'Єгипетський музей', 'cs': 'Egyptské muzeum', 'hu': 'Egyiptomi Múzeum', 'ja': 'エジプト博物館', 'ko': '이집트 박물관', 'zh-hans': '埃及博物馆'
+    },
+    'civilization museum': {
+      'de': 'Museum der ägyptischen Zivilisation', 'fr': 'Musée de la civilisation égyptienne', 'es': 'Museo de la Civilización Egipcia',
+      'it': 'Museo della Civiltà Egizia', 'nl': 'Museum van de Egyptische beschaving', 'pl': 'Muzeum Cywilizacji Egipskiej',
+      'tr': 'Mısır Medeniyeti Müzesi', 'ru': 'Музей египетской цивилизации', 'ro': 'Muzeul Civilizației Egiptene',
+      'pt-br': 'Museu da Civilização Egípcia', 'uk': 'Музей єгипетської цивілізації', 'cs': 'Muzeum egyptské civilizace',
+      'hu': 'Az egyiptomi civilizáció múzeuma', 'ja': 'エジプト文明博物館', 'ko': '이집트 문명 박물관', 'zh-hans': '埃及文明博物馆'
+    }
+  };
+  if (!map[p]) return '';
+  var v = map[p][lang];
+  return v ? String(v) : '';
+}
+
+function replaceDisallowedEnglishGenericPhrases_Updater_(text, targetLang, kw, spec) {
+  var lang = String(targetLang || '').toLowerCase();
+  var out = String(text || '');
+  if (!out || !lang || lang === 'en') return out;
+
+  var allowed = getAllowedEnglishProperNounsForNonEnglish_Updater_(spec);
+  var disallowed = getDisallowedEnglishGenericPhrasesForNonEnglish_Updater_();
+  for (var i = 0; i < disallowed.length; i++) {
+    var phrase = String(disallowed[i] || '').trim();
+    if (!phrase) continue;
+    var ph = normalizeForEnglishPhraseScan_Updater_(phrase);
+    if (!ph) continue;
+    if (keywordBlockAllowsPhrase_Updater_(kw, ph)) continue;
+    if (allowed.indexOf(ph) !== -1) continue;
+
+    var localized = localizeForbiddenEnglishPhraseForLang_Updater_(phrase, lang);
+    var re = new RegExp(escapeRegex_Updater_(phrase).replace(/\\ /g, '\\s+'), 'ig');
+    if (localized) out = out.replace(re, localized);
+    else out = out.replace(re, ' ');
+  }
+
+  out = out.replace(/\s+/g, ' ').trim();
+  out = out.replace(/^[\-\–\—\|\:\s]+/, '').replace(/[\-\–\—\|\:\s]+$/, '').trim();
+  return out;
+}
+
+function regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, translatedData, targetLang, kw, spec, slugLocked, validation) {
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return null;
+  var s = spec || {};
+  var g = translatedData && translatedData.general ? translatedData.general : {};
+  var p = translatedPayload || {};
+  var meta = p.meta || {};
+  var core = p.core || {};
+
+  var preserve = s.landmarks && s.landmarks.length ? s.landmarks.slice(0, 10) : [];
+  var preserveBlock = preserve.map(function(x) { return '- ' + String(x || '').trim(); }).filter(function(x) { return x.length > 2; }).join('\n');
+  var banned = getDisallowedEnglishGenericPhrasesForNonEnglish_Updater_().map(function(x) { return '- ' + x; }).join('\n');
+  var allowedBlock = getAllowedEnglishProperNounsForNonEnglish_Updater_(s).map(function(x) { return '- ' + x; }).join('\n');
+
+  var kwBlock = '';
+  if (kw && kw.primary) {
+    kwBlock =
+      "Provided SEO Keywords (MANDATORY):\n" +
+      "Primary Keyword: " + String(kw.primary) + "\n";
+  }
+
+  var prompt =
+    "Generate ONLY an improved SEO title and URL slug in " + lang.toUpperCase() + ".\n" +
+    "CRITICAL RULES:\n" +
+    "- Keep the same specificity as the English source; do NOT become generic.\n" +
+    "- Preserve key landmarks and selling points.\n" +
+    "- For non-English languages, localize generic English travel phrases.\n" +
+    "- Keep only necessary proper nouns in original form.\n" +
+    "- Do NOT output any of these generic English phrases in the final title or slug:\n" +
+    banned + "\n" +
+    (preserveBlock ? ("- Preserve these names if present in the source:\n" + preserveBlock + "\n") : "") +
+    (allowedBlock ? ("- Allowed English proper nouns (may remain as-is):\n" + allowedBlock + "\n") : "") +
+    (kwBlock ? (kwBlock + "\n") : "") +
+    "OUTPUT JSON ONLY:\n" +
+    "{ \"title\": \"...\", \"slug\": \"...\" }\n\n" +
+    "ENGLISH REFERENCE TITLE: " + String(s.english_title || '') + "\n" +
+    "CURRENT TITLE: " + String(meta.rank_math_title || g.AI_SEO_Title || '') + "\n" +
+    "CURRENT SLUG: " + String(core.slug || g.AI_SEO_Permalink || '') + "\n";
+
+  var res = callAiForTargetLangWithRetry_Updater_(prompt, lang);
+  if (!res || typeof res !== 'object' || Array.isArray(res)) return null;
+  var out = { title: '', slug: '' };
+  if (res.title) out.title = String(res.title).trim();
+  if (res.slug) out.slug = String(res.slug).trim();
+  if (!out.title && !out.slug) return null;
+  out.slug = sanitizeTranslatedSlug_(out.slug);
+  if (slugLocked) out.slug = '';
+  return out;
+}
+
+function applyTitleSlugFallbackNoEnglishMixing_Updater_(payload, targetLang, kw, spec, slugLocked) {
+  var out = payload || {};
+  out.meta = out.meta || {};
+  out.core = out.core || {};
+  var lang = String(targetLang || '').toLowerCase();
+  var s = spec || {};
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+
+  var parts = [];
+  if (primary) parts.push(primary);
+  var selected = [];
+  if (s.landmarks && s.landmarks.length) selected = s.landmarks.slice(0, 2);
+  var names = selected.map(function(x) {
+    var v = String(x || '').trim();
+    var repl = localizeForbiddenEnglishPhraseForLang_Updater_(v, lang);
+    return repl || v;
+  }).filter(function(x) { return !!x; }).join(' & ');
+  if (names) parts.push(names);
+  else if (s.place) parts.push(String(s.place).trim());
+
+  var title = parts.join(' - ').trim();
+  title = replaceDisallowedEnglishGenericPhrases_Updater_(title, lang, kw, s);
+  if (title.length > 65) title = title.substring(0, 65).trim();
+  if (title) out.meta.rank_math_title = title;
+
+  if (!slugLocked) {
+    var slug = buildShortSlugFromPrimaryKeyword_Updater_(primary) || sanitizeTranslatedSlug_(primary);
+    if (slug.length < 10 && names) slug = sanitizeTranslatedSlug_(slug + '-' + names);
+    slug = replaceDisallowedEnglishGenericPhrases_Updater_(slug.replace(/-/g, ' '), lang, kw, s);
+    slug = sanitizeTranslatedSlug_(slug);
+    slug = sanitizeTranslatedSlug_(slug);
+    if (slug.length > 80) slug = slug.substring(0, 80).replace(/-+$/g, '');
+    if (slug) out.core.slug = slug;
+  }
+
   return out;
 }
 
