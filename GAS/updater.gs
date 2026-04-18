@@ -575,7 +575,7 @@ function runUpdaterBatch() {
         if (!enhancedData) {
           enhancedData = fetchCompleteTripData_Updater_(tripId, f, { skipClassification: false });
         }
-        var specConstraints = extractSpecificityConstraintsFromEnglish_Updater_(enhancedData);
+        var specConstraints = extractSpecificityConstraintsFromEnglish_Updater_(enhancedData, f, sourceTripInfoFromWp);
         for (var i = 0; i < languagesToProcess.length; i++) {
           var targetLang = languagesToProcess[i];
           Logger.log('Updater: Processing translation for language: ' + targetLang);
@@ -3724,7 +3724,104 @@ function normalizeForSpecMatch_Updater_(s) {
   return t;
 }
 
-function extractSpecificityConstraintsFromEnglish_Updater_(sourceData) {
+function detectEnglishMuseumFamily_Updater_(text) {
+  var t = normalizeForEnglishPhraseScan_Updater_(String(text || ''));
+  if (!t) return '';
+  var civ = ['national museum of egyptian civilization', 'egyptian civilization museum', 'civilization museum', 'nmec'];
+  var egypt = ['egyptian museum', 'museum of egyptian antiquities'];
+  function hasAny_(hay, needles) {
+    for (var i = 0; i < needles.length; i++) {
+      if (hay.indexOf(needles[i]) !== -1) return true;
+    }
+    return false;
+  }
+  var hasCiv = hasAny_(t, civ);
+  var hasEgypt = hasAny_(t, egypt);
+  if (hasCiv && hasEgypt) return 'ambiguous';
+  if (hasCiv) return 'civilization';
+  if (hasEgypt) return 'egyptian';
+  return '';
+}
+
+function areLandmarkVariantsEquivalent_Updater_(a, b) {
+  var fa = detectEnglishMuseumFamily_Updater_(a);
+  var fb = detectEnglishMuseumFamily_Updater_(b);
+  if (!fa || !fb) return false;
+  if (fa === 'ambiguous' || fb === 'ambiguous') return false;
+  return fa === fb;
+}
+
+function resolveCanonicalEnglishPrimaryLandmarks_Updater_(sourceData, tripFields, wpTripInfo) {
+  var data = sourceData || {};
+  var g = data.general || {};
+  var f = tripFields || {};
+  var wp = wpTripInfo || {};
+  var wpCore = wp && wp.core ? wp.core : {};
+  var wpMeta = wp && wp.meta ? wp.meta : {};
+
+  var sources = [];
+  sources.push({
+    key: 'wp_core',
+    title: wpCore.title || '',
+    meta: '',
+    slug: wpCore.slug || ''
+  });
+  sources.push({
+    key: 'wp_seo',
+    title: wpMeta.rank_math_title || '',
+    meta: wpMeta.rank_math_description || '',
+    slug: wpCore.slug || ''
+  });
+  sources.push({
+    key: 'wp_schema',
+    title: '',
+    meta: wpMeta.schema_trip_data || '',
+    slug: ''
+  });
+  sources.push({
+    key: 'airtable_ai_seo',
+    title: g.AI_SEO_Title || '',
+    meta: g.AI_SEO_Meta_Description || '',
+    slug: g.AI_SEO_Permalink || ''
+  });
+  sources.push({
+    key: 'airtable_trip',
+    title: f.Title || f.Trip_Title || '',
+    meta: f.Trip_Description || '',
+    slug: f.Slug || ''
+  });
+
+  var chosen = null;
+  var chosenFamily = '';
+  var otherFamilies = {};
+  for (var i = 0; i < sources.length; i++) {
+    var s = sources[i] || {};
+    var combined = String(s.title || '') + ' ' + String(s.meta || '') + ' ' + String(s.slug || '');
+    var fam = detectEnglishMuseumFamily_Updater_(combined);
+    if (fam && fam !== 'ambiguous') otherFamilies[fam] = true;
+    if (!chosen && fam && fam !== 'ambiguous') {
+      chosen = s;
+      chosenFamily = fam;
+    }
+  }
+
+  var allFamilies = Object.keys(otherFamilies);
+  var inconsistent = chosenFamily && allFamilies.length > 1;
+  var ambiguous = !chosenFamily;
+
+  return {
+    museum_family: chosenFamily,
+    museum_source: chosen ? chosen.key : '',
+    is_clear: !!chosenFamily,
+    is_ambiguous: ambiguous,
+    is_inconsistent: inconsistent,
+    ref_title: chosen && chosen.title ? String(chosen.title) : '',
+    ref_meta: chosen && chosen.meta ? String(chosen.meta) : '',
+    ref_slug: chosen && chosen.slug ? String(chosen.slug) : ''
+  };
+}
+
+function extractSpecificityConstraintsFromEnglish_Updater_(sourceData, tripFields, wpTripInfo) {
   var data = sourceData || {};
   var g = data.general || {};
   var title = String(g.AI_SEO_Title || '').trim();
@@ -3818,10 +3915,28 @@ function extractSpecificityConstraintsFromEnglish_Updater_(sourceData) {
     return parts.join('-');
   }).filter(function(s) { return !!s; });
 
+  var canonical = resolveCanonicalEnglishPrimaryLandmarks_Updater_(data, tripFields, wpTripInfo);
+  if (canonical && canonical.museum_family) {
+    Logger.log('CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=' + canonical.museum_family + ' source=' + canonical.museum_source);
+  } else {
+    Logger.log('CANONICAL PRIMARY LANDMARK RESOLVED: (none detected)');
+  }
+  if (canonical && (canonical.is_inconsistent || canonical.is_ambiguous)) {
+    Logger.log('SOURCE LANDMARK INCONSISTENT - NORMALIZED BEFORE VALIDATION');
+  }
+
   return {
     english_title: title,
     english_meta: meta,
     english_slug: slug,
+    english_landmark_title: canonical && canonical.ref_title ? canonical.ref_title : title,
+    english_landmark_meta: canonical && canonical.ref_meta ? canonical.ref_meta : meta,
+    english_landmark_slug: canonical && canonical.ref_slug ? sanitizeTranslatedSlug_(canonical.ref_slug) : slug,
+    landmark_canonical_museum_family: canonical && canonical.museum_family ? canonical.museum_family : '',
+    landmark_canonical_museum_source: canonical && canonical.museum_source ? canonical.museum_source : '',
+    landmark_canonical_is_clear: canonical && canonical.is_clear ? true : false,
+    landmark_source_inconsistent: canonical && canonical.is_inconsistent ? true : false,
+    landmark_source_ambiguous: canonical && canonical.is_ambiguous ? true : false,
     place: detectedPlace,
     landmarks: landmarks,
     landmark_slugs: slugHints
@@ -4026,10 +4141,10 @@ function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLock
 
 function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
   var s = spec || {};
-  var enTitle = normalizeForEnglishPhraseScan_Updater_(String(s.english_title || ''));
-  var enMeta = normalizeForEnglishPhraseScan_Updater_(String(s.english_meta || ''));
-  var enSlug = normalizeForEnglishPhraseScan_Updater_(String(s.english_slug || ''));
-  var enAll = normalizeForEnglishPhraseScan_Updater_(String(s.english_title || '') + ' ' + String(s.english_meta || '') + ' ' + String(s.english_slug || '') + ' ' + (s.landmarks ? s.landmarks.join(' ') : ''));
+  var enTitle = normalizeForEnglishPhraseScan_Updater_(String(s.english_landmark_title || s.english_title || ''));
+  var enMeta = normalizeForEnglishPhraseScan_Updater_(String(s.english_landmark_meta || s.english_meta || ''));
+  var enSlug = normalizeForEnglishPhraseScan_Updater_(String(s.english_landmark_slug || s.english_slug || ''));
+  var enAll = normalizeForEnglishPhraseScan_Updater_(String(s.english_landmark_title || s.english_title || '') + ' ' + String(s.english_landmark_meta || s.english_meta || '') + ' ' + String(s.english_landmark_slug || s.english_slug || '') + ' ' + (s.landmarks ? s.landmarks.join(' ') : ''));
 
   function hasAny_(hay, needles) {
     var h = String(hay || '');
@@ -4049,12 +4164,27 @@ function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
   }
 
   var civNeedles = ['civilization museum', 'egyptian civilization museum', 'national museum of egyptian civilization', 'nmec'];
+  var egyptNeedles = ['egyptian museum', 'museum of egyptian antiquities'];
   var oldNeedles = ['old cairo'];
   var khanNeedles = ['khan el khalili'];
 
   var civ = score_(civNeedles);
+  var egypt = score_(egyptNeedles);
   var old = score_(oldNeedles);
   var khan = score_(khanNeedles);
+
+  var canonFam = String(s.landmark_canonical_museum_family || '').toLowerCase();
+  var canonClear = !!s.landmark_canonical_is_clear;
+  if (canonClear && canonFam === 'egyptian') {
+    civ.present = false;
+    civ.inTitle = false;
+    civ.inSlug = false;
+    civ.inMeta = false;
+    civ.score = 0;
+  } else if (canonClear && canonFam === 'civilization' && !civ.present) {
+    civ.present = true;
+    civ.score = Math.max(6, civ.score || 0);
+  }
 
   var items = {
     civilization_museum: civ,
@@ -4087,6 +4217,11 @@ function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
   if (!primaryKeys.length && presentKeys.length) primaryKeys.push(presentKeys[0]);
 
   var secondaryKeys = presentKeys.filter(function(k) { return primaryKeys.indexOf(k) === -1; });
+
+  if (!canonClear && items.civilization_museum && items.civilization_museum.present) {
+    primaryKeys = primaryKeys.filter(function(k) { return k !== 'civilization_museum'; });
+    if (secondaryKeys.indexOf('civilization_museum') === -1) secondaryKeys.push('civilization_museum');
+  }
 
   return {
     items: items,
@@ -4163,6 +4298,12 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
   if (req && req.items && req.items.civilization_museum && req.items.civilization_museum.present) {
     var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
     civOk = textContainsAnyMarker_Updater_(combined, markers);
+    if (civOk) {
+      var normCombined = normalizeForSpecMatch_Updater_(combined);
+      if (normCombined && normCombined.indexOf('nmec') !== -1) {
+        Logger.log('LANDMARK ALIAS ACCEPTED: NMEC ~ National Museum of Egyptian Civilization (' + lang + ')');
+      }
+    }
     mark_('civilization_museum', civOk);
   }
 
@@ -4182,6 +4323,17 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
 
   if (secondaryMissing.length) warnings = secondaryMissing.map(function(k) { return 'secondary_landmark_missing_' + k; });
   var reasons = primaryMissing.map(function(k) { return 'landmark_specificity_failed_' + k; });
+
+  var canonClear2 = spec && spec.landmark_canonical_is_clear ? true : false;
+  var canonFam2 = spec && spec.landmark_canonical_museum_family ? String(spec.landmark_canonical_museum_family).toLowerCase() : '';
+  if (!canonClear2 || (canonFam2 !== 'civilization' && canonFam2 !== 'egyptian')) {
+    var hard = reasons.filter(function(r) { return r !== 'landmark_specificity_failed_civilization_museum'; });
+    if (hard.length === 0 && reasons.length) {
+      warnings = warnings.concat(['source_landmark_inconsistent_normalized']);
+      reasons = [];
+    }
+  }
+
   return { ok: reasons.length === 0, reasons: reasons, warnings: warnings, primary_missing: primaryMissing, secondary_missing: secondaryMissing, primary_present: primaryPresent };
 }
 
