@@ -960,7 +960,7 @@ function runUpdaterBatch() {
 
             var lmCheck = validateLandmarkSpecificityPreservation_Updater_(specConstraints, translatedPayload, targetLang);
             if (!lmCheck.ok) {
-              Logger.log('HARD FAIL: primary landmark lost (' + targetLang + '): ' + lmCheck.reasons.join(', '));
+              Logger.log('Updater: LANDMARK SPECIFICITY FAILED - attempting fix (' + targetLang + '): ' + lmCheck.reasons.join(', '));
               translatedPayload = applyLandmarkSpecificityFix_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, slugLocked);
               translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
               kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
@@ -970,6 +970,7 @@ function runUpdaterBatch() {
                 Logger.log('LANDMARK SPECIFICITY FIXED AND ACCEPTED (' + targetLang + ')');
               } else {
                 var reasonL = 'landmark_specificity_failed: ' + lmCheck.reasons.join(', ');
+                Logger.log('HARD FAIL: canonical primary landmark truly lost (' + targetLang + '): ' + lmCheck.reasons.join(', '));
                 Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/landmarks): ' + reasonL);
                 translationSkipped.push({ lang: targetLang, message: reasonL });
                 continue;
@@ -4202,7 +4203,11 @@ function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
   presentKeys.forEach(function(k) {
     if (!items[k]) return;
     if (k === 'khan_el_khalili' && !(items[k].inTitle || items[k].inSlug)) return;
-    if (k === 'old_cairo' && !(items[k].inTitle || items[k].inSlug)) return;
+    if (k === 'old_cairo') {
+      var oldStrong = !!(items[k].inTitle && items[k].inSlug);
+      if (!oldStrong && presentKeys.length > 1) return;
+      if (!(items[k].inTitle || items[k].inSlug)) return;
+    }
     if ((items[k].inTitle || items[k].inSlug) && primaryKeys.indexOf(k) === -1) primaryKeys.push(k);
   });
 
@@ -4295,14 +4300,14 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
   }
 
   var civOk = true;
+  var civAliasAccepted = false;
   if (req && req.items && req.items.civilization_museum && req.items.civilization_museum.present) {
     var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
     civOk = textContainsAnyMarker_Updater_(combined, markers);
-    if (civOk) {
-      var normCombined = normalizeForSpecMatch_Updater_(combined);
-      if (normCombined && normCombined.indexOf('nmec') !== -1) {
-        Logger.log('LANDMARK ALIAS ACCEPTED: NMEC ~ National Museum of Egyptian Civilization (' + lang + ')');
-      }
+    var normCombined = normalizeForSpecMatch_Updater_(combined);
+    if (normCombined && normCombined.indexOf('nmec') !== -1) {
+      civAliasAccepted = true;
+      Logger.log('LANDMARK ALIAS ACCEPTED: NMEC ~ National Museum of Egyptian Civilization (' + lang + ')');
     }
     mark_('civilization_museum', civOk);
   }
@@ -4326,6 +4331,27 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
 
   var canonClear2 = spec && spec.landmark_canonical_is_clear ? true : false;
   var canonFam2 = spec && spec.landmark_canonical_museum_family ? String(spec.landmark_canonical_museum_family).toLowerCase() : '';
+
+  if (canonClear2 && canonFam2 === 'civilization' && reasons.indexOf('landmark_specificity_failed_civilization_museum') !== -1 && civAliasAccepted) {
+    reasons = reasons.filter(function(r) { return r !== 'landmark_specificity_failed_civilization_museum'; });
+    primaryMissing = primaryMissing.filter(function(k) { return k !== 'civilization_museum'; });
+    if (warnings.indexOf('primary_landmark_alias_accepted_civilization_museum') === -1) warnings.push('primary_landmark_alias_accepted_civilization_museum');
+    Logger.log('PRIMARY LANDMARK ALIAS ACCEPTED - HARD FAIL CLEARED (' + lang + ')');
+  }
+
+  var oldStrong2 = false;
+  try {
+    var eT = normalizeForEnglishPhraseScan_Updater_(String((spec && (spec.english_landmark_title || spec.english_title)) || ''));
+    var eS = normalizeForEnglishPhraseScan_Updater_(String((spec && (spec.english_landmark_slug || spec.english_slug)) || ''));
+    oldStrong2 = eT.indexOf('old cairo') !== -1 && eS.indexOf('old-cairo') !== -1;
+  } catch (eOldStrong) {}
+  if (reasons.indexOf('landmark_specificity_failed_old_cairo') !== -1 && !oldStrong2) {
+    reasons = reasons.filter(function(r) { return r !== 'landmark_specificity_failed_old_cairo'; });
+    primaryMissing = primaryMissing.filter(function(k) { return k !== 'old_cairo'; });
+    if (warnings.indexOf('old_cairo_missing_accepted_secondary') === -1) warnings.push('old_cairo_missing_accepted_secondary');
+    Logger.log('OLD CAIRO MISSING BUT ACCEPTED AS SECONDARY (' + lang + ')');
+  }
+
   if (!canonClear2 || (canonFam2 !== 'civilization' && canonFam2 !== 'egyptian')) {
     var hard = reasons.filter(function(r) { return r !== 'landmark_specificity_failed_civilization_museum'; });
     if (hard.length === 0 && reasons.length) {
