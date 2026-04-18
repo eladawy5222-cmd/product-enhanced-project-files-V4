@@ -1312,6 +1312,26 @@ async function runUpdaterBatch() {
             }
 
             translatedPayload = enforceCanonicalMuseumFamilyFidelityInPayload_Updater_(translatedPayload, targetLang, specConstraints)
+            var purityCheck = validateSingleLanguagePurity_Updater_(targetLang, {
+              page_title: translatedPayload && translatedPayload.core ? translatedPayload.core.title : '',
+              seo_title: translatedPayload && translatedPayload.meta ? translatedPayload.meta.rank_math_title : '',
+              meta_description: translatedPayload && translatedPayload.meta ? translatedPayload.meta.rank_math_description : ''
+            })
+            if (!purityCheck.ok) {
+              log('LANGUAGE CONTAMINATION DETECTED (' + targetLang + '): ' + JSON.stringify(purityCheck.contaminated))
+              log('REGENERATING CONTAMINATED FIELD (' + targetLang + '): seo_fields')
+              translatedPayload = await regenerateContaminatedSeoFields_Updater_(translatedPayload, targetLang, providedForLang, specConstraints)
+              translatedPayload = enforceCanonicalMuseumFamilyFidelityInPayload_Updater_(translatedPayload, targetLang, specConstraints)
+              purityCheck = validateSingleLanguagePurity_Updater_(targetLang, {
+                page_title: translatedPayload && translatedPayload.core ? translatedPayload.core.title : '',
+                seo_title: translatedPayload && translatedPayload.meta ? translatedPayload.meta.rank_math_title : '',
+                meta_description: translatedPayload && translatedPayload.meta ? translatedPayload.meta.rank_math_description : ''
+              })
+              if (purityCheck.ok) log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): seo_fields')
+            } else {
+              log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): seo_fields')
+            }
+
             if (translatedPayload && translatedPayload.core && translatedPayload.core.content) {
               translatedPayload.core.content = harmonizeBodyHeadingWithCanonicalLandmark_Updater_(translatedPayload.core.content, targetLang, specConstraints, translatedPayload)
               translatedPayload.core.content = removeStandaloneKeywordParagraphs_Updater_(translatedPayload.core.content, providedForLang ? providedForLang.primary : '', targetLang)
@@ -1320,6 +1340,24 @@ async function runUpdaterBatch() {
                 tHtml = harmonizeBodyHeadingWithCanonicalLandmark_Updater_(tHtml, targetLang, specConstraints, translatedPayload)
                 tHtml = removeStandaloneKeywordParagraphs_Updater_(tHtml, providedForLang ? providedForLang.primary : '', targetLang)
                 translatedPayload.meta.wp_travel_engine_setting.tab_content['1_wpeditor'] = tHtml
+              }
+
+              var bodySample = stripHtmlForLiteralCheck_Updater_(translatedPayload.core.content)
+              var bodyCheck = isLikelyLanguageContamination_Updater_(String(bodySample || '').substring(0, 600), targetLang)
+              if (bodyCheck.contaminated) {
+                log('LANGUAGE CONTAMINATION DETECTED (' + targetLang + '): body ' + bodyCheck.markers.join(', '))
+                log('REGENERATING CONTAMINATED FIELD (' + targetLang + '): body_cleanup')
+                translatedPayload.core.content = removeObviousCrossLanguageFragments_Updater_(translatedPayload.core.content, targetLang)
+                var bodySample2 = stripHtmlForLiteralCheck_Updater_(translatedPayload.core.content)
+                var bodyCheck2 = isLikelyLanguageContamination_Updater_(String(bodySample2 || '').substring(0, 600), targetLang)
+                if (bodyCheck2.contaminated) {
+                  log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (body contamination): ' + bodyCheck2.markers.join(', '))
+                  translationSkipped.push({ lang: targetLang, message: 'body_contamination: ' + bodyCheck2.markers.join(', ') })
+                  continue
+                }
+                log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): body_cleaned')
+              } else {
+                log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): body')
               }
             }
             
@@ -1352,6 +1390,56 @@ async function runUpdaterBatch() {
             if (!updateOnly) {
               log('CREATING TRANSLATION: ' + targetLang + ' (parent=' + primaryWpId + ')')
               translatedPayload.translation_of = primaryWpId
+              translatedPayload.core = translatedPayload.core || {}
+
+              var candidateSlug = finalizeTranslatedSlug_Updater_(translatedPayload.core.slug || translatedPayload.slug || '', { maxLen: 80, spec: specConstraints })
+              var slugCheck = validateNewTranslationSlugSemanticCompleteness_Updater_(candidateSlug, targetLang, providedForLang, specConstraints)
+              if (!slugCheck.ok) {
+                log('NEW SLUG REJECTED AS SEMANTICALLY WEAK (' + targetLang + '): ' + candidateSlug + ' | ' + slugCheck.reasons.join(', '))
+                log('REGENERATING NEW TRANSLATION SLUG (' + targetLang + ')')
+                try {
+                  var regen = await regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, translatedData, targetLang, providedForLang, specConstraints, false, { ok: false, found: ['semantic_slug_weak'], severity: 'hard' })
+                  if (regen && regen.slug) {
+                    var cand2 = finalizeTranslatedSlug_Updater_(regen.slug, { maxLen: 80, spec: specConstraints })
+                    var check2 = validateNewTranslationSlugSemanticCompleteness_Updater_(cand2, targetLang, providedForLang, specConstraints)
+                    if (check2.ok) {
+                      candidateSlug = cand2
+                      slugCheck = check2
+                    } else {
+                      log('NEW SLUG REJECTED AS SEMANTICALLY WEAK (' + targetLang + '): ' + cand2 + ' | ' + check2.reasons.join(', '))
+                    }
+                  }
+                } catch (eRegenSlug) {}
+              }
+              if (!slugCheck.ok) {
+                var fbSlug = buildDeterministicFallbackSlugForCreate_Updater_(targetLang, providedForLang, specConstraints, translatedPayload)
+                log('DETERMINISTIC FALLBACK SLUG BUILT (' + targetLang + '): ' + fbSlug)
+                if (fbSlug.indexOf('day-tours') === -1 && fbSlug.indexOf('day') === -1 && fbSlug.indexOf('tours') === -1) {
+                  log('DETERMINISTIC FALLBACK SIMPLIFIED (' + targetLang + ')')
+                }
+                var fbCheck = validateNewTranslationSlugSemanticCompleteness_Updater_(fbSlug, targetLang, providedForLang, specConstraints)
+                if (fbCheck.ok) {
+                  candidateSlug = fbSlug
+                  slugCheck = fbCheck
+                } else {
+                  if (fbCheck.reasons && fbCheck.reasons.join(',').indexOf('multilingual_hybrid') !== -1) {
+                    log('MULTILINGUAL FALLBACK REJECTED (' + targetLang + '): ' + fbSlug)
+                  }
+                  log('NEW SLUG REJECTED AS SEMANTICALLY WEAK (' + targetLang + '): ' + fbSlug + ' | ' + fbCheck.reasons.join(', '))
+                }
+              }
+
+              if (!slugCheck.ok) {
+                var reasonSlug = 'new_slug_semantically_weak: ' + slugCheck.reasons.join(', ')
+                log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (new slug): ' + reasonSlug)
+                translationSkipped.push({ lang: targetLang, message: reasonSlug })
+                continue
+              }
+
+              log('FINAL NEW TRANSLATION SLUG ACCEPTED (' + targetLang + '): ' + candidateSlug)
+              translatedPayload.core.slug = candidateSlug
+              translatedPayload.slug = candidateSlug
+
               transWpId = await createNewTripOnWordPress_Updater_(translatedPayload)
               log('Updater: Successfully CREATED translation ' + transWpId)
               if (translatedPayload && translatedPayload.core && translatedPayload.core.slug) {
@@ -2778,9 +2866,12 @@ function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
       continue
     }
 
-    if (isHighConfidencePolishKeyword_(raw)) {
-      add_('pl', raw)
-      continue
+    var contamPl = isLikelyLanguageContamination_Updater_(raw, 'pl')
+    if (!contamPl || !contamPl.contaminated) {
+      if (isHighConfidencePolishKeyword_(raw)) {
+        add_('pl', raw)
+        continue
+      }
     }
 
     add_('unknown', raw)
@@ -3443,6 +3534,122 @@ function finalizeTranslatedSlug_Updater_(raw, opts) {
     out = trimTrailingUnitPrefix_(out)
   }
   return out
+}
+
+function validateNewTranslationSlugSemanticCompleteness_Updater_(slug, targetLang, kw, spec) {
+  var out = { ok: true, reasons: [], warnings: [], slug: '', accepted_as_good_enough: false }
+  var s = sanitizeTranslatedSlug_(slug)
+  out.slug = s
+  if (!s) {
+    out.ok = false
+    out.reasons.push('empty_slug')
+    return out
+  }
+
+  var parts = s.split('-').filter(function (t) { return !!t })
+  var last = parts.length ? String(parts[parts.length - 1]) : ''
+  var weakTail = { old: true, new: true, and: true, of: true, the: true, to: true, in: true, at: true, on: true, for: true }
+  if (s.length < 10) out.reasons.push('slug_too_short')
+  if (last && (weakTail[last] || last.length < 2)) out.reasons.push('weak_trailing_token_' + last)
+
+  var hasDayTours = (s.indexOf('day-tours') !== -1) || (s.indexOf('day') !== -1 && s.indexOf('tours') !== -1)
+  if (hasDayTours) out.reasons.push('multilingual_hybrid_day_tours')
+
+  var cityVariants = { cairo: false, kairo: false, kahire: false, caire: false }
+  var cityCounts = { cairo: 0, kairo: 0, kahire: 0, caire: 0 }
+  for (var i = 0; i < parts.length; i++) {
+    var p = String(parts[i] || '')
+    if (cityVariants.hasOwnProperty(p)) {
+      cityVariants[p] = true
+      cityCounts[p] = (cityCounts[p] || 0) + 1
+    }
+  }
+  var presentCities = Object.keys(cityVariants).filter(function (k) { return cityVariants[k] })
+  if (String(targetLang || '').toLowerCase() !== 'en' && presentCities.length >= 2) out.reasons.push('multilingual_hybrid_city_variants_' + presentCities.join('_'))
+  presentCities.forEach(function (c) {
+    if (cityCounts[c] && cityCounts[c] >= 2) out.reasons.push('repeated_city_token_' + c)
+  })
+
+  if (isGenericSlug_Updater_(s, targetLang, spec)) {
+    if (parts.length >= 4 && s.length >= 14) out.warnings.push('acceptable_localized_slug_genericness_soft')
+    else out.reasons.push('slug_generic')
+  }
+
+  var place = spec && spec.place ? sanitizeTranslatedSlug_(spec.place) : ''
+  if (place && s.indexOf(place) === -1) out.warnings.push('missing_destination_intent')
+
+  var enRef = normalizeForEnglishPhraseScan_Updater_(String((spec && (spec.english_landmark_title || spec.english_title)) || '') + ' ' + String((spec && (spec.english_landmark_meta || spec.english_meta)) || '') + ' ' + String((spec && (spec.english_landmark_slug || spec.english_slug)) || ''))
+  var requireCitadel = enRef.indexOf('citadel') !== -1
+  if (requireCitadel) {
+    if (s.indexOf('citadel') === -1 && s.indexOf('zitadelle') === -1 && s.indexOf('fortress') === -1) out.warnings.push('missing_citadel_intent')
+  }
+
+  var fam = spec && spec.landmark_canonical_museum_family ? String(spec.landmark_canonical_museum_family).toLowerCase() : ''
+  if (fam === 'civilization') {
+    if (s.indexOf('nmec') === -1 && s.indexOf('civilization') === -1) out.warnings.push('missing_museum_family_civilization')
+  } else if (fam === 'egyptian') {
+    if (s.indexOf('museum') === -1) out.warnings.push('missing_museum_intent')
+  }
+
+  var oldStrong = enRef.indexOf('old cairo') !== -1 && (enRef.indexOf('old-cairo') !== -1 || enRef.indexOf('alt-kairo') !== -1)
+  if (oldStrong) {
+    if (s.indexOf('old-cairo') === -1 && s.indexOf('alt-kairo') === -1 && s.indexOf('altkairo') === -1) out.warnings.push('old_cairo_missing_in_slug')
+  }
+
+  out.ok = out.reasons.length === 0
+  if (out.ok && out.warnings.length) out.accepted_as_good_enough = true
+  return out
+}
+
+function buildDeterministicFallbackSlugForCreate_Updater_(targetLang, kw, spec, translatedPayload) {
+  var lang = String(targetLang || '').toLowerCase()
+  var s = spec || {}
+  var p = translatedPayload || {}
+  var meta = p.meta || {}
+  var core = p.core || {}
+
+  var titleBase = String(meta.rank_math_title || core.title || '').trim()
+  var baseSlug = sanitizeTranslatedSlug_(titleBase)
+  var wantedRaw = kw && kw.primary ? buildShortSlugFromPrimaryKeyword_Updater_(kw.primary) : ''
+  var wantedParts = wantedRaw ? sanitizeTranslatedSlug_(wantedRaw).split('-').filter(function (t) { return !!t }) : []
+  wantedParts = wantedParts.filter(function (t) { return t !== 'day' && t !== 'tours' && t !== 'nmec' })
+  var wanted = wantedParts.join('-')
+
+  var toks = baseSlug ? baseSlug.split('-').filter(function (t) { return !!t }) : []
+  var filtered = []
+  var seen = {}
+  for (var i = 0; i < toks.length; i++) {
+    var t = String(toks[i] || '')
+    if (!t) continue
+    if (t === 'day' || t === 'tours' || t === 'nmec') continue
+    if (seen[t]) continue
+    seen[t] = true
+    filtered.push(t)
+  }
+
+  if (lang !== 'en') {
+    var cityVariants = { cairo: false, kairo: false, kahire: false, caire: false }
+    for (var j = 0; j < filtered.length; j++) {
+      var v = filtered[j]
+      if (cityVariants.hasOwnProperty(v)) cityVariants[v] = true
+    }
+    var presentCities = Object.keys(cityVariants).filter(function (k) { return cityVariants[k] })
+    if (presentCities.length >= 2) {
+      var keep = presentCities[0]
+      if (wanted) {
+        for (var c = 0; c < presentCities.length; c++) {
+          if (wanted.indexOf(presentCities[c]) !== -1) { keep = presentCities[c]; break }
+        }
+      }
+      filtered = filtered.filter(function (x) { return !cityVariants.hasOwnProperty(x) || x === keep })
+    }
+  }
+
+  var joined = filtered.join('-')
+  if (wanted && joined.indexOf(wanted) === -1) joined = (wanted + (joined ? ('-' + joined) : ''))
+  joined = joined.replace(/(^|-)day-tours(-|$)/g, '-').replace(/(^|-)day(-|$)/g, '-').replace(/(^|-)tours(-|$)/g, '-').replace(/(^|-)nmec(-|$)/g, '-')
+  joined = joined.replace(/-+/g, '-').replace(/^-+|-+$/g, '')
+  return finalizeTranslatedSlug_Updater_(joined, { maxLen: 80, spec: s })
 }
 
 function normalizeTripCode_Updater_(raw) {
@@ -5747,6 +5954,168 @@ function normalizeKeywordsObject_Updater_(kw) {
   return out;
 }
 
+function isLikelyLanguageContamination_Updater_(text, targetLang) {
+  var lang = String(targetLang || '').toLowerCase()
+  var t = String(text || '').trim()
+  if (!t) return { contaminated: false, markers: [] }
+  var markers = []
+
+  if (lang !== 'tr') {
+    if (/[ıİşŞğĞçÇöÖüÜ]/.test(t)) markers.push('turkish_chars')
+    var tNorm = normalizeForSpecMatch_Updater_(t)
+    if (tNorm.indexOf('kahire') !== -1) markers.push('turkish_kahire')
+    if (tNorm.indexOf('turu') !== -1) markers.push('turkish_turu')
+    if (tNorm.indexOf('turlari') !== -1 || tNorm.indexOf('turları') !== -1) markers.push('turkish_turlari')
+    if (tNorm.indexOf('misir') !== -1 || tNorm.indexOf('mısır') !== -1) markers.push('turkish_misir')
+    if (tNorm.indexOf('gunubirlik') !== -1 || tNorm.indexOf('günübirlik') !== -1) markers.push('turkish_gunubirlik')
+  }
+
+  if (lang !== 'en') {
+    var low = t.toLowerCase()
+    if (low.indexOf('day tours') !== -1 || low.indexOf('day tour') !== -1) markers.push('english_day_tours')
+    if (low.indexOf('egyptian museum') !== -1) markers.push('english_egyptian_museum')
+    if (low.indexOf('cairo museum') !== -1) markers.push('english_cairo_museum')
+  }
+
+  var det = detectLanguageSafe_Updater_(t.length > 260 ? t.substring(0, 260) : t)
+  if (det && !langMatchesOrBase_Updater_(det, lang)) markers.push('detected_lang_' + det)
+
+  return { contaminated: markers.length > 0, markers: markers }
+}
+
+function validateSingleLanguagePurity_Updater_(targetLang, fieldMap) {
+  var lang = String(targetLang || '').toLowerCase()
+  var fields = fieldMap && typeof fieldMap === 'object' ? fieldMap : {}
+  var contaminated = []
+  for (var k in fields) {
+    if (!fields.hasOwnProperty(k)) continue
+    var v = String(fields[k] == null ? '' : fields[k]).trim()
+    if (!v) continue
+    var check = isLikelyLanguageContamination_Updater_(v, lang)
+    if (!check.contaminated) continue
+    contaminated.push({ field: k, markers: check.markers, sample: v.substring(0, 140) })
+  }
+  return { ok: contaminated.length === 0, contaminated: contaminated }
+}
+
+function removeObviousCrossLanguageFragments_Updater_(text, targetLang) {
+  var lang = String(targetLang || '').toLowerCase()
+  var t = String(text || '')
+  if (!t) return t
+  if (lang !== 'tr') {
+    t = t.replace(/\bkahire\s+turlar[ıi]\b/ig, '')
+    t = t.replace(/\bm[ıi]s[ıi]r\s+kahire\s+turu\b/ig, '')
+    t = t.replace(/\bkahire\s+turu\b/ig, '')
+    t = t.replace(/\bkahire\b/ig, '')
+    t = t.replace(/\bturu\b/ig, '')
+    t = t.replace(/\bturlar[ıi]\b/ig, '')
+    t = t.replace(/\bm[ıi]s[ıi]r\b/ig, '')
+  }
+  if (lang !== 'en') {
+    t = t.replace(/\bday\s+tours?\b/ig, '')
+    t = t.replace(/\bcairo\s+museum\b/ig, '')
+    t = t.replace(/\begyptian\s+museum\s+cairo\b/ig, '')
+  }
+  t = t.replace(/\s{2,}/g, ' ')
+  t = t.replace(/>\s+</g, '><')
+  return t
+}
+
+async function translateKeywordPhraseToTargetLang_Updater_(phrase, targetLang) {
+  var lang = String(targetLang || '').toLowerCase()
+  var p = String(phrase || '').trim()
+  if (!p) return ''
+  var prompt =
+    "Translate this SEO keyword phrase into " + lang.toUpperCase() + ".\n" +
+    "CRITICAL RULES:\n" +
+    "- TARGET LANGUAGE ONLY: output ONLY in " + lang + ".\n" +
+    "- Do NOT include any other language (no Turkish, no English).\n" +
+    "- Keep proper nouns unchanged.\n" +
+    "- Return ONLY valid JSON.\n\n" +
+    "INPUT JSON:\n" + JSON.stringify({ keyword: p }) + "\n\n" +
+    "OUTPUT JSON:\n" + "{\"keyword\":\"...\"}"
+  var res = await callAiForTargetLangWithRetry_Updater_(prompt, lang)
+  if (res && typeof res === 'object' && !Array.isArray(res) && res.keyword) return String(res.keyword || '').trim()
+  return ''
+}
+
+async function enforceKeywordsTargetLanguagePurity_Updater_(kwObj, targetLang, englishFallback) {
+  var lang = String(targetLang || '').toLowerCase()
+  var out = normalizeKeywordsObject_Updater_(kwObj)
+  var fb = normalizeKeywordsObject_Updater_(englishFallback)
+
+  function isBad_(s) {
+    var v = String(s || '').trim()
+    if (!v) return true
+    var c = isLikelyLanguageContamination_Updater_(v, lang)
+    if (c.contaminated) return true
+    var det = detectLanguageSafe_Updater_(v)
+    if (det && !langMatchesOrBase_Updater_(det, lang)) return true
+    return false
+  }
+
+  if (out.primary && isBad_(out.primary)) {
+    log('LANGUAGE CONTAMINATION DETECTED (' + lang + '): primary_keyword=' + out.primary)
+    log('REGENERATING CONTAMINATED FIELD: primary_keyword (' + lang + ')')
+    var src = fb.primary ? fb.primary : out.primary
+    var tr = await translateKeywordPhraseToTargetLang_Updater_(src, lang)
+    if (tr && !isBad_(tr)) out.primary = tr
+    else out.primary = ''
+  }
+
+  var cleanedSecondary = []
+  ;(out.secondary || []).forEach(function (s) {
+    var v = String(s || '').trim()
+    if (!v) return
+    if (isBad_(v)) return
+    cleanedSecondary.push(v)
+  })
+  out.secondary = cleanedSecondary.slice(0, 4)
+
+  if (!out.primary && fb.primary) {
+    var tr2 = await translateKeywordPhraseToTargetLang_Updater_(fb.primary, lang)
+    if (tr2 && !isBad_(tr2)) out.primary = tr2
+  }
+
+  out.all = [out.primary].concat(out.secondary).filter(function (x) { return !!String(x || '').trim() })
+  return out
+}
+
+async function regenerateContaminatedSeoFields_Updater_(payload, targetLang, kw, spec) {
+  var lang = String(targetLang || '').toLowerCase()
+  var out = payload || {}
+  out.core = out.core || {}
+  out.meta = out.meta || {}
+  var primary = kw && kw.primary ? String(kw.primary).trim() : ''
+  var civ = spec && String(spec.landmark_canonical_museum_family || '').toLowerCase() === 'civilization'
+    ? localizeForbiddenEnglishPhraseForLang_Updater_('civilization museum', lang)
+    : ''
+
+  var prompt =
+    "Rewrite the following fields for a travel landing page in " + lang.toUpperCase() + ".\n" +
+    "CRITICAL RULES:\n" +
+    "- TARGET LANGUAGE ONLY: output ONLY in " + lang + ".\n" +
+    "- No Turkish/English contamination.\n" +
+    "- Keep meaning and facts.\n" +
+    (primary ? ("- Must include this Primary Keyword verbatim at least once in SEO title OR meta description: " + primary + "\n") : "") +
+    (civ ? ("- Must preserve this landmark meaning in the SEO title if relevant: " + civ + "\n") : "") +
+    "Return ONLY valid JSON.\n\n" +
+    "INPUT JSON:\n" + JSON.stringify({
+      page_title: String(out.core.title || ''),
+      seo_title: String(out.meta.rank_math_title || ''),
+      meta_description: String(out.meta.rank_math_description || '')
+    }) + "\n\n" +
+    "OUTPUT JSON:\n" + "{\"page_title\":\"...\",\"seo_title\":\"...\",\"meta_description\":\"...\"}"
+
+  var res = await callAiForTargetLangWithRetry_Updater_(prompt, lang)
+  if (res && typeof res === 'object' && !Array.isArray(res)) {
+    if (res.page_title) out.core.title = String(res.page_title).trim()
+    if (res.seo_title) out.meta.rank_math_title = String(res.seo_title).trim()
+    if (res.meta_description) out.meta.rank_math_description = String(res.meta_description).trim()
+  }
+  return out
+}
+
 async function getMandatorySeoKeywordsForLang_Updater_(tripFields, enhancedData, targetLang) {
   var lang = String(targetLang || '').toLowerCase();
   var f = tripFields || {};
@@ -5780,6 +6149,7 @@ async function getMandatorySeoKeywordsForLang_Updater_(tripFields, enhancedData,
   });
   if (merged.secondary.length > 4) merged.secondary = merged.secondary.slice(0, 4);
   merged.all = [merged.primary].concat(merged.secondary);
+  merged = await enforceKeywordsTargetLanguagePurity_Updater_(merged, lang, englishFallback)
   return merged;
 }
 
@@ -6409,6 +6779,7 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
            var pkId = pkg.id; // Airtable Record ID
            var pkTextId = f.PackageID; // Text/Number ID
            if (pkTextId) pkTextId = String(pkTextId).trim(); // Normalize
+           var existingWpPkgId = (pkTextId && /^\d+$/.test(pkTextId)) ? pkTextId : '';
 
            // Get linked prices - Match by Record ID OR Text ID
            var linked = [];
@@ -6428,19 +6799,32 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
            }
 
            var payload = processPackage(f, linked); // Pass linked prices!
-           
+           if (existingWpPkgId) {
+             payload.id = Number(existingWpPkgId);
+             log('CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ' + String(targetLang || '') + '): ' + existingWpPkgId);
+           } else {
+             log('NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (package ' + String(targetLang || '') + '): airtable_pkg=' + pkId);
+           }
            log('Updater: Sending package "' + payload.title + '" to WP...');
            var newId = await sendPackageToWp_Updater_(payload, { lang: targetLang });
            
            if (newId) {
-              log('Updater: Package created with ID: ' + newId + '. Updating Airtable...');
+              if (existingWpPkgId && String(existingWpPkgId) === String(newId)) {
+                log('EXISTING OBJECT REUSED AND REFRESHED (package ' + String(targetLang || '') + '): ' + newId);
+              } else {
+                log('Updater: Package created with ID: ' + newId + '. Updating Airtable...');
+              }
               generatedPackageIds.push(newId);
               
               // 1. Update Package Record
               if (!skipAirtableSync) {
                 try {
-                    await airtableUpdate_('Packages', pkg.id, { PackageID: String(newId) });
-                    log('Updater: Updated Packages table for record ' + pkg.id);
+                    if (!existingWpPkgId || String(existingWpPkgId) !== String(newId)) {
+                      await airtableUpdate_('Packages', pkg.id, { PackageID: String(newId) });
+                      log('Updater: Updated Packages table for record ' + pkg.id);
+                    } else {
+                      log('EXISTING TRANSLATED CONTENT REFRESHED (package airtable record ' + pkg.id + ')');
+                    }
                 } catch (e) {
                     log('Updater: ERROR updating Packages table: ' + e.message);
                 }
@@ -6503,6 +6887,7 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
 
 async function sendPackageToWp_Updater_(payload, opts) {
       opts = opts || {};
+      var isUpdate = payload && payload.id;
       var options = {
         method: 'post',
         contentType: 'application/json',
@@ -6521,18 +6906,24 @@ async function sendPackageToWp_Updater_(payload, opts) {
       if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6);
       
       var url = baseUrl + '/packages';
+      if (isUpdate) url += '/' + encodeURIComponent(String(payload.id));
       if (opts.lang) {
         url += '?lang=' + encodeURIComponent(String(opts.lang));
       }
 
       var resp = await fetchUrl(url, options);
+      var code = resp.getResponseCode();
       var json = JSON.parse(resp.getContentText());
 
       if (json && json.id) {
-         log('Updater: Created Package ' + json.id);
+         if (isUpdate) log('Updater: Updated Package ' + json.id);
+         else log('Updater: Created Package ' + json.id);
          return json.id;
+      } else if (isUpdate && code >= 200 && code < 300) {
+         log('Updater: Updated Package ' + String(payload.id));
+         return payload.id;
       } else {
-         log('Updater: Failed to create package ' + JSON.stringify(json));
+         log('Updater: Failed to send package (code=' + code + '): ' + JSON.stringify(json));
          return null;
       }
 }
@@ -7136,8 +7527,13 @@ async function ensureTranslatedAttachmentWithStatus_Updater_(tripRecId, map, sou
 
   var cached = getCachedTranslatedAttachmentId_Updater_(map, sourceId, lang);
   if (cached) {
-    log('IMAGE TRANSLATION CACHE HIT (' + lang + '): ' + sourceId + ' -> ' + cached);
-    return { id: cached, status: 'cache', role: imageRole || '' };
+    var exists = null
+    try { exists = await getMediaFromWordPress_Updater_(cached) } catch (eExists) { exists = null }
+    if (exists) {
+      log('CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (attachment ' + lang + '): ' + sourceId + ' -> ' + cached)
+      return { id: cached, status: 'reuse', role: imageRole || '' }
+    }
+    log('CACHE HIT BUT TARGET MISSING - CREATE CONTINUES (attachment ' + lang + '): ' + sourceId + ' -> ' + cached)
   }
   log('IMAGE TRANSLATION CACHE MISS (' + lang + '): ' + sourceId);
   var newId = await createTranslatedAttachment_Updater_(sourceId, lang);
@@ -7146,6 +7542,7 @@ async function ensureTranslatedAttachmentWithStatus_Updater_(tripRecId, map, sou
   if (imageRole) {
     log(String(imageRole).toUpperCase() + ' IMAGE ATTACHMENT CREATED (' + lang + '): ' + newId);
   }
+  log('NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (attachment ' + lang + '): ' + sourceId + ' -> ' + newId)
   return { id: newId, status: 'new', role: imageRole || '' };
 }
 
@@ -7461,6 +7858,56 @@ async function translateImageMetadataForLanguage_Updater_(imageMeta, targetLang,
       out.alt = (primary + ' ' + out.alt).trim();
       if (out.alt.length > 125) out.alt = out.alt.substring(0, 125).trim();
     }
+  }
+
+  var purity = validateSingleLanguagePurity_Updater_(lang, {
+    title: out.title,
+    caption: out.caption,
+    alt: out.alt,
+    description: out.description
+  })
+  if (!purity.ok) {
+    log('LANGUAGE CONTAMINATION DETECTED (' + lang + '): image_metadata ' + JSON.stringify(purity.contaminated))
+    log('REGENERATING CONTAMINATED FIELD: image_metadata (' + lang + ')')
+    var forbid =
+      "- Do NOT use Turkish words (kahire, turu, turları, mısır) or Turkish characters.\n" +
+      "- Do NOT use English phrases like 'day tours', 'Egyptian Museum Cairo', 'cairo museum'.\n"
+    var prompt2 =
+      "You are an expert in Travel SEO and Multilingual Content Localization.\n\n" +
+      "CRITICAL RULES:\n" +
+      "1) TARGET LANGUAGE ONLY\n" +
+      "You MUST return the result ONLY in the target language: " + lang + ".\n" +
+      "Never output any other language.\n\n" +
+      "FORBIDDEN (STRICT):\n" + forbid + "\n" +
+      "2) CONTENT INTEGRITY\n" +
+      "- Keep meaning identical.\n" +
+      "- Do not change the visual meaning of the image.\n" +
+      "- Preserve place names and trip context.\n" +
+      "- Do not add new facts.\n\n" +
+      "3) SEO KEYWORDS\n" +
+      "- Do NOT keyword stuff.\n" +
+      "- Preferred keyword to use for this image when possible: " + (useKw ? useKw : "(none)") + "\n\n" +
+      "SAFE OUTPUT:\n" +
+      "Return ONLY valid JSON with this exact shape:\n" +
+      "{ \"title\": \"...\", \"caption\": \"...\", \"alt\": \"...\", \"description\": \"...\" }\n\n" +
+      "ENGLISH SOURCE IMAGE METADATA:\n" + JSON.stringify(input) + "\n\n" +
+      "CONTEXT:\n" +
+      "image_role: " + role + "\n" +
+      "trip_title: " + String(ctx.tripTitle || '') + "\n" +
+      "location: " + String(ctx.location || '') + "\n" +
+      "main_activity: " + String(ctx.activity || '') + "\n" +
+      "primary_keyword: " + primary + "\n" +
+      "secondary_keywords: " + JSON.stringify(secondary) + "\n"
+    var res2 = await callAiForTargetLangWithRetry_Updater_(prompt2, lang)
+    if (res2 && typeof res2 === 'object' && !Array.isArray(res2)) {
+      out.title = String(res2.title || out.title).trim()
+      out.caption = String(res2.caption || out.caption).trim()
+      out.alt = String(res2.alt || out.alt).trim()
+      out.description = String(res2.description || out.description).trim()
+      log('IMAGE METADATA LANGUAGE PURITY FIXED (' + lang + ')')
+    }
+  } else {
+    log('TARGET LANGUAGE PURITY PASSED (' + lang + '): image_metadata')
   }
 
   return out;
