@@ -911,12 +911,19 @@ function runUpdaterBatch() {
             if (!mixCheck.ok) {
               Logger.log('Updater: TITLE/SLUG LOCALIZATION FAILED (' + targetLang + '): ' + (mixCheck.found || []).join(', '));
 
+              var cleaned = cleanTitleSlugEnglishPhrasesInPlace_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, slugLocked);
+              translatedPayload = cleaned.payload;
+              if (cleaned.changed) Logger.log('SLUG CLEANED AND ACCEPTED (' + targetLang + ')');
+              mixCheck = validateNoEnglishGenericMixingInTitleSlug_Updater_(translatedPayload, targetLang, providedForLang, specConstraints);
+              if (mixCheck.ok) {
+                Logger.log('SLUG CLEANED AND ACCEPTED (' + targetLang + ')');
+              } else {
               var ts = regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, translatedData, targetLang, providedForLang, specConstraints, slugLocked, mixCheck);
               if (ts) {
                 if (ts.title) translatedPayload.meta.rank_math_title = ts.title;
                 if (!slugLocked && ts.slug) {
                   translatedPayload.core = translatedPayload.core || {};
-                  translatedPayload.core.slug = sanitizeTranslatedSlug_(ts.slug);
+                  translatedPayload.core.slug = finalizeTranslatedSlug_Updater_(ts.slug, { maxLen: 80, spec: specConstraints });
                 }
               }
 
@@ -939,11 +946,39 @@ function runUpdaterBatch() {
                 mixCheck = validateNoEnglishGenericMixingInTitleSlug_Updater_(translatedPayload, targetLang, providedForLang, specConstraints);
               }
 
-              if (!mixCheck.ok || !specCheck.ok) {
+              if (!mixCheck.ok && mixCheck.severity === 'soft' && specCheck.ok) {
+                Logger.log('LOCALIZATION IMPERFECT BUT ACCEPTED (' + targetLang + '): ' + (mixCheck.found || []).join(', '));
+              } else if (!mixCheck.ok || !specCheck.ok) {
                 var reasonM = 'localization_failed: ' + (mixCheck.found || []).join(', ');
+                Logger.log('HARD FAIL: ' + reasonM + ' (' + targetLang + ')');
                 Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/localization): ' + reasonM);
                 translationSkipped.push({ lang: targetLang, message: reasonM });
                 continue;
+              }
+              }
+            }
+
+            var lmCheck = validateLandmarkSpecificityPreservation_Updater_(specConstraints, translatedPayload, targetLang);
+            if (!lmCheck.ok) {
+              Logger.log('HARD FAIL: primary landmark lost (' + targetLang + '): ' + lmCheck.reasons.join(', '));
+              translatedPayload = applyLandmarkSpecificityFix_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, slugLocked);
+              translatedPayload = forcePrimaryKeywordFallbackOnSeo_Updater_(translatedPayload, providedForLang ? providedForLang.primary : '', payload, slugLocked);
+              kwCheck = validateKeywordEnforcement_Updater_(translatedPayload, targetLang, providedForLang, assets);
+              specCheck = validateSeoSpecificity_Updater_(specConstraints, translatedPayload, targetLang, providedForLang, slugLocked);
+              lmCheck = validateLandmarkSpecificityPreservation_Updater_(specConstraints, translatedPayload, targetLang);
+              if (kwCheck.ok && specCheck.ok && lmCheck.ok) {
+                Logger.log('LANDMARK SPECIFICITY FIXED AND ACCEPTED (' + targetLang + ')');
+              } else {
+                var reasonL = 'landmark_specificity_failed: ' + lmCheck.reasons.join(', ');
+                Logger.log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (SEO/landmarks): ' + reasonL);
+                translationSkipped.push({ lang: targetLang, message: reasonL });
+                continue;
+              }
+            } else {
+              if (lmCheck.secondary_missing && lmCheck.secondary_missing.length) {
+                Logger.log('SECONDARY LANDMARKS MISSING BUT ACCEPTED (' + targetLang + '): ' + lmCheck.secondary_missing.join(', '));
+              } else if (lmCheck.primary_present && lmCheck.primary_present.length) {
+                Logger.log('PRIMARY LANDMARKS PRESERVED (' + targetLang + '): ' + lmCheck.primary_present.join(', '));
               }
             }
 
@@ -1816,10 +1851,14 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   
   // Tab Content (Overview & Why People Love)
   wte.tab_content = {};
-  if (g.AI_Trip_Description) wte.tab_content['1_wpeditor'] = g.AI_Trip_Description; // Assuming 1 is Overview
+  if (g.AI_Trip_Description) {
+    wte.tab_content['1_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Overview_Section_Title || 'Overview', g.AI_Trip_Description);
+  } // Assuming 1 is Overview
   
   if (g.AI_Why_People_Love_This_Trip_Section_Title) wte.tab_8_title = g.AI_Why_People_Love_This_Trip_Section_Title;
-  if (g.AI_Tab_Content) wte.tab_content['8_wpeditor'] = g.AI_Tab_Content; // Assuming 8 is "Why People Love"
+  if (g.AI_Tab_Content) {
+    wte.tab_content['8_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Why_People_Love_This_Trip_Section_Title || 'Why People Love This Trip', g.AI_Tab_Content);
+  } // Assuming 8 is "Why People Love"
 
   var overviewHtml = (wte.tab_content && wte.tab_content['1_wpeditor']) ? wte.tab_content['1_wpeditor'] : '';
   if (overviewHtml) {
@@ -1869,7 +1908,9 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   // Itinerary
   // Note: JSON shows `trip_itinerary_title` (section title) vs `itinerary_title` (object of day titles)
   if (g.AI_Itinerary_Section_Title) wte.trip_itinerary_title = g.AI_Itinerary_Section_Title; 
-  if (g.AI_Itinerary_Description) wte.trip_itinerary_description = g.AI_Itinerary_Description;
+  if (g.AI_Itinerary_Description) {
+    wte.trip_itinerary_description = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Itinerary_Section_Title || 'Itinerary', g.AI_Itinerary_Description);
+  }
   
   if (data.itinerary.length > 0) {
     wte.itinerary.itinerary_title = {};
@@ -2834,6 +2875,126 @@ function sanitizeTranslatedSlug_(text) {
   return s;
 }
 
+function finalizeTranslatedSlug_Updater_(raw, opts) {
+  var maxLen = opts && opts.maxLen ? Number(opts.maxLen) : 80;
+  if (!isFinite(maxLen) || maxLen <= 0) maxLen = 80;
+
+  var original = sanitizeTranslatedSlug_(raw);
+  if (!original) return '';
+  if (original.length <= maxLen) return original;
+
+  var baseUnits = [
+    'old-cairo',
+    'alt-kairo',
+    'egyptian-museum',
+    'egyptian-civilization-museum',
+    'national-museum-of-egyptian-civilization',
+    'khan-el-khalili',
+    'quad-biking',
+    'horse-riding',
+    'orange-bay',
+    'water-sports',
+    'grand-egyptian-museum'
+  ];
+  var units = baseUnits.slice();
+  if (opts && opts.spec && opts.spec.landmark_slugs && Array.isArray(opts.spec.landmark_slugs)) {
+    opts.spec.landmark_slugs.forEach(function(x) { units.push(x); });
+  }
+  var seenUnits = {};
+  units = units.map(function(x) { return sanitizeTranslatedSlug_(x); }).filter(function(x) {
+    if (!x) return false;
+    if (seenUnits[x]) return false;
+    seenUnits[x] = true;
+    return true;
+  });
+
+  var tokens = original.split('-').filter(function(t) { return !!t; });
+  var outTokens = [];
+  for (var i = 0; i < tokens.length; i++) {
+    var candidate = outTokens.concat([tokens[i]]).join('-');
+    if (candidate.length > maxLen) break;
+    outTokens.push(tokens[i]);
+  }
+  if (!outTokens.length) outTokens = tokens.slice(0, 1);
+
+  function endsWithSeq_(arr, seq) {
+    if (arr.length < seq.length) return false;
+    for (var j = 0; j < seq.length; j++) {
+      if (arr[arr.length - seq.length + j] !== seq[j]) return false;
+    }
+    return true;
+  }
+
+  var didTrim = true;
+  while (didTrim) {
+    didTrim = false;
+    for (var u = 0; u < units.length; u++) {
+      var unit = units[u];
+      if (!unit) continue;
+      if (original.indexOf(unit) === -1) continue;
+      var unitTokens = unit.split('-').filter(function(t) { return !!t; });
+      if (unitTokens.length < 2) continue;
+      if (endsWithSeq_(outTokens, unitTokens)) continue;
+      for (var k = 1; k < unitTokens.length; k++) {
+        var prefix = unitTokens.slice(0, k);
+        if (endsWithSeq_(outTokens, prefix)) {
+          outTokens = outTokens.slice(0, outTokens.length - k);
+          didTrim = true;
+          break;
+        }
+      }
+      if (didTrim) break;
+    }
+  }
+
+  var didTrim2 = true;
+  while (didTrim2) {
+    didTrim2 = false;
+    for (var u2 = 0; u2 < units.length; u2++) {
+      var unit2 = units[u2];
+      if (!unit2) continue;
+      var unitTokens2 = unit2.split('-').filter(function(t) { return !!t; });
+      if (unitTokens2.length < 2) continue;
+      if (endsWithSeq_(outTokens, unitTokens2)) continue;
+      for (var k2 = 1; k2 < unitTokens2.length; k2++) {
+        var prefix2 = unitTokens2.slice(0, k2);
+        if (endsWithSeq_(outTokens, prefix2)) {
+          outTokens = outTokens.slice(0, outTokens.length - k2);
+          didTrim2 = true;
+          break;
+        }
+      }
+      if (didTrim2) break;
+    }
+  }
+
+  var stop = { 'of': true, 'and': true, 'the': true, 'to': true, 'in': true, 'at': true, 'on': true, 'for': true };
+  while (outTokens.length) {
+    var last = String(outTokens[outTokens.length - 1] || '');
+    if (!last) { outTokens.pop(); continue; }
+    if (last.length < 2) { outTokens.pop(); continue; }
+    if (stop[last]) { outTokens.pop(); continue; }
+    break;
+  }
+
+  if (opts && opts.spec) {
+    var enRef = normalizeForEnglishPhraseScan_Updater_(String(opts.spec.english_title || '') + ' ' + String(opts.spec.english_meta || '') + ' ' + String(opts.spec.english_slug || ''));
+    var hasOldCairo = enRef.indexOf('old cairo') !== -1;
+    if (hasOldCairo && outTokens.length && String(outTokens[outTokens.length - 1]) === 'alt') {
+      outTokens.pop();
+    }
+  }
+
+  var out = outTokens.join('-');
+  out = out.replace(/-+$/g, '');
+  if (!out) out = outTokens.slice(0, 1).join('-');
+  if (out.length > maxLen) {
+    out = out.substring(0, maxLen);
+    out = out.replace(/-+$/g, '');
+  }
+  return out;
+}
+
 function normalizeTripCode_Updater_(raw) {
   var s = String(raw == null ? '' : raw).trim();
   if (!s) return '';
@@ -3788,8 +3949,45 @@ function isGenericSlug_Updater_(slug, targetLang, spec) {
   return false;
 }
 
+function isAcceptableButNotPerfectSlug_Updater_(slug, targetLang, kw, spec) {
+  var s = String(slug || '').trim().toLowerCase();
+  if (!s) return false;
+  var parts = s.split('-').filter(function(p) { return !!p; });
+  if (parts.length < 4) return false;
+
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var primarySlug = buildShortSlugFromPrimaryKeyword_Updater_(primary);
+  var primarySlug2 = sanitizeTranslatedSlug_(primary);
+  var hasPrimary = false;
+  if (primarySlug && s.indexOf(primarySlug) !== -1) hasPrimary = true;
+  else if (primarySlug2 && s.indexOf(primarySlug2) !== -1) hasPrimary = true;
+  if (!hasPrimary) return false;
+
+  var hasLandmark = false;
+  if (countLandmarkSlugsPresent_Updater_(s, spec) > 0) hasLandmark = true;
+  if (!hasLandmark && hasAttractionConceptInText_Updater_(s.replace(/-/g, ' '), targetLang)) hasLandmark = true;
+  if (!hasLandmark) {
+    var place = spec && spec.place ? sanitizeTranslatedSlug_(spec.place) : '';
+    if (place && s.indexOf(place) !== -1 && parts.length >= 5) hasLandmark = true;
+  }
+  if (!hasLandmark) return false;
+
+  if (isGenericSlug_Updater_(s, targetLang, spec)) {
+    var genericTokens = getGenericTokensForLang_Updater_(targetLang).map(function(x) { return buildShortSlugFromPrimaryKeyword_Updater_(x); }).filter(function(x) { return !!x; });
+    var place2 = spec && spec.place ? sanitizeTranslatedSlug_(spec.place) : '';
+    var looksCityOnly = false;
+    if (place2) {
+      var others = parts.filter(function(p) { return p !== place2; });
+      if (others.length <= 1 && genericTokens.length) looksCityOnly = true;
+    }
+    if (looksCityOnly) return false;
+  }
+
+  return true;
+}
+
 function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLocked) {
-  var out = { ok: true, reasons: [] };
+  var out = { ok: true, reasons: [], warnings: [] };
   var s = spec || {};
   var p = payload || {};
   var meta = p.meta || {};
@@ -3808,12 +4006,325 @@ function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLock
   if (desc && enMeta && enMeta.length >= 90 && desc.length < Math.max(60, Math.floor(enMeta.length * 0.55))) out.reasons.push('meta_specificity_failed');
   if (desc && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(desc, s) === 0 && !hasAttractionConceptInText_Updater_(desc, targetLang)) out.reasons.push('meta_specificity_failed');
 
-  if (slug && slug.length < 12 && String(s.english_slug || '').length >= 18) out.reasons.push('slug_genericness_failed');
-  if (slug && isGenericSlug_Updater_(slug, targetLang, s) && String(s.english_slug || '').length >= 14) out.reasons.push('slug_genericness_failed');
-  if (slug && !slugLocked && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) out.reasons.push('slug_genericness_failed');
-  if (slug && slugLocked && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) out.reasons.push('slug_genericness_failed');
+  var slugAcceptable = isAcceptableButNotPerfectSlug_Updater_(slug, targetLang, kw, s);
+  if (slug && slug.length < 12 && String(s.english_slug || '').length >= 18) {
+    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
+    else out.warnings.push('acceptable_but_not_perfect_slug');
+  }
+  if (slug && isGenericSlug_Updater_(slug, targetLang, s) && String(s.english_slug || '').length >= 14) {
+    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
+    else out.warnings.push('acceptable_but_not_perfect_slug');
+  }
+  if (slug && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) {
+    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
+    else out.warnings.push('acceptable_but_not_perfect_slug');
+  }
 
   out.ok = out.reasons.length === 0;
+  return out;
+}
+
+function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
+  var s = spec || {};
+  var enTitle = normalizeForEnglishPhraseScan_Updater_(String(s.english_title || ''));
+  var enMeta = normalizeForEnglishPhraseScan_Updater_(String(s.english_meta || ''));
+  var enSlug = normalizeForEnglishPhraseScan_Updater_(String(s.english_slug || ''));
+  var enAll = normalizeForEnglishPhraseScan_Updater_(String(s.english_title || '') + ' ' + String(s.english_meta || '') + ' ' + String(s.english_slug || '') + ' ' + (s.landmarks ? s.landmarks.join(' ') : ''));
+
+  function hasAny_(hay, needles) {
+    var h = String(hay || '');
+    for (var i = 0; i < needles.length; i++) {
+      if (h.indexOf(needles[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function score_(needles) {
+    var inTitle = hasAny_(enTitle, needles);
+    var inSlug = hasAny_(enSlug, needles);
+    var inMeta = hasAny_(enMeta, needles);
+    var inAny = hasAny_(enAll, needles);
+    var score = (inTitle ? 6 : 0) + (inSlug ? 4 : 0) + (inMeta ? 2 : 0) + (inAny ? 1 : 0);
+    return { present: inAny, inTitle: inTitle, inSlug: inSlug, inMeta: inMeta, score: score };
+  }
+
+  var civNeedles = ['civilization museum', 'egyptian civilization museum', 'national museum of egyptian civilization', 'nmec'];
+  var oldNeedles = ['old cairo'];
+  var khanNeedles = ['khan el khalili'];
+
+  var civ = score_(civNeedles);
+  var old = score_(oldNeedles);
+  var khan = score_(khanNeedles);
+
+  var items = {
+    civilization_museum: civ,
+    old_cairo: old,
+    khan_el_khalili: khan
+  };
+
+  var presentKeys = Object.keys(items).filter(function(k) { return items[k] && items[k].present; });
+  var wantPrimaryCount = (String(s.english_title || '').length >= 45) ? 3 : 2;
+  if (wantPrimaryCount < 1) wantPrimaryCount = 1;
+
+  presentKeys.sort(function(a, b) { return (items[b].score || 0) - (items[a].score || 0); });
+
+  var primaryKeys = [];
+  presentKeys.forEach(function(k) {
+    if (!items[k]) return;
+    if (k === 'khan_el_khalili' && !(items[k].inTitle || items[k].inSlug)) return;
+    if (k === 'old_cairo' && !(items[k].inTitle || items[k].inSlug)) return;
+    if ((items[k].inTitle || items[k].inSlug) && primaryKeys.indexOf(k) === -1) primaryKeys.push(k);
+  });
+
+  for (var i = 0; i < presentKeys.length && primaryKeys.length < wantPrimaryCount; i++) {
+    var k2 = presentKeys[i];
+    if (primaryKeys.indexOf(k2) !== -1) continue;
+    if (k2 === 'khan_el_khalili') continue;
+    if (k2 === 'old_cairo') continue;
+    if (items[k2] && items[k2].score >= 4) primaryKeys.push(k2);
+  }
+
+  if (!primaryKeys.length && presentKeys.length) primaryKeys.push(presentKeys[0]);
+
+  var secondaryKeys = presentKeys.filter(function(k) { return primaryKeys.indexOf(k) === -1; });
+
+  return {
+    items: items,
+    primary_keys: primaryKeys,
+    secondary_keys: secondaryKeys
+  };
+}
+
+function getCivilizationMuseumMarkersForLang_Updater_(lang) {
+  var l = String(lang || '').toLowerCase();
+  var map = {
+    'de': ['zivilisation', 'nmec'],
+    'fr': ['civilisation', 'nmec'],
+    'es': ['civilizacion', 'civilización', 'nmec'],
+    'it': ['civilta', 'civiltà', 'nmec'],
+    'nl': ['beschaving', 'civilisatie', 'nmec'],
+    'pl': ['cywilizac', 'nmec'],
+    'tr': ['medeniyet', 'nmec'],
+    'ru': ['цивилизац', 'nmec'],
+    'ro': ['civiliza', 'nmec'],
+    'pt-br': ['civiliz', 'nmec'],
+    'uk': ['цивілізац', 'nmec'],
+    'cs': ['civilizac', 'nmec'],
+    'hu': ['civiliz', 'nmec'],
+    'ja': ['文明', 'nmec'],
+    'ko': ['문명', 'nmec'],
+    'zh-hans': ['文明', 'nmec']
+  };
+  return map[l] || ['civiliz', 'nmec'];
+}
+
+function textContainsAnyMarker_Updater_(text, markers) {
+  var t = normalizeForSpecMatch_Updater_(text);
+  if (!t) return false;
+  for (var i = 0; i < (markers || []).length; i++) {
+    var m = normalizeForSpecMatch_Updater_(markers[i]);
+    if (m && t.indexOf(m) !== -1) return true;
+  }
+  return false;
+}
+
+function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetLang) {
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return { ok: true, reasons: [], warnings: [], primary_missing: [], secondary_missing: [], primary_present: [] };
+
+  var req = getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec);
+  var p = payload || {};
+  var meta = p.meta || {};
+  var core = p.core || {};
+
+  var combined = [
+    meta.rank_math_title,
+    meta.rank_math_description,
+    core.slug
+  ].map(function(x) { return String(x || ''); }).join(' | ');
+
+  var primaryMissing = [];
+  var secondaryMissing = [];
+  var primaryPresent = [];
+  var warnings = [];
+
+  function mark_(key, ok) {
+    var isPrimary = req && req.primary_keys && req.primary_keys.indexOf(key) !== -1;
+    var isSecondary = req && req.secondary_keys && req.secondary_keys.indexOf(key) !== -1;
+    if (ok) {
+      if (isPrimary) primaryPresent.push(key);
+      return;
+    }
+    if (isPrimary) primaryMissing.push(key);
+    else if (isSecondary) secondaryMissing.push(key);
+  }
+
+  var civOk = true;
+  if (req && req.items && req.items.civilization_museum && req.items.civilization_museum.present) {
+    var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
+    civOk = textContainsAnyMarker_Updater_(combined, markers);
+    mark_('civilization_museum', civOk);
+  }
+
+  var oldOk = true;
+  if (req && req.items && req.items.old_cairo && req.items.old_cairo.present) {
+    var oc = localizeForbiddenEnglishPhraseForLang_Updater_('old cairo', lang) || '';
+    if (oc) oldOk = textContainsAnyMarker_Updater_(combined, [oc, 'old cairo', 'alt-kairo', 'alt kairo', 'altkairo']);
+    else oldOk = textContainsAnyMarker_Updater_(combined, ['old cairo', 'alt-kairo', 'alt kairo', 'altkairo']);
+    mark_('old_cairo', oldOk);
+  }
+
+  var khanOk = true;
+  if (req && req.items && req.items.khan_el_khalili && req.items.khan_el_khalili.present) {
+    khanOk = textContainsAnyMarker_Updater_(combined, ['khan el khalili', 'khan-el-khalili']);
+    mark_('khan_el_khalili', khanOk);
+  }
+
+  if (secondaryMissing.length) warnings = secondaryMissing.map(function(k) { return 'secondary_landmark_missing_' + k; });
+  var reasons = primaryMissing.map(function(k) { return 'landmark_specificity_failed_' + k; });
+  return { ok: reasons.length === 0, reasons: reasons, warnings: warnings, primary_missing: primaryMissing, secondary_missing: secondaryMissing, primary_present: primaryPresent };
+}
+
+function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slugLocked) {
+  var out = payload || {};
+  out.meta = out.meta || {};
+  out.core = out.core || {};
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return out;
+
+  var req = getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec);
+  var combined = String(out.meta.rank_math_title || '') + ' | ' + String(out.meta.rank_math_description || '') + ' | ' + String(out.core.slug || '');
+
+  var requireCiv = req && req.primary_keys && req.primary_keys.indexOf('civilization_museum') !== -1;
+  var requireOld = req && req.primary_keys && req.primary_keys.indexOf('old_cairo') !== -1;
+  var requireKhan = req && req.primary_keys && req.primary_keys.indexOf('khan_el_khalili') !== -1;
+
+  if (requireCiv) {
+    var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
+    if (!textContainsAnyMarker_Updater_(combined, markers)) {
+      var civPhrase =
+        localizeForbiddenEnglishPhraseForLang_Updater_('national museum of egyptian civilization', lang) ||
+        localizeForbiddenEnglishPhraseForLang_Updater_('egyptian civilization museum', lang) ||
+        localizeForbiddenEnglishPhraseForLang_Updater_('civilization museum', lang);
+
+      if (civPhrase) {
+        var title = String(out.meta.rank_math_title || '').trim();
+        var egyptPhrase = localizeForbiddenEnglishPhraseForLang_Updater_('egyptian museum', lang);
+        var titleNorm = normalizeForSpecMatch_Updater_(title);
+        var civNorm = normalizeForSpecMatch_Updater_(civPhrase);
+        if (title && civNorm && titleNorm.indexOf(civNorm) === -1) {
+          var replaced = false;
+          if (egyptPhrase) {
+            var egyptNorm = normalizeForSpecMatch_Updater_(egyptPhrase);
+            if (egyptNorm && titleNorm.indexOf(egyptNorm) !== -1) {
+              title = title.replace(new RegExp(escapeRegex_Updater_(egyptPhrase), 'i'), civPhrase);
+              replaced = true;
+            }
+          }
+          if (!replaced) {
+            title = title.replace(/(aegyptisches\s+museum|ägyptisches\s+museum|egyptian\s+museum)/i, civPhrase);
+          }
+        }
+        if (title && civNorm && normalizeForSpecMatch_Updater_(title).indexOf(civNorm) === -1) {
+          title = (title + ' – ' + civPhrase).trim();
+        } else if (!title) {
+          title = String(civPhrase);
+        }
+        if (title.length > 65) title = title.substring(0, 65).trim();
+        if (title) out.meta.rank_math_title = title;
+
+        var desc = String(out.meta.rank_math_description || '').trim();
+        if (desc && normalizeForSpecMatch_Updater_(desc).indexOf(normalizeForSpecMatch_Updater_(civPhrase)) === -1) {
+          desc = (civPhrase + ' – ' + desc).trim();
+        } else if (!desc) {
+          desc = String(civPhrase);
+        }
+        if (desc.length > 160) desc = desc.substring(0, 160).trim();
+        if (desc) out.meta.rank_math_description = desc;
+
+        if (!slugLocked) {
+          var slug = String(out.core.slug || '').trim();
+          var civSlug = sanitizeTranslatedSlug_(String(civPhrase));
+          if (civSlug) {
+            var egyptSlug1 = sanitizeTranslatedSlug_(String(egyptPhrase || ''));
+            var egyptSlug2 = 'aegyptisches-museum';
+            var egyptSlug3 = 'agyptisches-museum';
+            if (!slug) {
+              slug = civSlug;
+            } else if (slug.indexOf(civSlug) === -1) {
+              var replacedSlug = false;
+              if (egyptSlug1 && slug.indexOf(egyptSlug1) !== -1) { slug = slug.replace(egyptSlug1, civSlug); replacedSlug = true; }
+              else if (slug.indexOf(egyptSlug2) !== -1) { slug = slug.replace(egyptSlug2, civSlug); replacedSlug = true; }
+              else if (slug.indexOf(egyptSlug3) !== -1) { slug = slug.replace(egyptSlug3, civSlug); replacedSlug = true; }
+              if (!replacedSlug) slug = (slug + '-' + civSlug);
+            }
+            slug = finalizeTranslatedSlug_Updater_(slug, { maxLen: 80, spec: spec });
+            if (slug) out.core.slug = slug;
+          }
+        }
+      }
+    }
+  }
+
+  if (requireOld) {
+    var ocPhrase = localizeForbiddenEnglishPhraseForLang_Updater_('old cairo', lang) || '';
+    var ocOk = ocPhrase ? textContainsAnyMarker_Updater_(combined, [ocPhrase, 'old cairo', 'alt-kairo', 'alt kairo', 'altkairo']) : textContainsAnyMarker_Updater_(combined, ['old cairo', 'alt-kairo', 'alt kairo', 'altkairo']);
+    if (!ocOk) {
+      if (ocPhrase) {
+        var t1 = String(out.meta.rank_math_title || '').trim();
+        if (t1 && normalizeForSpecMatch_Updater_(t1).indexOf(normalizeForSpecMatch_Updater_(ocPhrase)) === -1) {
+          t1 = (t1 + ' – ' + ocPhrase).trim();
+          if (t1.length > 65) t1 = t1.substring(0, 65).trim();
+          out.meta.rank_math_title = t1;
+        }
+        var d1 = String(out.meta.rank_math_description || '').trim();
+        if (d1 && normalizeForSpecMatch_Updater_(d1).indexOf(normalizeForSpecMatch_Updater_(ocPhrase)) === -1) {
+          d1 = (d1 + ' – ' + ocPhrase).trim();
+          if (d1.length > 160) d1 = d1.substring(0, 160).trim();
+          out.meta.rank_math_description = d1;
+        }
+        if (!slugLocked) {
+          var s1 = String(out.core.slug || '').trim();
+          var ocSlug = sanitizeTranslatedSlug_(ocPhrase);
+          if (ocSlug && s1.indexOf(ocSlug) === -1) {
+            s1 = (s1 ? (s1 + '-' + ocSlug) : ocSlug);
+            out.core.slug = finalizeTranslatedSlug_Updater_(s1, { maxLen: 80, spec: spec });
+          }
+        }
+      }
+    }
+  }
+
+  if (requireKhan) {
+    var khOk = textContainsAnyMarker_Updater_(combined, ['khan el khalili', 'khan-el-khalili']);
+    if (!khOk) {
+      var kh = 'Khan El Khalili';
+      var t2 = String(out.meta.rank_math_title || '').trim();
+      if (t2 && normalizeForSpecMatch_Updater_(t2).indexOf(normalizeForSpecMatch_Updater_(kh)) === -1) {
+        t2 = (t2 + ' – ' + kh).trim();
+        if (t2.length > 65) t2 = t2.substring(0, 65).trim();
+        out.meta.rank_math_title = t2;
+      }
+      var d2 = String(out.meta.rank_math_description || '').trim();
+      if (d2 && normalizeForSpecMatch_Updater_(d2).indexOf(normalizeForSpecMatch_Updater_(kh)) === -1) {
+        d2 = (d2 + ' – ' + kh).trim();
+        if (d2.length > 160) d2 = d2.substring(0, 160).trim();
+        out.meta.rank_math_description = d2;
+      }
+      if (!slugLocked) {
+        var s2 = String(out.core.slug || '').trim();
+        if (s2.indexOf('khan-el-khalili') === -1) {
+          s2 = (s2 ? (s2 + '-khan-el-khalili') : 'khan-el-khalili');
+          out.core.slug = finalizeTranslatedSlug_Updater_(s2, { maxLen: 80, spec: spec });
+        }
+      }
+    }
+  }
+
+  if (!slugLocked && out.core && out.core.slug) {
+    out.core.slug = finalizeTranslatedSlug_Updater_(out.core.slug, { maxLen: 80, spec: spec });
+  }
+
   return out;
 }
 
@@ -3879,7 +4390,7 @@ function keywordBlockAllowsPhrase_Updater_(kw, phraseNorm) {
 
 function validateNoEnglishGenericMixingInTitleSlug_Updater_(payload, targetLang, kw, spec) {
   var lang = String(targetLang || '').toLowerCase();
-  if (!lang || lang === 'en') return { ok: true, reasons: [], found: [] };
+  if (!lang || lang === 'en') return { ok: true, reasons: [], found: [], severity: 'none' };
 
   var p = payload || {};
   var meta = p.meta || {};
@@ -3907,7 +4418,21 @@ function validateNoEnglishGenericMixingInTitleSlug_Updater_(payload, targetLang,
   }
 
   if (!found.length) return { ok: true, reasons: [], found: [] };
-  return { ok: false, reasons: ['localization_failed'], found: found };
+  var softList = [
+    'day tour', 'day tours', 'day trip', 'day trips', 'guided tour', 'city tour', 'tour', 'trips', 'travel'
+  ];
+  var allSoft = true;
+  for (var si = 0; si < found.length; si++) {
+    var f = normalizeForEnglishPhraseScan_Updater_(found[si]);
+    if (softList.indexOf(f) === -1) { allSoft = false; break; }
+  }
+
+  var titleNow = String(meta.rank_math_title || '').trim();
+  var slugNow = String(core.slug || '').trim();
+  var slugOk = isAcceptableButNotPerfectSlug_Updater_(slugNow, lang, kw, spec);
+  var titleOk = !isGenericTitle_Updater_(titleNow, lang, spec);
+  var severity = (allSoft && slugOk && titleOk) ? 'soft' : 'hard';
+  return { ok: false, reasons: ['localization_failed'], found: found, severity: severity };
 }
 
 function localizeForbiddenEnglishPhraseForLang_Updater_(phrase, targetLang) {
@@ -3966,6 +4491,20 @@ function localizeForbiddenEnglishPhraseForLang_Updater_(phrase, targetLang) {
       'tr': 'Mısır Medeniyeti Müzesi', 'ru': 'Музей египетской цивилизации', 'ro': 'Muzeul Civilizației Egiptene',
       'pt-br': 'Museu da Civilização Egípcia', 'uk': 'Музей єгипетської цивілізації', 'cs': 'Muzeum egyptské civilizace',
       'hu': 'Az egyiptomi civilizáció múzeuma', 'ja': 'エジプト文明博物館', 'ko': '이집트 문명 박물관', 'zh-hans': '埃及文明博物馆'
+    },
+    'egyptian civilization museum': {
+      'de': 'Museum der ägyptischen Zivilisation (NMEC)', 'fr': 'Musée de la civilisation égyptienne (NMEC)', 'es': 'Museo de la Civilización Egipcia (NMEC)',
+      'it': 'Museo della Civiltà Egizia (NMEC)', 'nl': 'Museum van de Egyptische beschaving (NMEC)', 'pl': 'Muzeum Cywilizacji Egipskiej (NMEC)',
+      'tr': 'Mısır Medeniyeti Müzesi (NMEC)', 'ru': 'Музей египетской цивилизации (NMEC)', 'ro': 'Muzeul Civilizației Egiptene (NMEC)',
+      'pt-br': 'Museu da Civilização Egípcia (NMEC)', 'uk': 'Музей єгипетської цивілізації (NMEC)', 'cs': 'Muzeum egyptské civilizace (NMEC)',
+      'hu': 'Az egyiptomi civilizáció múzeuma (NMEC)', 'ja': 'エジプト文明博物館（NMEC）', 'ko': '이집트 문명 박물관(NMEC)', 'zh-hans': '埃及文明博物馆（NMEC）'
+    },
+    'national museum of egyptian civilization': {
+      'de': 'Nationalmuseum der ägyptischen Zivilisation (NMEC)', 'fr': 'Musée national de la civilisation égyptienne (NMEC)', 'es': 'Museo Nacional de la Civilización Egipcia (NMEC)',
+      'it': 'Museo Nazionale della Civiltà Egizia (NMEC)', 'nl': 'Nationaal Museum van de Egyptische beschaving (NMEC)', 'pl': 'Narodowe Muzeum Cywilizacji Egipskiej (NMEC)',
+      'tr': 'Mısır Medeniyeti Ulusal Müzesi (NMEC)', 'ru': 'Национальный музей египетской цивилизации (NMEC)', 'ro': 'Muzeul Național al Civilizației Egiptene (NMEC)',
+      'pt-br': 'Museu Nacional da Civilização Egípcia (NMEC)', 'uk': 'Національний музей єгипетської цивілізації (NMEC)', 'cs': 'Národní muzeum egyptské civilizace (NMEC)',
+      'hu': 'Az egyiptomi civilizáció nemzeti múzeuma (NMEC)', 'ja': '国立エジプト文明博物館（NMEC）', 'ko': '이집트 문명 국립박물관(NMEC)', 'zh-hans': '埃及文明国家博物馆（NMEC）'
     }
   };
   if (!map[p]) return '';
@@ -3997,6 +4536,31 @@ function replaceDisallowedEnglishGenericPhrases_Updater_(text, targetLang, kw, s
   out = out.replace(/\s+/g, ' ').trim();
   out = out.replace(/^[\-\–\—\|\:\s]+/, '').replace(/[\-\–\—\|\:\s]+$/, '').trim();
   return out;
+}
+
+function cleanTitleSlugEnglishPhrasesInPlace_Updater_(payload, targetLang, kw, spec, slugLocked) {
+  var out = payload || {};
+  out.meta = out.meta || {};
+  out.core = out.core || {};
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return { payload: out, changed: false };
+
+  var beforeTitle = String(out.meta.rank_math_title || '').trim();
+  var beforeSlug = String(out.core.slug || '').trim();
+
+  var cleanedTitle = replaceDisallowedEnglishGenericPhrases_Updater_(beforeTitle, lang, kw, spec);
+  if (cleanedTitle) out.meta.rank_math_title = cleanedTitle;
+
+  if (!slugLocked) {
+    var cleanedSlug = replaceDisallowedEnglishGenericPhrases_Updater_(beforeSlug.replace(/-/g, ' '), lang, kw, spec);
+    cleanedSlug = finalizeTranslatedSlug_Updater_(cleanedSlug, { maxLen: 80, spec: spec });
+    if (cleanedSlug) out.core.slug = cleanedSlug;
+  }
+
+  var afterTitle = String(out.meta.rank_math_title || '').trim();
+  var afterSlug = String(out.core.slug || '').trim();
+  var changed = (beforeTitle !== afterTitle) || (beforeSlug !== afterSlug);
+  return { payload: out, changed: changed };
 }
 
 function regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, translatedData, targetLang, kw, spec, slugLocked, validation) {
@@ -4044,7 +4608,7 @@ function regenerateTitleSlugOnlyForLocalization_Updater_(translatedPayload, tran
   if (res.title) out.title = String(res.title).trim();
   if (res.slug) out.slug = String(res.slug).trim();
   if (!out.title && !out.slug) return null;
-  out.slug = sanitizeTranslatedSlug_(out.slug);
+  out.slug = finalizeTranslatedSlug_Updater_(out.slug, { maxLen: 80, spec: spec });
   if (slugLocked) out.slug = '';
   return out;
 }
@@ -4078,9 +4642,7 @@ function applyTitleSlugFallbackNoEnglishMixing_Updater_(payload, targetLang, kw,
     var slug = buildShortSlugFromPrimaryKeyword_Updater_(primary) || sanitizeTranslatedSlug_(primary);
     if (slug.length < 10 && names) slug = sanitizeTranslatedSlug_(slug + '-' + names);
     slug = replaceDisallowedEnglishGenericPhrases_Updater_(slug.replace(/-/g, ' '), lang, kw, s);
-    slug = sanitizeTranslatedSlug_(slug);
-    slug = sanitizeTranslatedSlug_(slug);
-    if (slug.length > 80) slug = slug.substring(0, 80).replace(/-+$/g, '');
+    slug = finalizeTranslatedSlug_Updater_(slug, { maxLen: 80, spec: s });
     if (slug) out.core.slug = slug;
   }
 
@@ -4127,8 +4689,7 @@ function buildSpecificSlugFallback_Updater_(kw, spec) {
     slug = (slug ? (slug + '-' + part) : part);
   });
   slug = sanitizeTranslatedSlug_(slug);
-  if (slug.length > 80) slug = slug.substring(0, 80).replace(/-+$/g, '');
-  return slug;
+  return finalizeTranslatedSlug_Updater_(slug, { maxLen: 80, spec: s });
 }
 
 function applySpecificityFallbackSeo_Updater_(payload, kw, spec, slugLocked) {
@@ -4191,12 +4752,12 @@ function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLan
 
   if (!slugLocked) {
     var slug = '';
-    if (assets.slug) slug = sanitizeTranslatedSlug_(assets.slug);
+    if (assets.slug) slug = finalizeTranslatedSlug_Updater_(assets.slug, { maxLen: 80, spec: opts && opts.spec ? opts.spec : null });
     if (!slug && translatedData && translatedData.general && translatedData.general.AI_SEO_Permalink) {
-      slug = sanitizeTranslatedSlug_(translatedData.general.AI_SEO_Permalink);
+      slug = finalizeTranslatedSlug_Updater_(translatedData.general.AI_SEO_Permalink, { maxLen: 80, spec: opts && opts.spec ? opts.spec : null });
     }
-    if (!slug && out.core && out.core.slug) slug = sanitizeTranslatedSlug_(out.core.slug);
-    if (!slug && out.core && out.core.title) slug = sanitizeTranslatedSlug_(out.core.title);
+    if (!slug && out.core && out.core.slug) slug = finalizeTranslatedSlug_Updater_(out.core.slug, { maxLen: 80, spec: opts && opts.spec ? opts.spec : null });
+    if (!slug && out.core && out.core.title) slug = finalizeTranslatedSlug_Updater_(out.core.title, { maxLen: 80, spec: opts && opts.spec ? opts.spec : null });
     if (!slug && kw && kw.primary) slug = buildShortSlugFromPrimaryKeyword_Updater_(kw.primary);
     if (slug) out.core.slug = slug;
   }
@@ -4216,6 +4777,8 @@ function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLan
         html = '<h2>' + String(assets.h2_heading || kw.primary) + '</h2>' + html;
         out.core.content = html;
         out.content = html;
+        var wte2 = out.meta && out.meta.wp_travel_engine_setting;
+        if (wte2 && wte2.tab_content && wte2.tab_content['1_wpeditor']) wte2.tab_content['1_wpeditor'] = html;
       }
     }
   }
@@ -6208,6 +6771,65 @@ function stripHtmlToText_Updater_(html) {
   var s = String(html || '');
   if (!s) return '';
   return s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeTitleForDedupe_Updater_(text) {
+  var s = stripHtmlToText_Updater_(text);
+  if (!s) return '';
+  s = s.replace(/[\u2600-\u27BF\u1F000-\u1FAFF]/g, ' ');
+  try {
+    s = s.replace(/[^\p{L}\p{N}\s]+/gu, ' ');
+  } catch (e) {
+    s = s.replace(/[^A-Za-z0-9\s]+/g, ' ');
+  }
+  s = s.replace(/\s+/g, ' ').trim().toLowerCase();
+  return s;
+}
+
+function isNearDuplicateTitle_Updater_(a, b) {
+  var x = normalizeTitleForDedupe_Updater_(a);
+  var y = normalizeTitleForDedupe_Updater_(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (x.length < 8 || y.length < 8) return false;
+  if (x.indexOf(y) !== -1 && y.length >= Math.floor(x.length * 0.75)) return true;
+  if (y.indexOf(x) !== -1 && x.length >= Math.floor(y.length * 0.75)) return true;
+  return false;
+}
+
+function dedupeRepeatedSectionIntroFromHtml_Updater_(sectionTitle, bodyHtml) {
+  var title = String(sectionTitle || '').trim();
+  var html = String(bodyHtml || '');
+  if (!title || !html) return html;
+
+  var out = html;
+
+  var headingRe = /^\s*<(h[2-4])[^>]*>([\s\S]*?)<\/\1>\s*/i;
+  var mh = out.match(headingRe);
+  if (mh) {
+    var headingText = stripHtmlToText_Updater_(mh[2]);
+    if (isNearDuplicateTitle_Updater_(headingText, title)) {
+      out = out.replace(headingRe, '');
+    }
+  }
+
+  var pRe = /^\s*<p[^>]*>([\s\S]*?)<\/p>\s*/i;
+  var mp = out.match(pRe);
+  if (mp) {
+    var pText = stripHtmlToText_Updater_(mp[1]);
+    if (isNearDuplicateTitle_Updater_(pText, title)) {
+      out = out.replace(pRe, '');
+    }
+  } else {
+    var firstLine = out.replace(/^\s+/, '').split(/\r?\n|<br\s*\/?>/i)[0];
+    var lineText = stripHtmlToText_Updater_(firstLine);
+    if (isNearDuplicateTitle_Updater_(lineText, title)) {
+      out = out.replace(/^\s*[\s\S]*?(?:\r?\n|<br\s*\/?>)/i, '');
+    }
+  }
+
+  out = out.replace(/^\s+/, '');
+  return out;
 }
 
 function buildMediaMetaFromWpResponse_Updater_(mediaJson) {

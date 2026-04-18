@@ -403,7 +403,7 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
      "*POINT 7: THE PERFECT FIT* 👨‍👩‍👧‍👦 (Who specifically loves this tour?)\n\n" +
      
      "=== WRITING RULES ===\n" +
-     "1. USE SUBHEADINGS: Each point needs a catchy title\n" +
+     "1. USE POINT TITLES (NO HEADINGS): Each point needs a catchy title, but do NOT use any HTML headings (<h2>/<h3>/<h4>).\n" +
      "2. BENEFIT-FOCUSED: Not features, but what they GET\n" +
      "3. EMOTIONAL LANGUAGE: Make them FEEL something\n" +
      "4. SPECIFIC DETAILS: Concrete examples, not vague claims\n" +
@@ -412,11 +412,10 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
      "7. VARIED STRUCTURE: Mix short punchy points with slightly longer ones\n\n" +
      
      "=== OUTPUT FORMAT ===\n" +
-     "Why People Love This Trip ❤️\n\n" +
-     "*[Catchy Title 1]* ⭐\n" +
-     "[2-3 sentences explaining this point with emotional language]\n\n" +
-     "*[Catchy Title 2]* 🚐\n" +
-     "[2-3 sentences explaining this point]\n\n" +
+     "IMPORTANT: Do NOT repeat any section title inside body fields that already have a dedicated title field.\n" +
+     "Do NOT include headings or title lines like 'Why People Love This Trip ❤️'. Start directly with the content.\n\n" +
+     "<p><strong>[Catchy Title 1]</strong> ⭐ — [2-3 sentences explaining this point with emotional language]</p>\n" +
+     "<p><strong>[Catchy Title 2]</strong> 🚐 — [2-3 sentences explaining this point]</p>\n\n" +
      "...(continue for 5-7 points)\n\n" +
 
      "TASK 7: CALCULATE DURATION FROM ITINERARY (STRICT MATH REQUIRED)\n" +
@@ -463,13 +462,13 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
     "=== ITINERARY FORMATTING RULES (HTML REQUIRED) ===\n" +
     "- DO NOT return the itinerary as a single solid block of text.\n" +
     "- YOU MUST FORMAT THE ITINERARY USING HTML TAGS for clarity.\n" +
-    "- For each Day, use this EXACT structure:\n" +
-    "  <h3>Day X: [Day Title]</h3><p>[Day Description]</p>\n" +
+    "- For each Day, use this EXACT structure (NO HEADINGS):\n" +
+    "  <p><strong>Day X: [Day Title]</strong> — [Day Description]</p>\n" +
     "- Ensure there is a <br> or <p> break between days.\n" +
     "- Use <strong> for key highlights within the description.\n" +
     "- Example Output:\n" +
-    "  <h3>Day 1: Arrival in Cairo</h3><p>Meet and greet at Cairo International Airport. Transfer to your hotel.</p>\n" +
-    "  <h3>Day 2: Pyramids Tour</h3><p>Visit the <strong>Great Pyramids</strong> and Sphinx. Enjoy lunch at a local restaurant.</p>\n" +
+    "  <p><strong>Day 1: Arrival in Cairo</strong> — Meet and greet at Cairo International Airport. Transfer to your hotel.</p>\n" +
+    "  <p><strong>Day 2: Pyramids Tour</strong> — Visit the <strong>Great Pyramids</strong> and Sphinx. Enjoy lunch at a local restaurant.</p>\n" +
     "- This formatting is CRITICAL for the website display.\n\n" +
 
     "=== MUSEUM DISTINCTION & LOGIC (CRITICAL) ===\n" +
@@ -499,10 +498,13 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
      "- Do NOT invent new cities, regions or destinations that are not clearly mentioned in the trip context.\n" +
      "- Do NOT invent highly specific or risky activities.\n\n" +
      "Style and length guidelines for each output field:\n" +
+     "GLOBAL RULE FOR BODY FIELDS (CRITICAL):\n" +
+     "- Do not include headings (<h2>/<h3>/<h4>) or repeated section titles in body fields that already have a dedicated title field.\n" +
+     "- Do not start the body with the section title, even with emojis.\n\n" +
      "- AI_Overview_Section_Title:\n" +
      "  * You MUST use exactly: 'Overview'.\n" +
      "- AI_Trip_Description:\n" +
-    "  * CRITICAL: Must start with <h3 class=\"trip-section-title\">Overview</h3>\n" +
+    "  * CRITICAL: Must NOT include any headings. Must NOT repeat 'Overview'. Start directly with useful content.\n" +
     "  * Write with strong PURCHASE INTENT to encourage booking immediately.\n" +
     "  * Use persuasive language that drives conversion.\n" +
     "  * Focus on the most compelling aspects of the trip.\n" +
@@ -510,18 +512,18 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
     "- AI_Itinerary_Section_Title:\n" +
     "  * You MUST use exactly: 'Itinerary'.\n" +
     "- AI_Itinerary_Description:\n" +
-    "  * CRITICAL: Must start with <h3 class=\"trip-section-title\">Itinerary</h3>\n" +
+    "  * CRITICAL: Must NOT include any headings. Must NOT repeat 'Itinerary'. Start directly with the itinerary content.\n" +
     "  * Structured, detailed explanation of the day's flow.\n" +
     "  * Prefer bullet points or clearly separated short paragraphs for each step (pickup, main sites, lunch, free time, return, etc.).\n" +
     "  * Typically 4–10 steps, depending on the trip.\n" +
     "- AI_Why_People_Love_This_Trip_Section_Title:\n" +
     "  * You MUST use exactly: 'Why People Love This Trip'.\n" +
     "- AI_Tab_Content:\n" +
-    "  * CRITICAL: Must start with <h3 class=\"trip-section-title\">Why People Love This Trip</h3>\n" +
+    "  * CRITICAL: Must NOT include any headings. Must NOT repeat 'Why People Love This Trip'. Start directly with the first point.\n" +
     "  * Do NOT use markdown headers (like ## or ###) anywhere in this section.\n" +
     "  * THIS IS THE 'Why People Love This Trip' SECTION GENERATED IN TASK 5.\n" +
     "  * Use the content generated in TASK 5 here.\n" +
-    "  * Ensure it follows the 'Why People Love This Trip ❤️' format with 5-7 points.\n" +
+    "  * Ensure it has 5-7 points with bolded point titles.\n" +
     "  * Medium-to-long explanatory text (150-300 words).\n\n" +
      "- AI_Trip_Highlights_Section_Title:\n" +
      "  * You MUST use exactly: 'Highlights'.\n" +
