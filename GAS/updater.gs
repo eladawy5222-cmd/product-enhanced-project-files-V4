@@ -2506,45 +2506,676 @@ function detectLangHeuristicForKeyword_Updater_(s) {
   return '';
 }
 
-function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
-  function isKnownFalsePositiveForPolish_(s) {
-    var t = normalizeForSpecMatch_Updater_(String(s || ''));
-    if (!t) return false;
-    if (/\b(piramides|piramidele)\b/.test(t)) return true;
-    if (/\b(de|din)\b/.test(t)) return true;
-    return false;
-  }
-
-  function isHighConfidencePolishKeyword_(s) {
-    var raw = String(s || '').trim();
-    var t = normalizeForSpecMatch_Updater_(raw);
-    if (!t) return false;
-    if (isKnownFalsePositiveForPolish_(t)) return false;
-    try {
-      if (/[ąćęłńóśźż]/i.test(raw)) return true;
-    } catch (e) {}
-    if (/\b(wycieczka|zwiedzanie|warto|zobaczyc|zobaczyć|piramidy|muzeum|egipskie|cytadela|saladyna|stary)\b/.test(t)) return true;
-    if (/\b(w|we|z)\s+(kairze|kair|gizie|giza)\b/.test(t)) return true;
-    return false;
-  }
-
-  var list = [];
+function normalizeKeywordPhrasesInput_Updater_(keywordsField) {
+  var rawList = [];
   if (keywordsField) {
     if (Array.isArray(keywordsField)) {
-      list = list.concat(keywordsField.map(function(x) { return String(x || '').trim(); }));
+      rawList = rawList.concat(keywordsField.map(function(x) { return String(x == null ? '' : x); }));
     } else {
-      list = list.concat(String(keywordsField).split(/[,;\n]+/).map(function(x) { return String(x || '').trim(); }));
+      rawList = rawList.concat(String(keywordsField).split(','));
     }
   }
-  list = list.map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+
+  var out = [];
+  var seen = {};
+  for (var i = 0; i < rawList.length; i++) {
+    var original = String(rawList[i] == null ? '' : rawList[i]);
+    var collapsed = original.replace(/\s+/g, ' ').trim();
+    if (!collapsed) continue;
+    var key = collapsed.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push({ raw: collapsed, key: key });
+  }
+  Logger.log('KEYWORD PHRASES NORMALIZED: total=' + String(out.length));
+  return out;
+}
+
+function detectKeywordScript_Updater_(phrase) {
+  var s = String(phrase || '');
+  if (!s) return '';
+  if (/[\u0400-\u04FF]/.test(s)) return 'cyrillic';
+  if (/[\uAC00-\uD7AF]/.test(s)) return 'hangul';
+  if (/[\u3040-\u30FF]/.test(s)) return 'japanese';
+  if (/[\u4E00-\u9FFF]/.test(s)) return 'han';
+  return '';
+}
+
+function normalizeKeywordForScoring_Updater_(phrase) {
+  var s = String(phrase || '').toLowerCase();
+  s = s.replace(/[\u2010-\u2015]/g, '-');
+  s = s.replace(/[^a-z0-9\u00C0-\u024F\u0400-\u04FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\s'\-]/g, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function foldKeywordLatinDiacritics_Updater_(s) {
+  var t = String(s == null ? '' : s);
+  if (!t) return t;
+  var map = {
+    'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a', 'ã': 'a', 'å': 'a',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+    'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+    'ý': 'y', 'ÿ': 'y',
+    'ç': 'c',
+    'ñ': 'n',
+    'ő': 'o', 'ű': 'u',
+    'ă': 'a', 'â': 'a', 'î': 'i', 'ș': 's', 'ş': 's', 'ț': 't', 'ţ': 't',
+    'ě': 'e', 'š': 's', 'č': 'c', 'ř': 'r', 'ž': 'z', 'ů': 'u', 'ď': 'd', 'ť': 't', 'ň': 'n',
+    'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z', 'ą': 'a', 'ę': 'e'
+  };
+  return t.replace(/[^\u0000-\u007E]/g, function(ch) {
+    var c = String(ch || '').toLowerCase();
+    return map[c] ? map[c] : ch;
+  });
+}
+
+function tokenizeKeywordPhrase_Updater_(phrase) {
+  var raw = String(phrase || '');
+  var re = /[A-Za-z0-9\u00C0-\u024F\u0400-\u04FF\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]+/g;
+  var out = [];
+  var m;
+  while ((m = re.exec(raw)) !== null) {
+    var t = String(m[0] || '');
+    if (!t) continue;
+    out.push({ raw: t, lower: t.toLowerCase() });
+  }
+  return out;
+}
+
+function containsTokenSequence_Updater_(tokens, seqLower) {
+  if (!tokens || !tokens.length || !seqLower || !seqLower.length) return false;
+  for (var i = 0; i <= tokens.length - seqLower.length; i++) {
+    var ok = true;
+    for (var j = 0; j < seqLower.length; j++) {
+      if (String(tokens[i + j].lower || '') !== String(seqLower[j])) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  return false;
+}
+
+function detectCityFormSignals_Updater_(phrase, opts) {
+  opts = opts || {};
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return [];
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+  var signals = [];
+
+  function add_(lang, token, weight) {
+    if (!lang || !token) return;
+    if (opts.log) Logger.log('CITY FORM EXACT MATCH: "' + token + '" -> ' + lang);
+    signals.push({ lang: lang, token: token, w: Number(weight || 0) });
+  }
+
+  if (containsTokenSequence_Updater_(tokens, ['le', 'caire'])) add_('fr', 'Le Caire', 4);
+
+  if (lowers.indexOf('kairó') !== -1) {
+    add_('hu', 'Kairó', 4);
+    if (opts.log) Logger.log('CITY FORM REJECTED (substring only): "Kair" inside "Kairó"');
+  } else if (lowers.indexOf('kairo') !== -1) {
+    add_('de', 'Kairo', 4);
+  } else if (lowers.indexOf('kair') !== -1) {
+    add_('pl', 'Kair', 3);
+  }
+
+  if (lowers.indexOf('káhira') !== -1) add_('cs', 'Káhira', 4);
+  else if (lowers.indexOf('kahira') !== -1) add_('cs', 'Kahira', 3);
+
+  if (lowers.indexOf('каїр') !== -1) add_('uk', 'Каїр', 5);
+  else if (lowers.indexOf('каир') !== -1) add_('ru', 'Каир', 4);
+
+  if (lowers.indexOf('cairo') !== -1) {
+    add_('en', 'Cairo', 1);
+    add_('es', 'Cairo', 1);
+    add_('it', 'Cairo', 1);
+    add_('pt-br', 'Cairo', 1);
+    add_('ro', 'Cairo', 1);
+    add_('nl', 'Cairo', 1);
+  }
+
+  return signals;
+}
+
+function applyExactKeywordPhraseRule_Updater_(phrase) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return null;
+  var norm = normalizeKeywordForScoring_Updater_(raw);
+  var folded = foldKeywordLatinDiacritics_Updater_(norm).toLowerCase();
+  var key = norm.toLowerCase();
+
+  var exact = {
+    'piramidy w gizie': { lang: 'pl', type: 'phrase' },
+    'piramides de giza': { lang: 'es', type: 'phrase' },
+    'piramidele din giza': { lang: 'ro', type: 'phrase' },
+    'pyramidy v gize': { lang: 'cs', type: 'phrase' },
+    'cidadela de saladino': { lang: 'pt-br', type: 'phrase' },
+    'piramidi di giza': { lang: 'it', type: 'phrase' },
+    'cittadella di saladino': { lang: 'it', type: 'phrase' },
+    'citadel van saladin': { lang: 'nl', type: 'phrase' },
+    'egyptisch museum cairo': { lang: 'nl', type: 'phrase' }
+  };
+  if (exact[folded]) return exact[folded];
+  if (exact[key]) return exact[key];
+
+  if (folded === 'gizai piramisok') return { lang: 'hu', type: 'phrase' };
+  if (folded === 'egyiptomi muzeum kairo') return { lang: 'hu', type: 'phrase' };
+
+  if (/^(?:каир\s+достопримечательности|достопримечательности\s+каир)$/i.test(key)) return { lang: 'ru', type: 'pattern' };
+  if (/(?:египетск\w*\s+музе\w*\s+каир|музе\w*\s+каир\s+египетск\w*)/i.test(key)) return { lang: 'ru', type: 'pattern' };
+  if (/(?:цитадел\w*\s+саладин\w*\s+каир)/i.test(key)) return { lang: 'ru', type: 'pattern' };
+
+  return null;
+}
+
+function applyAuthoritativeSeoPhraseOverride_Updater_(phrase) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return null;
+
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+  var normalized = normalizeKeywordForScoring_Updater_(raw);
+  var folded = foldKeywordLatinDiacritics_Updater_(normalized).toLowerCase();
+
+  function seq_(arr) { return containsTokenSequence_Updater_(tokens, arr); }
+  function has_(t) { return lowers.indexOf(String(t || '').toLowerCase()) !== -1; }
+
+  if (/[\u0400-\u04FF]/.test(raw)) {
+    if (seq_(['что', 'посмотреть', 'в', 'каире']) || seq_(['что', 'посмотреть', 'каир'])) return { lang: 'ru', type: 'authoritative_pattern', id: 'ru_what_to_see_in_cairo' };
+    if ((has_('цитадель') || has_('цитадели')) && has_('саладина') && (has_('каир') || has_('каире'))) {
+      return { lang: 'ru', type: 'authoritative_audit_fix', id: 'ru_citadel_saladina_cairo' };
+    }
+  }
+  if (/[іїєґ]/i.test(raw) || has_('каїр') || has_('каїре')) {
+    if (seq_(['піраміди', 'гізи']) || seq_(['піраміди', 'гiзи'])) return { lang: 'uk', type: 'authoritative_phrase', id: 'uk_giza_pyramids' };
+    if (seq_(['цитадель', 'саладіна'])) return { lang: 'uk', type: 'authoritative_phrase', id: 'uk_citadel_saladina' };
+  }
+
+  if (seq_(['pyramids', 'cairo', 'tour'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_pyramids_cairo_tour' };
+  if (seq_(['egyptian', 'museum', 'cairo'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_egyptian_museum_cairo' };
+  if (seq_(['cairo', 'day', 'tours'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_cairo_day_tours' };
+  if (seq_(['cairo', 'egypt', 'day', 'tours'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_cairo_egypt_day_tours' };
+  if (seq_(['day', 'tours', 'from', 'cairo'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_day_tours_from_cairo' };
+  if (seq_(['coptic', 'cairo', 'tour'])) return { lang: 'en', type: 'authoritative_phrase', id: 'en_coptic_cairo_tour' };
+  if (seq_(['el', 'khalili', 'cairo'])) return { lang: 'en', type: 'domain_specific_phrase', id: 'en_el_khalili_cairo' };
+
+  if (folded === 'piramides van gizeh' || (has_('van') && has_('gizeh') && has_('piramides'))) return { lang: 'nl', type: 'authoritative_phrase', id: 'nl_pyramids_van_gizeh' };
+
+  return null;
+}
+
+function detectMorphologyOverrideLang_Updater_(phrase, scriptHint) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return null;
+  if (scriptHint && scriptHint !== '' && scriptHint !== 'cyrillic') return null;
+
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+  function has_(t) { return lowers.indexOf(String(t || '').toLowerCase()) !== -1; }
+  function seq_(arr) { return containsTokenSequence_Updater_(tokens, arr); }
+
+  if (seq_(['wat', 'te', 'doen']) || has_('bezienswaardigheden') || (has_('van') && has_('gizeh'))) return { lang: 'nl', reason: 'nl_morph', id: 'nl_family' };
+  if (seq_(['o', 'que', 'fazer']) || has_('excursao') || has_('excursão') || (has_('pontos') && (has_('turisticos') || has_('turísticos')))) return { lang: 'pt-br', reason: 'ptbr_morph', id: 'ptbr_family' };
+  if ((has_('cidadela') && has_('saladino') && has_('de')) || seq_(['cidadela', 'de', 'saladino'])) return { lang: 'pt-br', reason: 'ptbr_saladino', id: 'ptbr_cidadela_de_saladino' };
+  if ((has_('din') && has_('giza')) || has_('piramidele') || has_('muzeul') || has_('excursii')) return { lang: 'ro', reason: 'ro_morph', id: 'ro_family' };
+  if ((has_('di') && has_('giza') && (has_('piramidi') || has_('cittadella'))) || seq_(['cittadella', 'di', 'saladino'])) return { lang: 'it', reason: 'it_morph', id: 'it_family' };
+  if (seq_(['que', 'ver']) || seq_(['barrio', 'copto']) || has_('ciudadela') || seq_(['museo', 'egipcio'])) return { lang: 'es', reason: 'es_morph', id: 'es_family' };
+
+  return null;
+}
+
+function getKeywordLanguageProfiles_Updater_() {
+  return {
+    de: [
+      { w: 9, strong: true, re: /\b(ausflug|ausflüge|ausfluege|sehenswürdigkeiten|sehenswuerdigkeiten|ägyptisches|aegyptisches|altstadt|zitadelle)\b/i },
+      { w: 7, strong: true, re: /\b(kairo\s+ausflug)\b/i },
+      { w: 4, re: /\b(ausflug|ausflüge|ausfluege|sehenswürdigkeiten|sehenswuerdigkeiten|altstadt|zitadelle|ägyptisches|aegyptisches|kairo)\b/i },
+      { w: 2, re: /\b(museum|pyramiden|nil|tagesausflug|stadtführung|stadtfuhrung)\b/i },
+      { w: 2, re: /[äöüß]/i }
+    ],
+    fr: [
+      { w: 9, strong: true, re: /\b(le caire|visiter|tourisme|musée|musee)\b/i },
+      { w: 7, strong: true, re: /\b(le\s+caire)\b/i },
+      { w: 4, re: /\b(excursion|le caire|visiter|tourisme|musée|musee)\b/i },
+      { w: 2, re: /\b(à voir|que faire|pyramides|citadelle|vieux caire|egypte|égypte)\b/i },
+      { w: 2, re: /[àâçéèêëîïôûùüÿœ]/i }
+    ],
+    es: [
+      { w: 9, strong: true, re: /\b(que ver|visitar|museo egipcio|barrio copto|ciudadela)\b/i },
+      { w: 7, strong: true, re: /\b(que\s+ver|el\s+cairo)\b/i },
+      { w: 4, re: /\b(que ver|visitar|museo|ciudadela|barrio copto|el cairo)\b/i },
+      { w: 2, re: /\b(excursiones|turismo|precios|egipto)\b/i },
+      { w: 2, re: /[áéíóúñ¿¡]/i }
+    ],
+    tr: [
+      { w: 9, strong: true, re: /\b(turları|mısır|müzesi|gezilecek|kalesi)\b/i },
+      { w: 7, strong: true, re: /\b(kahire\s+turu)\b/i },
+      { w: 4, re: /\b(kahire|turu|turları|müzesi|gezilecek)\b/i },
+      { w: 2, re: /\b(gezi|tur|müze|piramit|kale)\b/i },
+      { w: 2, re: /[ğşıçöüİ]/i }
+    ],
+    ro: [
+      { w: 8, strong: true, re: /\b(excursii|muzeul|vizita|vechi)\b/i },
+      { w: 9, strong: true, re: /\b(piramidele|din\s+giza|citadela|egiptologie)\b/i },
+      { w: 4, re: /\b(excursie|excursii|vizita|vechi|muzeul)\b/i },
+      { w: 2, re: /\b(ce să vezi|ce sa vezi|tur|cairo)\b/i },
+      { w: 2, re: /[ăâîșț]/i }
+    ],
+    pl: [
+      { w: 10, strong: true, re: /\b(wycieczka|zwiedzanie|stary kair|w kairze|saladyna)\b/i },
+      { w: 9, strong: true, re: /\b(co warto zobaczyć|co warto zobaczyc)\b/i },
+      { w: 9, strong: true, re: /\b(piramidy|gizie|cytadela|egipskie|kair)\b/i },
+      { w: 5, re: /\b(wycieczka|zwiedzanie|co warto zobaczyć|co warto zobaczyc|w kairze|stary kair|muzeum)\b/i },
+      { w: 2, re: /\b(piramidy|cytadela|saladyna)\b/i },
+      { w: 3, re: /[ąćęłńóśźż]/i }
+    ],
+    nl: [
+      { w: 9, strong: true, re: /\b(wat te doen|bezienswaardigheden|oud cairo)\b/i },
+      { w: 9, strong: true, re: /\b(van\s+gizeh|egyptisch|citadel\s+van\s+saladin)\b/i },
+      { w: 4, re: /\b(wat te doen|bezienswaardigheden|oud cairo)\b/i },
+      { w: 2, re: /\b(museum|piramides|citadel)\b/i }
+    ],
+    it: [
+      { w: 9, strong: true, re: /\b(escursioni|cosa vedere|museo egizio|vecchio cairo)\b/i },
+      { w: 9, strong: true, re: /\b(piramidi|di\s+giza|cittadella|visitare)\b/i },
+      { w: 4, re: /\b(escursioni|cosa vedere|museo egizio|vecchio cairo)\b/i },
+      { w: 2, re: /\b(museo|piramidi|citadella)\b/i }
+    ],
+    pt_br: [
+      { w: 9, strong: true, re: /\b(excursão|excursao|o que fazer|pirâmides|piramides|museu|antigo|pontos turísticos|pontos turisticos)\b/i },
+      { w: 9, strong: true, re: /\b(cidadela|de\s+saladino)\b/i },
+      { w: 4, re: /\b(excursão|excursao|o que fazer|pirâmides|piramides|museu|antigo|pontos turísticos|pontos turisticos)\b/i },
+      { w: 2, re: /\b(turismo|visitar|cairo)\b/i },
+      { w: 2, re: /[ãõçáéíóúâêôà]/i }
+    ],
+    hu: [
+      { w: 9, strong: true, re: /\b(kairó|kirándulás|kirandulas|látnivalók|latnivalok|ókairó|okairo|városnézés|varosnezes)\b/i },
+      { w: 9, strong: true, re: /\b(gízai|gizai|piramisok|egyiptomi|múzeum|muzeum|szaladin)\b/i },
+      { w: 4, re: /\b(kairó|kirándulás|kirandulas|látnivalók|latnivalok|ókairó|okairo|városnézés|varosnezes)\b/i },
+      { w: 2, re: /\b(múzeum|muzeum|piramis|citadella)\b/i },
+      { w: 2, re: /[őűáéíóöü]/i }
+    ],
+    cs: [
+      { w: 9, strong: true, re: /\b(výlet|vylet|co vidět|co videt|stará káhira|stara kahira|památky|pamatky)\b/i },
+      { w: 9, strong: true, re: /\b(egyptské|egyptske|káhira|kahira|muzeum|památky|pamatky)\b/i },
+      { w: 4, re: /\b(výlet|vylet|co vidět|co videt|stará káhira|stara kahira|památky|pamatky)\b/i },
+      { w: 2, re: /\b(mužeum|muzeum|pyramidy|citadela)\b/i },
+      { w: 2, re: /[ěščřžýáíéůúóďťň]/i }
+    ],
+    en: [
+      { w: 9, strong: true, re: /\b(day tour|things to do|sightseeing|old cairo tour)\b/i },
+      { w: 4, re: /\b(cairo day tour|things to do|sightseeing|cairo museum|old cairo)\b/i },
+      { w: 2, re: /\b(tour|tours|trip|excursion|museum|pyramids)\b/i }
+    ],
+    ru: [
+      { w: 10, strong: true, re: /\b(экскурсия|достопримечательности|старый каир)\b/i },
+      { w: 9, strong: true, re: /\b(каир|египетск\w*|музе\w*|цитадел\w*|саладин\w*|что\s+посмотреть)\b/i },
+      { w: 6, re: /\b(экскурсия|достопримечательности|старый каир|музей|пирамиды)\b/i },
+      { w: 2, re: /[ёыэ]/i }
+    ],
+    uk: [
+      { w: 10, strong: true, re: /\b(екскурсія|пам'ятки|памятки|старий каїр)\b/i },
+      { w: 9, strong: true, re: /\b(каїр|єгипетськ\w*|музе\w*|цитадел\w*|саладін\w*|що\s+подивитися)\b/i },
+      { w: 6, re: /\b(екскурсія|пам'ятки|памятки|старий каїр|музей|піраміди)\b/i },
+      { w: 3, re: /[їєґ]/i }
+    ],
+    zh_hans: [
+      { w: 6, re: /[\u4E00-\u9FFF]/ },
+      { w: 2, re: /(开罗|旅游|景点|博物馆|老城)/ }
+    ],
+    ko: [
+      { w: 6, re: /[\uAC00-\uD7AF]/ },
+      { w: 2, re: /(카이로|투어|박물관|성채)/ }
+    ],
+    ja: [
+      { w: 6, re: /[\u3040-\u30FF]/ },
+      { w: 2, re: /(カイロ|観光|ツアー|博物館|オールド\s*カイロ)/ }
+    ]
+  };
+}
+
+function detectCityFormExactLang_Updater_(phrase) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+
+  if (containsTokenSequence_Updater_(tokens, ['le', 'caire'])) return 'fr';
+  if (lowers.indexOf('kairó') !== -1) return 'hu';
+  if (lowers.indexOf('kairo') !== -1) return 'de';
+  if (lowers.indexOf('káhira') !== -1 || lowers.indexOf('kahira') !== -1) return 'cs';
+  if (lowers.indexOf('kair') !== -1) return 'pl';
+  if (lowers.indexOf('каїр') !== -1 || lowers.indexOf('каїре') !== -1) return 'uk';
+  if (lowers.indexOf('каир') !== -1 || lowers.indexOf('каире') !== -1) return 'ru';
+
+  return '';
+}
+
+function detectStrongMarkerLang_Updater_(phrase, scriptHint) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+  var folded = foldKeywordLatinDiacritics_Updater_(raw).toLowerCase();
+  var foldedNorm = foldKeywordLatinDiacritics_Updater_(normalizeKeywordForScoring_Updater_(raw)).toLowerCase();
+
+  function has_(t) { return lowers.indexOf(String(t || '').toLowerCase()) !== -1; }
+  function seq_(arr) { return containsTokenSequence_Updater_(tokens, arr); }
+  function hasFold_(s) { return (' ' + foldedNorm + ' ').indexOf(' ' + String(s || '').toLowerCase() + ' ') !== -1; }
+
+  if (scriptHint === 'cyrillic') {
+    if (/[іїєґ]/i.test(raw) || has_('екскурсія') || has_('пам\'ятки') || has_('каїр') || has_('каїре')) return 'uk';
+    if (has_('экскурсия') || has_('достопримечательности') || has_('каир') || has_('каире') || seq_(['что', 'посмотреть'])) return 'ru';
+    return '';
+  }
+
+  if (hasFold_('ausflug') || hasFold_('sehenswuerdigkeiten') || (' ' + foldedNorm + ' ').indexOf(' sehenswürdigkeiten ') !== -1 || hasFold_('altstadt') || hasFold_('zitadelle') || hasFold_('aegyptisches') || (' ' + foldedNorm + ' ').indexOf(' ägyptisches ') !== -1) return 'de';
+  if (seq_(['le', 'caire']) || hasFold_('visiter') || (' ' + foldedNorm + ' ').indexOf(' musée ') !== -1 || hasFold_('tourisme')) return 'fr';
+  if (seq_(['que', 'ver']) || hasFold_('visitar') || seq_(['barrio', 'copto']) || seq_(['museo', 'egipcio']) || hasFold_('ciudadela')) return 'es';
+  if (seq_(['kahire', 'turu']) || hasFold_('turları') || hasFold_('muzesi') || (' ' + foldedNorm + ' ').indexOf(' müzesi ') !== -1 || hasFold_('gezilecek')) return 'tr';
+  if (hasFold_('excursii') || hasFold_('muzeul') || hasFold_('piramidele') || (hasFold_('din') && hasFold_('giza'))) return 'ro';
+  if (hasFold_('wycieczka') || hasFold_('zwiedzanie') || seq_(['co', 'warto', 'zobaczyc']) || seq_(['co', 'warto', 'zobaczyć']) || hasFold_('saladyna')) return 'pl';
+  if (seq_(['wat', 'te', 'doen']) || hasFold_('bezienswaardigheden') || (hasFold_('van') && hasFold_('gizeh'))) return 'nl';
+  if (hasFold_('escursioni') || seq_(['cosa', 'vedere']) || seq_(['museo', 'egizio']) || hasFold_('cittadella') || hasFold_('visitare')) return 'it';
+  if (seq_(['o', 'que', 'fazer']) || hasFold_('excursao') || (' ' + foldedNorm + ' ').indexOf(' excursão ') !== -1 || (hasFold_('pontos') && (hasFold_('turisticos') || (' ' + foldedNorm + ' ').indexOf(' turísticos ') !== -1)) || hasFold_('museu')) return 'pt-br';
+  if (hasFold_('kirandulas') || (' ' + foldedNorm + ' ').indexOf(' kirándulás ') !== -1 || hasFold_('latnivalok') || (' ' + foldedNorm + ' ').indexOf(' látnivalók ') !== -1 || hasFold_('varosnezes') || (' ' + foldedNorm + ' ').indexOf(' városnézés ') !== -1) return 'hu';
+  if (hasFold_('vylet') || (' ' + foldedNorm + ' ').indexOf(' výlet ') !== -1 || seq_(['co', 'videt']) || (' ' + foldedNorm + ' ').indexOf(' co vidět ') !== -1 || hasFold_('pamatky') || (' ' + foldedNorm + ' ').indexOf(' památky ') !== -1) return 'cs';
+
+  return '';
+}
+
+function classifyKeywordPhraseLang_Updater_(phrase) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return { lang: 'unknown', reason: 'empty' };
+
+  var script = detectKeywordScript_Updater_(raw);
+  if (script === 'han') return { lang: 'zh-hans', reason: 'script' };
+  if (script === 'hangul') return { lang: 'ko', reason: 'script' };
+  if (script === 'japanese') return { lang: 'ja', reason: 'script' };
+  if (script === 'cyrillic') {
+    var strongCyr = detectStrongMarkerLang_Updater_(raw, 'cyrillic');
+    if (strongCyr) return { lang: strongCyr, reason: 'script' };
+    if (/[іїєґ]/i.test(raw) || /\bкаїр\b/i.test(raw)) return { lang: 'uk', reason: 'script' };
+    return { lang: 'ru', reason: 'script' };
+  }
+
+  var city = detectCityFormExactLang_Updater_(raw);
+  if (city && city !== 'ru' && city !== 'uk') return { lang: city, reason: 'city_form' };
+  if (city === 'ru' || city === 'uk') return { lang: city, reason: 'city_form' };
+
+  var strong = detectStrongMarkerLang_Updater_(raw, script);
+  if (strong) return { lang: strong, reason: 'strong_marker' };
+
+  var ex1 = applyExactKeywordPhraseRule_Updater_(raw);
+  if (ex1 && ex1.lang) return { lang: String(ex1.lang), reason: 'exact_phrase' };
+  var ex2 = applyAuthoritativeSeoPhraseOverride_Updater_(raw);
+  if (ex2 && ex2.lang) return { lang: String(ex2.lang), reason: 'exact_phrase' };
+
+  var morph = detectMorphologyOverrideLang_Updater_(raw, script);
+  if (morph && morph.lang) return { lang: String(morph.lang), reason: 'family' };
+
+  var minimal = minimalDisambiguationForKeywordPhrase_Updater_(raw, script);
+  if (minimal) return { lang: minimal, reason: 'minimal' };
+
+  return { lang: 'unknown', reason: 'ambiguous' };
+}
+
+function minimalDisambiguationForKeywordPhrase_Updater_(phrase, scriptHint) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  if (scriptHint && scriptHint !== '') return '';
+
+  var tokens = tokenizeKeywordPhrase_Updater_(raw);
+  var lowers = tokens.map(function(t) { return String(t.lower || ''); });
+  var norm = normalizeKeywordForScoring_Updater_(raw);
+  var folded = foldKeywordLatinDiacritics_Updater_(norm).toLowerCase();
+  var padded = ' ' + folded + ' ';
+  function has_(t) { return lowers.indexOf(String(t || '').toLowerCase()) !== -1; }
+  function hasFold_(t) { return padded.indexOf(' ' + String(t || '').toLowerCase() + ' ') !== -1; }
+  function seqFold_(s) { return padded.indexOf(' ' + String(s || '').toLowerCase() + ' ') !== -1; }
+
+  var hasCairo = has_('cairo') || hasFold_('cairo');
+  var hasElCairo = containsTokenSequence_Updater_(tokens, ['el', 'cairo']) || seqFold_('el cairo');
+  var hasKahire = hasFold_('kahire');
+  var hasCaire = hasFold_('caire');
+
+  if (hasCairo && (hasFold_('day') && (hasFold_('tour') || hasFold_('tours')))) return 'en';
+  if (seqFold_('things to do') && hasCairo) return 'en';
+  if (hasCairo && hasFold_('museum')) return 'en';
+  if (hasCairo && hasFold_('sightseeing')) return 'en';
+  if (seqFold_('old cairo') && hasFold_('tour')) return 'en';
+  if (hasFold_('alexandria') && hasFold_('day') && hasFold_('tour') && hasFold_('from') && hasCairo) return 'en';
+  if (hasCairo && hasFold_('to') && hasFold_('luxor') && hasFold_('day') && hasFold_('tour')) return 'en';
+
+  if (hasCaire && (hasFold_('musee') || padded.indexOf(' musée ') !== -1) && (hasFold_('egyptien') || hasFold_('egyptienne'))) return 'fr';
+
+  if (hasElCairo && (hasFold_('excursion') || hasFold_('museo') || seqFold_('museo egipcio'))) return 'es';
+
+  if (hasKahire && (hasFold_('piramit') || hasFold_('kalesi') || hasFold_('turu') || hasFold_('turlari'))) return 'tr';
+
+  if (hasCairo && (hasFold_('vizita') || hasFold_('vechi') || (hasFold_('citadela') && hasFold_('lui')))) return 'ro';
+  if (hasFold_('citadela') && hasFold_('lui') && hasFold_('saladin')) return 'ro';
+  if (hasFold_('excursie') && hasCairo) {
+    Logger.log('BUCKET AUDIT FIX APPLIED: "' + raw + '" moved from ro to nl');
+    return 'nl';
+  }
+  if (hasFold_('citadela') && hasFold_('saladin')) return 'ro';
+
+  if ((hasFold_('muzeum') && hasFold_('egipskie') && hasFold_('kairze')) || (hasFold_('muzeum') && hasFold_('egipskie') && seqFold_('w kairze'))) return 'pl';
+
+  if (hasFold_('oud') && hasCairo) return 'nl';
+  if (hasFold_('vecchio') && hasCairo) return 'it';
+
+  if (hasFold_('co') && hasFold_('videt') && hasFold_('kahire')) return 'cs';
+  if (hasFold_('muzeum') && (hasFold_('egyptske') || padded.indexOf(' egyptské ') !== -1) && (hasFold_('kahire') || hasFold_('kahira'))) return 'cs';
+
+  if ((hasFold_('piramides') || padded.indexOf(' pirâmides ') !== -1) && hasFold_('de') && (hasFold_('gize') || hasFold_('gize'))) return 'pt-br';
+  if (hasCairo && hasFold_('antigo')) return 'pt-br';
+
+  if (hasFold_('szaladin') && hasFold_('citadella')) return 'hu';
+  if (padded.indexOf(' ókairo ') !== -1 || hasFold_('okairo') || padded.indexOf(' ókairó ') !== -1) return 'hu';
+
+  return '';
+}
+
+function applyHardKeywordDisambiguation_Updater_(phrase) {
+  var raw = String(phrase || '');
+  var s = normalizeKeywordForScoring_Updater_(raw);
+  var p = ' ' + s + ' ';
+  if (p.indexOf(' le caire ') !== -1) return 'fr';
+  if (p.indexOf(' el cairo ') !== -1) return 'es';
+  if (p.indexOf(' oud cairo ') !== -1) return 'nl';
+  if (p.indexOf(' old cairo ') !== -1) return 'en';
+  if (p.indexOf(' stary kair ') !== -1) return 'pl';
+  if (p.indexOf(' ókairó ') !== -1 || p.indexOf(' okairo ') !== -1) return 'hu';
+  if (/стар(ый|ий)\s+ка(ир|їр)/i.test(raw)) {
+    if (/[їєґ]/i.test(raw)) return 'uk';
+    return 'ru';
+  }
+  return '';
+}
+
+function findStrongMarkerFastPathForKeyword_Updater_(phrase, scriptHint) {
+  var raw = String(phrase || '').trim();
+  if (!raw) return '';
+  var profiles = getKeywordLanguageProfiles_Updater_();
+  var scope = null;
+  if (scriptHint === 'cyrillic') scope = ['ru', 'uk'];
+  else if (scriptHint === 'han') return 'zh-hans';
+  else if (scriptHint === 'hangul') return 'ko';
+  else if (scriptHint === 'japanese') return 'ja';
+
+  var hard = applyHardKeywordDisambiguation_Updater_(raw);
+  if (hard) return hard;
+
+  var langs = scope || ['de', 'fr', 'es', 'tr', 'ro', 'pl', 'nl', 'it', 'pt-br', 'hu', 'cs', 'en', 'ru', 'uk'];
+  var hits = [];
+  for (var i = 0; i < langs.length; i++) {
+    var lang = langs[i];
+    var key = lang === 'pt-br' ? 'pt_br' : (lang === 'zh-hans' ? 'zh_hans' : lang);
+    var rules = profiles[key] || [];
+    for (var r = 0; r < rules.length; r++) {
+      if (!rules[r] || !rules[r].strong || !rules[r].re) continue;
+      if (rules[r].re.test(raw)) { hits.push(lang); break; }
+    }
+  }
+  if (hits.length === 1) return hits[0];
+  return '';
+}
+
+function scoreKeywordPhrase_Updater_(phrase, scriptHint, opts) {
+  opts = opts || {};
+  var raw = String(phrase || '');
+  var normalized = normalizeKeywordForScoring_Updater_(raw);
+  var profiles = getKeywordLanguageProfiles_Updater_();
+  var scores = {};
+  var scope = null;
+  var strongHits = {};
+  var cityHits = {};
+  var citySignals = opts.citySignals ? opts.citySignals : detectCityFormSignals_Updater_(raw, { log: false });
+  var cityApplied = {};
+
+  var forced = '';
+  if (scriptHint === 'han') forced = 'zh-hans';
+  else if (scriptHint === 'hangul') forced = 'ko';
+  else if (scriptHint === 'japanese') forced = 'ja';
+  else if (scriptHint === 'cyrillic') scope = ['ru', 'uk'];
+
+  var hard = applyHardKeywordDisambiguation_Updater_(raw);
+  if (hard) {
+    scores[hard] = 999;
+    return { scores: scores, forced: hard, normalized: normalized };
+  }
+
+  if (forced) {
+    scores[forced] = 999;
+    return { scores: scores, forced: forced, normalized: normalized };
+  }
+
+  var langs = scope || ['de', 'fr', 'es', 'tr', 'ro', 'pl', 'nl', 'it', 'pt-br', 'hu', 'cs', 'en', 'ru', 'uk'];
+  if (citySignals && citySignals.length) {
+    citySignals.forEach(function(s) {
+      var l = String(s.lang || '').toLowerCase();
+      if (!l) return;
+      if (!scores[l]) scores[l] = 0;
+      scores[l] += Number(s.w || 0);
+      cityApplied[l] = (cityApplied[l] ? cityApplied[l] : 0) + Number(s.w || 0);
+      cityHits[l] = true;
+      if (opts.logCityBoost) Logger.log('CITY-FORM BOOST APPLIED: "' + raw + '" -> ' + l);
+    });
+  }
+  for (var i = 0; i < langs.length; i++) {
+    var lang = langs[i];
+    var key = lang === 'pt-br' ? 'pt_br' : (lang === 'zh-hans' ? 'zh_hans' : lang);
+    var rules = profiles[key] || [];
+    var score = 0;
+    for (var r = 0; r < rules.length; r++) {
+      var rule = rules[r];
+      if (!rule || !rule.re) continue;
+      var hit = rule.re.test(raw) || rule.re.test(normalized);
+      if (hit) {
+        score += Number(rule.w || 0);
+        if (rule.strong) strongHits[lang] = true;
+      }
+    }
+    if (score > 0) scores[lang] = (scores[lang] ? scores[lang] : 0) + score;
+  }
+
+  var morph = detectMorphologyOverrideLang_Updater_(raw, scriptHint);
+  if (morph && morph.lang) {
+    var ml = String(morph.lang).toLowerCase();
+    scores[ml] = (scores[ml] ? scores[ml] : 0) + 12;
+    strongHits[ml] = true;
+    if (opts.logMorphology) {
+      Logger.log('MORPHOLOGY OVERRIDE APPLIED: "' + raw + '" -> ' + ml);
+      Logger.log('LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "' + raw + '" -> ' + ml);
+      if (morph.id) Logger.log('COUNT INFLATION SOURCE IDENTIFIED: "' + raw + '" -> ' + ml + ' (morphology:' + String(morph.id) + ')');
+    }
+  }
+
+  var strongKeys = Object.keys(strongHits || {});
+  if (strongKeys.length && citySignals && citySignals.length) {
+    var cityLangs = Object.keys(cityApplied || {});
+    for (var ci = 0; ci < cityLangs.length; ci++) {
+      var cl = cityLangs[ci];
+      if (!strongHits[cl] && cityApplied[cl]) {
+        scores[cl] = (scores[cl] ? scores[cl] : 0) - cityApplied[cl];
+        if (scores[cl] <= 0) delete scores[cl];
+        if (opts.logCityIgnore) Logger.log('CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "' + raw + '"');
+      }
+    }
+  }
+
+  return { scores: scores, forced: '', normalized: normalized, strongHits: strongHits, cityHits: cityHits };
+}
+
+function decideBucketFromScores_Updater_(phrase, scoreObj, scriptHint) {
+  var raw = String(phrase || '');
+  if (scoreObj && scoreObj.forced) return { lang: scoreObj.forced, confidence: 'forced' };
+
+  var entries = [];
+  for (var k in (scoreObj && scoreObj.scores ? scoreObj.scores : {})) {
+    if (!scoreObj.scores.hasOwnProperty(k)) continue;
+    entries.push({ lang: k, score: scoreObj.scores[k] });
+  }
+  entries.sort(function(a, b) { return b.score - a.score; });
+
+  var top = entries.length ? entries[0] : null;
+  var second = entries.length > 1 ? entries[1] : null;
+  var normalized = scoreObj && scoreObj.normalized ? String(scoreObj.normalized) : normalizeKeywordForScoring_Updater_(raw);
+
+  var words = normalized ? normalized.split(/\s+/).filter(function(x) { return !!x; }) : [];
+  var shortish = normalized.length < 12 || words.length <= 2;
+
+  if (!top) return { lang: 'unknown', confidence: 'none' };
+
+  var hasStrongTop = !!(scoreObj && scoreObj.strongHits && scoreObj.strongHits[top.lang]);
+  var hasCityTop = !!(scoreObj && scoreObj.cityHits && scoreObj.cityHits[top.lang]);
+  var isCyr = scriptHint === 'cyrillic';
+  var minScore = shortish ? (hasStrongTop || isCyr ? 4 : 6) : 4;
+  var minGap = shortish ? (hasStrongTop || isCyr ? 1 : 3) : 2;
+  var gap = second ? (top.score - second.score) : top.score;
+
+  var scoreLogParts = [];
+  entries.slice(0, 6).forEach(function(e) { scoreLogParts.push(e.lang + '=' + e.score); });
+  if (scoreLogParts.length) Logger.log('LANGUAGE PROFILE SCORES: "' + raw + '" -> ' + scoreLogParts.join(', '));
+
+  if ((top.score < minScore || (second && gap < minGap)) && !(shortish && hasCityTop && top.score >= 3 && (!second || gap >= 1))) {
+    if (hasStrongTop || isCyr) {
+      if (isCyr && hasStrongTop) Logger.log('SCRIPT + MARKER CONFIDENCE BOOST: "' + raw + '" -> ' + top.lang);
+      if (shortish && hasStrongTop) Logger.log('SHORT PHRASE ACCEPTED BY STRONG MARKER: "' + raw + '" -> ' + top.lang);
+      Logger.log('UNKNOWN FALLBACK SUPPRESSED BY STRONG MARKER: "' + raw + '" -> ' + top.lang);
+      return { lang: top.lang, confidence: 'strong_relaxed' };
+    }
+    Logger.log('LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "' + raw + '"');
+    return { lang: 'unknown', confidence: (second && gap < minGap) ? 'ambiguous' : 'low' };
+  }
+
+  return { lang: top.lang, confidence: 'scored' };
+}
+
+function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
+  var phrases = normalizeKeywordPhrasesInput_Updater_(keywordsField);
 
   var buckets = { unknown: [] };
   var seen = {};
-  function add_(lang, phrase) {
-    var l = String(lang || '').toLowerCase() || 'unknown';
+
+  function canonLang_(lang) {
+    var l = String(lang || '').toLowerCase().trim();
+    if (!l) return 'unknown';
     if (l.indexOf('pl') === 0) l = 'pl';
+    if (l === 'pt') l = 'pt-br';
+    if (l === 'zh') l = 'zh-hans';
     if (l === 'zh-cn') l = 'zh-hans';
-    var p = String(phrase || '').trim();
+    return l;
+  }
+
+  function add_(lang, phrase) {
+    var l = canonLang_(lang);
+    var p = String(phrase || '').replace(/\s+/g, ' ').trim();
     if (!p) return;
     var key = l + '|' + p.toLowerCase();
     if (seen[key]) return;
@@ -2553,8 +3184,8 @@ function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
     buckets[l].push(p);
   }
 
-  for (var i = 0; i < list.length; i++) {
-    var raw = String(list[i] || '').trim();
+  for (var i = 0; i < phrases.length; i++) {
+    var raw = phrases[i] ? String(phrases[i].raw || '') : '';
     if (!raw) continue;
 
     var parsed = parseKeywordWithLangPrefix_Updater_(raw);
@@ -2563,29 +3194,19 @@ function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
       continue;
     }
 
-    var det = '';
-    try { det = detectLanguageSafe_Updater_(raw); } catch (eDet) { det = ''; }
-    var detLower = det ? String(det).toLowerCase() : '';
-    if (detLower) {
-      add_(detLower, raw);
-      continue;
+    var cls = classifyKeywordPhraseLang_Updater_(raw);
+    if (cls && cls.lang && cls.lang !== 'unknown') {
+      if (cls.reason === 'script') Logger.log('SCRIPT CLASSIFICATION: "' + raw + '" -> ' + cls.lang);
+      else if (cls.reason === 'city_form') Logger.log('CITY-FORM CLASSIFICATION: "' + raw + '" -> ' + cls.lang);
+      else if (cls.reason === 'strong_marker') Logger.log('STRONG-MARKER CLASSIFICATION: "' + raw + '" -> ' + cls.lang);
+      else if (cls.reason === 'exact_phrase') Logger.log('EXACT-PHRASE CLASSIFICATION: "' + raw + '" -> ' + cls.lang);
+      else if (cls.reason === 'family') Logger.log('LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "' + raw + '" -> ' + cls.lang);
+      else if (cls.reason === 'minimal') Logger.log('MINIMAL DISAMBIGUATION APPLIED: "' + raw + '" -> ' + cls.lang);
+      add_(cls.lang, raw);
+    } else {
+      Logger.log('UNKNOWN ONLY BECAUSE TRULY AMBIGUOUS: "' + raw + '"');
+      add_('unknown', raw);
     }
-
-    var h = detectLangHeuristicForKeyword_Updater_(raw);
-    if (h) {
-      add_(h, raw);
-      continue;
-    }
-
-    var contamPl = isLikelyLanguageContamination_Updater_(raw, 'pl');
-    if (!contamPl || !contamPl.contaminated) {
-      if (isHighConfidencePolishKeyword_(raw)) {
-        add_('pl', raw);
-        continue;
-      }
-    }
-
-    add_('unknown', raw);
   }
 
   var summaryParts = [];
@@ -2595,10 +3216,12 @@ function buildKeywordBucketsByLanguage_Updater_(keywordsField) {
     summaryParts.push(keyLang + '=' + String((buckets[keyLang] || []).length));
   }
   if (buckets.unknown && buckets.unknown.length) summaryParts.push('unknown=' + String(buckets.unknown.length));
-  Logger.log('KEYWORD BUCKETS BUILT: ' + summaryParts.join(', '));
+  Logger.log('FINAL KEYWORD BUCKETS BUILT: ' + summaryParts.join(', '));
 
   return buckets;
 }
+
+ 
 
 function extractKeywordsForTargetLanguage_Updater_(keywordsField, targetLang) {
   var lang = String(targetLang || '').toLowerCase();
@@ -7408,8 +8031,35 @@ function ensureEnglishMediaMetadataForAttachment_Updater_(mediaId, tripFields, t
   try { ctx = buildImageContext_(fakeImageFields, tripFields || {}, id, tripId); } catch (e2) { ctx = null; }
   if (!ctx) return;
 
+  var kwPlan = null;
+  try { kwPlan = extractKeywordsForTargetLanguage_Updater_(ctx.seoKeywords || '', 'en'); } catch (eKw) { kwPlan = null; }
+  if (kwPlan && kwPlan.all && kwPlan.all.length) {
+    var allow = {};
+    kwPlan.all.forEach(function(k) { allow[String(k || '').toLowerCase()] = true; });
+    var rawPool = String(ctx.seoKeywords || '').split(',').map(function(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }).filter(function(s) { return !!s; });
+    var seenRm = {};
+    rawPool.forEach(function(k) {
+      var kk = String(k || '').toLowerCase();
+      if (!allow[kk] && !seenRm[kk]) {
+        seenRm[kk] = true;
+        Logger.log('CROSS-LANGUAGE IMAGE KEYWORD REMOVED: "' + k + '" from en');
+      }
+    });
+    ctx.seoKeywords = kwPlan.all.join(', ');
+    Logger.log('ENGLISH MEDIA KEYWORD POOL SOURCE: target_bucket_only (en)');
+    Logger.log('ENGLISH MEDIA KEYWORD POOL PURIFIED: ' + JSON.stringify(kwPlan.all.slice(0, 12)) + (kwPlan.all.length > 12 ? (' (+ ' + (kwPlan.all.length - 12) + ' more)') : ''));
+  } else {
+    ctx.seoKeywords = '';
+    var fallbackPrimary = String(ctx.seoTitle || ctx.tripTitle || '').replace(/\s+/g, ' ').trim();
+    if (fallbackPrimary.length > 60) fallbackPrimary = fallbackPrimary.substring(0, 60).trim();
+    if (fallbackPrimary) kwPlan = { primary: fallbackPrimary, secondary: [], all: [fallbackPrimary] };
+    Logger.log('ENGLISH MEDIA KEYWORD POOL SOURCE: target_bucket_only (en)');
+    Logger.log('ENGLISH MEDIA KEYWORD POOL PURIFIED: []');
+  }
+  Logger.log('ENGLISH MEDIA METADATA PATH NOW USING TARGET BUCKET ONLY');
+
   var prompt = '';
-  try { prompt = buildImagesPrompt_(ctx); } catch (e3) { prompt = ''; }
+  try { prompt = buildImagesPrompt_(ctx, kwPlan || null); } catch (e3) { prompt = ''; }
   if (!prompt) return;
 
   var aiResult = null;
@@ -7992,27 +8642,38 @@ function buildImageSeoContext_Updater_(opts) {
   var location = String(o.location || '').trim();
   var activity = String(o.activity || '').trim();
 
+  var rawPrimary = '';
+  var rawSecondary = [];
+  if (o.seoData) {
+    rawPrimary = String(o.seoData.primary || o.seoData.primary_keyword || '').trim();
+    if (o.seoData.secondary && Array.isArray(o.seoData.secondary)) rawSecondary = o.seoData.secondary;
+    if (o.seoData.secondary_keywords && Array.isArray(o.seoData.secondary_keywords)) rawSecondary = o.seoData.secondary_keywords;
+  }
+  rawPrimary = String(rawPrimary || '').trim();
+  rawSecondary = (rawSecondary || []).map(function(s) { return String(s || '').trim(); }).filter(function(s) { return !!s; });
+
   var primary = '';
   var secondary = [];
-  if (o.seoData) {
-    primary = String(o.seoData.primary || o.seoData.primary_keyword || '').trim();
-    if (o.seoData.secondary && Array.isArray(o.seoData.secondary)) secondary = o.seoData.secondary;
-    if (o.seoData.secondary_keywords && Array.isArray(o.seoData.secondary_keywords)) secondary = o.seoData.secondary_keywords;
+  var targetExtracted = null;
+  if (o.focusKeywordsString) targetExtracted = extractKeywordsForTargetLanguage_Updater_(o.focusKeywordsString, lang);
+  if (targetExtracted && targetExtracted.primary) {
+    var targetAll = (targetExtracted.all || []).map(function(s) { return String(s || '').trim(); }).filter(function(s) { return !!s; });
+    var allow = {};
+    targetAll.forEach(function(k) { allow[String(k || '').toLowerCase()] = true; });
+    var rawPool = [rawPrimary].concat(rawSecondary || []).map(function(s) { return String(s || '').trim(); }).filter(function(s) { return !!s; });
+    rawPool.forEach(function(k) {
+      var kk = String(k || '').toLowerCase();
+      if (!allow[kk]) Logger.log('CROSS-LANGUAGE IMAGE KEYWORD REMOVED: "' + String(k || '') + '" from ' + lang);
+    });
+    primary = targetExtracted.primary;
+    secondary = targetExtracted.secondary || [];
+    Logger.log('IMAGE KEYWORD POOL SOURCE: target_bucket_only (' + lang + ')');
+    Logger.log('IMAGE KEYWORD POOL PURIFIED: ' + JSON.stringify(targetAll.slice(0, 12)) + (targetAll.length > 12 ? (' (+ ' + (targetAll.length - 12) + ' more)') : ''));
+  } else {
+    var purified = enforceKeywordsTargetLanguagePurity_Updater_({ primary: rawPrimary, secondary: rawSecondary }, lang, { primary: '', secondary: [] });
+    primary = purified.primary;
+    secondary = purified.secondary;
   }
-  primary = String(primary || '').trim();
-  secondary = (secondary || []).map(function(s) { return String(s || '').trim(); }).filter(function(s) { return !!s; });
-  if (!primary && o.focusKeywordsString) {
-    var extracted = extractKeywordsForTargetLanguage_Updater_(o.focusKeywordsString, lang);
-    if (extracted) {
-      primary = extracted.primary;
-      secondary = extracted.secondary;
-      if (primary) Logger.log('IMAGE SEO KEYWORD SELECTED FROM TARGET LANGUAGE POOL (' + lang + '): ' + primary);
-    }
-  }
-
-  var purified = enforceKeywordsTargetLanguagePurity_Updater_({ primary: primary, secondary: secondary }, lang, { primary: '', secondary: [] });
-  primary = purified.primary;
-  secondary = purified.secondary;
 
   if (secondary.length > 4) secondary = secondary.slice(0, 4);
   return { lang: lang, tripTitle: tripTitle, location: location, activity: activity, primary: primary, secondary: secondary };
@@ -8167,6 +8828,8 @@ function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, targetLang, 
       if (purified && purified.primary) {
         ctx.primary = purified.primary;
         ctx.secondary = (purified.secondary || []).map(function(s) { return String(s || '').trim(); }).filter(function(s) { return !!s; });
+        Logger.log('IMAGE KEYWORD POOL SOURCE: target_bucket_only (' + lang + ')');
+        Logger.log('IMAGE KEYWORD POOL PURIFIED: ' + JSON.stringify([ctx.primary].concat(ctx.secondary || []).slice(0, 12)));
       } else {
         Logger.log('LANGUAGE CONTAMINATION DETECTED (' + lang + '): image_keyword_list_override_skipped');
       }

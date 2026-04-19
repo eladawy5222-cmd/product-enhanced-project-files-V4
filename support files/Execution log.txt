@@ -1,143 +1,941 @@
 Execution log
-7:15:12 PM	Notice	Execution started
-7:15:13 PM	Info	Updater: Starting batch...
-7:15:13 PM	Info	VERBOSE LOGGING DISABLED
-7:15:13 PM	Info	SUPPORTED LANGUAGES MAP UPDATED
-7:15:13 PM	Info	Updater: Processing Trip recGTjnq4X13zaOpG (TripID: 26144, Type: WORDPRESS)
-7:15:14 PM	Info	LANGUAGE RESOLVED: French -> fr
-7:15:14 PM	Info	TRANSLATION LANGUAGES LIST: ["en","fr"]
-7:15:14 PM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recGTjnq4X13zaOpG
-7:15:14 PM	Info	Updater: Found General Improvement record: recc45dBhQ8vkVHJS
-7:15:15 PM	Info	Updater: Found TripDetails record: reckJsl6YGRo3omKm
-7:15:29 PM	Info	Updater: Starting AI classification for Activities...
-7:15:31 PM	Info	Updater: AI suggested activities: ["Desert Safaris","Stargazing"]
-7:15:31 PM	Info	Updater: Starting AI classification for Trip Types...
-7:15:33 PM	Info	Updater: AI suggested trip types: ["Guided Tours","Other Experiences"]
-7:15:33 PM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 7, dMinutes: 0, tourType: single, Title: Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner
-7:15:33 PM	Info	Updater: Language set to: en
-7:15:33 PM	Info	Updater: Found 2 AI Activities. Mapping to payload...
-7:15:33 PM	Info	Updater: Payload.activities set to: [394,398]
-7:15:33 PM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
-7:15:33 PM	Info	Updater: Payload.trip_types set to: [408,410]
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
-7:15:33 PM	Info	Updater: Adding new fact "Duration" (97932390) to template
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
-7:15:33 PM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
-7:15:33 PM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 35550118 for "Transportation"
-7:15:33 PM	Info	Updater: Adding new fact "Transportation" (35550118) to template
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
-7:15:33 PM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
-7:15:33 PM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
-7:15:33 PM	Info	Updater: Adding new fact "Meals" (69801669) to template
-7:15:33 PM	Info	Updater: Trip Facts structure ready with 8 fields
-7:15:33 PM	Info	Updater: Updating existing WordPress trip 26144
-7:15:43 PM	Info	Updater: Found 1 packages and 2 prices for Trip recGTjnq4X13zaOpG
-7:15:43 PM	Info	Updater: Single package detected. Linking ALL 2 prices to it.
-7:15:43 PM	Info	Updater: Sending package "Desert Stargazing, Candlelight &#038; BBQ Dinner" to WP...
-7:15:44 PM	Info	Updater: Created Package 29110
-7:15:44 PM	Info	Updater: Package created with ID: 29110. Updating Airtable...
-7:15:45 PM	Info	Updater: Updated Packages table for record recSTJDLWwVcPFrtc
-7:15:45 PM	Info	Updater: Updating 2 prices with new PackageID 29110...
-7:15:45 PM	Info	Updater: Updated Price rec80GZUmKDysWZTY with PackageID 29110
-7:15:45 PM	Info	Updater: Updated Price recGitxRH1TEf01US with PackageID 29110
-7:15:52 PM	Info	Updater: Linked packages 29110 to Trip 26144
-7:15:56 PM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
-7:15:57 PM	Info	Updater: Updated Media 28991 metadata (Title: Yes)
-7:15:58 PM	Info	Updater: Filename ensured for Media 28991
-7:15:59 PM	Info	Updater: Updated Media 28992 metadata (Title: Yes)
-7:16:00 PM	Info	Updater: Filename ensured for Media 28992
-7:16:01 PM	Info	Updater: Updated Media 28995 metadata (Title: Yes)
-7:16:02 PM	Info	Updater: Filename ensured for Media 28995
-7:16:10 PM	Info	Updater: Published Images for Trip 26144 (Featured: None, Gallery: 3)
-7:16:17 PM	Info	TRIP SCHEMA GENERATED (en)
-7:16:17 PM	Info	Updater: Found additional languages: fr
-7:16:17 PM	Info	REUSING CACHED WORDPRESS TRIP INFO
-7:16:17 PM	Info	Updater: Found existing translations map: {"fr":"29098","de":"29095","en":"26144"}
-7:16:17 PM	Info	Updater: languagesToUpdate=["fr"] languagesToCreate=[]
-7:16:17 PM	Info	Updater: Processing translation for language: fr
-7:16:17 PM	Info	PROVIDED SEO KEYWORDS DETECTED (fr)
-7:16:17 PM	Info	Updater: Translating trip data to fr using DeepSeek...
-7:18:50 PM	Info	TRANSLATED SLUG GENERATED: excursion-hurghada-sahl-hasheesh-desert-observation-etoiles-diner-bbq
-7:18:50 PM	Info	AI TRANSLATION COMPLETE (fr)
-7:18:50 PM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 7, dMinutes: 0, tourType: single, Title: excursion hurghada : Tour Désert Sahl Hasheesh Observation des Étoiles & Dîner BBQ
-7:18:50 PM	Info	Updater: Language set to: fr
-7:18:50 PM	Info	Updater: Found 2 AI Activities. Mapping to payload...
-7:18:50 PM	Info	Updater: Payload.activities set to: [394,398]
-7:18:50 PM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
-7:18:50 PM	Info	Updater: Payload.trip_types set to: [408,410]
-7:18:50 PM	Info	TRANSLATED SLUG GENERATED: excursion-hurghada-sahl-hasheesh-desert-observation-etoiles-diner-bbq
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
-7:18:50 PM	Info	Updater: Adding new fact "Duration" (97932390) to template
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
-7:18:50 PM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
-7:18:50 PM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 35550118 for "Transportation"
-7:18:50 PM	Info	Updater: Adding new fact "Transportation" (35550118) to template
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
-7:18:50 PM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
-7:18:50 PM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
-7:18:50 PM	Info	Updater: Adding new fact "Meals" (69801669) to template
-7:18:50 PM	Info	Updater: Trip Facts structure ready with 8 fields
-7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28992 -> 29105
-7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28991 -> 29106
-7:18:50 PM	Info	IMAGE TRANSLATION CACHE HIT (fr): 28995 -> 29107
-7:18:50 PM	Info	IMAGE MAP SUMMARY (fr): featured: 28992 -> 29105 [cache] | gallery: 28991 -> 29106 [cache], 28995 -> 29107 [cache]
-7:18:59 PM	Info	SEO ASSETS GENERATED (fr)
-7:18:59 PM	Info	LOCALIZED PRIMARY KEYWORD GENERATED (fr): excursion hurghada
-7:18:59 PM	Info	LOCALIZED SECONDARY KEYWORDS GENERATED (fr): excursion depuis hurghada, que faire à hurghada, excursion désert hurghada, mısır turları
-7:18:59 PM	Info	SEO TITLE GENERATED (fr)
-7:18:59 PM	Info	LOCALIZED SEO TITLE GENERATED (fr): Excursion Hurghada : Tour Désert Sahl Hasheesh Observation des Ét
-7:18:59 PM	Info	LOCALIZED SEO TITLE (fr): Excursion Hurghada : Tour Désert Sahl Hasheesh Observation des Ét
-7:18:59 PM	Info	META DESCRIPTION GENERATED (fr)
-7:18:59 PM	Info	LOCALIZED META DESCRIPTION GENERATED (fr): Découvrez notre excursion Hurghada inoubliable. Balade à dos de chameau au coucher du soleil, dîner BBQ et observation guidée des étoiles au télescope dans le d
-7:18:59 PM	Info	LOCALIZED META DESCRIPTION (fr): Découvrez notre excursion Hurghada inoubliable. Balade à dos de chameau au coucher du soleil, dîner BBQ et observation guidée des étoiles au télescope dans le d
-7:18:59 PM	Info	IMAGE ALT GENERATED (fr): Groupe lors d'une excursion Hurghada profitant d'un coucher de soleil à dos de chameau dans le désert près de Sahl Hasheesh
-7:18:59 PM	Info	LOCALIZED SLUG GENERATED (fr): excursion-hurghada-tour-desert-sahl-hasheesh
-7:18:59 PM	Info	HTML SANITIZED (fr)
-7:18:59 PM	Info	UPDATING EXISTING TRANSLATION: fr -> 29098
-7:19:05 PM	Info	Updater: Successfully UPDATED translation 29098
-7:19:06 PM	Info	Updater: Found 1 packages and 2 prices for Trip recGTjnq4X13zaOpG
-7:19:06 PM	Info	Updater: Single package detected. Linking ALL 2 prices to it.
-7:19:06 PM	Info	Updater: Sending package "excursion hurghada : Tour Désert Sahl Hasheesh Observation des Étoiles & Dîner BBQ" to WP...
-7:19:07 PM	Info	Updater: Created Package 29112
-7:19:07 PM	Info	Updater: Package created with ID: 29112. Updating Airtable...
-7:19:13 PM	Info	Updater: Linked packages 29112 to Trip 29098
-7:19:13 PM	Info	Updater: Linked packages for translation (fr) Trip 29098
-7:19:21 PM	Info	TRIP SCHEMA GENERATED (fr)
-7:19:21 PM	Info	TRANSLATED IMAGE SET SUMMARY (fr): trip=29098 featured=29105 gallery_count=2
-7:19:21 PM	Info	TRANSLATING IMAGE METADATA FOR LANGUAGE: fr
-7:19:21 PM	Info	FEATURED IMAGE SEO KEYWORD USED (fr): excursion hurghada
-7:19:29 PM	Info	IMAGE METADATA TRANSLATED (fr): 29105
-7:19:31 PM	Info	Updater: Updated Media 29105 metadata (Title: Yes)
-7:19:34 PM	Info	Updater: Filename ensured for Media 29105
-7:19:34 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29105
-7:19:34 PM	Info	IMAGE ALT UPDATED (fr): 29105
-7:19:34 PM	Info	IMAGE CAPTION UPDATED (fr): 29105
-7:19:34 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29105
-7:19:34 PM	Info	FEATURED IMAGE ALT GENERATED (fr): Voyageur observant les étoiles avec un télescope lors d'une excursion hurghada dans le désert
-7:19:34 PM	Info	GALLERY IMAGE SEO KEYWORD USED (fr): excursion depuis hurghada
-7:19:41 PM	Info	IMAGE METADATA TRANSLATED (fr): 29106
-7:19:42 PM	Info	Updater: Updated Media 29106 metadata (Title: Yes)
-7:19:44 PM	Info	Updater: Filename ensured for Media 29106
-7:19:44 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29106
-7:19:44 PM	Info	IMAGE ALT UPDATED (fr): 29106
-7:19:44 PM	Info	IMAGE CAPTION UPDATED (fr): 29106
-7:19:44 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29106
-7:19:44 PM	Info	GALLERY IMAGE ALT GENERATED (fr): Groupe autour d'un feu de camp lors d'une excursion depuis Hurghada dans le désert égyptien
-7:19:44 PM	Info	GALLERY IMAGE SEO KEYWORD USED (fr): que faire à hurghada
-7:19:52 PM	Info	IMAGE METADATA TRANSLATED (fr): 29107
-7:19:53 PM	Info	Updater: Updated Media 29107 metadata (Title: Yes)
-7:19:53 PM	Info	Updater: Filename ensured for Media 29107
-7:19:53 PM	Info	IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: 29107
-7:19:53 PM	Info	IMAGE ALT UPDATED (fr): 29107
-7:19:53 PM	Info	IMAGE CAPTION UPDATED (fr): 29107
-7:19:53 PM	Info	IMAGE DESCRIPTION UPDATED (fr): 29107
-7:19:53 PM	Info	GALLERY IMAGE ALT GENERATED (fr): Couple observant les étoiles avec un télescope lors d'une excursion désert hurghada au coucher du
-7:19:53 PM	Info	Updater: Finalizing translation links on Primary Trip 26144
-7:19:59 PM	Info	Updater: Language map synced to WP: {"fr":"29098","de":"29095","en":"26144"}
-7:20:00 PM	Info	Updater: Updated Airtable Translation_Map.
-7:20:00 PM	Info	Updater: Successfully published Trip recGTjnq4X13zaOpG
-7:20:00 PM	Notice	Execution completed
+12:28:45 PM	Notice	Execution started
+12:28:46 PM	Info	Updater: Starting batch...
+12:28:46 PM	Info	VERBOSE LOGGING DISABLED
+12:28:46 PM	Info	SUPPORTED LANGUAGES MAP UPDATED
+12:28:47 PM	Info	Updater: Processing Trip recUDehvj1S32179Q (TripID: 23024, Type: WORDPRESS)
+12:28:47 PM	Info	LANGUAGE RESOLVED: Polish -> pl
+12:28:47 PM	Info	LANGUAGE RESOLVED: German -> de
+12:28:47 PM	Info	LANGUAGE RESOLVED: French -> fr
+12:28:47 PM	Info	LANGUAGE RESOLVED: Spanish -> es
+12:28:47 PM	Info	LANGUAGE RESOLVED: Russian -> ru
+12:28:47 PM	Info	LANGUAGE RESOLVED: Turkish -> tr
+12:28:47 PM	Info	LANGUAGE RESOLVED: Romanian -> ro
+12:28:47 PM	Info	LANGUAGE RESOLVED: Chinese (Simplified) -> zh-hans
+12:28:47 PM	Info	TRANSLATION LANGUAGES LIST: ["en","pl","de","fr","es","ru","tr","ro","zh-hans"]
+12:28:47 PM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recUDehvj1S32179Q
+12:28:49 PM	Info	Updater: Found General Improvement record: recyTzv6OwWfQ3jYw
+12:28:49 PM	Info	Updater: Found TripDetails record: recDRsiZFDSTqxWaq
+12:29:17 PM	Info	Updater: Starting AI classification for Activities...
+12:29:19 PM	Info	Updater: AI suggested activities: ["City Tours","Pyramids & History"]
+12:29:19 PM	Info	Updater: Starting AI classification for Trip Types...
+12:29:20 PM	Info	Updater: AI suggested trip types: ["Day Trips","Guided Tours"]
+12:29:20 PM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 8, dMinutes: 0, tourType: single, Title: Day Tours Cairo: Egyptian Museum, Citadel & Old Cairo
+12:29:20 PM	Info	Updater: Language set to: en
+12:29:20 PM	Info	Updater: Found 2 AI Activities. Mapping to payload...
+12:29:20 PM	Info	Updater: Payload.activities set to: [400,399]
+12:29:20 PM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
+12:29:20 PM	Info	Updater: Payload.trip_types set to: [407,408]
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
+12:29:20 PM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
+12:29:20 PM	Info	Updater: Adding new fact "Language" (12647846) to template
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
+12:29:20 PM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
+12:29:20 PM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
+12:29:20 PM	Info	Updater: Adding new fact "Meals" (69801669) to template
+12:29:20 PM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
+12:29:20 PM	Info	Updater: Adding new fact "Duration" (97932390) to template
+12:29:20 PM	Info	Updater: Trip Facts structure ready with 8 fields
+12:29:20 PM	Info	Updater: PRESERVING existing slug for primary trip: cairo-egyptian-civilization-museum-citadel
+12:29:20 PM	Info	Updater: Updating existing WordPress trip 23024
+12:29:38 PM	Info	Updater: Found 1 packages and 5 prices for Trip recUDehvj1S32179Q
+12:29:38 PM	Info	Updater: Single package detected. Linking ALL 5 prices to it.
+12:29:38 PM	Info	Updater: Skipping category Passengers because price is 0 and no valid group pricing
+12:29:38 PM	Info	Updater: Skipping category Infant because price is 0 and no valid group pricing
+12:29:38 PM	Info	Updater: Skipping dummy group pricing for Child (Regular: 60)
+12:29:38 PM	Info	Updater: Skipping dummy group pricing for Student (with ID) (Regular: 75)
+12:29:38 PM	Info	CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33016
+12:29:38 PM	Info	Updater: Sending package "Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour" to WP...
+12:29:39 PM	Info	Updater: Failed to send package (code=404): {"code":"rest_no_route","message":"No route was found matching the URL and request method.","data":{"status":404}}
+12:29:39 PM	Info	Updater: ERROR - Failed to create package on WordPress. Skipping Airtable updates.
+12:29:45 PM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
+12:29:45 PM	Info	Updater: Image record rec1YCDsow2RR7Lof Type raw value: "Gallery", wpMediaId: 30656
+12:29:45 PM	Info	Updater: Media 30656 update payload: {"title":"Day Tours Cairo Museum Illuminated Night","caption":"The Egyptian Museum shines brightly at night, showcasing its architectural beauty. A must-see on your excursion el cairo.","alt_text":"Egyptian Museum at night Cairo day tour, excursion el cairo","description":"Experience the stunning illumination of the Egyptian Museum at night, a highlight of your Cairo day tour. This architectural marvel stands as a testament to Egypt's rich history, surrounded by lush greenery and a serene water feature. Capture the essence of Cairo's vibrant culture and history as you"}
+12:29:46 PM	Info	Updater: Updated Media 30656 metadata (Title: Yes, Alt: Yes)
+12:29:48 PM	Info	Updater: Filename ensured for Media 30656
+12:29:48 PM	Info	Updater: Image record rec33gHTR2hOTSaFr Type raw value: "Gallery", wpMediaId: 30657
+12:29:48 PM	Info	Updater: Media 30657 update payload: {"title":"Day Tours Cairo Museum Ancient Treasures","caption":"Explore the exquisite artifacts of the museo egipcio el cairo, showcasing Egypt's rich history.","alt_text":"Artifacts displayed in the Cairo Museum, Cairo day tour, museo egipcio el cairo","description":"Step into the heart of Egyptian history at the Cairo Museum, where ancient treasures are displayed in stunning glass cases. This image captures the intricate details of artifacts that tell stories of a civilization that flourished thousands of years ago. From ornate jewelry to ceremonial items, each"}
+12:29:49 PM	Info	Updater: Updated Media 30657 metadata (Title: Yes, Alt: Yes)
+12:29:51 PM	Info	Updater: Filename ensured for Media 30657
+12:29:51 PM	Info	Updater: Image record rec3FeCcgLunfov2c Type raw value: "Gallery", wpMediaId: 30658
+12:29:51 PM	Info	Updater: Media 30658 update payload: {"title":"Day Tours Cairo Citadel Scenic View","caption":"A breathtaking view of Cairo's skyline with the majestic Citadel in the foreground, showcasing the city's rich history.","alt_text":"Scenic view of Cairo with the Citadel at sunset, Cairo day tour, excursion pyramide le caire","description":"This stunning image captures the vibrant skyline of Cairo, with the historic Citadel standing proudly amidst the urban landscape. The warm hues of the sunset illuminate the scene, highlighting the architectural beauty of the Citadel and the bustling city below. A perfect representation of Cairo's bl"}
+12:29:52 PM	Info	Updater: Updated Media 30658 metadata (Title: Yes, Alt: Yes)
+12:29:54 PM	Info	Updater: Filename ensured for Media 30658
+12:29:54 PM	Info	Updater: Image record rec83BV3NU6Pzbo2C Type raw value: "Gallery", wpMediaId: 30659
+12:29:54 PM	Info	Updater: Media 30659 update payload: {"title":"Day Tours Cairo Museum Ancient Artifacts Display","caption":"Explore the intricate details of ancient artifacts at the Egyptian Museum, a highlight of kahire turları.","alt_text":"Ancient artifacts displayed at the Egyptian Museum Cairo day tour, kahire turları","description":"This captivating display at the Egyptian Museum showcases a variety of ancient artifacts, reflecting the rich history and culture of Egypt. From beautifully crafted tools to exquisite sculptures, each piece tells a story of the past. A must-see for anyone on a Cairo day tour, this collection offers"}
+12:29:55 PM	Info	Updater: Updated Media 30659 metadata (Title: Yes, Alt: Yes)
+12:29:56 PM	Info	Updater: Filename ensured for Media 30659
+12:29:57 PM	Info	Updater: Image record recJH91yVLolvfqVv Type raw value: "Gallery", wpMediaId: 30660
+12:29:57 PM	Info	Updater: Media 30660 update payload: {"title":"Day Tours Cairo Museum Ancient Statues","caption":"Explore the stunning ancient statues at the Egyptian Museum, showcasing Egypt's rich history and artistry.","alt_text":"Ancient statues at the Egyptian Museum, Cairo day tour, kairo pyramiden","description":"The Egyptian Museum in Cairo houses a remarkable collection of ancient artifacts, including exquisite statues that reflect the grandeur of Egyptian civilization. Visitors can admire the intricate details and craftsmanship of these historical pieces, offering a glimpse into the past. This museum is a"}
+12:29:58 PM	Info	Updater: Updated Media 30660 metadata (Title: Yes, Alt: Yes)
+12:30:00 PM	Info	Updater: Filename ensured for Media 30660
+12:30:00 PM	Info	Updater: Image record recOgCK7Rm8h5USAb Type raw value: "Gallery", wpMediaId: 30661
+12:30:00 PM	Info	Updater: Media 30661 update payload: {"title":"Day Tours Cairo Museum Architectural Marvel","caption":"Explore the stunning facade of the National Museum of Egyptian Civilization, a highlight of your kairo altstadt adventure.","alt_text":"Facade of the National Museum of Egyptian Civilization, Cairo day tour, kairo altstadt","description":"The National Museum of Egyptian Civilization stands as a testament to Egypt's rich history and culture. Its impressive architecture and beautiful landscaping invite visitors to delve into the wonders of ancient Egyptian civilization. This museum is a must-visit on your Cairo day tour, offering a uni"}
+12:30:01 PM	Info	Updater: Updated Media 30661 metadata (Title: Yes, Alt: Yes)
+12:30:03 PM	Info	Updater: Filename ensured for Media 30661
+12:30:03 PM	Info	Updater: Image record recOrYmfRdVhPPzO3 Type raw value: "Gallery", wpMediaId: 30662
+12:30:03 PM	Info	Updater: Media 30662 update payload: {"title":"Day Tours Cairo Citadel Sunset","caption":"Witness the stunning silhouette of the Citadel at dusk, a highlight of your el khalili cairo adventure.","alt_text":"Cairo Citadel at sunset Cairo day tour, el khalili cairo","description":"As the sun sets over Cairo, the majestic Citadel stands tall against a vibrant sky. This iconic landmark is a testament to Egypt's rich history and offers breathtaking views of the city. Explore the intricate architecture and immerse yourself in the cultural heritage during your Cairo day tour."}
+12:30:04 PM	Info	Updater: Updated Media 30662 metadata (Title: Yes, Alt: Yes)
+12:30:06 PM	Info	Updater: Filename ensured for Media 30662
+12:30:06 PM	Info	Updater: Image record rechEpP2pCOpRYSXR Type raw value: "Featured", wpMediaId: 30663
+12:30:06 PM	Info	Updater: Media 30663 update payload: {"title":"Day Tours Cairo Museum Ancient Sculpture","caption":"Explore the grandeur of ancient Egypt at the Egyptian Museum, featuring remarkable artifacts.","alt_text":"Ancient sculpture at the Egyptian Museum, day tours cairo","description":"The Egyptian Museum in Cairo houses an extensive collection of ancient artifacts, including this stunning sculpture. Visitors can immerse themselves in the rich history of Egyptian civilization, discovering treasures that date back thousands of years. This iconic museum is a mu (pyramids cairo tour)"}
+12:30:07 PM	Info	Updater: Updated Media 30663 metadata (Title: Yes, Alt: Yes)
+12:30:09 PM	Info	Updater: Filename ensured for Media 30663
+12:30:09 PM	Info	Updater: Image record recnRi8UlDwt4BCLk Type raw value: "Gallery", wpMediaId: 30664
+12:30:09 PM	Info	Updater: Media 30664 update payload: {"title":"Day Tours Cairo Museum Ancient Artifacts","caption":"Explore the rich history of ancient Egypt at the Egyptian Museum, featuring stunning artifacts.","alt_text":"Ancient artifacts displayed at the Egyptian Museum, Cairo day tour, pyramids cairo tour","description":"Discover the treasures of ancient Egypt at the Egyptian Museum in Cairo. This captivating collection includes beautifully crafted artifacts, showcasing the artistry and culture of a civilization that has fascinated the world for centuries. From intricate sarcophagi to ceremonial items, each piece te"}
+12:30:10 PM	Info	Updater: Updated Media 30664 metadata (Title: Yes, Alt: Yes)
+12:30:12 PM	Info	Updater: Filename ensured for Media 30664
+12:30:20 PM	Info	Updater: Published Images for Trip 23024 (Featured: 30663, Gallery: 8)
+12:30:20 PM	Info	REUSING CACHED WORDPRESS TRIP INFO
+12:30:27 PM	Info	TRIP SCHEMA GENERATED (en)
+12:30:27 PM	Info	Updater: Found additional languages: pl, de, fr, es, ru, tr, ro, zh-hans
+12:30:27 PM	Info	REUSING CACHED WORDPRESS TRIP INFO
+12:30:27 PM	Info	Updater: Found existing translations map: {"de":"32871","en":"23024","pl":"32985"}
+12:30:27 PM	Info	NEW LANGUAGE DETECTED: fr, es, ru, tr, ro, zh-hans
+12:30:27 PM	Info	Updater: languagesToUpdate=["pl","de"] languagesToCreate=["fr","es","ru","tr","ro","zh-hans"]
+12:30:27 PM	Info	CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=civilization source=airtable_trip
+12:30:27 PM	Info	Updater: Processing translation for language: pl
+12:30:27 PM	Info	KEYWORD PHRASES NORMALIZED: total=125
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:27 PM	Info	CITY FORM / EXACT RULE PATH EXECUTED WITHOUT RUNTIME ERROR
+12:30:27 PM	Info	STRONG MARKER FAST-PATH APPLIED: "Cairo day tour" -> en
+12:30:27 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "Cairo day tour"
+12:30:27 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "Cairo day tour"
+12:30:27 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "Cairo day tour"
+12:30:27 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "Cairo day tour"
+12:30:27 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "Cairo day tour"
+12:30:27 PM	Info	LANGUAGE PROFILE SCORES: "Cairo day tour" -> en=16, pt-br=2, ro=2
+12:30:27 PM	Info	PHRASE ASSIGNED TO BUCKET: "Cairo day tour" -> en
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:27 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:27 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "pyramids cairo tour" -> en
+12:30:27 PM	Info	LANGUAGE PROFILE SCORES: "pyramids cairo tour" -> en=3, pt-br=3, ro=3, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "pyramids cairo tour"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "pyramids cairo tour"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "pyramids cairo tour" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "egyptian museum cairo" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "egyptian museum cairo" -> en=3, pt-br=3, ro=3, nl=3, de=2, es=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "egyptian museum cairo"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "egyptian museum cairo"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "egyptian museum cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "things to do in cairo" -> en
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "things to do in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "things to do in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "things to do in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "things to do in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "things to do in cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "things to do in cairo" -> en=14, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "things to do in cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> en
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> es
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> it
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> pt-br
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> ro
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "cairo museum" -> nl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo museum" -> en=7, pt-br=3, ro=3, nl=3, de=2, es=1
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo museum" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	DOMAIN-SPECIFIC PHRASE RULE APPLIED: "el khalili cairo" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "el khalili cairo" -> pt-br=3, ro=3, en=1, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "el khalili cairo"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "el khalili cairo"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "el khalili cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cairo sightseeing" -> en
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo sightseeing"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo sightseeing"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo sightseeing"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo sightseeing"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo sightseeing"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo sightseeing" -> en=14, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo sightseeing" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "Kairo Ausflug" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairo Ausflug" -> de=24
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Kairo Ausflug" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "ägyptisches museum kairo" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "ägyptisches museum kairo" -> de=12, nl=2, en=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "ägyptisches museum kairo" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "kairo pyramiden" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kairo pyramiden" -> de=10
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kairo pyramiden" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kairo sehenswürdigkeiten" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kairo sehenswürdigkeiten" -> de=19, fr=2, tr=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kairo sehenswürdigkeiten" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "neues ägyptisches museum kairo" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "neues ägyptisches museum kairo" -> de=12, nl=2, en=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "neues ägyptisches museum kairo" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "zitadelle kairo" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "zitadelle kairo" -> de=17
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "zitadelle kairo" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairo" -> de
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kairo altstadt" -> de
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kairo altstadt" -> de=17
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kairo altstadt" -> de
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursion Le Caire" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursion Le Caire" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursion hurghada le caire" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursion hurghada le caire" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursion le caire depuis hurghada" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursion le caire depuis hurghada" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursion pyramide le caire" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursion pyramide le caire" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "visiter le caire" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "visiter le caire" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Le Caire" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "le caire tourisme" -> fr
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "le caire tourisme" -> fr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "musée égyptien du caire" -> fr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "musée égyptien du caire" -> fr=15, es=2, pt-br=2, hu=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "musée égyptien du caire" -> fr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursion el cairo" -> es
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursion el cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "que ver en el cairo" -> es
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "que ver en el cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "visitar el cairo" -> es
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "visitar el cairo" -> es
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "piramides de giza" -> pt-br
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "piramides de giza" -> pt-br=13, nl=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "piramides de giza" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "museo egipcio el cairo" -> es
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "museo egipcio el cairo" -> es
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "ciudadela de saladino" -> es
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "ciudadela de saladino" -> es
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "ciudadela de saladino" -> es (morphology:es_family)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "ciudadela de saladino" -> es=25, pt-br=9
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "ciudadela de saladino" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "barrio copto el cairo" -> es
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "barrio copto el cairo" -> es
+12:30:28 PM	Info	SCRIPT DETECTED: "экскурсия Каир" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "экскурсия Каир" -> ru
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "экскурсия Каир" -> ru=6
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "экскурсия Каир" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "каир достопримечательности" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	EXACT PATTERN RULE APPLIED: "каир достопримечательности" -> ru
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "каир достопримечательности" -> ru=4
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "каир достопримечательности" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "каир пирамиды" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "каир пирамиды" -> ru
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "каир пирамиды" -> ru=6
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "каир пирамиды" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "египетский музей каир" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "египетский музей каир" -> ru
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "египетский музей каир" -> ru=4
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "египетский музей каир" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "цитадель саладина каир" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "цитадель саладина каир" -> ru
+12:30:28 PM	Info	AUTHORITATIVE RULE CORRECTED: "цитадель саладина каир" -> ru
+12:30:28 PM	Info	OVERRIDE TABLE AUDIT FIX APPLIED: "ru_citadel_saladina_cairo"
+12:30:28 PM	Info	HUMAN-GRADE AUDIT OVERRIDE APPLIED: "цитадель саладина каир"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "цитадель саладина каир" -> ru=4
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "цитадель саладина каир" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "старый каир" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каир" -> ru
+12:30:28 PM	Info	SCRIPT + MARKER CONFIDENCE BOOST: "старый каир" -> ru
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "старый каир" -> ru
+12:30:28 PM	Info	SCRIPT DETECTED: "что посмотреть в каире" -> cyrillic
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "что посмотреть в каире" -> ru
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "что посмотреть в каире"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "что посмотреть в каире" -> ru
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kahire turu" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire turu" -> tr=11
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire turu" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire turları" -> tr=6
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire turları" -> tr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "mısır kahire turu" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "mısır kahire turu" -> tr=22
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "mısır kahire turu" -> tr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kahire müzesi" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire müzesi" -> tr=15, de=2, fr=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire müzesi" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire piramit turu" -> tr=6
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire piramit turu" -> tr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kahire gezilecek yerler" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire gezilecek yerler" -> tr=13
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire gezilecek yerler" -> tr
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kahire kalesi" -> tr
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire kalesi" -> tr=13
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kahire kalesi" -> tr
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> en
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> es
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> it
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> pt-br
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> ro
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "excursie cairo" -> nl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "excursie cairo" -> ro=7, pt-br=3, en=1, es=1, it=1, nl=1
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursie cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursii cairo" -> ro
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "excursii cairo" -> ro
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "excursii cairo" -> ro
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "excursii cairo" -> ro (morphology:ro_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursii cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursii cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursii cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursii cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursii cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "excursii cairo" -> ro=27, pt-br=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursii cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "vizita cairo" -> ro
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vizita cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vizita cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vizita cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vizita cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vizita cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "vizita cairo" -> ro=15, pt-br=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "vizita cairo" -> ro
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "piramidele din giza" -> ro
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "piramidele din giza" -> ro
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "piramidele din giza" -> ro
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "piramidele din giza" -> ro (morphology:ro_family)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "piramidele din giza" -> ro=21
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "piramidele din giza" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "muzeul de egiptologie cairo" -> ro
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "muzeul de egiptologie cairo" -> ro
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "muzeul de egiptologie cairo" -> ro
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "muzeul de egiptologie cairo" -> ro (morphology:ro_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "muzeul de egiptologie cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "muzeul de egiptologie cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "muzeul de egiptologie cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "muzeul de egiptologie cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "muzeul de egiptologie cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "muzeul de egiptologie cairo" -> ro=36, pt-br=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "muzeul de egiptologie cairo" -> ro
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "citadela lui saladin" -> ro
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "citadela lui saladin" -> ro=9, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "citadela lui saladin" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cairo vechi" -> ro
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo vechi"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo vechi"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo vechi"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo vechi"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo vechi"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo vechi" -> ro=15, pt-br=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo vechi" -> ro
+12:30:28 PM	Info	SCRIPT DETECTED: "开罗 旅游" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "开罗 旅游" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "开罗 旅游" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "埃及 旅游" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "埃及 旅游" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "埃及 旅游" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "开罗 景点" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "开罗 景点" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "开罗 景点" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "吉萨 金字塔" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "吉萨 金字塔" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "吉萨 金字塔" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "埃及 博物馆" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "埃及 博物馆" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "埃及 博物馆" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "萨拉丁 城堡" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "萨拉丁 城堡" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "萨拉丁 城堡" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "开罗 老城" -> han
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "开罗 老城" -> zh-hans
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "开罗 老城" -> zh-hans
+12:30:28 PM	Info	SCRIPT DETECTED: "екскурсія Каїр" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каїр" -> uk
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "екскурсія Каїр" -> uk
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "екскурсія Каїр" -> uk=8
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "екскурсія Каїр" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "каїр пам'ятки" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каїр" -> uk
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "каїр пам'ятки" -> uk
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "каїр пам'ятки" -> uk=8
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "каїр пам'ятки" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "піраміди гізи" -> cyrillic
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "піраміди гізи" -> uk
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "піраміди гізи"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "піраміди гізи" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "єгипетський музей каїр" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каїр" -> uk
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "єгипетський музей каїр" -> uk
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "єгипетський музей каїр" -> uk=8
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "єгипетський музей каїр" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "цитадель саладіна" -> cyrillic
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "цитадель саладіна" -> uk
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "цитадель саладіна"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "цитадель саладіна" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "старий каїр" -> cyrillic
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Каїр" -> uk
+12:30:28 PM	Info	SCRIPT + MARKER CONFIDENCE BOOST: "старий каїр" -> uk
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "старий каїр" -> uk
+12:30:28 PM	Info	SCRIPT DETECTED: "що подивитися в каїрі" -> cyrillic
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "що подивитися в каїрі" -> uk=3
+12:30:28 PM	Info	UNKNOWN FALLBACK SUPPRESSED BY STRONG MARKER: "що подивитися в каїрі" -> uk
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "що подивитися в каїрі" -> uk
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "excursão Cairo" -> pt-br
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "excursão Cairo" -> pt-br
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "excursão Cairo" -> pt-br
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "excursão Cairo" -> pt-br (morphology:ptbr_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursão Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursão Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursão Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursão Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "excursão Cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "excursão Cairo" -> pt-br=30, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "excursão Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "o que fazer no cairo" -> pt-br
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "o que fazer no cairo" -> pt-br
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "o que fazer no cairo" -> pt-br
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "o que fazer no cairo" -> pt-br (morphology:ptbr_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "o que fazer no cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "o que fazer no cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "o que fazer no cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "o que fazer no cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "o que fazer no cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "o que fazer no cairo" -> pt-br=28, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "o que fazer no cairo" -> pt-br
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "pirâmides de gizé" -> pt-br
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "pirâmides de gizé" -> pt-br=15, fr=2, es=2, ro=2, hu=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "pirâmides de gizé" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "museu do cairo" -> pt-br
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museu do cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museu do cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museu do cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museu do cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museu do cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "museu do cairo" -> pt-br=16, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "museu do cairo" -> pt-br
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "cidadela de saladino" -> pt-br
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "cidadela de saladino" -> pt-br
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "cidadela de saladino" -> pt-br
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "cidadela de saladino" -> pt-br (morphology:ptbr_cidadela_de_saladino)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cidadela de saladino" -> pt-br=21
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cidadela de saladino" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cairo antigo" -> pt-br
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo antigo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo antigo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo antigo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo antigo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo antigo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo antigo" -> pt-br=16, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo antigo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "pontos turísticos cairo" -> pt-br
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "pontos turísticos cairo" -> pt-br
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "pontos turísticos cairo" -> pt-br
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "pontos turísticos cairo" -> pt-br (morphology:ptbr_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "pontos turísticos cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "pontos turísticos cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "pontos turísticos cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "pontos turísticos cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "pontos turísticos cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "pontos turísticos cairo" -> pt-br=30, es=2, ro=2, tr=2, hu=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "pontos turísticos cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kair" -> pl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "wycieczka Kair" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "wycieczka Kair" -> pl=27
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "wycieczka Kair" -> pl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "co warto zobaczyć w kairze" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "co warto zobaczyć w kairze" -> pl=18
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "co warto zobaczyć w kairze" -> pl
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "piramidy w gizie" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "piramidy w gizie" -> pl=11
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "piramidy w gizie" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "muzeum egipskie w kairze" -> pl=24, hu=11, cs=11
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "muzeum egipskie w kairze" -> pl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cytadela saladyna" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cytadela saladyna" -> pl=21
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cytadela saladyna" -> pl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kair" -> pl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "stary kair" -> pl
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "stary kair" -> pl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kair" -> pl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "kair zwiedzanie" -> pl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kair zwiedzanie" -> pl=27
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "kair zwiedzanie" -> pl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "wat te doen in cairo" -> nl
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "wat te doen in cairo" -> nl
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "wat te doen in cairo" -> nl
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "wat te doen in cairo" -> nl (morphology:nl_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "wat te doen in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "wat te doen in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "wat te doen in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "wat te doen in cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "wat te doen in cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "wat te doen in cairo" -> nl=26, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "wat te doen in cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "piramides van gizeh" -> nl
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "piramides van gizeh" -> nl
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "piramides van gizeh" -> nl
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "piramides van gizeh" -> nl (morphology:nl_family)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "piramides van gizeh" -> nl=23, pt-br=13
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "piramides van gizeh" -> nl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "egyptisch museum cairo" -> nl
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "egyptisch museum cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "egyptisch museum cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "egyptisch museum cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "egyptisch museum cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "egyptisch museum cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "egyptisch museum cairo" -> nl=12, en=2, pt-br=2, ro=2, de=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "egyptisch museum cairo" -> nl
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "citadel van saladin" -> nl
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "citadel van saladin" -> nl=11
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "citadel van saladin" -> nl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "oud cairo" -> nl
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "oud cairo" -> nl
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "bezienswaardigheden cairo" -> nl
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "bezienswaardigheden cairo" -> nl
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "bezienswaardigheden cairo" -> nl
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "bezienswaardigheden cairo" -> nl (morphology:nl_family)
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "bezienswaardigheden cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "bezienswaardigheden cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "bezienswaardigheden cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "bezienswaardigheden cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "bezienswaardigheden cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "bezienswaardigheden cairo" -> nl=26, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "bezienswaardigheden cairo" -> nl
+12:30:28 PM	Info	SCRIPT DETECTED: "카이로 투어" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "카이로 투어" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "카이로 투어" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "카이로 시내 투어" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "카이로 시내 투어" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "카이로 시내 투어" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "기자 피라미드 투어" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "기자 피라미드 투어" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "기자 피라미드 투어" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "이집트 박물관" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "이집트 박물관" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "이집트 박물관" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "살라딘 성채" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "살라딘 성채" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "살라딘 성채" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "올드 카이로" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "올드 카이로" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "올드 카이로" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "카이로 가볼만한곳" -> hangul
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "카이로 가볼만한곳" -> ko
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "카이로 가볼만한곳" -> ko
+12:30:28 PM	Info	SCRIPT DETECTED: "カイロ 観光" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "カイロ 観光" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "カイロ 観光" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "カイロ ツアー" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "カイロ ツアー" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "カイロ ツアー" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "ギザのピラミッド" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "ギザのピラミッド" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "ギザのピラミッド" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "エジプト考古学博物館" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "エジプト考古学博物館" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "エジプト考古学博物館" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "シタデル カイロ" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "シタデル カイロ" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "シタデル カイロ" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "オールド カイロ" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "オールド カイロ" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "オールド カイロ" -> ja
+12:30:28 PM	Info	SCRIPT DETECTED: "カイロ おすすめ 観光" -> japanese
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "カイロ おすすめ 観光" -> ja
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "カイロ おすすめ 観光" -> ja
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "escursioni Cairo" -> it
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "escursioni Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "escursioni Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "escursioni Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "escursioni Cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "escursioni Cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "escursioni Cairo" -> it=14, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "escursioni Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cosa vedere al cairo" -> it
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cosa vedere al cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cosa vedere al cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cosa vedere al cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cosa vedere al cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cosa vedere al cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cosa vedere al cairo" -> it=14, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cosa vedere al cairo" -> it
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "piramidi di giza" -> it
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "piramidi di giza" -> it
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "piramidi di giza" -> it
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "piramidi di giza" -> it (morphology:it_family)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "piramidi di giza" -> it=23
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "piramidi di giza" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "museo egizio cairo" -> it
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museo egizio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museo egizio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museo egizio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museo egizio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "museo egizio cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "museo egizio cairo" -> it=16, es=4, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "museo egizio cairo" -> it
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "cittadella di saladino" -> it
+12:30:28 PM	Info	MORPHOLOGY OVERRIDE APPLIED: "cittadella di saladino" -> it
+12:30:28 PM	Info	LANGUAGE-FAMILY DISAMBIGUATION APPLIED: "cittadella di saladino" -> it
+12:30:28 PM	Info	COUNT INFLATION SOURCE IDENTIFIED: "cittadella di saladino" -> it (morphology:it_family)
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cittadella di saladino" -> it=21
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cittadella di saladino" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "vecchio cairo" -> it
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vecchio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vecchio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vecchio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vecchio cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "vecchio cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "vecchio cairo" -> it=14, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "vecchio cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cairo cosa visitare" -> it
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo cosa visitare"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo cosa visitare"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo cosa visitare"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo cosa visitare"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo cosa visitare"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo cosa visitare" -> it=10, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo cosa visitare" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairó" -> hu
+12:30:28 PM	Info	CITY FORM REJECTED (substring only): "Kair" inside "Kairó"
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "Kairó kirándulás" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó kirándulás" -> hu=19, pl=12, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Kairó kirándulás" -> hu
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairó" -> hu
+12:30:28 PM	Info	CITY FORM REJECTED (substring only): "Kair" inside "Kairó"
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "Kairó látnivalók" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó látnivalók" -> hu=19, pl=12, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Kairó látnivalók" -> hu
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "Gízai piramisok" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Gízai piramisok" -> hu=11, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Gízai piramisok" -> hu
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairó" -> hu
+12:30:28 PM	Info	CITY FORM REJECTED (substring only): "Kair" inside "Kairó"
+12:30:28 PM	Info	EXACT PHRASE RULE APPLIED: "Egyiptomi Múzeum Kairó" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Egyiptomi Múzeum Kairó" -> hu=17, pl=12, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Egyiptomi Múzeum Kairó" -> hu
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "Szaladin citadella" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Szaladin citadella" -> hu=11, it=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Szaladin citadella" -> hu
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "Ókairó" -> hu
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Ókairó" -> hu
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Kairó" -> hu
+12:30:28 PM	Info	CITY FORM REJECTED (substring only): "Kair" inside "Kairó"
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "Kairó városnézés" -> hu
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó városnézés" -> hu=19, pl=12, fr=2, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "Kairó városnézés" -> hu
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Káhira" -> cs
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "výlet Káhira" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "výlet Káhira" -> cs=28, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "výlet Káhira" -> cs
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "co vidět v káhiře" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "co vidět v káhiře" -> cs=15, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "co vidět v káhiře" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "pyramidy v gíze" -> cs=4, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "pyramidy v gíze" -> cs
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Káhira" -> cs
+12:30:28 PM	Info	CITY-FORM BOOST APPLIED: "egyptské muzeum káhira" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "egyptské muzeum káhira" -> cs=17, hu=13, pl=5, fr=2, es=2, pt-br=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "egyptské muzeum káhira" -> cs
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "citadela saladin" -> ro
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "citadela saladin" -> ro=9, cs=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "citadela saladin" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Káhira" -> cs
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "stará káhira" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "stará káhira" -> cs=28, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "stará káhira" -> cs
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Káhira" -> cs
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "káhira památky" -> cs
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "káhira památky" -> cs=28, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "káhira památky" -> cs
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "alexandria day tour from cairo" -> en
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "alexandria day tour from cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "alexandria day tour from cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "alexandria day tour from cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "alexandria day tour from cairo"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "alexandria day tour from cairo"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "alexandria day tour from cairo" -> en=12, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "alexandria day tour from cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "cairo day tours" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo day tours" -> en=3, pt-br=3, ro=3, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "cairo day tours"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "cairo day tours"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo day tours" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "cairo egypt day tours" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo egypt day tours" -> en=3, pt-br=3, ro=3, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "cairo egypt day tours"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "cairo egypt day tours"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo egypt day tours" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "day tours from cairo" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "day tours from cairo" -> en=3, pt-br=3, ro=3, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "day tours from cairo"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "day tours from cairo"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "day tours from cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "cairo to luxor day tour" -> en
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo to luxor day tour"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo to luxor day tour"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo to luxor day tour"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo to luxor day tour"
+12:30:28 PM	Info	CITY-FORM BOOST IGNORED DUE TO STRONG MARKER: "cairo to luxor day tour"
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo to luxor day tour" -> en=12, pt-br=2, ro=2
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "cairo to luxor day tour" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	AUTHORITATIVE EXACT CLASSIFICATION APPLIED: "coptic cairo tour" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "coptic cairo tour" -> en=3, pt-br=3, ro=3, es=1, it=1, nl=1
+12:30:28 PM	Info	LOW CONFIDENCE PHRASE SENT TO UNKNOWN: "coptic cairo tour"
+12:30:28 PM	Info	UNKNOWN REJECTED - HUMAN-GRADE RULE AVAILABLE: "coptic cairo tour"
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "coptic cairo tour" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> en
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> es
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> it
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> pt-br
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> ro
+12:30:28 PM	Info	CITY FORM EXACT MATCH: "Cairo" -> nl
+12:30:28 PM	Info	STRONG MARKER FAST-PATH APPLIED: "old cairo tour" -> en
+12:30:28 PM	Info	PHRASE ASSIGNED TO BUCKET: "old cairo tour" -> en
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "egyptské muzeum káhira" -> cs=17, hu=13, pl=5, fr=2, es=2, pt-br=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "pyramidy v gíze" -> cs=4, es=2, pt-br=2, hu=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "neues ägyptisches museum kairo" -> de=12, nl=2, en=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kairo pyramiden" -> de=10
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "ägyptisches museum kairo" -> de=12, nl=2, en=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "cairo museum" -> en=7, pt-br=3, ro=3, nl=3, de=2, es=1
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "ciudadela de saladino" -> es=25, pt-br=9
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó városnézés" -> hu=19, pl=12, fr=2, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó látnivalók" -> hu=19, pl=12, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "Kairó kirándulás" -> hu=19, pl=12, es=2, pt-br=2, cs=2
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "muzeum egipskie w kairze" -> pl=24, hu=11, cs=11
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "excursie cairo" -> ro=7, pt-br=3, en=1, es=1, it=1, nl=1
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "египетский музей каир" -> ru=4
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "каир пирамиды" -> ru=6
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "экскурсия Каир" -> ru=6
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire piramit turu" -> tr=6
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "kahire turları" -> tr=6
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "що подивитися в каїрі" -> uk=3
+12:30:28 PM	Info	UNKNOWN FALLBACK SUPPRESSED BY STRONG MARKER: "що подивитися в каїрі" -> uk
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "єгипетський музей каїр" -> uk=8
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "каїр пам'ятки" -> uk=8
+12:30:28 PM	Info	LANGUAGE PROFILE SCORES: "екскурсія Каїр" -> uk=8
+12:30:28 PM	Info	FINAL KEYWORD BUCKETS BUILT: cs=6, de=7, en=14, es=6, fr=7, hu=7, it=7, ja=7, ko=7, nl=6, pl=7, pt-br=8, ro=8, ru=7, tr=7, uk=7, zh-hans=7
+12:30:28 PM	Info	TARGET BUCKET BUILT (pl): ["wycieczka Kair","co warto zobaczyć w kairze","piramidy w gizie","muzeum egipskie w kairze","cytadela saladyna","stary kair","kair zwiedzanie"]
+12:30:28 PM	Info	TARGET BUCKET PURIFIED (pl): ["wycieczka Kair","co warto zobaczyć w kairze","piramidy w gizie","muzeum egipskie w kairze","cytadela saladyna","stary kair","kair zwiedzanie"]
+12:30:28 PM	Info	TARGET-LANGUAGE KEYWORDS EXTRACTED (pl): ["wycieczka Kair","co warto zobaczyć w kairze","piramidy w gizie","muzeum egipskie w kairze","cytadela saladyna","stary kair","kair zwiedzanie"]
+12:30:28 PM	Info	TARGET-LANGUAGE PRIMARY KEYWORD SELECTED (pl): wycieczka Kair
+12:30:28 PM	Info	FALLBACK NOT USED - TARGET BUCKET NOT EMPTY (pl)
+12:30:28 PM	Info	MANDATORY SEO KEYWORDS (pl): wycieczka Kair
+12:30:28 PM	Info	Updater: Translating trip data to pl using DeepSeek..
