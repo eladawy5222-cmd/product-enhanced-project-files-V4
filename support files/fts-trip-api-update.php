@@ -79,6 +79,18 @@ add_action('rest_api_init', function () {
         'permission_callback' => 'fts_trips_permission',
     ]);
 
+    register_rest_route('fts/v1', '/packages/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::EDITABLE, // POST, PUT, PATCH
+        'callback' => 'fts_update_package',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
+    register_rest_route('fts/v1', '/package/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::EDITABLE, // POST, PUT, PATCH
+        'callback' => 'fts_update_package',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
     // 🔹 CLONE media attachment without uploading (POST)
     register_rest_route('fts/v1', '/media/clone', [
         'methods'  => WP_REST_Server::CREATABLE, // POST
@@ -1754,6 +1766,118 @@ function fts_create_package(WP_REST_Request $request) {
     }
     
     return rest_ensure_response(['id' => $post_id]);
+}
+
+function fts_update_package(WP_REST_Request $request) {
+    $package_id = intval($request['id']);
+    $post = get_post($package_id);
+
+    if (!$post || $post->post_type !== 'trip-packages') {
+        return new WP_Error('not_found', 'Package not found', ['status' => 404]);
+    }
+
+    $params = $request->get_json_params();
+    if (!$params) $params = $request->get_params();
+
+    $updated_meta_keys = [];
+    $updated_core = false;
+
+    $update = ['ID' => $package_id];
+    if (isset($params['title'])) {
+        $title = sanitize_text_field($params['title']);
+        if ($title !== '') {
+            $update['post_title'] = $title;
+            $updated_core = true;
+        }
+    }
+    if (isset($params['status'])) {
+        $status = sanitize_text_field($params['status']);
+        if ($status !== '') {
+            $update['post_status'] = $status;
+            $updated_core = true;
+        }
+    }
+
+    if ($updated_core) {
+        $res = wp_update_post($update, true);
+        if (is_wp_error($res)) return $res;
+    }
+
+    if (isset($params['trip_id'])) {
+        update_post_meta($package_id, 'trip_id', intval($params['trip_id']));
+        $updated_meta_keys[] = 'trip_id';
+    }
+
+    $pricing_cats = $params['pricing_categories'] ?? null;
+    if (is_array($pricing_cats) && count($pricing_cats) > 0) {
+        $wte_cats = [
+            'c_ids' => [],
+            'labels' => [],
+            'prices' => [],
+            'sale_prices' => [],
+            'min_paxes' => [],
+            'max_paxes' => [],
+            'pricing_types' => [],
+            'enabled_sale' => [],
+            'enabled_group_discount' => []
+        ];
+
+        $group_pricing = [];
+
+        foreach ($pricing_cats as $idx => $cat) {
+            if (!is_array($cat)) continue;
+
+            if (isset($cat['id']) && $cat['id'] !== '') {
+                $cid_str = (string)$cat['id'];
+            } else {
+                $cid_str = (string)($idx + 11);
+            }
+
+            $cid = $cid_str;
+
+            $wte_cats['c_ids'][$cid] = (int)$cid_str;
+            $wte_cats['labels'][$cid] = isset($cat['label']) ? sanitize_text_field($cat['label']) : 'Standard';
+            $wte_cats['prices'][$cid] = isset($cat['regular_price']) ? (string)$cat['regular_price'] : '0';
+            $wte_cats['sale_prices'][$cid] = isset($cat['sale_price']) ? (string)$cat['sale_price'] : '0';
+            $wte_cats['min_paxes'][$cid] = isset($cat['min_pax']) ? intval($cat['min_pax']) : 0;
+            $wte_cats['max_paxes'][$cid] = isset($cat['max_pax']) ? intval($cat['max_pax']) : 100;
+            $wte_cats['pricing_types'][$cid] = isset($cat['pricing_type']) ? sanitize_text_field($cat['pricing_type']) : 'per-person';
+            $wte_cats['enabled_sale'][$cid] = (isset($cat['sale_price']) && floatval($cat['sale_price']) > 0) ? '1' : '0';
+
+            if (isset($cat['group_pricing']) && is_array($cat['group_pricing'])) {
+                $group_pricing[$cid] = $cat['group_pricing'];
+
+                $has_valid_gp = false;
+                foreach ($cat['group_pricing'] as $gp) {
+                    if (isset($gp['price']) && floatval($gp['price']) > 0) {
+                        $has_valid_gp = true;
+                        break;
+                    }
+                }
+                if ($has_valid_gp) {
+                    $wte_cats['enabled_group_discount'][$cid] = '1';
+                }
+            }
+        }
+
+        update_post_meta($package_id, 'package-categories', $wte_cats);
+        $updated_meta_keys[] = 'package-categories';
+
+        if (!empty($group_pricing)) {
+            update_post_meta($package_id, 'group-pricing', $group_pricing);
+            $updated_meta_keys[] = 'group-pricing';
+        }
+    }
+
+    return rest_ensure_response([
+        'id' => $package_id,
+        'success' => true,
+        'post_type' => $post->post_type,
+        'debug_updated_core' => $updated_core,
+        'debug_meta_keys_updated' => $updated_meta_keys,
+        'debug_pricing_updated' => in_array('package-categories', $updated_meta_keys, true),
+        'debug_group_pricing_updated' => in_array('group-pricing', $updated_meta_keys, true)
+    ]);
 }
 
 /**
