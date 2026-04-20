@@ -539,7 +539,7 @@ function fts_create_trip(WP_REST_Request $request) {
             $incoming_trip_code = sanitize_text_field($meta['wp_travel_engine_setting']['trip_code']);
         }
 
-        foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data'] as $schema_key) {
+        foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data', 'translation_url_map'] as $schema_key) {
             if (isset($meta[$schema_key])) {
                 $v = $meta[$schema_key];
                 if (is_array($v) || is_object($v)) {
@@ -984,7 +984,7 @@ function fts_update_trip(WP_REST_Request $request) {
 
     // Handle generic meta updates
     $meta_keys_updated = [];
-    foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data'] as $schema_key) {
+    foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data', 'translation_url_map'] as $schema_key) {
         if (isset($meta_input[$schema_key])) {
             $v = $meta_input[$schema_key];
             if (is_array($v) || is_object($v)) {
@@ -1772,8 +1772,25 @@ function fts_update_package(WP_REST_Request $request) {
     $package_id = intval($request['id']);
     $post = get_post($package_id);
 
-    if (!$post || $post->post_type !== 'trip-packages') {
-        return new WP_Error('not_found', 'Package not found', ['status' => 404]);
+    if (!$post) {
+        return new WP_Error('not_found', 'Package not found', [
+            'status' => 404,
+            'debug' => [
+                'id' => $package_id,
+                'exists' => false
+            ]
+        ]);
+    }
+    if ($post->post_type !== 'trip-packages') {
+        return new WP_Error('not_found', 'Package not found', [
+            'status' => 404,
+            'debug' => [
+                'id' => $package_id,
+                'exists' => true,
+                'post_type' => $post->post_type,
+                'post_status' => $post->post_status
+            ]
+        ]);
     }
 
     $params = $request->get_json_params();
@@ -2137,7 +2154,16 @@ function fts_render_trip_hreflang_alternates() {
                     $lang = isset($t->language_code) ? strtolower((string)$t->language_code) : '';
                     $id = isset($t->element_id) ? intval($t->element_id) : 0;
                     if (!$lang || !$id) continue;
-                    $url = get_permalink($id);
+                    $url = '';
+                    if (isset($t->url) && is_string($t->url) && $t->url !== '') {
+                        $url = $t->url;
+                    } else {
+                        $p = get_permalink($id);
+                        if ($p) {
+                            if (has_filter('wpml_permalink')) $url = apply_filters('wpml_permalink', $p, $lang);
+                            else $url = $p;
+                        }
+                    }
                     if (!$url) continue;
                     $alternates[$lang] = $url;
                 }
@@ -2145,7 +2171,41 @@ function fts_render_trip_hreflang_alternates() {
         }
     }
 
+    if (count($alternates) < 2) {
+        $map_raw = get_post_meta($post_id, 'translation_url_map', true);
+        $map = fts_normalize_schema_meta_value($map_raw);
+        if (is_array($map)) {
+            foreach ($map as $lang => $entry) {
+                $l = strtolower((string)$lang);
+                if (!is_array($entry)) continue;
+                $url = isset($entry['url']) ? (string)$entry['url'] : '';
+                $pid = isset($entry['post_id']) ? intval($entry['post_id']) : 0;
+                if (!$l || !$url) continue;
+                if ($pid > 0) {
+                    $p2 = get_permalink($pid);
+                    if ($p2 && strpos($url, parse_url($p2, PHP_URL_PATH)) === false) {
+                        $url = $p2;
+                    }
+                }
+                if ($url) $alternates[$l] = $url;
+            }
+        }
+    }
+
     if (count($alternates) < 2) return;
+
+    $uniq_by_url = [];
+    foreach ($alternates as $lang => $url) {
+        $u = (string)$url;
+        if ($u === '') continue;
+        if (isset($uniq_by_url[$u])) continue;
+        $uniq_by_url[$u] = $lang;
+    }
+    if (count($uniq_by_url) < 2) return;
+    $alternates = [];
+    foreach ($uniq_by_url as $url => $lang) {
+        $alternates[$lang] = $url;
+    }
 
     $x_default = '';
     if (isset($alternates['en'])) $x_default = $alternates['en'];

@@ -445,6 +445,7 @@ function runUpdaterBatch() {
       var enhancedData = null;
       var payload = null;
       var seoValidationByLanguage = {};
+      var translationUrlMap = parseTranslationUrlMap_Updater_(f.Translation_URL_Map);
 
       // 4. Push Primary to WordPress (create or update)
       var primaryWpId = null;
@@ -531,6 +532,20 @@ function runUpdaterBatch() {
         storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage);
       } catch (eVal) {
         Logger.log('Updater: Warning - Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)));
+      }
+
+      try {
+        var infoForUrl = null;
+        try { infoForUrl = getTripInfoFromWpCached_Updater_(primaryWpId); } catch (eUrlPrimary) {}
+        if (infoForUrl && infoForUrl.meta && infoForUrl.meta.translation_url_map) {
+          translationUrlMap = mergeTranslationUrlMap_Updater_(translationUrlMap, parseTranslationUrlMap_Updater_(infoForUrl.meta.translation_url_map));
+        }
+        var pUrl = infoForUrl && infoForUrl.core ? (infoForUrl.core.permalink || infoForUrl.core.link || '') : '';
+        translationUrlMap = upsertTranslationUrlMapEntry_Updater_(translationUrlMap, primaryLang, primaryWpId, pUrl);
+        storeTranslationUrlMap_Updater_(tripId, translationUrlMap);
+        pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap);
+      } catch (eUrlStorePrimary) {
+        Logger.log('Updater: Warning - Failed to store translation_url_map for primary: ' + (eUrlStorePrimary && eUrlStorePrimary.message ? eUrlStorePrimary.message : String(eUrlStorePrimary)));
       }
       
       // ----------------------------------------------------------
@@ -1225,6 +1240,16 @@ function runUpdaterBatch() {
             }
 
             try {
+              var tUrl = transTripInfoForSchema && transTripInfoForSchema.core ? (transTripInfoForSchema.core.permalink || transTripInfoForSchema.core.link || '') : '';
+              translationUrlMap = upsertTranslationUrlMapEntry_Updater_(translationUrlMap, targetLang, transWpId, tUrl);
+              storeTranslationUrlMap_Updater_(tripId, translationUrlMap);
+              pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap);
+              pushTranslationUrlMapMetaToWordPress_Updater_(transWpId, translationUrlMap);
+            } catch (eTurl) {
+              Logger.log('Updater: Warning - Failed to update translation_url_map (' + targetLang + '): ' + (eTurl && eTurl.message ? eTurl.message : String(eTurl)));
+            }
+
+            try {
               var wpForLangVal = transTripInfoForSchema || {};
               wpForLangVal.meta = wpForLangVal.meta || {};
               if (typeof transSchema !== 'undefined' && transSchema) {
@@ -1305,6 +1330,7 @@ function runUpdaterBatch() {
                 var mapJson = JSON.stringify(newTranslationIds);
                 var atUpdate = {
                     'Translation_Map': mapJson,
+                    'Translation_URL_Map': JSON.stringify(translationUrlMap || {}),
                     'Translation_Status': 'Done'
                 };
                 
@@ -8053,7 +8079,20 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
              Logger.log('NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (package ' + String(targetLang || '') + '): airtable_pkg=' + pkId);
            }
            Logger.log('Updater: Sending package "' + payload.title + '" to WP...');
-           var newId = sendPackageToWp_Updater_(payload, { lang: targetLang });
+           var sendRes = sendPackageToWp_Updater_(payload, { lang: targetLang });
+           var newId = sendRes && sendRes.id ? String(sendRes.id) : '';
+           if (!newId && existingWpPkgId && sendRes && String(sendRes.error_code || '') === 'not_found') {
+             Logger.log('STALE PACKAGE ID DETECTED (package ' + String(targetLang || '') + '): ' + existingWpPkgId + ' -> attempting recreate');
+             var createPayload = JSON.parse(JSON.stringify(payload || {}));
+             delete createPayload.id;
+             var createRes = sendPackageToWp_Updater_(createPayload, { lang: targetLang });
+             if (createRes && createRes.id) {
+               newId = String(createRes.id);
+               Logger.log('PACKAGE RECREATED AFTER NOT_FOUND (package ' + String(targetLang || '') + '): newId=' + newId);
+             } else {
+               Logger.log('PACKAGE RECREATE FAILED AFTER NOT_FOUND (package ' + String(targetLang || '') + '): ' + JSON.stringify(createRes || {}));
+             }
+           }
            
            if (newId) {
               if (existingWpPkgId && String(existingWpPkgId) === String(newId)) {
@@ -8108,8 +8147,9 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
        // 3. Fallback: If NO Packages table records but we have Prices records
        Logger.log('Updater: Found Prices but no Packages. Creating default package.');
        var payload = processPackage({ PackageTitle: "Standard Options" }, priceRecords);
-       var newId = sendPackageToWp_Updater_(payload, { lang: targetLang });
-       if (newId) generatedPackageIds.push(newId);
+       var res2 = sendPackageToWp_Updater_(payload, { lang: targetLang });
+       var newId2 = res2 && res2.id ? String(res2.id) : '';
+       if (newId2) generatedPackageIds.push(newId2);
     }
 
     // 4. Link Packages to Trip
@@ -8159,18 +8199,21 @@ function sendPackageToWp_Updater_(payload, opts) {
 
       var resp = UrlFetchApp.fetch(url, options);
       var code = resp.getResponseCode();
-      var json = JSON.parse(resp.getContentText());
+      var text = resp.getContentText();
+      var json = null;
+      try { json = JSON.parse(text); } catch (eJson) { json = { raw: text }; }
+      var errCode = (json && json.code) ? String(json.code) : '';
 
       if (json && json.id) {
          if (isUpdate) Logger.log('Updater: Updated Package ' + json.id);
          else Logger.log('Updater: Created Package ' + json.id);
-         return json.id;
+         return { id: json.id, http_code: code, error_code: errCode, body: json };
       } else if (isUpdate && code >= 200 && code < 300) {
          Logger.log('Updater: Updated Package ' + String(payload.id));
-         return payload.id;
+         return { id: payload.id, http_code: code, error_code: errCode, body: json };
       } else {
          Logger.log('Updater: Failed to send package (code=' + code + '): ' + JSON.stringify(json));
-         return null;
+         return { id: null, http_code: code, error_code: errCode, body: json };
       }
 }
 
@@ -8718,6 +8761,64 @@ function parseImageTranslationMap_Updater_(raw) {
   } catch (e) {
     return {};
   }
+}
+
+function parseTranslationUrlMap_Updater_(raw) {
+  try {
+    if (!raw) return {};
+    var s = raw;
+    if (Array.isArray(s)) s = s[0];
+    if (typeof s === 'object') {
+      if (!s || Array.isArray(s)) return {};
+      return s;
+    }
+    if (typeof s !== 'string') s = String(s);
+    s = s.trim();
+    if (!s) return {};
+    var obj = JSON.parse(s);
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
+    return obj;
+  } catch (e) {
+    return {};
+  }
+}
+
+function mergeTranslationUrlMap_Updater_(base, incoming) {
+  var a = base && typeof base === 'object' ? base : {};
+  var b = incoming && typeof incoming === 'object' ? incoming : {};
+  var out = {};
+  for (var k1 in a) out[k1] = a[k1];
+  for (var k2 in b) out[k2] = b[k2];
+  return out;
+}
+
+function upsertTranslationUrlMapEntry_Updater_(mapObj, lang, postId, url) {
+  var map = mapObj && typeof mapObj === 'object' ? mapObj : {};
+  var l = String(lang || '').toLowerCase();
+  if (!l) return map;
+  var pid = Number(postId || 0);
+  var u = String(url || '').trim();
+  if (!pid && !u) return map;
+  map[l] = {
+    post_id: pid || (map[l] && map[l].post_id ? map[l].post_id : 0),
+    url: u || (map[l] && map[l].url ? map[l].url : ''),
+    last_synced_at: new Date().toISOString()
+  };
+  return map;
+}
+
+function storeTranslationUrlMap_Updater_(tripRecId, map) {
+  try {
+    airtableUpdate_(UPDATER_TRIPS_TABLE, tripRecId, {
+      'Translation_URL_Map': JSON.stringify(map || {})
+    });
+  } catch (e) {}
+}
+
+function pushTranslationUrlMapMetaToWordPress_Updater_(wpTripId, map) {
+  try {
+    pushToWordPress_Updater_(wpTripId, { meta: { translation_url_map: JSON.stringify(map || {}) } });
+  } catch (e) {}
 }
 
 function getAirtableAttachmentKey_Updater_(attachmentId) {
