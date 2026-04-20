@@ -2114,3 +2114,52 @@ function fts_render_trip_schema_jsonld() {
 }
 
 add_action('wp_head', 'fts_render_trip_schema_jsonld', 20);
+
+function fts_render_trip_hreflang_alternates() {
+    if (is_admin() || is_feed()) return;
+    if (!is_singular('trip')) return;
+    $post_id = get_queried_object_id();
+    if (!$post_id) {
+        global $post;
+        if ($post && isset($post->ID)) $post_id = intval($post->ID);
+    }
+    if (!$post_id) return;
+
+    $alternates = [];
+
+    if (has_filter('wpml_element_trid') && has_filter('wpml_get_element_translations')) {
+        $trid = apply_filters('wpml_element_trid', null, $post_id, 'post_trip');
+        if ($trid) {
+            $translations = apply_filters('wpml_get_element_translations', null, $trid, 'post_trip');
+            if (is_array($translations)) {
+                foreach ($translations as $t) {
+                    if (!is_object($t)) continue;
+                    $lang = isset($t->language_code) ? strtolower((string)$t->language_code) : '';
+                    $id = isset($t->element_id) ? intval($t->element_id) : 0;
+                    if (!$lang || !$id) continue;
+                    $url = get_permalink($id);
+                    if (!$url) continue;
+                    $alternates[$lang] = $url;
+                }
+            }
+        }
+    }
+
+    if (count($alternates) < 2) return;
+
+    $x_default = '';
+    if (isset($alternates['en'])) $x_default = $alternates['en'];
+    else {
+        $current = get_permalink($post_id);
+        if ($current) $x_default = $current;
+    }
+
+    foreach ($alternates as $lang => $url) {
+        echo '<link rel="alternate" hreflang="' . esc_attr($lang) . '" href="' . esc_url($url) . '" />' . "\n";
+    }
+    if ($x_default) {
+        echo '<link rel="alternate" hreflang="x-default" href="' . esc_url($x_default) . '" />' . "\n";
+    }
+}
+
+add_action('wp_head', 'fts_render_trip_hreflang_alternates', 5);

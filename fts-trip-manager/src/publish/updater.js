@@ -4654,8 +4654,8 @@ async function generateLocalizedSEO_Updater_(translatedData, targetLang) {
     outKeywords = picked.join(', ');
   }
 
-  if (outTitle && outTitle.length > 65) outTitle = outTitle.substring(0, 65).trim();
-  if (outDesc && outDesc.length > 160) outDesc = outDesc.substring(0, 160).trim();
+  outTitle = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(outTitle), 65)
+  outDesc = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(outDesc), 160)
 
   return { title: outTitle, description: outDesc, focus_keyword: outKeywords };
 }
@@ -4905,8 +4905,8 @@ async function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, p
   if (!out.slug) out.slug = out.primary_keyword;
   out.slug = buildShortSlugFromPrimaryKeyword_Updater_(out.slug) || buildShortSlugFromPrimaryKeyword_Updater_(out.primary_keyword);
 
-  if (out.title && out.title.length > 65) out.title = out.title.substring(0, 65).trim();
-  if (out.description && out.description.length > 160) out.description = out.description.substring(0, 160).trim();
+  out.title = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out.title), 65)
+  out.description = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out.description), 160)
 
   return out;
 }
@@ -4921,15 +4921,15 @@ function generateTripSchema_Updater_(tripData, targetLang) {
   var title = String(core.title || '').trim();
   var url = String(core.permalink || core.link || '').trim();
 
-  var descRaw = '';
-  if (meta.rank_math_description) descRaw = meta.rank_math_description;
-  else if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0];
-  else if (meta.rank_math_description && typeof meta.rank_math_description === 'object') descRaw = String(meta.rank_math_description);
-  else if (core.excerpt) descRaw = core.excerpt;
-  else if (meta.rank_math_description) descRaw = meta.rank_math_description;
-  else if (core.content_html) descRaw = core.content_html;
+  var descRaw = ''
+  if (core.content_html) descRaw = core.content_html
+  else if (core.excerpt) descRaw = core.excerpt
+  else if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
+  else if (meta.rank_math_description && typeof meta.rank_math_description === 'object') descRaw = String(meta.rank_math_description)
+  else if (meta.rank_math_description) descRaw = meta.rank_math_description
 
   var description = String(descRaw || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  description = truncateAtWordBoundary_Updater_(description, 240)
 
   var images = [];
   if (d.featured_image && d.featured_image.url) images.push(String(d.featured_image.url));
@@ -6634,7 +6634,7 @@ function applyTitleSlugFallbackNoEnglishMixing_Updater_(payload, targetLang, kw,
 
   var title = parts.join(' - ').trim()
   title = replaceDisallowedEnglishGenericPhrases_Updater_(title, lang, kw, s)
-  if (title.length > 65) title = title.substring(0, 65).trim()
+  title = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(title), 65)
   if (title) out.meta.rank_math_title = title
 
   if (!slugLocked) {
@@ -6746,7 +6746,15 @@ function getLandmarkSpecificityRequirementsFromEnglish_Updater_(spec) {
 function getCivilizationMuseumMarkersForLang_Updater_(lang) {
   var l = String(lang || '').toLowerCase()
   var map = {
-    'de': ['zivilisation', 'nmec'],
+    'de': [
+      'nationalmuseum der ägyptischen zivilisation',
+      'nationalmuseum der aegyptischen zivilisation',
+      'ägyptisches zivilisationsmuseum',
+      'aegyptisches zivilisationsmuseum',
+      'zivilisationsmuseum',
+      'zivilisation',
+      'nmec'
+    ],
     'fr': [
       'musée national de la civilisation égyptienne',
       'musée de la civilisation égyptienne',
@@ -6909,7 +6917,7 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
         } else if (!title) {
           title = String(civPhrase)
         }
-        if (title.length > 65) title = title.substring(0, 65).trim()
+        title = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(title), 65)
         if (title) out.meta.rank_math_title = title
 
         var desc = String(out.meta.rank_math_description || '').trim()
@@ -6918,7 +6926,7 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
         } else if (!desc) {
           desc = String(civPhrase)
         }
-        if (desc.length > 160) desc = desc.substring(0, 160).trim()
+        desc = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(desc), 160)
         if (desc) out.meta.rank_math_description = desc
 
         if (lang === 'fr') {
@@ -6953,13 +6961,13 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
       var t1 = String(out.meta.rank_math_title || '').trim()
       if (t1 && normalizeForSpecMatch_Updater_(t1).indexOf(normalizeForSpecMatch_Updater_(ocPhrase)) === -1) {
         t1 = (t1 + ' – ' + ocPhrase).trim()
-        if (t1.length > 65) t1 = t1.substring(0, 65).trim()
+        t1 = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(t1), 65)
         out.meta.rank_math_title = t1
       }
       var d1 = String(out.meta.rank_math_description || '').trim()
       if (d1 && normalizeForSpecMatch_Updater_(d1).indexOf(normalizeForSpecMatch_Updater_(ocPhrase)) === -1) {
         d1 = (d1 + ' – ' + ocPhrase).trim()
-        if (d1.length > 160) d1 = d1.substring(0, 160).trim()
+        d1 = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(d1), 160)
         out.meta.rank_math_description = d1
       }
       if (!slugLocked) {
@@ -6980,13 +6988,13 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
       var t2 = String(out.meta.rank_math_title || '').trim()
       if (t2 && normalizeForSpecMatch_Updater_(t2).indexOf(normalizeForSpecMatch_Updater_(kh)) === -1) {
         t2 = (t2 + ' – ' + kh).trim()
-        if (t2.length > 65) t2 = t2.substring(0, 65).trim()
+        t2 = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(t2), 65)
         out.meta.rank_math_title = t2
       }
       var d2 = String(out.meta.rank_math_description || '').trim()
       if (d2 && normalizeForSpecMatch_Updater_(d2).indexOf(normalizeForSpecMatch_Updater_(kh)) === -1) {
         d2 = (d2 + ' – ' + kh).trim()
-        if (d2.length > 160) d2 = d2.substring(0, 160).trim()
+        d2 = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(d2), 160)
         out.meta.rank_math_description = d2
       }
       if (!slugLocked) {
@@ -7015,7 +7023,7 @@ function buildSpecificTitleFallback_Updater_(kw, spec) {
   if (names) parts.push(names);
   else if (s.place) parts.push(String(s.place).trim());
   var out = parts.join(' - ').trim();
-  if (out.length > 65) out = out.substring(0, 65).trim();
+  out = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out), 65)
   return out;
 }
 
@@ -7028,7 +7036,7 @@ function buildSpecificMetaFallback_Updater_(kw, spec) {
   else if (primary) out = primary + '.';
   else out = names;
   out = String(out || '').trim();
-  if (out.length > 160) out = out.substring(0, 160).trim();
+  out = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out), 160)
   return out;
 }
 
@@ -7392,6 +7400,7 @@ async function regenerateSeoHeadFieldsForQuality_Updater_(lang, englishMeta, cur
   var mustMention = ''
   if (fam === 'civilization' && l === 'fr') mustMention = 'Musée national de la civilisation égyptienne'
   if (fam === 'civilization' && l === 'es') mustMention = 'Museo Nacional de la Civilización Egipcia'
+  if (fam === 'civilization' && l === 'de') mustMention = 'Nationalmuseum der ägyptischen Zivilisation'
 
   var prompt =
     "You are a native-level travel SEO localization editor.\n" +
@@ -7422,7 +7431,7 @@ async function regenerateSeoHeadFieldsForQuality_Updater_(lang, englishMeta, cur
 
 async function hardenTranslatedSeoHeadFieldsQuality_Updater_(payload, targetLang, kw, spec, englishPayload) {
   var lang = String(targetLang || '').toLowerCase()
-  if (!(lang === 'fr' || lang === 'es')) return payload
+  if (!(lang === 'fr' || lang === 'es' || lang === 'de')) return payload
   var out = payload || {}
   out.meta = out.meta || {}
 
@@ -7457,6 +7466,15 @@ async function hardenTranslatedSeoHeadFieldsQuality_Updater_(payload, targetLang
     }
   } else if (beforeTitle !== String(out.meta.rank_math_title || '').trim() || beforeDesc !== String(out.meta.rank_math_description || '').trim()) {
     log('SEO HEAD QUALITY NORMALIZED (' + lang + ')')
+  }
+
+  if (out.meta.rank_math_title) {
+    out.meta.rank_math_facebook_title = out.meta.rank_math_title
+    out.meta.rank_math_twitter_title = out.meta.rank_math_title
+  }
+  if (out.meta.rank_math_description) {
+    out.meta.rank_math_facebook_description = out.meta.rank_math_description
+    out.meta.rank_math_twitter_description = out.meta.rank_math_description
   }
 
   return out
@@ -7640,6 +7658,13 @@ function enforceCanonicalMuseumFamilyFidelityInPayload_Updater_(payload, targetL
   function fixText_(txt) {
     var t = String(txt || '').trim()
     if (!t) return t
+    if (lang === 'de') {
+      if (/(?:ägyptisch|aegyptisch)\w*\s+museum/i.test(t)) {
+        t = t.replace(/(?:ägyptisch|aegyptisch)\w*\s+museum/ig, civ).trim()
+        log('LANDMARK FIDELITY FIXED IN FIELD (de): aegyptisch* museum -> civilization_museum')
+        return t
+      }
+    }
     var norm = normalizeForSpecMatch_Updater_(t)
     var markers = getCivilizationMuseumMarkersForLang_Updater_(lang).concat([civ, 'NMEC'])
     var hasCiv = textContainsAnyMarker_Updater_(t, markers)
@@ -7658,7 +7683,7 @@ function enforceCanonicalMuseumFamilyFidelityInPayload_Updater_(payload, targetL
       return t
     }
     if (t.length < 70) {
-      var civPhrase = (lang === 'fr') ? 'Musée national de la civilisation égyptienne (NMEC)' : civ
+      var civPhrase = (lang === 'fr') ? 'Musée national de la civilisation égyptienne (NMEC)' : ((lang === 'de') ? 'Nationalmuseum der ägyptischen Zivilisation (NMEC)' : civ)
       t = (t + ' – ' + civPhrase).trim()
       log('LANDMARK FIDELITY APPENDED (' + lang + '): civilization_museum')
     }
@@ -7734,14 +7759,14 @@ function forcePrimaryKeywordFallbackOnSeo_Updater_(payload, primaryKeyword, engl
   if (!title) title = String(out.core.title || '').trim();
   if (!title) title = primary;
   if (!containsKeyword_Updater_(title, primary)) title = (primary + ' | ' + title).trim();
-  if (title.length > 65) title = title.substring(0, 65).trim();
+  title = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(title), 65)
   out.meta.rank_math_title = title;
 
   var desc = String(out.meta.rank_math_description || '').trim();
   if (!desc) desc = String(enMeta.rank_math_description || '').trim();
   if (!desc) desc = primary;
   if (!containsKeyword_Updater_(desc, primary)) desc = (primary + ' - ' + desc).trim();
-  if (desc.length > 160) desc = desc.substring(0, 160).trim();
+  desc = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(desc), 160)
   out.meta.rank_math_description = desc;
 
   if (!slugLocked) {
@@ -9737,6 +9762,13 @@ function enforceCanonicalMuseumFamilyFidelityInImageMetadata_Updater_(translated
     var t = String(val || '').trim()
     if (!t) return t
     if (hasCiv_(t)) return t
+    if (lang === 'de') {
+      if (/(?:ägyptisch|aegyptisch)\w*\s+museum/i.test(t)) {
+        t = t.replace(/(?:ägyptisch|aegyptisch)\w*\s+museum/ig, civ).trim()
+        log('IMAGE ENTITY FIDELITY FIXED (de): aegyptisch* museum -> civilization_museum')
+        return t
+      }
+    }
     var n = norm_(t)
     var eNorm = norm_(egypt)
     if (eNorm && n.indexOf(eNorm) !== -1) {
