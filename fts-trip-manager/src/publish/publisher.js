@@ -1066,6 +1066,41 @@ function mapAirtableToWordPress_(data, tripFields) {
     advItinerary.meals_included = mealsIncluded;
   }
   
+  try {
+    if (!payload.meta) payload.meta = {};
+    if (!payload.meta.trip_schema_data) {
+      var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim();
+      var descRaw = String(g.AI_SEO_Meta_Description || g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      var tripSchema = {
+        "@context": "https://schema.org",
+        "@type": "TouristTrip",
+        "name": tripTitle || undefined,
+        "description": descRaw || undefined
+      };
+      Object.keys(tripSchema).forEach(function(k) { if (tripSchema[k] === undefined) delete tripSchema[k]; });
+      payload.meta.trip_schema_data = JSON.stringify(tripSchema);
+      if (!payload.meta.schema_trip_data) payload.meta.schema_trip_data = payload.meta.trip_schema_data;
+    }
+
+    if (!payload.meta.faq_schema_data && data.faqs && data.faqs.length) {
+      var mainEntity = [];
+      data.faqs.forEach(function(rec) {
+        var q = String(rec && rec.fields && rec.fields.AI_Question ? rec.fields.AI_Question : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        var a = String(rec && rec.fields && rec.fields.AI_Answer ? rec.fields.AI_Answer : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!q || !a) return;
+        mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
+      });
+      if (mainEntity.length) {
+        var faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": mainEntity
+        };
+        payload.meta.faq_schema_data = JSON.stringify(faqSchema);
+      }
+    }
+  } catch (eSchema) {}
+
   return payload;
 }
 

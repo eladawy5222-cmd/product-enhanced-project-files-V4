@@ -527,6 +527,15 @@ function fts_create_trip(WP_REST_Request $request) {
             $incoming_trip_code = sanitize_text_field($meta['wp_travel_engine_setting']['trip_code']);
         }
 
+        foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data'] as $schema_key) {
+            if (isset($meta[$schema_key])) {
+                $v = $meta[$schema_key];
+                if (is_array($v) || is_object($v)) {
+                    $meta[$schema_key] = wp_json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                }
+            }
+        }
+
         foreach ($meta as $key => $value) {
             $meta_key = sanitize_key($key);
             update_post_meta($trip_id, $meta_key, $value);
@@ -963,6 +972,14 @@ function fts_update_trip(WP_REST_Request $request) {
 
     // Handle generic meta updates
     $meta_keys_updated = [];
+    foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data'] as $schema_key) {
+        if (isset($meta_input[$schema_key])) {
+            $v = $meta_input[$schema_key];
+            if (is_array($v) || is_object($v)) {
+                $meta_input[$schema_key] = wp_json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        }
+    }
     foreach ($meta_input as $key => $value) {
         $meta_key = sanitize_key($key);
         $update_result = update_post_meta($trip_id, $meta_key, $value);

@@ -507,7 +507,15 @@ function runUpdaterBatch() {
       try {
         var primaryTripInfoForSchema = getTripInfoFromWpCached_Updater_(primaryWpId);
         var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang);
-        pushToWordPress_Updater_(primaryWpId, { meta: { schema_trip_data: JSON.stringify(primarySchema) } });
+        var primaryFaqSchema = null;
+        try {
+          primaryFaqSchema = generateFaqSchema_Updater_(enhancedData, primaryTripInfoForSchema, primaryLang);
+        } catch (eFaqPrimary) {
+          Logger.log('Updater: Warning - Failed to generate FAQ schema for primary: ' + eFaqPrimary.message);
+        }
+        var primaryMetaSchema = { schema_trip_data: JSON.stringify(primarySchema), trip_schema_data: JSON.stringify(primarySchema) };
+        if (primaryFaqSchema) primaryMetaSchema.faq_schema_data = JSON.stringify(primaryFaqSchema);
+        pushToWordPress_Updater_(primaryWpId, { meta: primaryMetaSchema });
         Logger.log('TRIP SCHEMA GENERATED (' + primaryLang + ')');
       } catch (eSchemaPrimary) {
         Logger.log('Updater: Warning - Failed to generate schema for primary: ' + eSchemaPrimary.message);
@@ -1167,7 +1175,15 @@ function runUpdaterBatch() {
             try {
               transTripInfoForSchema = getTripInfoFromWpCached_Updater_(transWpId);
               var transSchema = generateTripSchema_Updater_(transTripInfoForSchema, targetLang);
-              pushToWordPress_Updater_(transWpId, { meta: { schema_trip_data: JSON.stringify(transSchema) } });
+              var transFaqSchema = null;
+              try {
+                transFaqSchema = generateFaqSchema_Updater_(translatedData, transTripInfoForSchema, targetLang);
+              } catch (eFaqTrans) {
+                Logger.log('Updater: Warning - Failed to generate FAQ schema for ' + targetLang + ': ' + eFaqTrans.message);
+              }
+              var transMetaSchema = { schema_trip_data: JSON.stringify(transSchema), trip_schema_data: JSON.stringify(transSchema) };
+              if (transFaqSchema) transMetaSchema.faq_schema_data = JSON.stringify(transFaqSchema);
+              pushToWordPress_Updater_(transWpId, { meta: transMetaSchema });
               Logger.log('TRIP SCHEMA GENERATED (' + targetLang + ')');
             } catch (eSchemaTrans) {
               Logger.log('Updater: Warning - Failed to generate schema for ' + targetLang + ': ' + eSchemaTrans.message);
@@ -2226,6 +2242,41 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     advItinerary.meals_included = mealsIncluded;
   }
   
+  try {
+    payload.meta = payload.meta || {};
+    if (!payload.meta.trip_schema_data) {
+      var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim();
+      var descRaw = String(g.AI_SEO_Meta_Description || g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      var tripSchema = {
+        "@context": "https://schema.org",
+        "@type": "TouristTrip",
+        "name": tripTitle || undefined,
+        "description": descRaw || undefined
+      };
+      Object.keys(tripSchema).forEach(function(k) { if (tripSchema[k] === undefined) delete tripSchema[k]; });
+      payload.meta.trip_schema_data = JSON.stringify(tripSchema);
+      if (!payload.meta.schema_trip_data) payload.meta.schema_trip_data = payload.meta.trip_schema_data;
+    }
+
+    if (!payload.meta.faq_schema_data && data.faqs && data.faqs.length) {
+      var mainEntity = [];
+      data.faqs.forEach(function(rec) {
+        var q = String(rec && rec.fields && rec.fields.AI_Question ? rec.fields.AI_Question : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        var a = String(rec && rec.fields && rec.fields.AI_Answer ? rec.fields.AI_Answer : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!q || !a) return;
+        mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
+      });
+      if (mainEntity.length) {
+        var faqSchema = {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": mainEntity
+        };
+        payload.meta.faq_schema_data = JSON.stringify(faqSchema);
+      }
+    }
+  } catch (eSchema) {}
+
   return payload;
 }
 
@@ -3608,6 +3659,8 @@ function mergeTranslationMetaFromSourceTrip_Updater_(translatedPayload, sourceTr
   var excludedExact = {
     wp_travel_engine_setting: true,
     schema_trip_data: true,
+    trip_schema_data: true,
+    faq_schema_data: true,
     _thumbnail_id: true,
     wpte_gallery_id: true
   };
@@ -4982,7 +5035,7 @@ function resolveCanonicalEnglishPrimaryLandmarks_Updater_(sourceData, tripFields
   sources.push({
     key: 'wp_schema',
     title: '',
-    meta: wpMeta.schema_trip_data || '',
+    meta: wpMeta.trip_schema_data || wpMeta.schema_trip_data || '',
     slug: ''
   });
   sources.push({
@@ -6634,6 +6687,45 @@ function generateTripSchema_Updater_(tripData, targetLang) {
     Object.keys(schema.offers).forEach(function(k) { if (schema.offers[k] === undefined || schema.offers[k] === '') delete schema.offers[k]; });
   }
 
+  return schema;
+}
+
+function generateFaqSchema_Updater_(enhancedTripData, wpTripInfo, targetLang) {
+  var lang = String(targetLang || 'en').toLowerCase();
+  var t = wpTripInfo || {};
+  var core = t.core || {};
+  var g = enhancedTripData && enhancedTripData.general ? enhancedTripData.general : {};
+  var faqs = enhancedTripData && enhancedTripData.faqs ? enhancedTripData.faqs : [];
+  if (!Array.isArray(faqs) || faqs.length === 0) return null;
+
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function stripHtml_(s) { return norm_(String(s || '').replace(/<[^>]*>/g, ' ')); }
+
+  var mainEntity = [];
+  faqs.forEach(function(f) {
+    var fields = f && f.fields ? f.fields : f;
+    var q = stripHtml_(fields && (fields.AI_Question || fields.question || fields.Q || fields.q) ? (fields.AI_Question || fields.question || fields.Q || fields.q) : '');
+    var a = stripHtml_(fields && (fields.AI_Answer || fields.answer || fields.A || fields.a) ? (fields.AI_Answer || fields.answer || fields.A || fields.a) : '');
+    if (!q || !a) return;
+    mainEntity.push({
+      "@type": "Question",
+      "name": q,
+      "acceptedAnswer": { "@type": "Answer", "text": a }
+    });
+  });
+  if (mainEntity.length === 0) return null;
+
+  var title = String(g.AI_SEO_Title || core.title || '').trim();
+  var url = String(core.permalink || core.link || '').trim();
+
+  var schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "inLanguage": lang,
+    "mainEntity": mainEntity
+  };
+  if (title) schema.name = title;
+  if (url) schema.url = url;
   return schema;
 }
 
