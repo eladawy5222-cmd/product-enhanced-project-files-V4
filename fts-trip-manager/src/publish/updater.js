@@ -1284,14 +1284,35 @@ async function runUpdaterBatch() {
               var bodyCheck = isLikelyLanguageContamination_Updater_(String(bodySample || '').substring(0, 600), targetLang)
               if (bodyCheck.contaminated) {
                 log('LANGUAGE CONTAMINATION DETECTED (' + targetLang + '): body ' + bodyCheck.markers.join(', '))
+                if (String(targetLang || '').toLowerCase() === 'fr' && bodyCheck.markers.indexOf('turkish_chars') !== -1) {
+                  log('BODY CONTAMINATION MARKERS (fr): ' + JSON.stringify(bodyCheck.markers))
+                  log('BODY TURKISH CHARS FOUND (fr): ' + JSON.stringify(listTurkishCharMarkers_Updater_(String(bodySample || '').substring(0, 600))))
+                }
                 log('REGENERATING CONTAMINATED FIELD (' + targetLang + '): body_cleanup')
                 translatedPayload.core.content = removeObviousCrossLanguageFragments_Updater_(translatedPayload.core.content, targetLang)
                 var bodySample2 = stripHtmlForLiteralCheck_Updater_(translatedPayload.core.content)
                 var bodyCheck2 = isLikelyLanguageContamination_Updater_(String(bodySample2 || '').substring(0, 600), targetLang)
                 if (bodyCheck2.contaminated) {
-                  log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (body contamination): ' + bodyCheck2.markers.join(', '))
-                  translationSkipped.push({ lang: targetLang, message: 'body_contamination: ' + bodyCheck2.markers.join(', ') })
-                  continue
+                  var retrySucceeded = false
+                  if (String(targetLang || '').toLowerCase() === 'fr' && bodyCheck2.markers.indexOf('turkish_chars') !== -1) {
+                    log('BODY CLEANUP NORMALIZED MARKERS (fr): ' + JSON.stringify(bodyCheck2.markers))
+                    log('BODY TURKISH CHARS FOUND AFTER CLEANUP (fr): ' + JSON.stringify(listTurkishCharMarkers_Updater_(String(bodySample2 || '').substring(0, 600))))
+                    log('REGENERATING CONTAMINATED FIELD (' + targetLang + '): body_regen_retry')
+                    translatedPayload.core.content = await regenerateBodyHtmlOnly_Updater_(translatedPayload.core.content, targetLang)
+                    var bodySample3 = stripHtmlForLiteralCheck_Updater_(translatedPayload.core.content)
+                    var bodyCheck3 = isLikelyLanguageContamination_Updater_(String(bodySample3 || '').substring(0, 600), targetLang)
+                    if (!bodyCheck3.contaminated) {
+                      log('BODY REGENERATION RETRY SUCCEEDED (fr)')
+                      log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): body_regen_retry')
+                      retrySucceeded = true
+                    }
+                    if (!retrySucceeded) log('BODY CONTAMINATION PERSISTED AFTER RETRY (fr): ' + bodyCheck3.markers.join(', '))
+                  }
+                  if (!retrySucceeded) {
+                    log('Updater: SKIPPING LANGUAGE ' + targetLang + ' (body contamination): ' + bodyCheck2.markers.join(', '))
+                    translationSkipped.push({ lang: targetLang, message: 'body_contamination: ' + bodyCheck2.markers.join(', ') })
+                    continue
+                  }
                 }
                 log('TARGET LANGUAGE PURITY PASSED (' + targetLang + '): body_cleaned')
               } else {
@@ -7042,7 +7063,8 @@ function isLikelyLanguageContamination_Updater_(text, targetLang) {
   var markers = []
 
   if (lang !== 'tr') {
-    if (/[ıİşŞğĞçÇöÖüÜ]/.test(t)) markers.push('turkish_chars')
+    var trChars = (lang === 'fr') ? /[ıİşŞğĞ]/ : /[ıİşŞğĞçÇöÖüÜ]/
+    if (trChars.test(t)) markers.push('turkish_chars')
     var tNorm = normalizeForSpecMatch_Updater_(t)
     if (tNorm.indexOf('kahire') !== -1) markers.push('turkish_kahire')
     if (tNorm.indexOf('turu') !== -1) markers.push('turkish_turu')
@@ -7062,6 +7084,21 @@ function isLikelyLanguageContamination_Updater_(text, targetLang) {
   if (det && !langMatchesOrBase_Updater_(det, lang)) markers.push('detected_lang_' + det)
 
   return { contaminated: markers.length > 0, markers: markers }
+}
+
+function listTurkishCharMarkers_Updater_(text) {
+  var t = String(text || '')
+  if (!t) return []
+  var m = t.match(/[ıİşŞğĞçÇöÖüÜ]/g)
+  if (!m || !m.length) return []
+  var seen = {}
+  var out = []
+  m.forEach(function(ch) {
+    if (seen[ch]) return
+    seen[ch] = true
+    out.push(ch)
+  })
+  return out
 }
 
 function validateSingleLanguagePurity_Updater_(targetLang, fieldMap) {
@@ -7091,6 +7128,9 @@ function removeObviousCrossLanguageFragments_Updater_(text, targetLang) {
     t = t.replace(/\bturu\b/ig, '')
     t = t.replace(/\bturlar[ıi]\b/ig, '')
     t = t.replace(/\bm[ıi]s[ıi]r\b/ig, '')
+    if (lang === 'fr') {
+      t = t.replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+    }
   }
   if (lang !== 'en') {
     t = t.replace(/\bday\s+tours?\b/ig, '')
@@ -7100,6 +7140,26 @@ function removeObviousCrossLanguageFragments_Updater_(text, targetLang) {
   t = t.replace(/\s{2,}/g, ' ')
   t = t.replace(/>\s+</g, '><')
   return t
+}
+
+async function regenerateBodyHtmlOnly_Updater_(html, targetLang) {
+  var lang = String(targetLang || '').toLowerCase()
+  var h = String(html || '')
+  if (!h) return h
+  var prompt =
+    "You are a native-level travel localization editor.\n" +
+    "Fix the following HTML body content so it is fully in " + lang.toUpperCase() + " and contains ZERO Turkish words/characters.\n" +
+    "CRITICAL RULES:\n" +
+    "- Output MUST be ONLY in the target language: " + lang + ".\n" +
+    "- Preserve ALL meaning and ALL factual details exactly.\n" +
+    "- Preserve ALL existing HTML tags exactly. Do NOT add/remove tags, wrappers, or attributes.\n" +
+    "- Remove or rewrite any Turkish fragments into natural " + lang.toUpperCase() + ".\n" +
+    "- Return ONLY valid JSON.\n\n" +
+    "INPUT JSON:\n" + JSON.stringify({ html: h }) + "\n\n" +
+    "OUTPUT JSON:\n" + "{\"html\":\"...\"}"
+  var res = await callAiForTargetLangWithRetry_Updater_(prompt, lang)
+  if (res && typeof res === 'object' && res.html) return String(res.html || '')
+  return h
 }
 
 async function translateKeywordPhraseToTargetLang_Updater_(phrase, targetLang) {
