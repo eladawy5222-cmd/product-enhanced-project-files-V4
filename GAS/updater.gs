@@ -444,6 +444,7 @@ function runUpdaterBatch() {
 
       var enhancedData = null;
       var payload = null;
+      var seoValidationByLanguage = {};
 
       // 4. Push Primary to WordPress (create or update)
       var primaryWpId = null;
@@ -526,6 +527,8 @@ function runUpdaterBatch() {
         try { validationTripInfo = getTripInfoFromWpCached_Updater_(primaryWpId); } catch (eValInfo) {}
         var vRes = computeSeoValidationOutputs_Updater_(enhancedData, f, payload, validationTripInfo);
         storeSeoValidationOutputs_Updater_(tripId, vRes);
+        seoValidationByLanguage[primaryLang] = formatSeoValidationForLanguageMap_Updater_(vRes);
+        storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage);
       } catch (eVal) {
         Logger.log('Updater: Warning - Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)));
       }
@@ -1199,6 +1202,23 @@ function runUpdaterBatch() {
             }
 
             try {
+              var wpForLangVal = transTripInfoForSchema || {};
+              wpForLangVal.meta = wpForLangVal.meta || {};
+              if (typeof transSchema !== 'undefined' && transSchema) {
+                wpForLangVal.meta.trip_schema_data = JSON.stringify(transSchema);
+                wpForLangVal.meta.schema_trip_data = JSON.stringify(transSchema);
+              }
+              if (typeof transFaqSchema !== 'undefined' && transFaqSchema) {
+                wpForLangVal.meta.faq_schema_data = JSON.stringify(transFaqSchema);
+              }
+              var vResLang = computeSeoValidationOutputs_Updater_(translatedData, f, translatedPayload, wpForLangVal);
+              seoValidationByLanguage[targetLang] = formatSeoValidationForLanguageMap_Updater_(vResLang);
+              storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage);
+            } catch (eValLang) {
+              Logger.log('Updater: Warning - Failed to compute/store per-language SEO validation (' + targetLang + '): ' + (eValLang && eValLang.message ? eValLang.message : String(eValLang)));
+            }
+
+            try {
               if (wantsImages) {
                 Logger.log(formatTranslatedImageSetSummary_Updater_(targetLang, transWpId, featuredTranslated, galleryTranslatedIds.length));
                 localizeTripImagesMetadataForLang_Updater_(sourceTripInfoFromWp, targetLang, {
@@ -1405,6 +1425,25 @@ function storeSeoValidationOutputs_Updater_(tripId, vRes) {
     airtableUpdate_(UPDATER_TRIPS_TABLE, tripId, fields);
   } catch (e) {
     Logger.log('Updater: Warning - Failed to store SEO validation fields (Airtable may be missing columns): ' + (e && e.message ? e.message : String(e)));
+  }
+}
+
+function formatSeoValidationForLanguageMap_Updater_(vRes) {
+  var r = vRes || {};
+  return {
+    status: String(r.seo_status || ''),
+    score: Number(r.seo_score || 0),
+    flags: r.seo_flags || [],
+    publish: String(r.publish_status || '')
+  };
+}
+
+function storeSeoValidationByLanguageMap_Updater_(tripId, mapObj) {
+  var map = mapObj || {};
+  try {
+    airtableUpdate_(UPDATER_TRIPS_TABLE, tripId, { SEO_Validation_By_Language: JSON.stringify(map) });
+  } catch (e) {
+    Logger.log('Updater: Warning - Failed to store SEO_Validation_By_Language (Airtable may be missing column): ' + (e && e.message ? e.message : String(e)));
   }
 }
 
