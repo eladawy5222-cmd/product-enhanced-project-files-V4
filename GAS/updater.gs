@@ -1035,6 +1035,7 @@ function runUpdaterBatch() {
 
             translatedPayload = enforceCanonicalMuseumFamilyFidelityInPayload_Updater_(translatedPayload, targetLang, specConstraints);
             translatedPayload = hardenTranslatedSeoHeadFieldsQuality_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, payload);
+            if (!updateOnly) translatedPayload = ensureDescriptiveSlugForScript_Updater_(translatedPayload, targetLang, providedForLang, specConstraints, slugLocked);
             var purityCheck = validateSingleLanguagePurity_Updater_(targetLang, {
               page_title: translatedPayload && translatedPayload.core ? translatedPayload.core.title : '',
               seo_title: translatedPayload && translatedPayload.meta ? translatedPayload.meta.rank_math_title : '',
@@ -6566,6 +6567,124 @@ function detectSeoHeadQualityIssues_Updater_(title, desc) {
   return issues;
 }
 
+function getWeakTailTokensForLatin_Updater_() {
+  return [
+    'a','an','and','or','but','the','of','to','in','on','at','by','for','from','with','without',
+    'et','ou','mais','le','la','les','de','des','du','au','aux','en','dans','sur','pour','avec','sans',
+    'y','o','pero','el','la','los','las','de','del','al','en','para','con','sin',
+    'und','oder','aber','der','die','das','den','dem','des','ein','eine','einem','einen','im','in','am','auf','mit','ohne','für','von','zum','zur',
+    '&'
+  ];
+}
+
+function detectDanglingTailToken_Updater_(text, scriptProfile) {
+  var s = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (scriptProfile !== 'latin') return '';
+  s = s.replace(/[|—–\-:;,]+$/g, '').trim();
+  var parts = s.split(' ');
+  if (!parts.length) return '';
+  var last = String(parts[parts.length - 1] || '').trim();
+  if (!last) return '';
+  var lower = last.toLowerCase();
+  var weak = getWeakTailTokensForLatin_Updater_();
+  if (weak.indexOf(lower) !== -1) return lower;
+  if (lower.length <= 2 && /^[a-z]+$/.test(lower)) return lower;
+  return '';
+}
+
+function stripDanglingTail_Updater_(text, scriptProfile) {
+  var s = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!s) return s;
+  if (scriptProfile !== 'latin') return s;
+  for (var i = 0; i < 3; i++) {
+    var tail = detectDanglingTailToken_Updater_(s, scriptProfile);
+    if (!tail) break;
+    s = s.replace(new RegExp('\\s+' + escapeRegex_Updater_(tail) + '\\s*$', 'i'), '').trim();
+    s = s.replace(/[|—–\-:;,]+$/g, '').trim();
+  }
+  return s;
+}
+
+function finalizePublishText_Updater_(text, maxLen, targetLang, fieldType) {
+  var lang = String(targetLang || '').toLowerCase();
+  var profile = getScriptProfileForLang_Updater_(lang);
+  var s = normalizeSeoHeadTextForQuality_Updater_(String(text || ''));
+  if (fieldType === 'title') s = dedupeSeoTitleSegments_Updater_(s);
+  s = truncateAtWordBoundary_Updater_(s, maxLen);
+  s = stripDanglingTail_Updater_(s, profile);
+  s = normalizeSeoHeadTextForQuality_Updater_(s);
+  return s;
+}
+
+function isWeakGeneratedSlug_Updater_(slug) {
+  var s = String(slug || '').trim().toLowerCase();
+  if (!s) return true;
+  if (s.length < 14) return true;
+  if (/^s-/.test(s)) return true;
+  var parts = s.split('-').filter(function(x) { return !!x; });
+  if (parts.length < 3) return true;
+  for (var i = 0; i < parts.length; i++) {
+    if (String(parts[i] || '').length <= 1) return true;
+  }
+  return false;
+}
+
+function buildDescriptiveSlugCandidate_Updater_(targetLang, kw, spec) {
+  var lang = String(targetLang || '').toLowerCase();
+  var s = spec || {};
+  var base = String(s.english_slug || '').trim();
+  if (base) return base;
+  var primary = kw && kw.primary ? String(kw.primary).trim() : '';
+  var secondary = kw && kw.secondary && kw.secondary.length ? kw.secondary.map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; }) : [];
+  var pieces = [primary].concat(secondary.slice(0, 2)).filter(function(x) { return !!x; });
+  if (!pieces.length) pieces = ['tour', lang];
+  return pieces.join(' ');
+}
+
+function ensureDescriptiveSlugForScript_Updater_(payload, targetLang, kw, spec, slugLocked) {
+  if (slugLocked) return payload;
+  var lang = String(targetLang || '').toLowerCase();
+  if (!lang || lang === 'en') return payload;
+  var profile = getScriptProfileForLang_Updater_(lang);
+  if (profile === 'latin') return payload;
+  var out = payload || {};
+  out.core = out.core || {};
+  var cur = String(out.core.slug || '').trim();
+  if (!isWeakGeneratedSlug_Updater_(cur)) return out;
+  var candidate = buildDescriptiveSlugCandidate_Updater_(lang, kw, spec);
+  var fixed = finalizeTranslatedSlug_Updater_(candidate, { maxLen: 80, spec: spec || {} });
+  if (fixed && fixed !== cur) {
+    out.core.slug = fixed;
+    Logger.log('SLUG QUALITY UPGRADED (' + lang + '): ' + String(cur || '(empty)') + ' -> ' + fixed);
+  }
+  return out;
+}
+
+function evaluatePublishTextQuality_Updater_(text, maxLen, targetLang, fieldType) {
+  var lang = String(targetLang || '').toLowerCase();
+  var profile = getScriptProfileForLang_Updater_(lang);
+  var s = String(text || '').trim();
+  var issues = [];
+  if (!s) issues.push('missing');
+  if (/[|—–\-:;,]\s*$/.test(s)) issues.push('trailing_separator');
+  if (fieldType === 'title' && /\s*&\s*[A-Za-zÀ-ÿ]$/.test(s)) issues.push('truncated_after_amp');
+  var tail = detectDanglingTailToken_Updater_(s, profile);
+  if (tail) issues.push('dangling_tail:' + tail);
+  if (maxLen && s.length > maxLen + 5) issues.push('too_long');
+  return { ok: issues.length === 0, issues: issues };
+}
+
+function decideQualityAction_Updater_(qa, allowRegenerate) {
+  var issues = (qa && qa.issues) ? qa.issues : [];
+  var hard = issues.some(function(x) { return String(x).indexOf('missing') === 0; });
+  if (hard && allowRegenerate) return 'regenerate';
+  var dangling = issues.some(function(x) { return String(x).indexOf('dangling_tail:') === 0; });
+  if (dangling && allowRegenerate) return 'regenerate';
+  if (issues.length) return 'accept_with_warning';
+  return 'accept';
+}
+
 function regenerateSeoHeadFieldsForQuality_Updater_(lang, englishMeta, currentMeta, kw, spec) {
   var l = String(lang || '').toLowerCase();
   var en = englishMeta || {};
@@ -6613,15 +6732,16 @@ function hardenTranslatedSeoHeadFieldsQuality_Updater_(payload, targetLang, kw, 
   var out = payload || {};
   out.meta = out.meta || {};
 
-  var beforeTitle = String(out.meta.rank_math_title || '').trim();
-  var beforeDesc = String(out.meta.rank_math_description || '').trim();
+  out.meta.rank_math_title = finalizePublishText_Updater_(out.meta.rank_math_title, 65, lang, 'title');
+  out.meta.rank_math_description = finalizePublishText_Updater_(out.meta.rank_math_description, 160, lang, 'description');
 
-  out.meta.rank_math_title = dedupeSeoTitleSegments_Updater_(truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out.meta.rank_math_title), 65));
-  out.meta.rank_math_description = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(out.meta.rank_math_description), 160);
+  var qaTitle = evaluatePublishTextQuality_Updater_(out.meta.rank_math_title, 65, lang, 'title');
+  var qaDesc = evaluatePublishTextQuality_Updater_(out.meta.rank_math_description, 160, lang, 'description');
+  var allowRegenerate = true;
+  var action = decideQualityAction_Updater_({ issues: qaTitle.issues.concat(qaDesc.issues) }, allowRegenerate);
 
-  var issues = detectSeoHeadQualityIssues_Updater_(out.meta.rank_math_title, out.meta.rank_math_description);
-  if (issues.length) {
-    Logger.log('SEO HEAD QUALITY ISSUES (' + lang + '): ' + issues.join(', '));
+  if (action === 'regenerate') {
+    Logger.log('SEO FINALIZATION DECISION (' + lang + '): action=regenerate issues=' + JSON.stringify(qaTitle.issues.concat(qaDesc.issues)));
     var enMeta = englishPayload && englishPayload.meta ? englishPayload.meta : {};
     var regen = regenerateSeoHeadFieldsForQuality_Updater_(
       lang,
@@ -6631,16 +6751,18 @@ function hardenTranslatedSeoHeadFieldsQuality_Updater_(payload, targetLang, kw, 
       spec
     );
     if (regen && regen.title && regen.description) {
-      out.meta.rank_math_title = dedupeSeoTitleSegments_Updater_(truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(regen.title), 65));
-      out.meta.rank_math_description = truncateAtWordBoundary_Updater_(normalizeSeoHeadTextForQuality_Updater_(regen.description), 160);
-      var issues2 = detectSeoHeadQualityIssues_Updater_(out.meta.rank_math_title, out.meta.rank_math_description);
+      out.meta.rank_math_title = finalizePublishText_Updater_(regen.title, 65, lang, 'title');
+      out.meta.rank_math_description = finalizePublishText_Updater_(regen.description, 160, lang, 'description');
+      var qaTitle2 = evaluatePublishTextQuality_Updater_(out.meta.rank_math_title, 65, lang, 'title');
+      var qaDesc2 = evaluatePublishTextQuality_Updater_(out.meta.rank_math_description, 160, lang, 'description');
+      var issues2 = qaTitle2.issues.concat(qaDesc2.issues);
       if (!issues2.length) Logger.log('SEO HEAD REGENERATION RETRY SUCCEEDED (' + lang + ')');
-      else Logger.log('SEO HEAD QUALITY STILL IMPERFECT AFTER RETRY (' + lang + '): ' + issues2.join(', '));
+      else Logger.log('SEO HEAD QUALITY STILL IMPERFECT AFTER RETRY (' + lang + '): ' + JSON.stringify(issues2));
     } else {
       Logger.log('SEO HEAD REGENERATION RETRY FAILED (' + lang + ')');
     }
-  } else if (beforeTitle !== String(out.meta.rank_math_title || '').trim() || beforeDesc !== String(out.meta.rank_math_description || '').trim()) {
-    Logger.log('SEO HEAD QUALITY NORMALIZED (' + lang + ')');
+  } else if (action === 'accept_with_warning') {
+    Logger.log('SEO FINALIZATION DECISION (' + lang + '): action=accept_with_warning issues=' + JSON.stringify(qaTitle.issues.concat(qaDesc.issues)));
   }
 
   if (out.meta.rank_math_title) {
@@ -9676,6 +9798,10 @@ function enforceCanonicalMuseumFamilyFidelityInImageMetadata_Updater_(translated
   out.alt = fixField_(out.alt);
   out.caption = fixField_(out.caption);
   out.description = fixField_(out.description);
+  out.title = finalizePublishText_Updater_(out.title, 90, lang, 'title');
+  out.alt = finalizePublishText_Updater_(out.alt, 125, lang, 'alt');
+  out.caption = finalizePublishText_Updater_(out.caption, 160, lang, 'caption');
+  out.description = finalizePublishText_Updater_(out.description, 240, lang, 'description');
   return out;
 }
 
