@@ -211,6 +211,7 @@ function resolveImageRole_AiImages_(tripFields, imageFields) {
   var c = String(f.Caption || '').toLowerCase().trim();
   if (c) {
     if (c.indexOf('imported from trip featuredimage') !== -1) return 'featured';
+    if (c.indexOf('imported from trip featured image') !== -1) return 'featured';
     if (c.indexOf('imported from trip gallery') !== -1) return 'gallery';
   }
 
@@ -223,9 +224,7 @@ function splitKeywordsCsv_AiImages_(raw) {
   return s.split(/[,;\n]+/).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
 }
 
-function extractEnglishKeywordsForGallery_AiImages_(tripFields) {
-  var f = tripFields || {};
-  var v = f.SEO_FocusKeywords_List;
+function extractEnglishKeywordsFromListFieldValue_AiImages_(v) {
   var list = [];
   if (v) {
     if (Array.isArray(v)) {
@@ -259,6 +258,11 @@ function extractEnglishKeywordsForGallery_AiImages_(tripFields) {
   return uniq;
 }
 
+function extractEnglishKeywordsForGallery_AiImages_(tripFields) {
+  var f = tripFields || {};
+  return extractEnglishKeywordsFromListFieldValue_AiImages_(f.AI_SEO_FocusKeywords_List);
+}
+
 function normalizeKeywordList_AiImages_(list, limit) {
   var items = (list || []).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
   var seen = {};
@@ -277,30 +281,46 @@ function normalizeKeywordList_AiImages_(list, limit) {
 function buildTripKeywordPlans_AiImages_(tripFields, ctx) {
   var f = tripFields || {};
 
-  var listFromField = extractEnglishKeywordsForGallery_AiImages_(f);
+  var imp = ctx || {};
+  var focusRaw = (f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? String(f.AI_SEO_FocusKeywords) : String(imp.seoKeywords || '');
+  var listRaw = (f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? f.AI_SEO_FocusKeywords_List : (imp.seoKeywordsList || '');
+
+  var listFromField = extractEnglishKeywordsFromListFieldValue_AiImages_(listRaw);
   listFromField = normalizeKeywordList_AiImages_(listFromField, 30);
 
-  var focus = f.SEO_FocusKeywords || f['Focus Keyword'] || f.FocusKeyword || f['FocusKeyword'] || '';
-  var focusItems = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focus), 10);
+  log('AI IMAGES KEYWORD FALLBACK DISABLED');
 
-  var fallback = ctx && ctx.seoKeywords ? String(ctx.seoKeywords) : '';
-  var fallbackItems = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(fallback), 10);
+  log('AI IMAGES KEYWORD SOURCE (PRIMARY): ' + (((f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? 'Trips.AI_SEO_FocusKeywords' : 'ImprovementWithAI.AI_SEO_FocusKeywords')));
+  log('AI IMAGES KEYWORD SOURCE (LIST): ' + (((f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? 'Trips.AI_SEO_FocusKeywords_List' : 'ImprovementWithAI.AI_SEO_FocusKeywords_List')));
 
+  var focusItems = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focusRaw), 10);
   var featuredPrimary = (focusItems && focusItems.length) ? focusItems[0] : '';
-  if (!featuredPrimary && listFromField.length) featuredPrimary = listFromField[0];
-  if (!featuredPrimary && fallbackItems.length) featuredPrimary = fallbackItems[0];
+  if (focusItems && focusItems.length > 1) {
+    log('AI IMAGES: Ignoring extra tokens in AI_SEO_FocusKeywords (primary only): ' + JSON.stringify(focusItems.slice(1)));
+  }
 
   var galleryPrimary = listFromField.length ? listFromField[0] : '';
   if (!galleryPrimary) galleryPrimary = featuredPrimary;
-  if (!galleryPrimary && fallbackItems.length) galleryPrimary = fallbackItems[0];
 
   var gallerySecondary = listFromField.length > 1 ? listFromField.slice(1) : [];
 
   var all = [];
   if (featuredPrimary) all.push(featuredPrimary);
   listFromField.forEach(function(x) { all.push(x); });
-  if (!all.length) fallbackItems.forEach(function(x) { all.push(x); });
   all = normalizeKeywordList_AiImages_(all, 30);
+
+  if (featuredPrimary) {
+    log('AI IMAGES KEYWORD SOURCE: AI_SEO_FocusKeywords');
+    log('AI IMAGES PRIMARY KEYWORD: ' + featuredPrimary);
+  } else {
+    log('AI IMAGES KEYWORD SOURCE: AI_SEO_FocusKeywords');
+    log('AI IMAGES PRIMARY KEYWORD: (empty)');
+  }
+  log('AI IMAGES KEYWORD SOURCE: AI_SEO_FocusKeywords_List');
+  log('AI IMAGES ADDITIONAL KEYWORDS: ' + JSON.stringify(listFromField.slice(0, 25)));
+  if (!featuredPrimary && (!listFromField || !listFromField.length)) {
+    log('AI Images: WARNING - No keywords found in AI_SEO_FocusKeywords or AI_SEO_FocusKeywords_List')
+  }
 
   return {
     all: all,
@@ -562,6 +582,922 @@ function collapseRepeatedPhrases_AiImages_(text, maxWords) {
   return cleaned.join(' ').trim();
 }
 
+function deriveSoftTopicHint_AiImages_(phrase) {
+  var raw = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  var low = raw.toLowerCase();
+
+  function cap_(s) {
+    var w = String(s || '').trim();
+    if (!w) return '';
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }
+
+  if (low.indexOf('alexandria') !== -1) return 'Alexandria';
+  if (low.indexOf('luxor') !== -1) return 'Luxor';
+  if (low.indexOf('coptic') !== -1 && low.indexOf('cairo') !== -1) return 'Coptic Cairo';
+  if (low.indexOf('old') !== -1 && low.indexOf('cairo') !== -1) return 'Old Cairo';
+
+  var remove = {
+    day: true, tour: true, tours: true, trip: true, excursions: true, excursion: true,
+    from: true, to: true, in: true, on: true, at: true, the: true, a: true, an: true, of: true,
+    cairo: true, egypt: true
+  };
+  var parts = raw.split(/\s+/).map(function(x) { return String(x || '').replace(/[^A-Za-z0-9\u00C0-\u024F]/g, '').trim(); }).filter(function(x) { return !!x; });
+  var kept = [];
+  for (var i = 0; i < parts.length; i++) {
+    var w = parts[i];
+    var k = w.toLowerCase();
+    if (remove[k]) continue;
+    kept.push(cap_(w));
+    if (kept.length >= 3) break;
+  }
+  return kept.length ? kept.join(' ') : cap_(parts[0] || '');
+}
+
+function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, keywordPlan, opts) {
+  var m = meta || {};
+  var out = {
+    title: String(m.title || '').trim(),
+    alt: String(m.alt || '').trim(),
+    caption: String(m.caption || '').trim(),
+    description: String(m.description || '').trim()
+  };
+  var kp = keywordPlan || {};
+  var options = opts || {};
+
+  function log_(msg) { log(String(msg || '')); }
+  function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function lc_(s) { return norm_(s).toLowerCase(); }
+  function wordCount_(s) { var x = norm_(s); return x ? x.split(' ').filter(function(w) { return !!w; }).length : 0; }
+  function isRoutey_(phrase) {
+    var x = lc_(phrase);
+    if (!x) return false;
+    if (/\bfrom\b/.test(x) || /\bto\b/.test(x)) return true;
+    if (/\bday\s+tours?\b/.test(x)) return true;
+    return false;
+  }
+  function isExactFeaturedOk_(phrase) {
+    var x = norm_(phrase);
+    if (!x) return false;
+    if (isGeneric_(x)) return false;
+    if (/\bfrom\b|\bto\b/i.test(x)) return false;
+    if (x.length > 34) return false;
+    if (wordCount_(x) > 6) return false;
+    return true;
+  }
+  function isGeneric_(phrase) {
+    var x = lc_(phrase);
+    if (!x) return true;
+    if (x === 'tour' || x === 'tours' || x === 'day tour' || x === 'day tours') return true;
+    return false;
+  }
+  function isBadContextWord_(phrase) {
+    var x = lc_(phrase);
+    if (!x) return true;
+    if (x === 'day' || x === 'tour' || x === 'tours' || x === 'trip' || x === 'travel' || x === 'photo') return true;
+    return false;
+  }
+  function tooHeavyForTitleAlt_(phrase) {
+    var x = norm_(phrase);
+    if (!x) return true;
+    if (isRoutey_(x)) return true;
+    if (x.length > 32) return true;
+    if (wordCount_(x) > 6) return true;
+    return false;
+  }
+  function isAltKeywordOk_(phrase) {
+    var x = norm_(phrase);
+    if (!x) return false;
+    if (isGeneric_(x)) return false;
+    if (/\bfrom\b|\bto\b/i.test(x)) return false;
+    if (/\bday\b/i.test(x) && /\btours?\b/i.test(x)) return false;
+    if (/\btours?\b/i.test(x)) return false;
+    if (x.length > 28) return false;
+    if (wordCount_(x) > 4) return false;
+    return true;
+  }
+  function containsPhrase_(text, phrase) {
+    var t = norm_(text);
+    var p = norm_(phrase);
+    if (!t || !p) return false;
+    var re = new RegExp("\\b" + escRe_(p).replace(/\\s+/g, "\\\\s+") + "\\b", 'i');
+    return re.test(t);
+  }
+  function countPhrase_(text, phrase) {
+    var t = norm_(text);
+    var p = norm_(phrase);
+    if (!t || !p) return 0;
+    var re = new RegExp("\\b" + escRe_(p).replace(/\\s+/g, "\\\\s+") + "\\b", 'ig');
+    var m = t.match(re);
+    return m ? m.length : 0;
+  }
+  function removePhraseAll_(text, phrase) {
+    var t = norm_(text);
+    var p = norm_(phrase);
+    if (!t || !p) return t;
+    var re = new RegExp("\\b" + escRe_(p).replace(/\\s+/g, "\\\\s+") + "\\b", 'ig');
+    t = t.replace(re, ' ');
+    t = t.replace(/\s+/g, ' ').trim();
+    t = t.replace(/\s+[.,;:]+/g, '');
+    t = t.replace(/[.,;:]+\s+/g, ' ');
+    return norm_(t);
+  }
+  function cleanupEndPunctuation_(s) {
+    var x = norm_(s);
+    if (!x) return '';
+    x = x.replace(/\s+([,.;:!?])/g, '$1');
+    x = x.replace(/([,;:])(\S)/g, '$1 $2');
+    x = x.replace(/\s+/g, ' ').trim();
+    return x;
+  }
+  function removeSeoAppendages_(field, text) {
+    var before = norm_(text);
+    if (!before) return before;
+    var s = before;
+
+    if (field === 'alt') {
+      if (/,/.test(s)) {
+        s = s.replace(/,\s*/g, ' ');
+      }
+    }
+
+    var last = s;
+    for (var i = 0; i < 4; i++) {
+      s = s.replace(/\s*(?:[.?!]\s*)?(?:Part of|Included in)\s+[^.?!]+[.?!]?\s*$/i, '').trim();
+      s = s.replace(/\s*(?:[.?!]\s*)?(?:Part of|Included in)\s+[^.?!]+[.?!]?\s*(?=$)/i, '').trim();
+      if (s === last) break;
+      last = s;
+    }
+
+    s = s.replace(/(^|[.!?]\s+)(Part of|Included in)\s+/ig, '$1');
+
+    if (field === 'title') {
+      if (/\s*\([^)]*\)\s*$/.test(s)) {
+        s = s.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      }
+    } else if (/\s*\([^)]*\)\s*$/.test(s)) {
+      var par = s.match(/\(([^)]*)\)\s*$/);
+      var inside = par && par[1] ? lc_(par[1]) : '';
+      if (inside && (/\bday\s+tours?\b/.test(inside) || /\btours?\b/.test(inside) || /\bfrom\b|\bto\b/.test(inside))) {
+        s = s.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      }
+    }
+
+    var dashMatch = s.match(/^(.*?)(?:\s[—–-]\s)([^—–-]+)\s*$/);
+    if (dashMatch && dashMatch[1] && dashMatch[2]) {
+      var right = norm_(dashMatch[2]);
+      var rightLow = lc_(right);
+      var seoishRight = /\bday\s+tours?\b/.test(rightLow) || /\btours?\b/.test(rightLow) || /\bfrom\b|\bto\b/.test(rightLow);
+      if (seoishRight) {
+        s = norm_(dashMatch[1]);
+      }
+    }
+
+    s = cleanupEndPunctuation_(s);
+    if (before !== s) {
+      log_('SEO APPENDAGE REMOVED');
+    }
+    return s;
+  }
+  function ensureSentenceEnd_(s) {
+    var x = norm_(s);
+    if (!x) return '';
+    if (/[.!?]$/.test(x)) return x;
+    return x + '.';
+  }
+  function addSentenceIfFits_(base, sentence, maxLen) {
+    var b = norm_(base);
+    var s = norm_(sentence);
+    if (!s) return b;
+    if (!b) return s.length <= maxLen ? s : (s.substring(0, maxLen).trim());
+    var join = /[.!?]$/.test(b) ? ' ' : '. ';
+    var out2 = (b + join + s).trim();
+    if (out2.length <= maxLen) return out2;
+    return b;
+  }
+  function fitWithSuffix_(base, suffix, maxLen) {
+    var b = norm_(base);
+    var s = norm_(suffix);
+    if (!b) return '';
+    if (!s) return b.length <= maxLen ? b : b.substring(0, maxLen).trim();
+    var out2 = (b + s).trim();
+    if (out2.length <= maxLen) return out2;
+    return '';
+  }
+  function sentenceCount_(s) {
+    var x = norm_(s);
+    if (!x) return 0;
+    var parts = x.split(/[.!?]+/).map(function(z) { return norm_(z); }).filter(function(z) { return !!z; });
+    return parts.length;
+  }
+
+  function collectCandidates_() {
+    var all = [];
+    function push_(x) { var s = norm_(x); if (s) all.push(s); }
+    if (Array.isArray(options.extraCandidates)) options.extraCandidates.forEach(push_);
+    if (kp.secondary && Array.isArray(kp.secondary)) kp.secondary.forEach(push_);
+    if (kp.primary) push_(kp.primary);
+    if (kp.all && Array.isArray(kp.all)) kp.all.forEach(push_);
+    var seen = {};
+    var outL = [];
+    all.forEach(function(x) {
+      var k = lc_(x);
+      if (!k || seen[k]) return;
+      seen[k] = true;
+      outL.push(x);
+    });
+    return outL;
+  }
+
+  var candidates = collectCandidates_();
+  var primary = '';
+  for (var c = 0; c < candidates.length; c++) {
+    var cand = candidates[c];
+    if (!cand) continue;
+    if (isGeneric_(cand)) continue;
+    if (isRoutey_(cand) && wordCount_(cand) > 4) continue;
+    primary = cand;
+    break;
+  }
+  if (!primary) primary = norm_(kp.primary) || '';
+
+  var ctxLocation = norm_(ctx && ctx.tripLocation ? ctx.tripLocation : '');
+  var secondary = '';
+  if (ctxLocation && ctxLocation.length <= 24 && wordCount_(ctxLocation) <= 3) secondary = ctxLocation;
+  if (!secondary) secondary = deriveSoftTopicHint_AiImages_(primary) || '';
+  if (secondary && primary && lc_(secondary) === lc_(primary)) secondary = '';
+  if (secondary && isRoutey_(secondary)) secondary = '';
+  if (secondary && (isGeneric_(secondary) || isBadContextWord_(secondary) || secondary.length < 3)) secondary = '';
+
+  log_('PRIMARY IMAGE KEYWORD SELECTED: ' + (primary || ''));
+  log_('SECONDARY IMAGE CONTEXT KEYWORD SELECTED: ' + (secondary || ''));
+
+  var beforeTitle = out.title;
+  var beforeAlt = out.alt;
+  var beforeCaption = out.caption;
+  var beforeDesc = out.description;
+
+  out.title = removeSeoAppendages_('title', out.title);
+  out.alt = removeSeoAppendages_('alt', out.alt);
+  out.caption = removeSeoAppendages_('caption', out.caption);
+  out.description = removeSeoAppendages_('description', out.description);
+
+  out.title = collapseRepeatedPhrases_AiImages_(out.title, 16);
+  out.alt = collapseRepeatedPhrases_AiImages_(out.alt, 40);
+  out.caption = collapseRepeatedPhrases_AiImages_(out.caption, 28);
+  out.description = collapseRepeatedPhrases_AiImages_(out.description, 60);
+
+  function enforceFieldKeywordLimits_() {
+    var fields = ['title', 'alt', 'caption', 'description'];
+    function get_(f) { return norm_(out[f]); }
+    function set_(f, v) { out[f] = cleanupEndPunctuation_(norm_(v)); }
+
+    if (primary) {
+      fields.forEach(function(f) {
+        var v = get_(f);
+        if (countPhrase_(v, primary) > 1) {
+          set_(f, removePhraseAll_(v, primary));
+          log_('EXACT PHRASE STUFFING REMOVED');
+        }
+      });
+    }
+    if (secondary) {
+      fields.forEach(function(f) {
+        var v = get_(f);
+        if (countPhrase_(v, secondary) > 1) {
+          set_(f, removePhraseAll_(v, secondary));
+          log_('EXACT PHRASE STUFFING REMOVED');
+        }
+      });
+    }
+
+    if (primary) {
+      var present = fields.filter(function(f) { return containsPhrase_(get_(f), primary); });
+      if (present.length > 2) {
+        fields.forEach(function(f) {
+          if (f === 'description') return;
+          if (f === 'caption') return;
+          if (containsPhrase_(get_(f), primary)) {
+            set_(f, removePhraseAll_(get_(f), primary));
+            log_('EXACT PHRASE STUFFING REMOVED');
+          }
+        });
+      } else if (present.length > 1) {
+        if (containsPhrase_(get_('title'), primary)) {
+          set_('title', removePhraseAll_(get_('title'), primary));
+          log_('EXACT PHRASE STUFFING REMOVED');
+        }
+        if (containsPhrase_(get_('alt'), primary)) {
+          set_('alt', removePhraseAll_(get_('alt'), primary));
+          log_('EXACT PHRASE STUFFING REMOVED');
+        }
+      }
+    }
+
+    if (secondary) {
+      var present2 = fields.filter(function(f) { return containsPhrase_(get_(f), secondary); });
+      if (present2.length > 1) {
+        fields.forEach(function(f) {
+          if (f === 'title') return;
+          if (containsPhrase_(get_(f), secondary)) {
+            set_(f, removePhraseAll_(get_(f), secondary));
+            log_('EXACT PHRASE STUFFING REMOVED');
+          }
+        });
+      }
+    }
+
+    ['title', 'alt', 'caption'].forEach(function(f) {
+      var v = get_(f);
+      if (!v) return;
+      var hasP = primary ? containsPhrase_(v, primary) : false;
+      var hasS = secondary ? containsPhrase_(v, secondary) : false;
+      if (hasP && hasS) {
+        if (tooHeavyForTitleAlt_(primary) || f === 'alt') {
+          set_(f, removePhraseAll_(v, primary));
+        } else {
+          set_(f, removePhraseAll_(v, secondary));
+        }
+        log_('EXACT PHRASE STUFFING REMOVED');
+      }
+    });
+  }
+
+  enforceFieldKeywordLimits_();
+
+  var role = norm_(ctx && ctx.imageRole ? ctx.imageRole : '');
+  var wantFeaturedAltKeyword = role === 'featured' && options && options.featuredAltKeyword === true;
+  if (wantFeaturedAltKeyword) {
+    var altKeyword = '';
+    var pick = [];
+    if (kp.primary) pick.push(kp.primary);
+    if (kp.secondary && Array.isArray(kp.secondary)) pick = pick.concat(kp.secondary);
+    if (kp.all && Array.isArray(kp.all)) pick = pick.concat(kp.all);
+    for (var pk = 0; pk < pick.length; pk++) {
+      var cand2 = norm_(pick[pk]);
+      if (!cand2) continue;
+      if (isAltKeywordOk_(cand2)) { altKeyword = cand2; break; }
+    }
+    if (!altKeyword) {
+      var hint2 = deriveSoftTopicHint_AiImages_(primary);
+      if (isAltKeywordOk_(hint2)) altKeyword = hint2;
+    }
+
+    if (altKeyword) {
+      log_('FEATURED ALT KEYWORD SELECTED: ' + altKeyword);
+      var currentAlt = norm_(out.alt) || 'Travel photo';
+      if (!containsPhrase_(currentAlt, altKeyword)) {
+        var kwLow = lc_(altKeyword);
+        var useIn = /\bcairo\b|\bluxor\b|\balexandria\b|\begypt\b|\bgiza\b|\baswan\b|\bhurghada\b|\bsharm\b|\bdahab\b/.test(kwLow) || /^old\s+/i.test(altKeyword) || /^coptic\s+/i.test(altKeyword);
+        var suffix = (useIn ? (' in ' + altKeyword) : (' at ' + altKeyword));
+        var candidateAlt = fitWithSuffix_(currentAlt, suffix, 125);
+        if (candidateAlt) {
+          out.alt = candidateAlt;
+          log_('FEATURED ALT KEYWORD INCLUDED: ' + altKeyword);
+        } else {
+          log_('FEATURED ALT KEYWORD SKIPPED (NO ROOM): ' + altKeyword);
+        }
+      } else {
+        log_('FEATURED ALT KEYWORD ALREADY PRESENT: ' + altKeyword);
+      }
+    } else {
+      log_('FEATURED ALT KEYWORD SKIPPED (NOT SUITABLE)');
+    }
+  }
+
+  function simplifySeoKeywordToNaturalPhrase_(phrase) {
+    var raw = norm_(phrase);
+    if (!raw) return '';
+    var low = raw.toLowerCase();
+    function titleCaseWords_(s) {
+      return String(s || '').split(/\s+/).map(function(w) {
+        var x = String(w || '').trim();
+        if (!x) return '';
+        return x.charAt(0).toUpperCase() + x.slice(1);
+      }).filter(function(x) { return !!x; }).join(' ');
+    }
+    if (/\bcoptic\s+cairo\b/.test(low)) return 'Coptic Cairo';
+    if (/\bold\s+cairo\b/.test(low)) return 'Old Cairo';
+    var m = low.match(/^(.+?)\s+day\s+tours?$/);
+    if (m && m[1]) {
+      var city = m[1].trim();
+      if (/\begypt\b/.test(city)) {
+        city = city.replace(/\begypt\b/g, '').replace(/\s+/g, ' ').trim();
+        city = titleCaseWords_(city);
+        return (city ? (city + ' day tour in Egypt') : 'a day tour in Egypt');
+      }
+      return titleCaseWords_(city) + ' day tour';
+    }
+    m = low.match(/^day\s+tours?\s+(.+?)$/);
+    if (m && m[1]) {
+      var loc = m[1].trim();
+      if (/\begypt\b/.test(loc)) {
+        loc = loc.replace(/\begypt\b/g, '').replace(/\s+/g, ' ').trim();
+        loc = titleCaseWords_(loc);
+        return (loc ? ('a day tour in ' + loc + ', Egypt') : 'a day tour in Egypt');
+      }
+      return 'a day tour in ' + titleCaseWords_(loc);
+    }
+    m = low.match(/^day\s+tours?\s+from\s+(.+?)$/);
+    if (m && m[1]) {
+      var fromCity = m[1].trim();
+      fromCity = titleCaseWords_(fromCity);
+      return 'a day tour from ' + fromCity;
+    }
+    m = low.match(/^(.+?)\s+day\s+tour\s+from\s+(.+?)$/);
+    if (m && m[1] && m[2]) {
+      var dest = m[1].trim();
+      var from2 = m[2].trim();
+      dest = titleCaseWords_(dest);
+      from2 = titleCaseWords_(from2);
+      return 'a day trip from ' + from2 + ' to ' + dest;
+    }
+    m = low.match(/^(.+?)\s+to\s+(.+?)\s+day\s+tour$/);
+    if (m && m[1] && m[2]) {
+      var from3 = m[1].trim();
+      var to3 = m[2].trim();
+      from3 = titleCaseWords_(from3);
+      to3 = titleCaseWords_(to3);
+      return 'a day trip from ' + from3 + ' to ' + to3;
+    }
+    if (/\bday\s+tours?\b/.test(low)) return 'a day tour';
+    if (/\btour\b/.test(low) && low.indexOf('tour') === low.lastIndexOf('tour')) return raw.replace(/\btour\b/i, '').replace(/\s+/g, ' ').trim();
+    return raw;
+  }
+
+  function buildPrimarySeoSentence_() {
+    if (!primary) return '';
+    var useExact = !(isRoutey_(primary) || /\bday\s+tours?\b/.test(lc_(primary)));
+    var mention = useExact ? primary : simplifySeoKeywordToNaturalPhrase_(primary);
+    mention = norm_(mention);
+    if (!mention) mention = primary;
+    var mLow = lc_(mention);
+    if (/^(a|an)\b/.test(mLow)) return 'A memorable stop on ' + mention + '.';
+    if (/\bday\s+tour\b/.test(mLow) || /\bday\s+trip\b/.test(mLow)) return 'A memorable stop on a ' + mention + '.';
+    if (/\btours\b/.test(mLow)) return 'A popular highlight for ' + mention + '.';
+    if (/\btour\b/.test(mLow)) return 'A memorable highlight on a ' + mention + '.';
+    return 'A memorable highlight for travelers interested in ' + mention + '.';
+  }
+
+  var desc = norm_(out.description);
+  var captionBase = norm_(out.caption);
+  var altBase = norm_(out.alt);
+  var titleBase = norm_(out.title);
+
+  if (!desc) {
+    var seed = captionBase || altBase || titleBase || 'Travel photo';
+    desc = ensureSentenceEnd_(seed);
+  } else if (sentenceCount_(desc) === 0) {
+    desc = ensureSentenceEnd_(desc);
+  }
+
+  var needPrimaryInDesc = primary ? !containsPhrase_(desc, primary) : false;
+  if (primary && needPrimaryInDesc) {
+    desc = addSentenceIfFits_(desc, buildPrimarySeoSentence_(), 300);
+  }
+
+  var wantExactFeaturedPrimary = role === 'featured' && options && options.featuredExactPrimary === true;
+  if (wantExactFeaturedPrimary && primary) {
+    if (containsPhrase_(desc, primary)) {
+      log_('FEATURED EXACT PRIMARY ALREADY PRESENT: ' + primary);
+    } else if (isExactFeaturedOk_(primary)) {
+      var candidateExact = addSentenceIfFits_(desc, 'A popular highlight for ' + primary + '.', 300);
+      if (candidateExact !== desc && containsPhrase_(candidateExact, primary)) {
+        desc = candidateExact;
+        log_('FEATURED EXACT PRIMARY INCLUDED: ' + primary);
+      } else {
+        log_('FEATURED EXACT PRIMARY SKIPPED (NO ROOM): ' + primary);
+      }
+    } else {
+      log_('FEATURED EXACT PRIMARY SKIPPED (ROUTEY/HEAVY): ' + primary);
+    }
+  }
+
+  var descSentences = sentenceCount_(desc);
+  if (descSentences < 2) {
+    if (secondary && !containsPhrase_(desc, secondary)) {
+      desc = addSentenceIfFits_(desc, 'A great addition to a ' + secondary + ' itinerary.', 300);
+    } else if (primary && containsPhrase_(desc, primary)) {
+      desc = addSentenceIfFits_(desc, 'A timeless scene for travelers.', 300);
+    }
+  } else if (descSentences < 3) {
+    if (secondary && !containsPhrase_(desc, secondary)) {
+      desc = addSentenceIfFits_(desc, 'A great addition to a ' + secondary + ' itinerary.', 300);
+    }
+  }
+
+  out.description = cleanupEndPunctuation_(desc);
+
+  out.title = norm_(out.title) || 'Travel photo';
+  out.alt = norm_(out.alt) || 'Travel photo';
+  out.caption = norm_(out.caption);
+  out.description = norm_(out.description);
+
+  if (out.title.length > 60) out.title = out.title.substring(0, 60).trim();
+  if (out.caption.length > 150) out.caption = out.caption.substring(0, 150).trim();
+  if (out.description.length > 300) out.description = out.description.substring(0, 300).trim();
+  if (out.alt.length > 125) out.alt = out.alt.substring(0, 125).trim();
+
+  if (beforeTitle !== out.title) log_('TITLE NORMALIZED FOR NATURAL SEO');
+  if (beforeAlt !== out.alt) log_('ALT TEXT NORMALIZED FOR NATURAL SEO');
+  if (beforeCaption !== out.caption) log_('CAPTION NORMALIZED FOR NATURAL SEO');
+  if (beforeDesc !== out.description) log_('DESCRIPTION NORMALIZED FOR NATURAL SEO');
+
+  log_('NATURAL SEO PLACEMENT APPLIED');
+  return out;
+}
+
+function englishImageSeoStuffingGuard_AiImages_(meta, ctx, keywordPlan) {
+  var m = meta || {};
+  var out = {
+    title: String(m.title || '').trim(),
+    caption: String(m.caption || '').trim(),
+    description: String(m.description || '').trim(),
+    alt: String(m.alt || '').trim()
+  };
+
+  function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function isSeoish_(p) {
+    var x = String(p || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!x) return false;
+    if (x.length < 6) return false;
+    if (/\b(day\s+tours?|tours?|tour|from)\b/.test(x)) return true;
+    if (/\bcairo\b/.test(x) && /\b(day\s+tours?|tours?|tour)\b/.test(x)) return true;
+    return false;
+  }
+
+  var phrases = [
+    'day tours cairo',
+    'day tours from cairo',
+    'cairo day tours',
+    'cairo egypt day tours',
+    'day tours cairo egypt',
+    'alexandria day tour from cairo',
+    'old cairo tour',
+    'coptic cairo tour',
+    'cairo to luxor day tour',
+    'day tour',
+    'day tours'
+  ];
+
+  var kp = keywordPlan || {};
+  var cand = [];
+  if (kp.primary) cand.push(kp.primary);
+  if (kp.secondary && Array.isArray(kp.secondary)) {
+    for (var i = 0; i < kp.secondary.length; i++) cand.push(kp.secondary[i]);
+  }
+  if (kp.all && Array.isArray(kp.all)) {
+    for (var j = 0; j < kp.all.length; j++) cand.push(kp.all[j]);
+  }
+
+  var seen = {};
+  var extra = [];
+  cand.forEach(function(x) {
+    var s = norm_(x);
+    var k = s.toLowerCase();
+    if (!s || seen[k]) return;
+    seen[k] = true;
+    if (isSeoish_(s)) extra.push(s);
+  });
+  extra.forEach(function(x) { phrases.push(x); });
+
+  var uniq = {};
+  var finalPhrases = [];
+  phrases.forEach(function(x) {
+    var s = norm_(x);
+    var k = s.toLowerCase();
+    if (!s || uniq[k]) return;
+    uniq[k] = true;
+    finalPhrases.push(s);
+  });
+  finalPhrases.sort(function(a, b) { return b.length - a.length; });
+
+  function stripPhrases_(text) {
+    var s = norm_(text);
+    if (!s) return s;
+    for (var i = 0; i < finalPhrases.length; i++) {
+      var p = finalPhrases[i];
+      if (!p) continue;
+      var re = new RegExp("\\b" + escRe_(p).replace(/\\s+/g, "\\\\s+") + "\\b", 'ig');
+      s = s.replace(re, ' ');
+    }
+    s = s.replace(/\s+/g, ' ').trim();
+    s = s.replace(/\s+[.,;:]+/g, '');
+    s = s.replace(/[.,;:]+\s+/g, ' ');
+    s = s.replace(/\s+/g, ' ').trim();
+    return s;
+  }
+
+  var applied = false;
+
+  function cleanField_(field, value) {
+    var before = norm_(value);
+    if (!before) return before;
+
+    var s = before;
+    if (field === 'alt') {
+      s = s.replace(/,\s*/g, ' ');
+    }
+
+    s = stripPhrases_(s);
+
+    var maxWords = field === 'title' ? 16 : (field === 'caption' ? 28 : (field === 'description' ? 60 : 40));
+    s = collapseRepeatedPhrases_AiImages_(s, maxWords);
+    s = norm_(s);
+
+    if (field === 'title') {
+      var low = s.toLowerCase();
+      if (/\b(day\s+tours?|tours?|tour)\b/.test(low)) {
+        s = s.replace(/\b(Day\s+Tours?|Tours?|Tour)\b/gi, ' ');
+        s = norm_(s);
+      }
+    }
+
+    if (!s) {
+      if (field === 'title') s = 'Travel photo';
+      else if (field === 'alt') s = 'Travel photo';
+    }
+
+    if (before !== s) {
+      applied = true;
+      if (field === 'title') log('TITLE KEYWORD STUFFING CLEANED: "' + before + '" -> "' + s + '"');
+      else if (field === 'alt') log('ALT TEXT KEYWORD STUFFING CLEANED: "' + before + '" -> "' + s + '"');
+      else if (field === 'caption') log('CAPTION KEYWORD STUFFING CLEANED');
+      else if (field === 'description') log('DESCRIPTION KEYWORD STUFFING CLEANED');
+    }
+    return s;
+  }
+
+  out.title = cleanField_('title', out.title);
+  out.alt = cleanField_('alt', out.alt);
+  out.caption = cleanField_('caption', out.caption);
+  out.description = cleanField_('description', out.description);
+
+  if (applied) log('ENGLISH IMAGE SEO STUFFING GUARD APPLIED');
+  return out;
+}
+
+function blendExactPhraseNaturally_AiImages_(caption, description, phrase) {
+  var c = String(caption || '').trim();
+  var d = String(description || '').trim();
+  var p = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!p) return { caption: c, description: d };
+
+  function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function count_(text, phraseText) {
+    var t = String(text || '');
+    if (!t) return 0;
+    var re = new RegExp(escRe_(phraseText), 'ig');
+    var m = t.match(re);
+    return m ? m.length : 0;
+  }
+  function removeAll_(text, phraseText) {
+    var t = String(text || '');
+    if (!t) return '';
+    var re = new RegExp(escRe_(phraseText), 'ig');
+    t = t.replace(re, ' ');
+    t = t.replace(/\s+/g, ' ').trim();
+    t = t.replace(/\s+[.,;:]+/g, '');
+    t = t.replace(/[.,;:]+\s+/g, ' ');
+    return t.replace(/\s+/g, ' ').trim();
+  }
+  function appendSentence_(text, sentence, maxLen) {
+    var s = String(text || '').trim();
+    var add = String(sentence || '').trim();
+    if (!add) return s;
+    if (!s) return add.length <= maxLen ? add : add.substring(0, maxLen).trim();
+    var join = /[.!?]$/.test(s) ? ' ' : '. ';
+    var out = s + join + add;
+    if (out.length <= maxLen) return out;
+    return '';
+  }
+
+  function ensureInField_(value, maxLen, sentence, fieldLabel) {
+    var s = String(value || '').trim();
+    var cnt = count_(s, p);
+    if (cnt > 1) s = removeAll_(s, p);
+    if (cnt === 1) return s;
+
+    var appended = appendSentence_(s, sentence, maxLen);
+    if (appended) {
+      log('EXACT KEYWORD PHRASE NATURALIZED IN ' + fieldLabel + ': ' + p);
+      return appended;
+    }
+
+    var base = String(s || '').trim();
+    var join = (!base ? '' : (/[.!?]$/.test(base) ? ' ' : '. '));
+    var allowedBaseLen = maxLen - (join.length + String(sentence || '').length);
+    if (allowedBaseLen > 10 && base && base.length > allowedBaseLen) {
+      try { base = truncateByWords_AiImages_(base, allowedBaseLen); } catch (eT) { base = base.substring(0, allowedBaseLen).trim(); }
+      base = String(base || '').trim();
+      appended = appendSentence_(base, sentence, maxLen);
+      if (appended) {
+        log('EXACT KEYWORD PHRASE NATURALIZED IN ' + fieldLabel + ' (TRIMMED): ' + p);
+        return appended;
+      }
+    }
+
+    if (String(sentence || '').length <= maxLen) {
+      log('EXACT KEYWORD PHRASE INSERTED AS SENTENCE IN ' + fieldLabel + ': ' + p);
+      return String(sentence || '').trim();
+    }
+
+    return s;
+  }
+
+  c = ensureInField_(c, 150, 'Part of ' + p + '.', 'CAPTION');
+  d = ensureInField_(d, 300, 'Included in ' + p + '.', 'DESCRIPTION');
+  return { caption: c, description: d };
+}
+
+function naturalizeTitleAltWithPhrase_AiImages_(title, alt, phrase) {
+  var t = String(title || '').trim();
+  var a = String(alt || '').trim();
+  var p = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!p) return { title: t, alt: a };
+
+  function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function fitWithSuffix_(base, suffix, maxLen) {
+    var b = norm_(base);
+    var s = String(suffix || '');
+    if (!b) return '';
+    if (b.length + s.length <= maxLen) return (b + s).trim();
+    var allowed = maxLen - s.length;
+    if (allowed < 8) return '';
+    try { b = truncateByWords_AiImages_(b, allowed); } catch (e) { b = b.substring(0, allowed).trim(); }
+    b = norm_(b);
+    if (!b) return '';
+    if (b.length + s.length <= maxLen) return (b + s).trim();
+    return '';
+  }
+
+  function ensureInTitle_(text) {
+    var before = norm_(text);
+    if (!before) {
+      var hint = deriveSoftTopicHint_AiImages_(p);
+      before = hint ? (hint + ' photo') : 'Travel photo';
+    }
+    var out = before;
+    var re = new RegExp(escRe_(p), 'ig');
+    var m = out.match(re);
+    var count = m ? m.length : 0;
+    if (count === 1 && out.length <= 60) return out;
+    if (count > 1) out = out.replace(re, ' ');
+    out = norm_(out);
+
+    var suffix = ' (' + p + ')';
+    var maxBase = 60 - suffix.length;
+    if (maxBase < 8) maxBase = 8;
+
+    function splitDash_(s) {
+      var x = norm_(s);
+      if (!x) return { left: '', right: '' };
+      var parts = x.split('—').map(function (z) { return norm_(z) }).filter(function (z) { return !!z });
+      if (parts.length > 1) {
+        return { left: parts.slice(0, parts.length - 1).join(' — '), right: parts[parts.length - 1] };
+      }
+      parts = x.split(/\s[-–]\s/).map(function (z) { return norm_(z) }).filter(function (z) { return !!z });
+      if (parts.length > 1) {
+        return { left: parts.slice(0, parts.length - 1).join(' - '), right: parts[parts.length - 1] };
+      }
+      return { left: x, right: '' };
+    }
+
+    function buildBaseKeepingRight_(base, maxLenBase) {
+      var sp = splitDash_(base);
+      var left = norm_(sp.left);
+      var right = norm_(sp.right);
+      if (!right) return left;
+      if (right.length > maxLenBase) right = right.substring(0, maxLenBase).trim();
+      var join = ' — ';
+      var remaining = maxLenBase - right.length;
+      if (!left || remaining <= join.length + 8) return right;
+      var allowedLeft = remaining - join.length;
+      try { left = truncateByWords_AiImages_(left, allowedLeft); } catch (eL) { left = left.substring(0, allowedLeft).trim(); }
+      left = norm_(left);
+      if (!left) return right;
+      return (left + join + right).trim();
+    }
+
+    var base2 = buildBaseKeepingRight_(out, maxBase);
+    var dashSuffix = ' — ' + p;
+    var maxBaseDash = 60 - dashSuffix.length;
+    if (maxBaseDash < 8) maxBaseDash = 8;
+    var baseDash = buildBaseKeepingRight_(out, maxBaseDash);
+    var spR = splitDash_(out);
+    var rightPart = norm_(spR && spR.right ? spR.right : '');
+    var redundantDash = false;
+    if (rightPart) {
+      var reRight = new RegExp("\\b" + escRe_(rightPart).replace(/\\s+/g, "\\\\s+") + "\\b", 'i');
+      if (reRight.test(p)) redundantDash = true;
+    }
+    if (!redundantDash) {
+      var candidateDash = fitWithSuffix_(baseDash, dashSuffix, 60);
+      if (candidateDash) return candidateDash;
+    }
+
+    var candidateParen = fitWithSuffix_(base2, suffix, 60);
+    if (candidateParen) return candidateParen;
+
+    return base2 && base2.length <= 60 ? base2 : (out.length <= 60 ? out : out.substring(0, 60).trim());
+  }
+
+  function ensureInAlt_(text) {
+    var before = norm_(text);
+    if (!before) before = 'Travel photo';
+    var out = before;
+    var re = new RegExp(escRe_(p), 'ig');
+    var m = out.match(re);
+    var count = m ? m.length : 0;
+    if (count === 1 && out.length <= 125) return out;
+    if (count > 1) out = out.replace(re, ' ');
+    out = norm_(out);
+
+    var sentence = ' Part of ' + p + '.';
+    var candidate2 = fitWithSuffix_(out, sentence, 125);
+    if (candidate2) return candidate2;
+    return out.length <= 125 ? out : out.substring(0, 125).trim();
+  }
+
+  var beforeT = t;
+  var beforeA = a;
+  t = ensureInTitle_(t);
+  a = ensureInAlt_(a);
+  if (beforeT !== t) log('TITLE KEYWORD STUFFING CLEANED: "' + String(beforeT || '').trim() + '" -> "' + t + '"');
+  if (beforeA !== a) log('ALT TEXT KEYWORD STUFFING CLEANED: "' + String(beforeA || '').trim() + '" -> "' + a + '"');
+  if (!t) t = 'Travel photo';
+  if (!a) a = 'Travel photo';
+  return { title: t, alt: a };
+}
+
+function enrichThinDescription_AiImages_(title, caption, alt, description, phrase) {
+  var t = String(title || '').trim();
+  var c = String(caption || '').trim();
+  var a = String(alt || '').trim();
+  var d = String(description || '').trim();
+  var p = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!p) return d;
+
+  function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function stripPartOf_(s) {
+    var x = norm_(s);
+    if (!x) return '';
+    x = x.replace(new RegExp("\\bPart of\\s+" + escRe_(p) + "\\.?$", 'i'), '').trim();
+    x = x.replace(new RegExp("\\bIncluded in\\s+" + escRe_(p) + "\\.?$", 'i'), '').trim();
+    return norm_(x);
+  }
+  function hasOnlyPhraseSentence_(s) {
+    var x = norm_(s);
+    if (!x) return true;
+    var re = new RegExp("^(Included in|Part of)\\s+" + escRe_(p) + "\\.?$", 'i');
+    return re.test(x);
+  }
+  function wordCount_(s) {
+    var x = norm_(s);
+    if (!x) return 0;
+    return x.split(' ').filter(function (w) { return !!w }).length;
+  }
+  function ensurePeriod_(s) {
+    var x = norm_(s);
+    if (!x) return '';
+    if (/[.!?]$/.test(x)) return x;
+    return x + '.';
+  }
+  function addSentence_(base, sentence, maxLen) {
+    var b = norm_(base);
+    var s = norm_(sentence);
+    if (!s) return b;
+    if (!b) return s.length <= maxLen ? s : (s.substring(0, maxLen).trim());
+    var join = /[.!?]$/.test(b) ? ' ' : '. ';
+    var out = (b + join + s).trim();
+    if (out.length <= maxLen) return out;
+    return b;
+  }
+
+  var tooThin = hasOnlyPhraseSentence_(d) || wordCount_(stripPartOf_(d)) < 10;
+  if (!tooThin) return d;
+
+  var capBase = stripPartOf_(c);
+  var altBase = stripPartOf_(a);
+
+  var out = '';
+  if (capBase) out = addSentence_(out, ensurePeriod_(capBase), 300);
+  if (altBase && altBase !== capBase) out = addSentence_(out, ensurePeriod_(altBase), 300);
+  if (!out) {
+    var t2 = stripPartOf_(t);
+    if (t2) out = addSentence_(out, ensurePeriod_(t2), 300);
+  }
+  out = addSentence_(out, 'Included in ' + p + '.', 300);
+  out = norm_(out);
+  if (out && out !== d) log('DESCRIPTION ENRICHED FROM CAPTION/ALT');
+  return out || d;
+}
+
 function removeKeywordsFromAltBody_AiImages_(alt, primary, secondary) {
   var p = String(primary || '').trim();
   if (!p) return String(alt || '').trim();
@@ -662,22 +1598,19 @@ function removeDashesFromText_AiImages_(text) {
 function resolveKeywordCandidatesForImage_AiImages_(imageRole, tripFields, ctx) {
   var role = String(imageRole || '').toLowerCase();
   var f = tripFields || {};
-  var fallback = ctx && ctx.seoKeywords ? String(ctx.seoKeywords) : '';
 
   if (role === 'featured') {
-    var raw = f.SEO_FocusKeywords || '';
+    var raw = f.AI_SEO_FocusKeywords || '';
     var items = splitKeywordsCsv_AiImages_(raw);
-    if (!items.length && fallback) items = splitKeywordsCsv_AiImages_(fallback);
     return items;
   }
 
   if (role === 'gallery') {
     var en = extractEnglishKeywordsForGallery_AiImages_(f);
-    if (!en.length && fallback) en = splitKeywordsCsv_AiImages_(fallback);
     return en;
   }
 
-  return fallback ? splitKeywordsCsv_AiImages_(fallback) : [];
+  return [];
 }
 
 async function callOpenAiVisionForImageMeta_AiImages_(imageUrl, ctx, keywordPlan, opts) {
@@ -702,6 +1635,8 @@ async function callOpenAiVisionForImageMeta_AiImages_(imageUrl, ctx, keywordPlan
 
   var preferredTitleKeyword = opts && opts.preferredTitleKeyword ? String(opts.preferredTitleKeyword) : '';
   preferredTitleKeyword = preferredTitleKeyword.trim();
+  var primaryTopic = deriveSoftTopicHint_AiImages_(primaryKeyword) || primaryKeyword;
+  var secondaryTopic = deriveSoftTopicHint_AiImages_(secondaryKeywords && secondaryKeywords.length ? secondaryKeywords[0] : '') || (secondaryKeywords && secondaryKeywords.length ? secondaryKeywords[0] : '');
 
   var prompt =
     "You are generating SEO + accessibility metadata for a travel photo.\n" +
@@ -710,27 +1645,30 @@ async function callOpenAiVisionForImageMeta_AiImages_(imageUrl, ctx, keywordPlan
     "Return ONLY valid JSON with keys: title, caption, description, alt.\n" +
     "Limits: title<=60 chars, caption<=150 chars, description<=300 chars, alt<=125 chars.\n\n" +
 
-    "TITLE RULE (STRICT): Title must be very short and linked to the trip SEO title.\n" +
-    "TITLE FORMAT: '<Short Trip Name> <Subject>'.\n" +
+    "TITLE: Keep it short and natural. Prefer a visible subject. Optionally add ONE light trip context phrase if it fits naturally.\n" +
+    "TITLE FORMAT (suggested): '<Visible Subject> — <Place>' or '<Visible Subject>'\n" +
     "Avoid filler like 'Experience'/'Enjoy'.\n" +
     "TITLE UNIQUENESS (CRITICAL):\n" +
     "- Each image MUST have a completely different, descriptive title.\n" +
     "- Do NOT just add numbers or suffixes to make titles unique.\n" +
     "- Use different aspects of the image/trip for each title (landmark/activity/scene, cultural/historical/scenic/experiential angle, different phrasing).\n" +
     (forbiddenTitles.length ? ("- Previously used titles for this trip (DO NOT reuse or create similar ones): " + JSON.stringify(forbiddenTitles) + "\n") : "") +
-    (preferredTitleKeyword ? ("TITLE SEO HINT: If it fits naturally, include this exact phrase ONCE in the title: " + JSON.stringify(preferredTitleKeyword) + "\n") : "") +
-    "PRIMARY KEYWORD RULE (STRICT): The alt text MUST end with the Primary Keyword verbatim.\n" +
-    "SECONDARY KEYWORD RULE (STRICT): If a secondary keyword is provided, include it verbatim ONCE in caption OR description (not in alt).\n" +
-    "Do NOT repeat keywords. No keyword stuffing.\n\n" +
+    "KEYWORDS: Use as soft topic grounding only. Do NOT copy-paste keyword phrases. No keyword stuffing.\n" +
+    "ALT: Natural description of what is visible. Do NOT output comma-separated keyword lists.\n" +
+    "CAPTION/DESCRIPTION: Natural language. At most one light contextual mention. Do NOT repeat phrases.\n\n" +
     "Trip Title: " + tripTitle + "\n" +
     "Trip SEO Title: " + tripSeoTitle + "\n" +
     "Location: " + tripLocation + "\n" +
     "Tour Type: " + tripType + "\n" +
     "Image Role: " + role + "\n" +
     "Image URL: " + url + "\n" +
-    "Primary Keyword: " + JSON.stringify(primaryKeyword) + "\n" +
-    "Secondary Keyword (optional): " + JSON.stringify(secondaryKeywords && secondaryKeywords.length ? secondaryKeywords[0] : '') + "\n" +
+    "Primary Topic: " + JSON.stringify(primaryTopic) + "\n" +
+    "Optional related topic: " + JSON.stringify(secondaryTopic) + "\n" +
     "All Keywords (trip): " + JSON.stringify(allKeywords) + "\n";
+
+  if (preferredTitleKeyword) {
+    prompt += "Topic hint (soft, do NOT copy-paste): " + JSON.stringify(preferredTitleKeyword) + "\n";
+  }
 
   if (!aiProvider) throw new Error('AI Images: missing aiProvider')
   var aiResult = null
@@ -911,6 +1849,18 @@ async function runAiImagesEnhancementBatch() {
       if (perGallery < 1) perGallery = 1;
       if (perGallery > 12) perGallery = 12;
       var galleryCursor = 0;
+      var galleryPhrasePool = [];
+      try {
+        var gp = [];
+        if (tripKeywordPlans && tripKeywordPlans.gallery) {
+          if (tripKeywordPlans.gallery.primary) gp.push(String(tripKeywordPlans.gallery.primary));
+          if (tripKeywordPlans.gallery.secondary && Array.isArray(tripKeywordPlans.gallery.secondary)) {
+            tripKeywordPlans.gallery.secondary.forEach(function (x) { gp.push(String(x || '').trim()); });
+          }
+        }
+        galleryPhrasePool = normalizeKeywordList_AiImages_(gp, 30);
+      } catch (eGpp) {}
+      var galleryPhraseCursor = 0;
       
       // 3) Process each image
       for (let imgIdx = 0; imgIdx < images.length; imgIdx++) {
@@ -935,7 +1885,7 @@ async function runAiImagesEnhancementBatch() {
           if (role === 'featured') {
             if (secondary && secondary.length) kwPlanForImage.secondary = secondary.slice(0, Math.min(12, secondary.length));
             keywordSuffixSecondary = (kwPlanForImage.secondary && kwPlanForImage.secondary.length) ? String(kwPlanForImage.secondary[0] || '') : '';
-            preferredTitleKeywordForImage = basePrimary || '';
+            preferredTitleKeywordForImage = deriveSoftTopicHint_AiImages_(basePrimary) || basePrimary || '';
           } else {
             if (secondary && secondary.length) {
               var chunk = [];
@@ -945,12 +1895,20 @@ async function runAiImagesEnhancementBatch() {
               }
               kwPlanForImage.secondary = normalizeKeywordList_AiImages_(chunk, 12);
               keywordSuffixSecondary = (kwPlanForImage.secondary && kwPlanForImage.secondary.length) ? String(kwPlanForImage.secondary[0] || '') : '';
-              preferredTitleKeywordForImage = keywordSuffixSecondary || basePrimary || '';
+              var hint = deriveSoftTopicHint_AiImages_(keywordSuffixSecondary) || deriveSoftTopicHint_AiImages_(basePrimary) || '';
+              preferredTitleKeywordForImage = hint || basePrimary || '';
               galleryCursor = (galleryCursor + perGallery) % secondary.length;
             } else {
-              preferredTitleKeywordForImage = basePrimary || '';
+              preferredTitleKeywordForImage = deriveSoftTopicHint_AiImages_(basePrimary) || basePrimary || '';
             }
           }
+          
+          var phraseForNaturalUseForImage = '';
+          if (role === 'gallery' && galleryPhrasePool && galleryPhrasePool.length) {
+            phraseForNaturalUseForImage = String(galleryPhrasePool[galleryPhraseCursor % galleryPhrasePool.length] || '').trim();
+            galleryPhraseCursor++;
+          }
+          if (!phraseForNaturalUseForImage) phraseForNaturalUseForImage = keywordSuffixSecondary || basePrimary || '';
 
           if (imageUrl) {
             aiResult = await callOpenAiVisionForImageMeta_AiImages_(imageUrl, ctx, kwPlanForImage, { forbiddenTitles: usedTitles, preferredTitleKeyword: preferredTitleKeywordForImage })
@@ -970,24 +1928,29 @@ async function runAiImagesEnhancementBatch() {
           var description = (aiResult.description || '').toString().trim();
           var alt = (aiResult.alt || '').toString().trim();
 
-          var altSecondaryForImage = (role === 'gallery' && keywordSuffixSecondary) ? keywordSuffixSecondary : '';
-          alt = enforceAltKeywordSuffix_AiImages_(alt, basePrimary, altSecondaryForImage);
-          alt = removeKeywordsFromAltBody_AiImages_(alt, basePrimary, altSecondaryForImage);
-          title = ensureTitleLinkedToTripSeo_AiImages_(title, ctx, 60);
+          title = cleanupImageTitle_AiImages_(title);
           title = collapseRepeatedPhrases_AiImages_(title, 16);
           caption = collapseRepeatedPhrases_AiImages_(caption, 28);
           description = collapseRepeatedPhrases_AiImages_(description, 60);
           alt = collapseRepeatedPhrases_AiImages_(alt, 40);
           caption = removeDashesFromText_AiImages_(caption);
           description = removeDashesFromText_AiImages_(description);
-          alt = cleanupAltPunctuation_AiImages_(alt, basePrimary, altSecondaryForImage);
-          if (keywordSuffixSecondary && !altSecondaryForImage) {
-            var beforeDesc = description;
-            description = ensureKeywordIncludedOnce_AiImages_(description, keywordSuffixSecondary, 300);
-            if (description === beforeDesc) {
-              caption = ensureKeywordIncludedOnce_AiImages_(caption, keywordSuffixSecondary, 150);
-            }
-          }
+          
+          var guarded0 = englishImageSeoStuffingGuard_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx, kwPlanForImage);
+          title = guarded0.title;
+          caption = guarded0.caption;
+          description = guarded0.description;
+          alt = guarded0.alt;
+          var natural0 = applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(
+            { title: title, caption: caption, description: description, alt: alt },
+            ctx,
+            kwPlanForImage,
+            { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
+          );
+          title = natural0.title;
+          caption = natural0.caption;
+          description = natural0.description;
+          alt = natural0.alt;
           
           // Validate lengths
           if (title.length > 60) title = title.substring(0, 60).trim();
@@ -1011,24 +1974,30 @@ async function runAiImagesEnhancementBatch() {
                   caption = (retry.caption || caption || '').toString().trim();
                   description = (retry.description || description || '').toString().trim();
                   alt = (retry.alt || alt || '').toString().trim();
-                  var altSecondaryForRetry = (role === 'gallery' && keywordSuffixSecondary) ? keywordSuffixSecondary : '';
-                  alt = enforceAltKeywordSuffix_AiImages_(alt, basePrimary, altSecondaryForRetry);
-                  alt = removeKeywordsFromAltBody_AiImages_(alt, basePrimary, altSecondaryForRetry);
-                  title = ensureTitleLinkedToTripSeo_AiImages_(title, ctx, 60);
+                  title = cleanupImageTitle_AiImages_(title);
                   title = collapseRepeatedPhrases_AiImages_(title, 16);
                   caption = collapseRepeatedPhrases_AiImages_(caption, 28);
                   description = collapseRepeatedPhrases_AiImages_(description, 60);
                   alt = collapseRepeatedPhrases_AiImages_(alt, 40);
                   caption = removeDashesFromText_AiImages_(caption);
                   description = removeDashesFromText_AiImages_(description);
-                  alt = cleanupAltPunctuation_AiImages_(alt, basePrimary, altSecondaryForRetry);
-                  if (keywordSuffixSecondary && !altSecondaryForRetry) {
-                    var beforeDesc2 = description;
-                    description = ensureKeywordIncludedOnce_AiImages_(description, keywordSuffixSecondary, 300);
-                    if (description === beforeDesc2) {
-                      caption = ensureKeywordIncludedOnce_AiImages_(caption, keywordSuffixSecondary, 150);
-                    }
-                  }
+                  
+                  var guarded1 = englishImageSeoStuffingGuard_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx, kwPlanForImage);
+                  title = guarded1.title;
+                  caption = guarded1.caption;
+                  description = guarded1.description;
+                  alt = guarded1.alt;
+                  var natural1 = applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(
+                    { title: title, caption: caption, description: description, alt: alt },
+                    ctx,
+                    kwPlanForImage,
+                    { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
+                  );
+                  title = natural1.title;
+                  caption = natural1.caption;
+                  description = natural1.description;
+                  alt = natural1.alt;
+                  
                   if (title.length > 60) title = title.substring(0, 60).trim();
                   if (caption.length > 150) caption = caption.substring(0, 150).trim();
                   if (description.length > 300) description = description.substring(0, 300).trim();
@@ -1047,24 +2016,30 @@ async function runAiImagesEnhancementBatch() {
                   caption = (retryRes.caption || caption || '').toString().trim();
                   description = (retryRes.description || description || '').toString().trim();
                   alt = (retryRes.alt || alt || '').toString().trim();
-                  var altSecondaryForRetry2 = (role === 'gallery' && keywordSuffixSecondary) ? keywordSuffixSecondary : '';
-                  alt = enforceAltKeywordSuffix_AiImages_(alt, basePrimary, altSecondaryForRetry2);
-                  alt = removeKeywordsFromAltBody_AiImages_(alt, basePrimary, altSecondaryForRetry2);
-                  title = ensureTitleLinkedToTripSeo_AiImages_(title, ctx, 60);
+                  title = cleanupImageTitle_AiImages_(title);
                   title = collapseRepeatedPhrases_AiImages_(title, 16);
                   caption = collapseRepeatedPhrases_AiImages_(caption, 28);
                   description = collapseRepeatedPhrases_AiImages_(description, 60);
                   alt = collapseRepeatedPhrases_AiImages_(alt, 40);
                   caption = removeDashesFromText_AiImages_(caption);
                   description = removeDashesFromText_AiImages_(description);
-                  alt = cleanupAltPunctuation_AiImages_(alt, basePrimary, altSecondaryForRetry2);
-                  if (keywordSuffixSecondary && !altSecondaryForRetry2) {
-                    var beforeDesc3 = description;
-                    description = ensureKeywordIncludedOnce_AiImages_(description, keywordSuffixSecondary, 300);
-                    if (description === beforeDesc3) {
-                      caption = ensureKeywordIncludedOnce_AiImages_(caption, keywordSuffixSecondary, 150);
-                    }
-                  }
+                  
+                  var guarded2 = englishImageSeoStuffingGuard_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx, kwPlanForImage);
+                  title = guarded2.title;
+                  caption = guarded2.caption;
+                  description = guarded2.description;
+                  alt = guarded2.alt;
+                  var natural2 = applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(
+                    { title: title, caption: caption, description: description, alt: alt },
+                    ctx,
+                    kwPlanForImage,
+                    { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
+                  );
+                  title = natural2.title;
+                  caption = natural2.caption;
+                  description = natural2.description;
+                  alt = natural2.alt;
+                  
                   if (title.length > 60) title = title.substring(0, 60).trim();
                   if (caption.length > 150) caption = caption.substring(0, 150).trim();
                   if (description.length > 300) description = description.substring(0, 300).trim();
@@ -1144,32 +2119,18 @@ async function buildImageContext_(imageFields, tripFields, imageId, tripId) {
     ctx.tripDescription = imp.tripDescription || '';
     ctx.seoTitle = imp.seoTitle || '';
     ctx.seoMetaDescription = imp.seoMetaDescription || '';
-    ctx.seoKeywords = imp.seoKeywords || '';
-  }
-
-    // Fallback: If no SEO keywords in Improvement table, check Trip record
-    if (!ctx.seoKeywords && tripFields) {
-      log('AI Images: Focus Keyword not found in Improvement table, checking Trip record fallback...');
-      // Try common field names for Focus Keyword
-      // Note: 'FocusKeyword' is the field name in Trips table based on user confirmation/observation
-      var rawKw = tripFields['Focus Keyword'] || tripFields['FocusKeyword'] || tripFields['SEO_FocusKeywords'] || tripFields['SEO_FocusKeywords_List'];
-      
-      // Additional fallback: Check for Lookup fields that might return an array of IDs or values
-      if (!rawKw && tripFields['Focus Keyword (from Improvement With AI)']) {
-         rawKw = tripFields['Focus Keyword (from Improvement With AI)'];
-      }
-
-      if (rawKw) {
-         if (Array.isArray(rawKw)) ctx.seoKeywords = rawKw[0];
-         else ctx.seoKeywords = String(rawKw);
-         log('AI Images: Found Focus Keyword in Trip record: ' + ctx.seoKeywords);
-      } else {
-         // Log available keys to help debugging
-         log('AI Images: WARNING - No Focus Keyword found in Trip record either. Available keys: ' + Object.keys(tripFields).join(', '));
-      }
-    } else if (ctx.seoKeywords) {
-       log('AI Images: Found Focus Keyword in Improvement table: ' + ctx.seoKeywords);
+    var primaryRaw = (tripFields && tripFields.AI_SEO_FocusKeywords) ? String(tripFields.AI_SEO_FocusKeywords) : (imp.seoKeywords || '')
+    var listRaw = (tripFields && tripFields.AI_SEO_FocusKeywords_List) ? tripFields.AI_SEO_FocusKeywords_List : (imp.seoKeywordsList || '')
+    var primaryItems = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(primaryRaw), 10)
+    var primary = primaryItems && primaryItems.length ? primaryItems[0] : ''
+    var listItems = []
+    if (listRaw) {
+      if (Array.isArray(listRaw)) listItems = listItems.concat(listRaw.map(function (x) { return String(x || '').trim() }))
+      else listItems = listItems.concat(String(listRaw).split(/[,;\n]+/).map(function (x) { return String(x || '').trim() }))
     }
+    listItems = normalizeKeywordList_AiImages_(listItems, 30)
+    ctx.seoKeywords = normalizeKeywordList_AiImages_([primary].concat(listItems), 30).join(', ')
+  }
   var U = await buildUnifiedTripContext_(tripId, tripFields)
   ctx.highlightsText = U && U.highlightsText ? U.highlightsText : '';
   ctx.itineraryText = U && U.itineraryText ? U.itineraryText : '';
@@ -1182,7 +2143,7 @@ async function buildImageContext_(imageFields, tripFields, imageId, tripId) {
  * AI PROMPT
  ************************************************************/
 function buildImagesPrompt_(ctx, keywordPlan, opts) {
-  var p = keywordPlan && keywordPlan.primary ? String(keywordPlan.primary) : (ctx && ctx.seoKeywords ? String(ctx.seoKeywords) : '');
+  var p = keywordPlan && keywordPlan.primary ? String(keywordPlan.primary) : '';
   var secondary = keywordPlan && keywordPlan.secondary && Array.isArray(keywordPlan.secondary) ? keywordPlan.secondary : [];
   secondary = secondary.map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
   if (secondary.length > 12) secondary = secondary.slice(0, 12);
@@ -1192,6 +2153,8 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
   var preferredTitleKeyword = opts && opts.preferredTitleKeyword ? String(opts.preferredTitleKeyword) : '';
   preferredTitleKeyword = preferredTitleKeyword.trim();
   var seoTitle = ctx && ctx.seoTitle ? String(ctx.seoTitle) : '';
+  var primaryTopic = deriveSoftTopicHint_AiImages_(p) || p;
+  var secondaryTopic = deriveSoftTopicHint_AiImages_(secondary.length ? secondary[0] : '') || (secondary.length ? secondary[0] : '');
 
   var prompt =
     "You are an SEO and accessibility expert for a premium global travel website. Enhance the metadata for this travel image.\n\n" +
@@ -1211,15 +2174,15 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
     (ctx.itineraryText ? ("ITINERARY CONTEXT:\n" + ctx.itineraryText + "\n\n") : "") +
     (ctx.includesText ? ("INCLUDES CONTEXT:\n" + ctx.includesText + "\n\n") : "") +
     
-    "SEO CONTEXT (use for keyword optimization):\n" +
+    "SEO CONTEXT (topic grounding only; do NOT stuff keywords):\n" +
     "SEO Title: " + (ctx.seoTitle || 'N/A') + "\n" +
     "SEO Meta Description: " + (ctx.seoMetaDescription || 'N/A') + "\n" +
     "SEO Keywords: " + (ctx.seoKeywords || 'N/A') + "\n\n" +
 
-    "KEYWORDS (STRICT):\n" +
-    "- Primary Keyword (verbatim): " + p + "\n" +
-    (secondary.length ? ("- Secondary Keyword for this image (verbatim, optional): " + secondary[0] + "\n\n") : "\n") +
-    (preferredTitleKeyword ? ("TITLE SEO HINT: If it fits naturally, include this exact phrase ONCE in the title: " + JSON.stringify(preferredTitleKeyword) + "\n\n") : "") +
+    "KEYWORDS (SOFT GUIDANCE):\n" +
+    "- Primary Topic: " + primaryTopic + "\n" +
+    (secondaryTopic ? ("- Optional related topic: " + secondaryTopic + "\n\n") : "\n") +
+    (preferredTitleKeyword ? ("TOPIC HINT (soft, do NOT copy-paste): " + JSON.stringify(preferredTitleKeyword) + "\n\n") : "") +
     (forbiddenTitles.length ? ("TITLE UNIQUENESS (STRICT): Do NOT reuse any of these titles: " + JSON.stringify(forbiddenTitles) + "\n\n") : "") +
     
     "🎯 ENHANCEMENT RULES:\n" +
@@ -1227,10 +2190,10 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
     "   - Must be SHORT and strongly linked to the trip SEO title\n" +
     "   - Format: '<Short Trip Name> <Visible Subject>'\n" +
     "   - Clear and concise\n" +
-    "   - Include location if relevant\n" +
+    "   - Optionally include ONE light context mention if natural\n" +
     "   - Avoid generic filler like: 'Experience the magic', 'Immerse yourself', 'Unforgettable moment'\n" +
     "   - Avoid repeated words/phrases\n" +
-    "   - Example: 'Al-Hakim Mosque - Cairo Islamic Heritage Tour'\n\n" +
+    "   - Avoid SEO stacking like 'Day Tours Cairo Egypt Day Tours ...'\n\n" +
     
     "2. Caption (max 150 chars):\n" +
     "   - Short, simple, and quick context\n" +
@@ -1238,24 +2201,19 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
     "   - Example: 'The Al-Hakim Mosque in Cairo, built in 1013 AD'\n\n" +
     
     "3. Description (max 300 chars):\n" +
-    "   - Detailed and SEO-oriented\n" +
+    "   - Detailed and helpful, but natural (no SEO keyword stuffing)\n" +
     "   - Useful for Gallery/Slider context\n" +
     "   - Include historical/cultural context\n" +
     "   - Example: 'The Al-Hakim Mosque in Cairo is a stunning example of Fatimid architecture built in 1013 AD. It features unique minarets and a large courtyard, making it a key site for Islamic heritage tours.'\n\n" +
     
     "4. Alt Text (max 125 chars):\n" +
     "   - Descriptive for accessibility, describing only what is visible\n" +
-    "   - End with the Primary Keyword verbatim.\n" +
-    "   - Do NOT add secondary keywords to alt.\n" +
-    "   - Example: 'Guests stargazing by a campfire under the stars " + p + "'\n\n" +
-
-    "SECONDARY KEYWORD RULE (STRICT):\n" +
-    (secondary.length ? ("- Include EXACTLY ONE secondary keyword verbatim ONCE in caption OR description: " + secondary[0] + "\n\n") : "- No secondary keyword provided.\n\n") +
+    "   - Natural sentence, no comma-separated keyword list\n" +
+    "   - Do NOT force-insert keywords or exact-match SEO phrases\n\n" +
 
     "- Use current data as base, enhance with trip context\n" +
     "- Do NOT invent details not in context\n" +
-    "- Include location keywords for SEO\n" +
-    "- STRICT REQUIREMENT: The Alt Text MUST contain the Primary Keyword '" + p + "' EXACTLY (verbatim). Do NOT translate or modify it.\n" +
+    "- Keywords are guidance only; avoid copying keyword phrases verbatim\n" +
     "- Output in ENGLISH ONLY\n\n" +
     
     "OUTPUT FORMAT (JSON ONLY):\n" +
@@ -1298,6 +2256,7 @@ async function getTripImprovementCached_AiImages_(tripId, tripFields) {
       out.seoTitle = impFields.AI_SEO_Title || '';
       out.seoMetaDescription = impFields.AI_SEO_Meta_Description || '';
       out.seoKeywords = impFields.AI_SEO_FocusKeywords || '';
+      out.seoKeywordsList = impFields.AI_SEO_FocusKeywords_List || '';
     }
   } catch (e) {}
 

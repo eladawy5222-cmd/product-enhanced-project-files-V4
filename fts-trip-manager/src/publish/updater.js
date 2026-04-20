@@ -4824,26 +4824,35 @@ async function translateTripData_Updater_(data, targetLang, providedKeywords, sp
   }
 
   var corePrompt = 
-    "You are an expert travel transcreator. Transcreate the following JSON content into " + targetLang.toUpperCase() + ".\n" +
-    "RULES:\n" +
-    "- TARGET LANGUAGE ONLY: Return the result ONLY in the target language (" + targetLang.toLowerCase() + "). Do NOT switch language.\n" +
-    "- CONTENT INTEGRITY: Do NOT change itinerary steps, schedule, inclusions, exclusions, pricing facts, durations, logistics, or pickup details.\n" +
+    "You are a native-level travel localization editor and SEO translator.\n" +
+    "Localize (not literal-translate) the JSON content into " + targetLang.toUpperCase() + " so it reads fully native, polished, and premium.\n" +
+    "RULES (CRITICAL):\n" +
+    "- TARGET LANGUAGE ONLY: Output ONLY in (" + targetLang.toLowerCase() + "). No English leakage. No mixed-language phrases.\n" +
+    "- CONTENT INTEGRITY: Preserve ALL facts exactly (numbers, prices, durations, pickup/logistics, timings). Do NOT add new facts.\n" +
+    "- COMPLETENESS: Do NOT omit any detail from the source. Every detail must remain represented.\n" +
     "- SPECIFICITY PRESERVATION: If the English title is specific, the translated title/meta/slug MUST remain specific and persuasive (not generic).\n" +
     (preserveBlock ? (
       "- PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT (do not drop them):\n" + preserveBlock + "\n"
     ) : "") +
-    "- Maintain HTML tags exactly as they are.\n" +
-    "- Preserve all HTML tags exactly as they are. Do NOT add new HTML tags. Do NOT wrap text in <font>, <span>, or inline styles.\n" +
+    "- STRUCTURE PARITY: Keep the same JSON keys, same structure, same meaning.\n" +
+    "- HTML LOCK: Preserve existing HTML tags exactly. Do NOT add new tags. Do NOT wrap with <font>/<span> or inline styles.\n" +
+    "- TONE: Premium travel brand voice (natural, persuasive, not robotic).\n" +
+    "- CONSISTENCY: Use consistent terminology across title/meta/body. Avoid inconsistent synonyms.\n" +
     (providedKwBlock ? (
-      "- MANDATORY KEYWORD STRATEGY:\n" +
-      "  - Use the provided Primary Keyword and Secondary Keywords EXACTLY as provided (do not translate or alter them).\n" +
-      "  - Primary Keyword must appear in: title, meta_desc, slug (derived from it), and early in description.\n" +
-      "  - Secondary keywords should appear naturally (no stuffing).\n"
+      "- KEYWORD SAFETY (DO NOT FORCE UNSAFE WORDING):\n" +
+      "  - If a provided SEO keyword is ALREADY correctly written in the target language and sounds natural → preserve and use it naturally.\n" +
+      "  - If a provided keyword contains foreign words, partial untranslated wording, mixed-language wording, or unnatural phrasing → do NOT force it as-is.\n" +
+      "    Silently normalize/localize it into a fully natural target-language equivalent.\n" +
+      "  - Proper nouns/official brand names/official landmark names may stay unchanged.\n" +
+      "  - Never keyword-stuff. Avoid awkward repetition.\n"
     ) : "") +
-    "- Keep tone professional, persuasive, and SEO-friendly.\n" +
-    "- 'slug': Translate into a URL-friendly slug (lowercase, hyphens only, no special chars). Example: 'best-egypt-tour' -> 'meilleur-tour-egypte'.\n" +
-    "- 'meta_desc': Translate and optimize for SEO (max 160 chars).\n" +
-    "- Return ONLY valid JSON.\n\n" +
+    "- SEO FIELDS:\n" +
+    "  - 'slug': Localize meaning (do NOT mirror the English slug). Lowercase, hyphenated, URL-safe.\n" +
+    "    No mixed-language slug. Do NOT reuse English words unless they are true locked proper nouns.\n" +
+    "    Output slug using only [a-z0-9-]. If the target language is non-Latin, transliterate into natural Latin slug form.\n" +
+    "  - 'meta_desc': Natural, persuasive, concise (ideally <=160 chars), no stuffing.\n" +
+    "- OUTPUT: Return ONLY valid JSON. No markdown. No explanations.\n" +
+    "- SELF-CHECK BEFORE OUTPUT: target-language-only, no mixed-language, valid JSON, full structural parity.\n\n" +
     (providedKwBlock ? (providedKwBlock + "\n") : "") +
     "INPUT JSON:\n" + JSON.stringify(contentToTranslate);
     
@@ -4852,14 +4861,18 @@ async function translateTripData_Updater_(data, targetLang, providedKeywords, sp
 
   // --- Chunk 2: Lists (Includes FAQs) ---
   var listPrompt = 
-    "Transcreate these lists into " + targetLang.toUpperCase() + ". Return ONLY valid JSON matching input structure.\n" +
-    "RULES:\n" +
-    "- TARGET LANGUAGE ONLY: Return the result ONLY in the target language (" + targetLang.toLowerCase() + "). Do NOT switch language.\n" +
-    "- CONTENT INTEGRITY: Do NOT change inclusions/exclusions/FAQ meaning or facts.\n" +
+    "You are a native-level travel localization editor.\n" +
+    "Localize these lists into " + targetLang.toUpperCase() + " so they read natural, polished, and consistent.\n" +
+    "RULES (CRITICAL):\n" +
+    "- TARGET LANGUAGE ONLY: Output ONLY in (" + targetLang.toLowerCase() + "). No English leakage. No mixed-language phrases.\n" +
+    "- CONTENT INTEGRITY: Keep meaning and facts identical.\n" +
+    "- STRUCTURE PARITY: Keep the same keys, same item counts, and the same order.\n" +
+    "- COMPLETENESS: Do NOT drop or shorten away meaningful details.\n" +
     (preserveBlock ? (
       "- PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT (do not drop them):\n" + preserveBlock + "\n"
     ) : "") +
-    "- Preserve all HTML tags exactly as they are. Do NOT add new HTML tags. Do NOT wrap text in <font>, <span>, or inline styles.\n" +
+    "- HTML LOCK: Preserve existing HTML exactly. Do NOT add tags/spans/styles.\n" +
+    "- OUTPUT: Return ONLY valid JSON. No markdown.\n" +
     "INPUT JSON:\n" + JSON.stringify({
         highlights: highlights,
         includes: includes,
@@ -4873,16 +4886,20 @@ async function translateTripData_Updater_(data, targetLang, providedKeywords, sp
   // --- Chunk 3: Itinerary ---
   if (itinerary.length > 0) {
     var itinPrompt = 
-      "Transcreate this itinerary into " + targetLang.toUpperCase() + ". Return ONLY valid JSON.\n" +
-      "RULES:\n" +
-      "- TARGET LANGUAGE ONLY: Return the result ONLY in the target language (" + targetLang.toLowerCase() + "). Do NOT switch language.\n" +
-      "- CONTENT INTEGRITY: Do NOT change itinerary steps, order, times, or any factual details.\n" +
+      "You are a native-level travel localization editor.\n" +
+      "Localize this itinerary into " + targetLang.toUpperCase() + " with fully natural native phrasing.\n" +
+      "RULES (CRITICAL):\n" +
+      "- TARGET LANGUAGE ONLY: Output ONLY in (" + targetLang.toLowerCase() + "). No English leakage. No mixed-language phrases.\n" +
+      "- STRUCTURE PARITY: Do NOT add/remove/merge/split items. Keep the same order.\n" +
+      "- FACT LOCK: Preserve times, numbers, durations, logistics, emojis, and punctuation exactly.\n" +
+      "- COMPLETENESS: Keep ALL details from each step. Do NOT summarize away specifics.\n" +
       (preserveBlock ? (
         "- PRESERVE THESE PLACE/ATTRACTION NAMES EXACTLY IF PRESENT IN THE INPUT (do not drop them):\n" + preserveBlock + "\n"
       ) : "") +
-      "- Preserve all HTML tags exactly as they are. Do NOT add new HTML tags. Do NOT wrap text in <font>, <span>, or inline styles.\n" +
+      "- HTML LOCK: Preserve existing HTML tags exactly. Do NOT add tags/spans/styles.\n" +
       "- OUTPUT FORMAT: Return ONLY a JSON object with EXACTLY this shape: {\"itinerary\":[{\"title\":\"...\",\"desc\":\"...\",\"label\":\"...\"}, ...]}.\n" +
-      "- LENGTH: The output itinerary array length MUST equal the input itinerary length exactly.\n" +
+      "- LENGTH: Output itinerary length MUST equal input length exactly.\n" +
+      "- OUTPUT: Return ONLY valid JSON. No markdown.\n" +
       "INPUT JSON:\n" + JSON.stringify({ itinerary: itinerary });
     var itinRes = await callAiForTargetLangWithRetry_Updater_(itinPrompt, targetLang);
     var itinArr = null;
@@ -4899,14 +4916,14 @@ async function translateTripData_Updater_(data, targetLang, providedKeywords, sp
     } else {
       log('Updater: itinerary translation missing/invalid for ' + targetLang + ' (kept original)');
       var strictItinPrompt =
-        "Translate this itinerary into " + targetLang.toUpperCase() + ". Return ONLY valid JSON.\n" +
-        "CRITICAL:\n" +
+        "Localize this itinerary into " + targetLang.toUpperCase() + ". Return ONLY valid JSON.\n" +
+        "CRITICAL (STRICT):\n" +
+        "- TARGET LANGUAGE ONLY: Output ONLY in (" + targetLang.toLowerCase() + "). No English leakage. No mixed-language phrases.\n" +
         "- Return ONLY a JSON object with EXACTLY this shape: {\"itinerary\":[{\"title\":\"...\",\"desc\":\"...\",\"label\":\"...\"}, ...]}.\n" +
         "- The output itinerary array length MUST equal the input itinerary length exactly.\n" +
-        "- Use the SAME order as input.\n" +
-        "- Do NOT add, remove, merge, or split items.\n" +
-        "- Preserve times, numbers, emojis, and punctuation exactly.\n" +
-        "- Preserve HTML tags exactly.\n" +
+        "- Use the SAME order as input. Do NOT add/remove/merge/split items.\n" +
+        "- Preserve times, numbers, emojis, punctuation, and HTML tags exactly.\n" +
+        "- COMPLETENESS: Keep ALL details from each step.\n" +
         "INPUT JSON:\n" + JSON.stringify({ itinerary: itinerary });
       var itinRes2 = await callAiForTargetLangWithRetry_Updater_(strictItinPrompt, targetLang);
       var itinArr2 = null;
@@ -4927,12 +4944,16 @@ async function translateTripData_Updater_(data, targetLang, providedKeywords, sp
   });
   if (factsToTranslate.length > 0 || addonsToTranslate.length > 0) {
     var extrasPrompt =
-      "Translate these fields into " + targetLang.toUpperCase() + ". Return ONLY valid JSON matching input structure.\n" +
-      "RULES:\n" +
-      "- TARGET LANGUAGE ONLY: Return the result ONLY in the target language (" + targetLang.toLowerCase() + "). Do NOT switch language.\n" +
-      "- CONTENT INTEGRITY: Do NOT change numbers, prices, durations, logistics, or factual meaning.\n" +
-      "- Preserve all HTML tags exactly as they are. Do NOT add new HTML tags. Do NOT wrap text in <font>, <span>, or inline styles.\n" +
+      "You are a native-level travel localization editor.\n" +
+      "Localize these facts and add-ons into " + targetLang.toUpperCase() + " with natural native phrasing.\n" +
+      "RULES (CRITICAL):\n" +
+      "- TARGET LANGUAGE ONLY: Output ONLY in (" + targetLang.toLowerCase() + "). No English leakage. No mixed-language phrases.\n" +
+      "- FACT LOCK: Preserve numbers, prices, durations, units, and logistics exactly.\n" +
+      "- STRUCTURE PARITY: Keep the same keys, item counts, and order.\n" +
+      "- COMPLETENESS: Do NOT omit details from fact values or add-on descriptions.\n" +
+      "- HTML LOCK: Preserve existing HTML exactly. Do NOT add tags/spans/styles.\n" +
       "- Trip facts: translate both 'label' and 'value'.\n" +
+      "- OUTPUT: Return ONLY valid JSON. No markdown.\n" +
       "INPUT JSON:\n" + JSON.stringify({ facts: factsToTranslate, addons: addonsToTranslate });
     var extrasRes = await callAiForTargetLangWithRetry_Updater_(extrasPrompt, targetLang);
     if (extrasRes) translatedJson.extras = extrasRes;
@@ -8035,18 +8056,38 @@ async function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
 
                // --- NEW: Update Image Metadata (Title, Caption, Alt) ---
                // We use the standard WordPress REST API for this: /wp-json/wp/v2/media/{id}
-               if (f.AI_Title || f.AI_Caption || f.AI_Alt || f.AI_Description) {
-                   await updateMediaOnWordPress_Updater_(wpMediaId, {
-                       title: f.AI_Title,
-                       caption: f.AI_Caption,
-                       alt_text: f.AI_Alt,
-                       description: f.AI_Description || f.AI_Caption // Use Description if available, else fallback to Caption
-                   });
-                   if (f.AI_Title) await ensureFilenameForMedia_Updater_(wpMediaId, f.AI_Title);
-                   // Add a small delay to avoid overwhelming the server if many images
-                   await sleep(200); 
+               var mediaJson2 = null
+               try { mediaJson2 = await getMediaFromWordPress_Updater_(String(wpMediaId)) } catch (eMeta2) { mediaJson2 = null }
+               var wpMeta2 = buildMediaMetaFromWpResponse_Updater_(mediaJson2) || { alt: '', title: '', caption: '', description: '' }
+               var pref = buildPreferredEnglishImageMetadata_Updater_(f || {}, wpMeta2)
+               var wpTitle2 = String(wpMeta2 && wpMeta2.title ? wpMeta2.title : '').trim()
+               var wpCaption2 = String(wpMeta2 && wpMeta2.caption ? wpMeta2.caption : '').trim()
+               var wpAlt2 = String(wpMeta2 && wpMeta2.alt ? wpMeta2.alt : '').trim()
+               var wpDesc2 = String(wpMeta2 && wpMeta2.description ? wpMeta2.description : '').trim()
+               var wpMissingAny = (!wpTitle2 || !wpCaption2 || !wpAlt2 || !wpDesc2)
+               var aiAllEmpty2 = !!(pref && pref._ai_all_empty)
+
+               if (pref && pref._source === 'airtable_ai') {
+                 log('ENGLISH IMAGE METADATA SOURCE: airtable_ai')
+                 if (pref._partial_merge) log('ENGLISH IMAGE METADATA PARTIAL MERGE APPLIED')
+                 log('ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA')
+
+                 var payloadAi = {}
+                 if (pref._field_sources && pref._field_sources.title === 'airtable_ai' && pref.title) payloadAi.title = pref.title
+                 if (pref._field_sources && pref._field_sources.caption === 'airtable_ai' && pref.caption) payloadAi.caption = pref.caption
+                 if (pref._field_sources && pref._field_sources.alt_text === 'airtable_ai' && pref.alt_text) payloadAi.alt_text = pref.alt_text
+                 if (pref._field_sources && pref._field_sources.description === 'airtable_ai' && pref.description) payloadAi.description = pref.description
+
+                 if (payloadAi.title || payloadAi.caption || payloadAi.alt_text || payloadAi.description) {
+                   await updateMediaOnWordPress_Updater_(wpMediaId, payloadAi)
+                   if (payloadAi.title) await ensureFilenameForMedia_Updater_(wpMediaId, payloadAi.title)
+                   await sleep(200)
+                 }
+               } else if (aiAllEmpty2 && wpMissingAny) {
+                 log('ENGLISH IMAGE METADATA SOURCE: fallback_ai')
+                 await ensureEnglishMediaMetadataForAttachment_Updater_(wpMediaId, tripFields, tripId, declaredType, '')
                } else {
-                   await ensureEnglishMediaMetadataForAttachment_Updater_(wpMediaId, tripFields, tripId, declaredType, '');
+                 log('ENGLISH IMAGE METADATA SOURCE: wordpress_existing')
                }
            }
        }
@@ -8054,9 +8095,6 @@ async function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
 
    // --- Step C: Finalize Payload ---
    if (featId || galleryIds.length > 0) {
-     if (featId) {
-        await ensureEnglishMediaMetadataForAttachment_Updater_(featId, tripFields, tripId, 'featured', '');
-     }
      // Deduplicate Gallery IDs
      var uniqueGalleryIds = [];
      var seenIds = {};
@@ -8086,6 +8124,50 @@ async function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
      await pushToWordPress_Updater_(wpTripId, payload);
      log('Updater: Published Images for Trip ' + wpTripId + ' (Featured: ' + (featId || 'None') + ', Gallery: ' + galleryIds.length + ')');
    }
+}
+
+function buildPreferredEnglishImageMetadata_Updater_(aiFields, wpMeta) {
+  var f = aiFields || {}
+  var wp = wpMeta || { alt: '', title: '', caption: '', description: '' }
+  function clean_(x) { return String(x == null ? '' : x).replace(/\s+/g, ' ').trim() }
+
+  var aiTitle = clean_(f.AI_Title)
+  var aiCaption = clean_(f.AI_Caption)
+  var aiAlt = clean_(f.AI_Alt)
+  var aiDesc = clean_(f.AI_Description)
+
+  var wpTitle = clean_(wp.title)
+  var wpCaption = clean_(wp.caption)
+  var wpAlt = clean_(wp.alt)
+  var wpDesc = clean_(wp.description)
+
+  var out = { title: '', caption: '', alt_text: '', description: '' }
+  var sources = { title: '', caption: '', alt_text: '', description: '' }
+
+  out.title = aiTitle || wpTitle || ''
+  sources.title = aiTitle ? 'airtable_ai' : (wpTitle ? 'wordpress_existing' : '')
+
+  out.caption = aiCaption || wpCaption || ''
+  sources.caption = aiCaption ? 'airtable_ai' : (wpCaption ? 'wordpress_existing' : '')
+
+  out.alt_text = aiAlt || wpAlt || ''
+  sources.alt_text = aiAlt ? 'airtable_ai' : (wpAlt ? 'wordpress_existing' : '')
+
+  out.description = aiDesc || wpDesc || ''
+  sources.description = aiDesc ? 'airtable_ai' : (wpDesc ? 'wordpress_existing' : '')
+
+  var anyAi = !!(aiTitle || aiCaption || aiAlt || aiDesc)
+  var anyWp = !!(wpTitle || wpCaption || wpAlt || wpDesc)
+  var anyValue = !!(out.title || out.caption || out.alt_text || out.description)
+  out._ai_all_empty = !anyAi
+  out._wp_all_empty = !anyWp
+  out._field_sources = sources
+  out._partial_merge = anyAi && (sources.title === 'wordpress_existing' || sources.caption === 'wordpress_existing' || sources.alt_text === 'wordpress_existing' || sources.description === 'wordpress_existing')
+  if (anyAi) out._source = 'airtable_ai'
+  else if (anyWp) out._source = 'wordpress_existing'
+  else if (anyValue) out._source = 'wordpress_existing'
+  else out._source = 'none'
+  return out
 }
 
 async function maybeStoreStableImageUrl_Updater_(rawImagesTable, rawRecId, currentUrl, wpMediaId) {
@@ -8739,7 +8821,7 @@ async function translateImageMetadataForLanguage_Updater_(imageMeta, targetLang,
   if (!input.title && !input.caption && !input.alt && !input.description) return null;
 
   var prompt =
-    "You are an expert in Travel SEO and Multilingual Content Localization.\n\n" +
+    "You are generating localized image metadata for a travel website.\n\n" +
     "CRITICAL RULES:\n" +
     "1) TARGET LANGUAGE ONLY\n" +
     "You MUST return the result ONLY in the target language: " + lang + ".\n" +
@@ -8750,17 +8832,18 @@ async function translateImageMetadataForLanguage_Updater_(imageMeta, targetLang,
     "- Preserve place names and trip context.\n" +
     "- Preserve activity names.\n" +
     "- Do not add new facts.\n\n" +
-    "3) SEO KEYWORDS\n" +
-    "- Do NOT keyword stuff.\n" +
-    "- Featured image: alt MUST include the Primary Keyword.\n" +
-    "- Featured image: title and caption SHOULD include the Primary Keyword naturally.\n" +
-    "- Gallery image: use either the Primary Keyword or ONE secondary keyword naturally (rotate between images).\n" +
-    "- Preferred keyword to use for this image when possible: " + (preferredKeyword ? preferredKeyword : "(none)") + "\n\n" +
+    "3) NATURAL SEO (NO STUFFING)\n" +
+    "- Keywords are SEMANTIC GUIDANCE only. Do NOT copy-paste long keyword phrases.\n" +
+    "- Avoid route-style phrases in title/alt (equivalent of: 'from', 'to', 'day tours').\n" +
+    "- Do NOT add fixed suffixes like the equivalent of 'Part of ...' or 'Included in ...'.\n" +
+    "- Do NOT output comma-separated keyword lists.\n" +
+    "- Distribute mentions: title 0–1 keyword, alt 0–1 keyword, caption 0–1 keyword, description 1–2 mentions total.\n" +
+    "- Preferred keyword for this image (use ONLY if it fits naturally): " + (preferredKeyword ? preferredKeyword : "(none)") + "\n\n" +
     "FIELD RULES:\n" +
-    "- alt: short descriptive phrase (8–15 words).\n" +
+    "- alt: visual-first, short descriptive phrase (8–15 words).\n" +
     "- title: short descriptive image title.\n" +
     "- caption: natural sentence.\n" +
-    "- description: longer SEO description of the image.\n\n" +
+    "- description: 2–3 sentences, natural, no stuffing.\n\n" +
     "CONTEXT:\n" +
     "image_role: " + role + "\n" +
     "trip_title: " + String(ctx.tripTitle || '') + "\n" +
@@ -8792,10 +8875,81 @@ async function translateImageMetadataForLanguage_Updater_(imageMeta, targetLang,
   if (out.caption.length > 150) out.caption = out.caption.substring(0, 150).trim();
   if (out.description.length > 300) out.description = out.description.substring(0, 300).trim();
 
-  if (role === 'featured' && primary) {
-    if (out.alt.toLowerCase().indexOf(primary.toLowerCase()) === -1) {
-      out.alt = (primary + ' ' + out.alt).trim();
-      if (out.alt.length > 125) out.alt = out.alt.substring(0, 125).trim();
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function lc_(s) { return norm_(s).toLowerCase(); }
+  function wordCount_(s) { var x = norm_(s); return x ? x.split(' ').filter(function(w) { return !!w; }).length : 0; }
+  function contains_(text, phrase) { return !!phrase && lc_(text).indexOf(lc_(phrase)) !== -1; }
+  function isGenericKw_(phrase) {
+    var x = lc_(phrase);
+    if (!x) return true;
+    if (x === 'tour' || x === 'tours' || x === 'day tour' || x === 'day tours') return true;
+    return false;
+  }
+  function isRouteyKw_(phrase) {
+    var x = lc_(phrase);
+    if (!x) return false;
+    if (/\bfrom\b|\bto\b/.test(x)) return true;
+    if (/\bday\s+tours?\b/.test(x)) return true;
+    return false;
+  }
+  function isAltKeywordOk_(phrase) {
+    var x = norm_(phrase);
+    if (!x) return false;
+    if (isGenericKw_(x)) return false;
+    if (isRouteyKw_(x)) return false;
+    if (x.length > 28) return false;
+    if (wordCount_(x) > 4) return false;
+    return true;
+  }
+  function prepositionForLang_(langCode) {
+    var l = String(langCode || '').toLowerCase().split('-')[0];
+    if (l === 'ar') return 'في';
+    if (l === 'fr') return 'à';
+    if (l === 'es') return 'en';
+    if (l === 'it') return 'a';
+    if (l === 'de') return 'in';
+    if (l === 'ru') return 'в';
+    if (l === 'pt') return 'em';
+    if (l === 'nl') return 'in';
+    return '';
+  }
+  function fitWithSuffix_(base, suffix, maxLen) {
+    var b = norm_(base);
+    var s = norm_(suffix);
+    if (!b) return '';
+    if (!s) return b.length <= maxLen ? b : b.substring(0, maxLen).trim();
+    var out2 = (b + ' ' + s).replace(/\s+/g, ' ').trim();
+    if (out2.length <= maxLen) return out2;
+    return '';
+  }
+
+  if (role === 'featured') {
+    var altKeyword = '';
+    if (preferredKeyword && isAltKeywordOk_(preferredKeyword)) altKeyword = preferredKeyword;
+    else if (primary && isAltKeywordOk_(primary)) altKeyword = primary;
+    else {
+      for (var sk = 0; sk < secondary.length; sk++) {
+        if (secondary[sk] && isAltKeywordOk_(secondary[sk])) { altKeyword = secondary[sk]; break; }
+      }
+    }
+
+    if (altKeyword) {
+      log('FEATURED ALT KEYWORD SELECTED (' + lang + '): ' + altKeyword);
+      if (!contains_(out.alt, altKeyword)) {
+        var prep = prepositionForLang_(lang);
+        var suffix = prep ? (prep + ' ' + altKeyword) : altKeyword;
+        var alt2 = fitWithSuffix_(out.alt || 'Travel photo', suffix, 125);
+        if (alt2) {
+          out.alt = alt2;
+          log('FEATURED ALT KEYWORD INCLUDED (' + lang + '): ' + altKeyword);
+        } else {
+          log('FEATURED ALT KEYWORD SKIPPED (NO ROOM) (' + lang + '): ' + altKeyword);
+        }
+      } else {
+        log('FEATURED ALT KEYWORD ALREADY PRESENT (' + lang + '): ' + altKeyword);
+      }
+    } else {
+      log('FEATURED ALT KEYWORD SKIPPED (NOT SUITABLE) (' + lang + ')');
     }
   }
 
@@ -8825,7 +8979,7 @@ async function translateImageMetadataForLanguage_Updater_(imageMeta, targetLang,
       "- Do not add new facts.\n\n" +
       "3) SEO KEYWORDS\n" +
       "- Do NOT keyword stuff.\n" +
-      "- Preferred keyword to use for this image when possible: " + (useKw ? useKw : "(none)") + "\n\n" +
+      "- Preferred keyword to use for this image when possible: " + (preferredKeyword ? preferredKeyword : "(none)") + "\n\n" +
       "SAFE OUTPUT:\n" +
       "Return ONLY valid JSON with this exact shape:\n" +
       "{ \"title\": \"...\", \"caption\": \"...\", \"alt\": \"...\", \"description\": \"...\" }\n\n" +
@@ -8954,7 +9108,7 @@ async function generateLocalizedImageMetadata_Updater_(imageMeta, seoContext, la
   var useKw = String(keywordToUse || (role === 'featured' ? primary : '') || '').trim();
 
   var prompt =
-    "You are an expert in Travel SEO and Multilingual Content Localization.\n\n" +
+    "You are generating localized image metadata for a travel website.\n\n" +
     "CRITICAL RULES:\n" +
     "1) TARGET LANGUAGE ONLY\n" +
     "You MUST return the result ONLY in the target language: " + lang + ".\n" +
@@ -8963,17 +9117,17 @@ async function generateLocalizedImageMetadata_Updater_(imageMeta, seoContext, la
     "- Keep meaning identical.\n" +
     "- Preserve location names and activity names.\n" +
     "- Do not add new facts.\n\n" +
-    "3) SEO KEYWORDS\n" +
-    "- Do NOT keyword stuff.\n" +
-    "- Featured image: alt MUST include the Primary Keyword.\n" +
-    "- Featured image: title and caption SHOULD include the Primary Keyword naturally if possible.\n" +
-    "- Gallery image: use either the Primary Keyword or ONE secondary keyword naturally (rotate between images).\n" +
-    "- Use this preferred keyword for this image when possible: " + (useKw ? useKw : "(none)") + "\n\n" +
+    "3) NATURAL SEO (NO STUFFING)\n" +
+    "- Keywords are SEMANTIC GUIDANCE only. Do NOT copy-paste long keyword phrases.\n" +
+    "- Avoid route-style phrases in title/alt (equivalent of: 'from', 'to', 'day tours').\n" +
+    "- Do NOT add fixed suffixes like the equivalent of 'Part of ...' or 'Included in ...'.\n" +
+    "- Do NOT output comma-separated keyword lists.\n" +
+    "- Preferred keyword for this image (use ONLY if it fits naturally): " + (useKw ? useKw : "(none)") + "\n\n" +
     "FIELD RULES:\n" +
-    "- alt: short descriptive phrase (8–15 words).\n" +
+    "- alt: visual-first, short descriptive phrase (8–15 words).\n" +
     "- title: short descriptive image title.\n" +
     "- caption: natural sentence.\n" +
-    "- description: longer SEO description of the image.\n\n" +
+    "- description: 2–3 sentences, natural, no stuffing.\n\n" +
     "CONTEXT:\n" +
     "image_role: " + role + "\n" +
     "trip_title: " + String(ctx.tripTitle || '') + "\n" +
@@ -9004,13 +9158,6 @@ async function generateLocalizedImageMetadata_Updater_(imageMeta, seoContext, la
   if (out.title.length > 60) out.title = out.title.substring(0, 60).trim();
   if (out.caption.length > 150) out.caption = out.caption.substring(0, 150).trim();
   if (out.description.length > 300) out.description = out.description.substring(0, 300).trim();
-
-  if (role === 'featured' && primary) {
-    if (out.alt.toLowerCase().indexOf(primary.toLowerCase()) === -1) {
-      out.alt = (primary + ' ' + out.alt).trim();
-      if (out.alt.length > 125) out.alt = out.alt.substring(0, 125).trim();
-    }
-  }
 
   return out;
 }
@@ -9143,8 +9290,14 @@ async function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, target
     var detectSample = [current.alt, current.title, current.caption, current.description].join(' ').trim();
     var detected = detectLanguageSafe_Updater_(detectSample);
     var keywordMissing = false;
-    if (keywordToUse) {
-      keywordMissing = current.alt.toLowerCase().indexOf(String(keywordToUse).toLowerCase()) === -1;
+    if (keywordToUse && role === 'featured') {
+      var kw = String(keywordToUse || '').trim();
+      var kwLow = kw.toLowerCase();
+      var tooRoutey = /\bfrom\b|\bto\b/.test(kwLow) || /\bday\s+tours?\b/.test(kwLow) || /\btours?\b/.test(kwLow);
+      var tooLong = kw.length > 28 || kw.split(/\s+/).filter(function(w) { return !!w; }).length > 4;
+      if (!tooRoutey && !tooLong) {
+        keywordMissing = current.alt.toLowerCase().indexOf(kwLow) === -1;
+      }
     }
     if (!hasEmptyFields && detected && langMatchesOrBase_Updater_(detected, lang) && !keywordMissing) continue;
 
