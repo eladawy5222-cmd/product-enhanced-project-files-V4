@@ -5633,6 +5633,15 @@ function isAcceptableButNotPerfectSlug_Updater_(slug, targetLang, kw, spec) {
   return true;
 }
 
+function getScriptProfileForLang_Updater_(targetLang) {
+  var l = String(targetLang || '').toLowerCase();
+  if (!l) return 'latin';
+  if (l.indexOf('zh') === 0 || l === 'ja' || l === 'ko' || l.indexOf('zh-') === 0) return 'cjk';
+  if (l === 'ru' || l === 'uk') return 'cyrillic';
+  if (l === 'ar') return 'arabic';
+  return 'latin';
+}
+
 function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLocked) {
   var out = { ok: true, reasons: [], warnings: [] };
   var s = spec || {};
@@ -5645,26 +5654,49 @@ function validateSeoSpecificity_Updater_(spec, payload, targetLang, kw, slugLock
   var title = String(meta.rank_math_title || '').trim();
   var desc = String(meta.rank_math_description || '').trim();
   var slug = String(core.slug || '').trim();
+  var scriptProfile = getScriptProfileForLang_Updater_(targetLang);
+  var isCjk = scriptProfile === 'cjk';
 
-  if (enTitle && title && enTitle.length >= 24 && title.length < Math.max(12, Math.floor(enTitle.length * 0.45))) out.reasons.push('title_genericness_failed');
-  if (title && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(title, s) === 0 && !hasAttractionConceptInText_Updater_(title, targetLang)) out.reasons.push('title_genericness_failed');
-  if (title && isGenericTitle_Updater_(title, targetLang, s) && enTitle.length >= 18) out.reasons.push('title_genericness_failed');
+  if (enTitle && title && enTitle.length >= 24 && title.length < Math.max(12, Math.floor(enTitle.length * 0.45))) {
+    if (isCjk) out.warnings.push('title_length_specificity_ignored_for_script');
+    else out.reasons.push('title_genericness_failed');
+  }
+  if (title && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(title, s) === 0 && !hasAttractionConceptInText_Updater_(title, targetLang)) {
+    if (isCjk) out.warnings.push('title_landmark_specificity_ignored_for_script');
+    else out.reasons.push('title_genericness_failed');
+  }
+  if (title && isGenericTitle_Updater_(title, targetLang, s) && enTitle.length >= 18) {
+    if (isCjk) out.warnings.push('title_genericness_ignored_for_script');
+    else out.reasons.push('title_genericness_failed');
+  }
 
-  if (desc && enMeta && enMeta.length >= 90 && desc.length < Math.max(60, Math.floor(enMeta.length * 0.55))) out.reasons.push('meta_specificity_failed');
-  if (desc && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(desc, s) === 0 && !hasAttractionConceptInText_Updater_(desc, targetLang)) out.reasons.push('meta_specificity_failed');
+  if (desc && enMeta && enMeta.length >= 90 && desc.length < Math.max(60, Math.floor(enMeta.length * 0.55))) {
+    if (isCjk) out.warnings.push('meta_length_specificity_ignored_for_script');
+    else out.reasons.push('meta_specificity_failed');
+  }
+  if (desc && s.landmarks && s.landmarks.length >= 2 && countLandmarksPresentInText_Updater_(desc, s) === 0 && !hasAttractionConceptInText_Updater_(desc, targetLang)) {
+    if (isCjk) out.warnings.push('meta_landmark_specificity_ignored_for_script');
+    else out.reasons.push('meta_specificity_failed');
+  }
 
   var slugAcceptable = isAcceptableButNotPerfectSlug_Updater_(slug, targetLang, kw, s);
   if (slug && slug.length < 12 && String(s.english_slug || '').length >= 18) {
-    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
-    else out.warnings.push('acceptable_but_not_perfect_slug');
+    if (!slugAcceptable) {
+      if (isCjk) out.warnings.push('slug_genericness_ignored_for_script');
+      else out.reasons.push('slug_genericness_failed');
+    } else out.warnings.push('acceptable_but_not_perfect_slug');
   }
   if (slug && isGenericSlug_Updater_(slug, targetLang, s) && String(s.english_slug || '').length >= 14) {
-    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
-    else out.warnings.push('acceptable_but_not_perfect_slug');
+    if (!slugAcceptable) {
+      if (isCjk) out.warnings.push('slug_genericness_ignored_for_script');
+      else out.reasons.push('slug_genericness_failed');
+    } else out.warnings.push('acceptable_but_not_perfect_slug');
   }
   if (slug && s.landmark_slugs && s.landmark_slugs.length >= 2 && countLandmarkSlugsPresent_Updater_(slug, s) === 0) {
-    if (!slugAcceptable) out.reasons.push('slug_genericness_failed');
-    else out.warnings.push('acceptable_but_not_perfect_slug');
+    if (!slugAcceptable) {
+      if (isCjk) out.warnings.push('slug_genericness_ignored_for_script');
+      else out.reasons.push('slug_genericness_failed');
+    } else out.warnings.push('acceptable_but_not_perfect_slug');
   }
 
   out.ok = out.reasons.length === 0;
@@ -6472,10 +6504,22 @@ function truncateAtWordBoundary_Updater_(text, maxLen) {
   if (s.length <= n) return s;
   var slice = s.substring(0, n + 1);
   var cut = slice.lastIndexOf(' ');
-  if (cut < Math.floor(n * 0.6)) cut = n;
-  s = s.substring(0, cut).trim();
+  if (cut <= 0) {
+    var lastPunct = -1;
+    for (var i = slice.length - 1; i >= 0; i--) {
+      var ch = slice.charAt(i);
+      if (ch === '，' || ch === '。' || ch === '、' || ch === '！' || ch === '？' || ch === '；' || ch === '：' || ch === '·') { lastPunct = i; break; }
+    }
+    if (lastPunct >= Math.floor(n * 0.6)) cut = lastPunct;
+    else cut = n;
+    s = s.substring(0, cut).trim();
+  } else {
+    if (cut < Math.floor(n * 0.6)) cut = n;
+    s = s.substring(0, cut).trim();
+  }
   s = s.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
   s = s.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '').trim();
+  s = s.replace(/[，。、！？；：·]+$/g, '').trim();
   return s;
 }
 
@@ -6529,9 +6573,12 @@ function regenerateSeoHeadFieldsForQuality_Updater_(lang, englishMeta, currentMe
   var primary = kw && kw.primary ? String(kw.primary).trim() : '';
   var fam = spec && spec.landmark_canonical_museum_family ? String(spec.landmark_canonical_museum_family).toLowerCase() : '';
   var mustMention = '';
-  if (fam === 'civilization' && l === 'fr') mustMention = 'Musée national de la civilisation égyptienne';
-  if (fam === 'civilization' && l === 'es') mustMention = 'Museo Nacional de la Civilización Egipcia';
-  if (fam === 'civilization' && l === 'de') mustMention = 'Nationalmuseum der ägyptischen Zivilisation';
+  if (fam === 'civilization') {
+    mustMention =
+      localizeForbiddenEnglishPhraseForLang_Updater_('national museum of egyptian civilization', l) ||
+      localizeForbiddenEnglishPhraseForLang_Updater_('civilization museum', l) ||
+      'National Museum of Egyptian Civilization';
+  }
 
   var prompt =
     "You are a native-level travel SEO localization editor.\n" +
@@ -6562,7 +6609,7 @@ function regenerateSeoHeadFieldsForQuality_Updater_(lang, englishMeta, currentMe
 
 function hardenTranslatedSeoHeadFieldsQuality_Updater_(payload, targetLang, kw, spec, englishPayload) {
   var lang = String(targetLang || '').toLowerCase();
-  if (!(lang === 'fr' || lang === 'es' || lang === 'de')) return payload;
+  if (!lang || lang === 'en') return payload;
   var out = payload || {};
   out.meta = out.meta || {};
 
@@ -6639,13 +6686,8 @@ function enforceSeoKeywordsOnPayload_Updater_(payload, translatedData, targetLan
       out.meta.localized_image_alt = (kw.primary + ' - ' + out.meta.localized_image_alt).trim();
     }
     if (out.meta.rank_math_title && !containsKeyword_Updater_(out.meta.rank_math_title, kw.primary)) {
-      var lang = String(targetLang || '').toLowerCase();
       var candidateTitle = (kw.primary + ' | ' + out.meta.rank_math_title).trim();
-      if ((lang === 'fr' || lang === 'es') && candidateTitle.length > 65) {
-        out.meta.rank_math_title = normalizeSeoHeadTextForQuality_Updater_(out.meta.rank_math_title);
-      } else {
-        out.meta.rank_math_title = normalizeSeoHeadTextForQuality_Updater_(truncateAtWordBoundary_Updater_(candidateTitle, 65));
-      }
+      out.meta.rank_math_title = normalizeSeoHeadTextForQuality_Updater_(truncateAtWordBoundary_Updater_(candidateTitle, 65));
     } else {
       out.meta.rank_math_title = normalizeSeoHeadTextForQuality_Updater_(truncateAtWordBoundary_Updater_(out.meta.rank_math_title, 65));
     }
@@ -9600,12 +9642,20 @@ function enforceCanonicalMuseumFamilyFidelityInImageMetadata_Updater_(translated
     var t = String(val || '').trim();
     if (!t) return t;
     if (hasCiv_(t)) return t;
-    if (lang === 'de') {
-      if (/(?:ägyptisch|aegyptisch)\w*\s+museum/i.test(t)) {
-        t = t.replace(/(?:ägyptisch|aegyptisch)\w*\s+museum/ig, civ).trim();
-        Logger.log('IMAGE ENTITY FIDELITY FIXED (de): aegyptisch* museum -> civilization_museum');
-        return t;
-      }
+    if (/(?:\begyptian\s+museum\b)/i.test(t)) {
+      t = t.replace(/\begyptian\s+museum\b/ig, civ).trim();
+      Logger.log('IMAGE ENTITY FIDELITY FIXED (' + lang + '): english_egyptian_museum -> civilization_museum');
+      return t;
+    }
+    if (egypt && new RegExp('\\b' + escapeRegex_Updater_(egypt) + '\\b', 'i').test(t)) {
+      t = t.replace(new RegExp(escapeRegex_Updater_(egypt), 'ig'), civ).trim();
+      Logger.log('IMAGE ENTITY FIDELITY FIXED (' + lang + '): localized_egyptian_museum -> civilization_museum');
+      return t;
+    }
+    if (/(?:ägyptisch|aegyptisch)\w*\s+museum/i.test(t)) {
+      t = t.replace(/(?:ägyptisch|aegyptisch)\w*\s+museum/ig, civ).trim();
+      Logger.log('IMAGE ENTITY FIDELITY FIXED (' + lang + '): aegyptisch* museum -> civilization_museum');
+      return t;
     }
     var n = norm_(t);
     var eNorm = norm_(egypt);
