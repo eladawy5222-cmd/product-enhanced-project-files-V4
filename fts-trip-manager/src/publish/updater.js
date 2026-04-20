@@ -836,6 +836,15 @@ async function runUpdaterBatch() {
       } catch (eSchemaPrimary) {
         log('Updater: Warning - Failed to generate schema for primary: ' + eSchemaPrimary.message);
       }
+
+      try {
+        var validationTripInfo = null
+        try { validationTripInfo = await getTripInfoFromWpCached_Updater_(primaryWpId) } catch (eValInfo) {}
+        var vRes = computeSeoValidationOutputs_Updater_(enhancedData, f, payload, validationTripInfo)
+        await storeSeoValidationOutputs_Updater_(tripId, vRes)
+      } catch (eVal) {
+        log('Updater: Warning - Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)))
+      }
       
       // ----------------------------------------------------------
       // 🆕 MULTILINGUAL LOOP
@@ -1529,6 +1538,103 @@ async function updatePublishStatus_Updater_(tripId, status) {
   var fields = {};
   fields[UPDATER_PUBLISH_STATUS_FIELD] = status;
   await airtableUpdate_(UPDATER_TRIPS_TABLE, tripId, fields);
+}
+
+function computeSeoValidationOutputs_Updater_(enhancedData, tripFields, payload, wpTripInfo) {
+  var data = enhancedData || {}
+  var f = tripFields || {}
+  var p = payload || {}
+  var core = p.core || {}
+  var meta = p.meta || {}
+  var g = data.general || {}
+  var wp = wpTripInfo || {}
+  var wpMeta = wp && wp.meta ? wp.meta : {}
+
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim() }
+  function hasText_(s) { return !!norm_(s) }
+  function arrLen_(a) { return Array.isArray(a) ? a.length : 0 }
+  function strIncludes_(hay, needle) { return String(hay || '').toLowerCase().indexOf(String(needle || '').toLowerCase()) !== -1 }
+
+  var score = 100
+  var flags = []
+  var blockers = []
+
+  function addFlag_(k) { if (flags.indexOf(k) === -1) flags.push(k) }
+  function deduct_(pts) { score = Math.max(0, score - pts) }
+  function requireBlocker_(flag, pts) { addFlag_(flag); deduct_(pts); if (blockers.indexOf(flag) === -1) blockers.push(flag) }
+  function requireWarn_(flag, pts) { addFlag_(flag); deduct_(pts) }
+
+  var seoTitle = norm_(meta.rank_math_title || g.AI_SEO_Title || (wpMeta ? wpMeta.rank_math_title : '') || '')
+  var seoDesc = norm_(meta.rank_math_description || g.AI_SEO_Meta_Description || (wpMeta ? wpMeta.rank_math_description : '') || '')
+  var slug = norm_(core.slug || g.AI_SEO_Permalink || f.Slug || f.slug || '')
+
+  if (!hasText_(seoTitle)) requireBlocker_('missing_seo_title', 20)
+  if (!hasText_(seoDesc)) requireBlocker_('missing_seo_meta_description', 15)
+  if (!hasText_(slug)) requireBlocker_('missing_slug', 20)
+
+  var tripSchema = meta.trip_schema_data || meta.schema_trip_data || (wpMeta ? (wpMeta.trip_schema_data || wpMeta.schema_trip_data) : null)
+  if (!hasText_(tripSchema)) requireBlocker_('missing_trip_schema', 15)
+
+  var faqsExist = arrLen_(data.faqs) > 0
+  var faqSchema = meta.faq_schema_data || (wpMeta ? wpMeta.faq_schema_data : null)
+  if (faqsExist && !hasText_(faqSchema)) requireWarn_('missing_faq_schema', 8)
+
+  if (arrLen_(data.highlights) === 0) requireWarn_('missing_highlights', 8)
+  if (arrLen_(data.itinerary) === 0) requireBlocker_('missing_itinerary', 15)
+
+  if (arrLen_(data.includes) === 0) requireWarn_('missing_includes', 5)
+  if (arrLen_(data.excludes) === 0) requireWarn_('missing_excludes', 5)
+
+  if (arrLen_(data.facts) === 0) requireWarn_('missing_trip_facts', 8)
+
+  var hasFeatured = !!(wp && wp.featured_image && wp.featured_image.url)
+  if (!hasFeatured) requireBlocker_('missing_featured_image', 15)
+
+  try {
+    var spec = extractSpecificityConstraintsFromEnglish_Updater_(data, f, wp)
+    if (spec && spec.landmark_source_inconsistent) {
+      requireWarn_('landmark_source_inconsistent', 3)
+    }
+    if (spec && spec.landmark_source_ambiguous) {
+      requireWarn_('landmark_source_ambiguous', 3)
+    }
+  } catch (eSpec) {}
+
+  if (f.Translation_Error && strIncludes_(f.Translation_Error, 'contamination')) {
+    requireWarn_('translation_language_contamination_detected', 5)
+  }
+
+  score = Math.max(0, Math.min(100, score))
+
+  var seoStatus = 'PASS'
+  if (blockers.length > 0 || score < 70) seoStatus = 'FAIL'
+  else if (flags.length > 0 || score < 90) seoStatus = 'WARN'
+
+  var publishStatus = 'READY'
+  if (blockers.length > 0) publishStatus = 'BLOCKED'
+  else if (seoStatus !== 'PASS' || score < 95) publishStatus = 'REVIEW'
+
+  return {
+    seo_status: seoStatus,
+    seo_score: score,
+    seo_flags: flags,
+    publish_status: publishStatus
+  }
+}
+
+async function storeSeoValidationOutputs_Updater_(tripId, vRes) {
+  var r = vRes || {}
+  var fields = {
+    SEO_Validation_Status: String(r.seo_status || ''),
+    SEO_Validation_Score: Number(r.seo_score || 0),
+    SEO_Validation_Flags: JSON.stringify(r.seo_flags || []),
+    Publish_Readiness_Status: String(r.publish_status || '')
+  }
+  try {
+    await airtableUpdate_(UPDATER_TRIPS_TABLE, tripId, fields)
+  } catch (e) {
+    log('Updater: Warning - Failed to store SEO validation fields (Airtable may be missing columns): ' + (e && e.message ? e.message : String(e)))
+  }
 }
 
 // ----------------------------------------------------------
