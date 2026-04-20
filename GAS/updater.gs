@@ -5643,7 +5643,15 @@ function getCivilizationMuseumMarkersForLang_Updater_(lang) {
   var l = String(lang || '').toLowerCase();
   var map = {
     'de': ['zivilisation', 'nmec'],
-    'fr': ['civilisation', 'nmec'],
+    'fr': [
+      'musée national de la civilisation égyptienne',
+      'musée de la civilisation égyptienne',
+      'musee national de la civilisation egyptienne',
+      'musee de la civilisation egyptienne',
+      'civilisation égyptienne',
+      'civilisation egyptienne',
+      'nmec'
+    ],
     'es': ['civilizacion', 'civilización', 'nmec'],
     'it': ['civilta', 'civiltà', 'nmec'],
     'nl': ['beschaving', 'civilisatie', 'nmec'],
@@ -5672,6 +5680,17 @@ function textContainsAnyMarker_Updater_(text, markers) {
   return false;
 }
 
+function findFirstMarkerMatch_Updater_(text, markers) {
+  var t = normalizeForSpecMatch_Updater_(text);
+  if (!t) return '';
+  for (var i = 0; i < (markers || []).length; i++) {
+    var raw = String(markers[i] || '');
+    var m = normalizeForSpecMatch_Updater_(raw);
+    if (m && t.indexOf(m) !== -1) return raw;
+  }
+  return '';
+}
+
 function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetLang) {
   var lang = String(targetLang || '').toLowerCase();
   if (!lang || lang === 'en') return { ok: true, reasons: [], warnings: [], primary_missing: [], secondary_missing: [], primary_present: [] };
@@ -5684,6 +5703,7 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
   var combined = [
     meta.rank_math_title,
     meta.rank_math_description,
+    core.title,
     core.slug
   ].map(function(x) { return String(x || ''); }).join(' | ');
 
@@ -5708,6 +5728,12 @@ function validateLandmarkSpecificityPreservation_Updater_(spec, payload, targetL
   if (req && req.items && req.items.civilization_museum && req.items.civilization_museum.present) {
     var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
     civOk = textContainsAnyMarker_Updater_(combined, markers);
+    if (!civOk && lang === 'fr') {
+      Logger.log('CIVILIZATION MUSEUM MARKER NOT DETECTED (fr): sample="' + String(combined || '').substring(0, 220) + '"');
+    } else if (civOk && lang === 'fr') {
+      var hit = findFirstMarkerMatch_Updater_(combined, markers);
+      if (hit) Logger.log('CIVILIZATION MUSEUM MARKER DETECTED (fr): ' + hit);
+    }
     var normCombined = normalizeForSpecMatch_Updater_(combined);
     if (normCombined && normCombined.indexOf('nmec') !== -1) {
       civAliasAccepted = true;
@@ -5784,12 +5810,18 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
   if (requireCiv) {
     var markers = getCivilizationMuseumMarkersForLang_Updater_(lang);
     if (!textContainsAnyMarker_Updater_(combined, markers)) {
-      var civPhrase =
-        localizeForbiddenEnglishPhraseForLang_Updater_('national museum of egyptian civilization', lang) ||
-        localizeForbiddenEnglishPhraseForLang_Updater_('egyptian civilization museum', lang) ||
-        localizeForbiddenEnglishPhraseForLang_Updater_('civilization museum', lang);
+      var civPhrase = '';
+      if (lang === 'fr') {
+        civPhrase = 'Musée national de la civilisation égyptienne (NMEC)';
+      } else {
+        civPhrase =
+          localizeForbiddenEnglishPhraseForLang_Updater_('national museum of egyptian civilization', lang) ||
+          localizeForbiddenEnglishPhraseForLang_Updater_('egyptian civilization museum', lang) ||
+          localizeForbiddenEnglishPhraseForLang_Updater_('civilization museum', lang);
+      }
 
       if (civPhrase) {
+        if (lang === 'fr') Logger.log('LANDMARK FIX INSERT (fr): civilization_museum -> "' + civPhrase + '"');
         var title = String(out.meta.rank_math_title || '').trim();
         var egyptPhrase = localizeForbiddenEnglishPhraseForLang_Updater_('egyptian museum', lang);
         var titleNorm = normalizeForSpecMatch_Updater_(title);
@@ -5823,6 +5855,12 @@ function applyLandmarkSpecificityFix_Updater_(payload, targetLang, kw, spec, slu
         }
         if (desc.length > 160) desc = desc.substring(0, 160).trim();
         if (desc) out.meta.rank_math_description = desc;
+
+        if (lang === 'fr') {
+          var checkCombined = String(out.meta.rank_math_title || '') + ' | ' + String(out.meta.rank_math_description || '') + ' | ' + String(out.core.title || '') + ' | ' + String(out.core.slug || '');
+          var okNow = textContainsAnyMarker_Updater_(checkCombined, markers);
+          Logger.log('LANDMARK FIX RESULT (fr): civilization_museum_present=' + (okNow ? 'yes' : 'no'));
+        }
 
         if (!slugLocked) {
           var slug = String(out.core.slug || '').trim();
