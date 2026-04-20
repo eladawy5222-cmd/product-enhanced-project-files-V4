@@ -1919,3 +1919,74 @@ add_action('enqueue_block_editor_assets', function() {
         })();
     ");
 });
+
+function fts_normalize_schema_meta_value($raw) {
+    if ($raw === null) return null;
+    if (is_string($raw)) {
+        $s = trim($raw);
+        if ($s === '') return null;
+        $maybe = maybe_unserialize($s);
+        if ($maybe !== $s && (is_array($maybe) || is_object($maybe))) {
+            $raw = $maybe;
+        } else {
+            $raw = $s;
+        }
+    }
+
+    if (is_object($raw)) {
+        $raw = json_decode(wp_json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+    }
+
+    if (is_array($raw)) {
+        return $raw;
+    }
+
+    if (!is_string($raw)) return null;
+    $s2 = trim($raw);
+    if ($s2 === '') return null;
+
+    $decoded = json_decode($s2, true);
+    if (json_last_error() !== JSON_ERROR_NONE) return null;
+
+    if (is_string($decoded)) {
+        $decoded2 = json_decode($decoded, true);
+        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded2) || is_object($decoded2))) {
+            $decoded = $decoded2;
+        }
+    }
+
+    if (is_object($decoded)) {
+        $decoded = json_decode(wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+    }
+
+    return is_array($decoded) ? $decoded : null;
+}
+
+function fts_print_jsonld_script($schema) {
+    $data = fts_normalize_schema_meta_value($schema);
+    if (!$data) return;
+    $json = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($json) || $json === '' || $json === 'null') return;
+    $json = str_ireplace('</script', '<\/script', $json);
+    echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
+}
+
+function fts_render_trip_schema_jsonld() {
+    if (is_admin() || is_feed()) return;
+    if (!is_singular('trip')) return;
+    $post_id = get_queried_object_id();
+    if (!$post_id) {
+        global $post;
+        if ($post && isset($post->ID)) $post_id = intval($post->ID);
+    }
+    if (!$post_id) return;
+
+    $trip_schema = get_post_meta($post_id, 'trip_schema_data', true);
+    if (!$trip_schema) $trip_schema = get_post_meta($post_id, 'schema_trip_data', true);
+    $faq_schema = get_post_meta($post_id, 'faq_schema_data', true);
+
+    fts_print_jsonld_script($trip_schema);
+    fts_print_jsonld_script($faq_schema);
+}
+
+add_action('wp_head', 'fts_render_trip_schema_jsonld', 20);
