@@ -278,6 +278,39 @@ function normalizeKeywordList_AiImages_(list, limit) {
   return out;
 }
 
+function isImageIneligibleKeywordPhrase_AiImages_(phrase) {
+  var s = String(phrase || '').replace(/\s+/g, ' ').trim();
+  if (!s) return true;
+  var low = s.toLowerCase();
+
+  if (low.length > 52) return true;
+  var wc = s.split(' ').filter(function(x) { return !!x; }).length;
+  if (wc > 7) return true;
+
+  if (/\b(things\s+to\s+do|what\s+to\s+do|best|top|cheap|discount|deal|offers?)\b/.test(low)) return true;
+  if (/\b(day\s+(tour|trip)s?|tours?|trip\b|excursions?)\b/.test(low)) return true;
+  if (/\b(sightseeing|attractions?)\b/.test(low)) return true;
+  if (/\b(book|booking|tickets?|price|prices)\b/.test(low)) return true;
+  if (/^(?:from|to|near|around)\b/.test(low)) return true;
+  if (wc >= 3 && /\b(?:from|to)\b/.test(low)) return true;
+
+  return false;
+}
+
+function filterImageKeywordListEligibility_AiImages_(list, limit) {
+  var items = normalizeKeywordList_AiImages_(list || [], typeof limit === 'number' ? limit : 30);
+  var out = [];
+  for (var i = 0; i < items.length; i++) {
+    var kw = String(items[i] || '').trim();
+    if (!kw) continue;
+    if (isImageIneligibleKeywordPhrase_AiImages_(kw)) continue;
+    out.push(kw);
+  }
+  var max = typeof limit === 'number' && limit > 0 ? limit : 30;
+  if (out.length > max) out = out.slice(0, max);
+  return out;
+}
+
 function buildTripKeywordPlans_AiImages_(tripFields, ctx) {
   var f = tripFields || {};
 
@@ -285,15 +318,20 @@ function buildTripKeywordPlans_AiImages_(tripFields, ctx) {
   var focusRaw = (f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? String(f.AI_SEO_FocusKeywords) : String(imp.seoKeywords || '');
   var listRaw = (f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? f.AI_SEO_FocusKeywords_List : (imp.seoKeywordsList || '');
 
-  var listFromField = extractEnglishKeywordsFromListFieldValue_AiImages_(listRaw);
-  listFromField = normalizeKeywordList_AiImages_(listFromField, 30);
+  var listFromFieldRaw = extractEnglishKeywordsFromListFieldValue_AiImages_(listRaw);
+  listFromFieldRaw = normalizeKeywordList_AiImages_(listFromFieldRaw, 30);
+  var listFromField = filterImageKeywordListEligibility_AiImages_(listFromFieldRaw, 30);
+  if (listFromField.length !== listFromFieldRaw.length) {
+    log('AI Images: filtered ineligible SEO phrases for image keywords: removed ' + (listFromFieldRaw.length - listFromField.length))
+  }
 
   log('AI IMAGES KEYWORD FALLBACK DISABLED');
 
   log('AI IMAGES KEYWORD SOURCE (PRIMARY): ' + (((f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? 'Trips.AI_SEO_FocusKeywords' : 'ImprovementWithAI.AI_SEO_FocusKeywords')));
   log('AI IMAGES KEYWORD SOURCE (LIST): ' + (((f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? 'Trips.AI_SEO_FocusKeywords_List' : 'ImprovementWithAI.AI_SEO_FocusKeywords_List')));
 
-  var focusItems = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focusRaw), 10);
+  var focusItemsRaw = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focusRaw), 10);
+  var focusItems = filterImageKeywordListEligibility_AiImages_(focusItemsRaw, 10);
   var featuredPrimary = (focusItems && focusItems.length) ? focusItems[0] : '';
   if (focusItems && focusItems.length > 1) {
     log('AI IMAGES: Ignoring extra tokens in AI_SEO_FocusKeywords (primary only): ' + JSON.stringify(focusItems.slice(1)));
@@ -593,15 +631,10 @@ function deriveSoftTopicHint_AiImages_(phrase) {
     return w.charAt(0).toUpperCase() + w.slice(1);
   }
 
-  if (low.indexOf('alexandria') !== -1) return 'Alexandria';
-  if (low.indexOf('luxor') !== -1) return 'Luxor';
-  if (low.indexOf('coptic') !== -1 && low.indexOf('cairo') !== -1) return 'Coptic Cairo';
-  if (low.indexOf('old') !== -1 && low.indexOf('cairo') !== -1) return 'Old Cairo';
-
   var remove = {
     day: true, tour: true, tours: true, trip: true, excursions: true, excursion: true,
     from: true, to: true, in: true, on: true, at: true, the: true, a: true, an: true, of: true,
-    cairo: true, egypt: true
+    city: true, sightseeing: true, attractions: true
   };
   var parts = raw.split(/\s+/).map(function(x) { return String(x || '').replace(/[^A-Za-z0-9\u00C0-\u024F]/g, '').trim(); }).filter(function(x) { return !!x; });
   var kept = [];
@@ -625,6 +658,7 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
   };
   var kp = keywordPlan || {};
   var options = opts || {};
+  var role = String((ctx && ctx.imageRole) ? ctx.imageRole : '').toLowerCase().trim() || 'gallery'
 
   function log_(msg) { log(String(msg || '')); }
   function escRe_(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -678,6 +712,59 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
     if (wordCount_(x) > 4) return false;
     return true;
   }
+
+  function tokensSet_(metaObj) {
+    var s = norm_([metaObj.title, metaObj.alt, metaObj.caption, metaObj.description].join(' ')).toLowerCase()
+    s = s.replace(/[^a-z0-9\s]/g, ' ')
+    var parts = s.split(/\s+/).filter(function(x) { return !!x; })
+    var stop = { the: 1, a: 1, an: 1, and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1, as: 1 }
+    var set = {}
+    for (var i = 0; i < parts.length; i++) {
+      var t = parts[i]
+      if (t.length <= 2) continue
+      if (stop[t]) continue
+      set[t] = 1
+    }
+    return set
+  }
+  function keywordTokens_(phrase) {
+    var s = norm_(phrase).toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
+    var parts = s.split(/\s+/).filter(function(x) { return !!x; })
+    var stop = { the: 1, a: 1, an: 1, and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1, as: 1 }
+    return parts.filter(function(t) { return t.length > 2 && !stop[t] })
+  }
+  function isEligibleForImageUse_(phrase, field) {
+    var x = norm_(phrase)
+    if (!x) return false
+    if (isImageIneligibleKeywordPhrase_AiImages_(x)) return false
+    if (role === 'featured') {
+      if (field === 'alt' && wordCount_(x) > 3) return false
+      if (field === 'title' && wordCount_(x) > 4) return false
+    }
+    var toks = keywordTokens_(x)
+    if (!toks.length) return false
+    var hits = 0
+    for (var i = 0; i < toks.length; i++) {
+      if (metaTokens[toks[i]]) hits++
+    }
+    if (!hits) return false
+    if (role === 'featured' && toks.length > 1 && hits < 2) return false
+    return true
+  }
+
+  var metaTokens = tokensSet_(out)
+  var eligiblePrimary = (kp && kp.primary && isEligibleForImageUse_(kp.primary, 'title')) ? String(kp.primary).trim() : ''
+  var eligibleSecondary = []
+  if (kp && kp.secondary && Array.isArray(kp.secondary)) {
+    for (var si = 0; si < kp.secondary.length; si++) {
+      var kw = String(kp.secondary[si] || '').trim()
+      if (!kw) continue
+      if (!isEligibleForImageUse_(kw, 'title')) continue
+      eligibleSecondary.push(kw)
+      if (eligibleSecondary.length >= 12) break
+    }
+  }
+  kp = { all: kp && kp.all ? kp.all : [], primary: eligiblePrimary, secondary: eligibleSecondary }
   function containsPhrase_(text, phrase) {
     var t = norm_(text);
     var p = norm_(phrase);
@@ -949,15 +1036,20 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
       log_('FEATURED ALT KEYWORD SELECTED: ' + altKeyword);
       var currentAlt = norm_(out.alt) || 'Travel photo';
       if (!containsPhrase_(currentAlt, altKeyword)) {
-        var kwLow = lc_(altKeyword);
-        var useIn = /\bcairo\b|\bluxor\b|\balexandria\b|\begypt\b|\bgiza\b|\baswan\b|\bhurghada\b|\bsharm\b|\bdahab\b/.test(kwLow) || /^old\s+/i.test(altKeyword) || /^coptic\s+/i.test(altKeyword);
-        var suffix = (useIn ? (' in ' + altKeyword) : (' at ' + altKeyword));
-        var candidateAlt = fitWithSuffix_(currentAlt, suffix, 125);
-        if (candidateAlt) {
-          out.alt = candidateAlt;
-          log_('FEATURED ALT KEYWORD INCLUDED: ' + altKeyword);
+        var allowAppend = !(/[A-Z]/.test(altKeyword)) && wordCount_(altKeyword) <= 2 && isEligibleForImageUse_(altKeyword, 'alt');
+        if (!allowAppend) {
+          log_('FEATURED ALT KEYWORD SKIPPED (TOO RISKY TO APPEND)');
         } else {
-          log_('FEATURED ALT KEYWORD SKIPPED (NO ROOM): ' + altKeyword);
+          var kwLow = lc_(altKeyword);
+          var prep = (/\b(river|sea|lake|canal|beach)\b/.test(kwLow) ? ' on the ' : ' at the ');
+          var suffix = prep + altKeyword;
+          var candidateAlt = fitWithSuffix_(currentAlt, suffix, 125);
+          if (candidateAlt) {
+            out.alt = candidateAlt;
+            log_('FEATURED ALT KEYWORD INCLUDED: ' + altKeyword);
+          } else {
+            log_('FEATURED ALT KEYWORD SKIPPED (NO ROOM): ' + altKeyword);
+          }
         }
       } else {
         log_('FEATURED ALT KEYWORD ALREADY PRESENT: ' + altKeyword);
@@ -978,8 +1070,6 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
         return x.charAt(0).toUpperCase() + x.slice(1);
       }).filter(function(x) { return !!x; }).join(' ');
     }
-    if (/\bcoptic\s+cairo\b/.test(low)) return 'Coptic Cairo';
-    if (/\bold\s+cairo\b/.test(low)) return 'Old Cairo';
     var m = low.match(/^(.+?)\s+day\s+tours?$/);
     if (m && m[1]) {
       var city = m[1].trim();
@@ -1253,6 +1343,7 @@ function repairMalformedImageEnglishPhrases_AiImages_(text, ctx) {
 
   s = s.replace(/\bin\s+'s\s+museum\b/ig, 'in the museum');
   s = s.replace(/\b(at|in|of)\s+'s\s+\b/ig, '$1 the ');
+  s = s.replace(/\bthe\s*'s\b/ig, 'the');
   s = s.replace(/\.\s+(in|at|on|with|from|for|to)\b/ig, ', $1');
   s = s.replace(/\bstands\s+majestically\s+by\s+the\s+water\s+its\b/ig, 'stands majestically by the water, with its');
   s = s.replace(/\bby\s+the\s+water\s+its\b/ig, 'by the water, with its');
@@ -1325,10 +1416,16 @@ function isWeakEndingFragmentImageEn_AiImages_(text) {
 function repairObviousJoinedWordsImageEn_AiImages_(text) {
   var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
   if (!s) return s;
+  s = s.replace(/\bstaffin\b/ig, 'staff in');
   s = s.replace(/\bmuseumin\b/ig, 'museum in');
   s = s.replace(/\bmuseum\s+in\s+cairo\s+museum\b/ig, 'museum in Cairo');
   s = s.replace(/\bin\s+cairo\s+museum\b/ig, 'in a museum');
-  s = s.replace(/\b(cairo)\s+museum\b/ig, 'Cairo museum');
+  s = s.replace(/\b(cairo)\s+museum\b/ig, 'museum in Cairo');
+  s = s.replace(/\b([a-z]{4,})(in)\s+([A-Z][a-z]{2,})\b/g, function(m, w, prep, loc) {
+    var ww = String(w || '')
+    if (/^(begin|origin|within|again|cousin|muffin)$/i.test(ww)) return m
+    return ww + ' ' + prep + ' ' + loc
+  });
   s = s.replace(/\bstands\s+proudly\s+in\s+showcasing\b/ig, 'stands proudly, showcasing');
   s = s.replace(/\bstands\s+in\s+showcasing\b/ig, 'stands, showcasing');
   s = s.replace(/\b(a|an)\s+(El\s+)/g, '$2');
@@ -1362,6 +1459,8 @@ function finalizeAltTextEnglishImageEn_AiImages_(text) {
   s = s.replace(/\s+in\s+a\s+museum\s+in\s+cairo\.?$/i, ' on display in a museum').trim();
   s = s.replace(/,\s*in\s+a\s+museum\.?$/i, ' on display in a museum').trim();
   s = s.replace(/\s+in\s+a\s+museum\.?$/i, ' on display in a museum').trim();
+  s = s.replace(/\bmuseum\s+in\s+cairo\b/ig, 'museum');
+  s = s.replace(/\bcairo\s+museum\b/ig, 'museum');
   s = s.replace(/\s+in\s+cairo\.?$/i, '').trim();
 
   function trimToWords_(str, maxWords) {

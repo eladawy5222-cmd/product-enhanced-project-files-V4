@@ -941,16 +941,24 @@ function sanitizeFaqAnswer_(text) {
     s = s.replace(rx, ''); 
   }); 
 
+  s = s.replace(/[—–-]\s*will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '. ');
   s = s.replace(/[—–-]\s*our\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '. ');
   s = s.replace(/[—–-]\s*our\s+will\b/ig, '. ');
+  s = s.replace(/[—–-]\s*(?:will|would|can|could|should|may|might)\b[^.?!]*(?:[.?!]|$)/ig, '. ');
+  s = s.replace(/(?:^|[.!?]\s+)\s*(?:and|but)\s+will\b[^.?!]*(?:[.?!]|$)/ig, '. ');
+  s = s.replace(/(?:^|[.!?]\s+)\s*will\b[^.?!]*(?:[.?!]|$)/ig, '');
   s = s.replace(/\bour\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '');
   s = s.replace(/\bour\s+will\b/ig, 'we will');
   s = s.replace(/\bwe\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '');
+  s = s.replace(/[—–-]\s*(?:and|but)\s+will\b[^.?!]*(?:[.?!]|$)/ig, '. ');
+  s = s.replace(/\bRelated to [^.?!]*(?:[.?!]|$)/ig, '');
   s = s.replace(/\bcontact\s+our\s+customer\s+service\s+team\b/ig, 'book directly on this page');
+  s = s.replace(/[—–-]\s*(?:will|and|but|also)\b[^.?!]*$/ig, '').trim();
 
   // تنظيف مسافات زائدة 
   s = s.replace(/\s+/g, ' ').replace(/\s+\./g, '.').trim(); 
   s = s.replace(/\.\s*\./g, '.').replace(/\s+([,.;:!?])/g, '$1').trim();
+  if (s && !/[.!?]$/.test(s) && s.length >= 20) s += '.';
   return s; 
 } 
 
