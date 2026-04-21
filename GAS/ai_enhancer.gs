@@ -604,11 +604,28 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
  * CALL AI PROVIDER
  ************************************************************/
 
+function sanitizeAiPromptPlaceholders_(prompt) {
+  var s = String(prompt || '');
+  if (!s) return s;
+  var before = s;
+
+  s = s.replace(/GENERATE ONE IF MISSING/ig, '');
+  s = s.replace(/\bPLACEHOLDER\b/ig, '');
+  s = s.replace(/\bTBD\b/ig, '');
+  s = s.replace(/\bTODO\b/ig, '');
+  s = s.replace(/'\s*'/g, "''");
+  s = s.replace(/\s+\n/g, "\n");
+
+  if (s !== before) Logger.log('AI: prompt placeholder leakage prevented');
+  return s;
+}
+
 /**
  * callAi_
  * يختار الـ provider (DeepSeek الآن، ويمكن إضافة OpenAI لاحقاً)
  */
 function callAi_(prompt) {
+  prompt = sanitizeAiPromptPlaceholders_(prompt);
   if (AI_PROVIDER === 'deepseek') {
     return callDeepseek_(prompt);
   } else if (AI_PROVIDER === 'openai') {

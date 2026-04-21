@@ -40,9 +40,25 @@ async function callChatJson(options) {
   if (!apiKey) throw new Error('AI apiKey is missing')
   if (!model) throw new Error('AI model is missing')
 
+  function sanitizeAiPromptPlaceholders_(p) {
+    let s = String(p || '')
+    if (!s) return s
+    const before = s
+    s = s.replace(/GENERATE ONE IF MISSING/ig, '')
+    s = s.replace(/\bPLACEHOLDER\b/ig, '')
+    s = s.replace(/\bTBD\b/ig, '')
+    s = s.replace(/\bTODO\b/ig, '')
+    s = s.replace(/'\s*'/g, "''")
+    s = s.replace(/\s+\n/g, '\n')
+    if (s !== before) logger.warn('AI: prompt placeholder leakage prevented')
+    return s
+  }
+
+  const safePrompt = sanitizeAiPromptPlaceholders_(prompt)
+
   const body = {
     model,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{ role: 'user', content: safePrompt }],
     temperature
   }
 
@@ -92,8 +108,35 @@ async function callOpenAiChatJsonWithMessages(options) {
   if (!model) throw new Error('AI model is missing')
   if (!messages.length) throw new Error('AI messages are missing')
 
+  function sanitizeAiPromptPlaceholders_(p) {
+    let s = String(p || '')
+    if (!s) return s
+    const before = s
+    s = s.replace(/GENERATE ONE IF MISSING/ig, '')
+    s = s.replace(/\bPLACEHOLDER\b/ig, '')
+    s = s.replace(/\bTBD\b/ig, '')
+    s = s.replace(/\bTODO\b/ig, '')
+    s = s.replace(/'\s*'/g, "''")
+    s = s.replace(/\s+\n/g, '\n')
+    if (s !== before) logger.warn('AI: prompt placeholder leakage prevented')
+    return s
+  }
+
+  const safeMessages = messages.map(m => {
+    if (!m || typeof m !== 'object') return m
+    if (typeof m.content === 'string') return { ...m, content: sanitizeAiPromptPlaceholders_(m.content) }
+    if (Array.isArray(m.content)) {
+      const content = m.content.map(part => {
+        if (part && typeof part === 'object' && part.type === 'text') return { ...part, text: sanitizeAiPromptPlaceholders_(part.text) }
+        return part
+      })
+      return { ...m, content }
+    }
+    return m
+  })
+
   const endpoint = 'https://api.openai.com/v1/chat/completions'
-  const body = { model, messages, temperature }
+  const body = { model, messages: safeMessages, temperature }
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
