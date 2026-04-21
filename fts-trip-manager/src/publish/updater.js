@@ -5180,33 +5180,86 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   }
 
   var destinationName = '';
+  var itineraryObj = undefined
+  var placeNames = []
   if (d.taxonomies && typeof d.taxonomies === 'object') {
-    var candidates = ['destination', 'destinations', 'trip_location', 'trip_locations', 'location', 'tour_location', 'tour_locations'];
+    var candidates = ['destination', 'destinations', 'trip_location', 'trip_locations', 'location', 'tour_location', 'tour_locations']
     for (var i = 0; i < candidates.length; i++) {
-      var key = candidates[i];
-      if (d.taxonomies[key] && d.taxonomies[key].length && d.taxonomies[key][0] && d.taxonomies[key][0].name) {
-        destinationName = String(d.taxonomies[key][0].name).trim();
-        break;
+      var key = candidates[i]
+      var arr = d.taxonomies[key]
+      if (!arr || !arr.length) continue
+      for (var j = 0; j < arr.length; j++) {
+        var t = arr[j]
+        if (!t || !t.name) continue
+        var nm = String(t.name || '').trim()
+        if (!nm) continue
+        placeNames.push(nm)
       }
+      if (!destinationName && arr[0] && arr[0].name) destinationName = String(arr[0].name).trim()
     }
   }
+  var seenPlace = {}
+  var uniqPlaces = []
+  for (var kP = 0; kP < placeNames.length; kP++) {
+    var nm2 = String(placeNames[kP] || '').trim()
+    var kk = nm2.toLowerCase()
+    if (!nm2 || seenPlace[kk]) continue
+    seenPlace[kk] = true
+    uniqPlaces.push(nm2)
+    if (uniqPlaces.length >= 6) break
+  }
+  if (uniqPlaces.length === 1) {
+    itineraryObj = { "@type": "Place", "name": uniqPlaces[0] }
+  } else if (uniqPlaces.length > 1) {
+    var items = []
+    for (var pi = 0; pi < uniqPlaces.length; pi++) {
+      items.push({
+        "@type": "ListItem",
+        "position": pi + 1,
+        "item": { "@type": "Place", "name": uniqPlaces[pi] }
+      })
+    }
+    itineraryObj = { "@type": "ItemList", "itemListElement": items }
+  } else if (destinationName) {
+    itineraryObj = { "@type": "Place", "name": destinationName }
+  }
+
+  var providerUrl = ''
+  if (url && /^https?:\/\//i.test(url)) {
+    var mSite = String(url).match(/^https?:\/\/[^\/]+/i)
+    if (mSite && mSite[0]) providerUrl = mSite[0]
+  }
+  var provider = { "@type": "TravelAgency", "name": "FTS Travels", "url": providerUrl || undefined }
+
+  var touristTypeVal = 'Sightseeing Travelers'
+  var hayType = (String(title || '') + ' ' + String(description || '')).toLowerCase()
+  var culture = /(museum|citadel|temple|mosque|church|coptic|old cairo|khan|bazaar|market|heritage|historic|history|ancient|artifacts?|pharaoh|civilization)/i.test(hayType)
+  var adventure = /(desert|safari|quad|atv|snorkel|snorkeling|diving|hike|hiking|trek|trekking|camp|camping|adventure)/i.test(hayType)
+  if (culture) touristTypeVal = ['Cultural Travelers', 'History Lovers']
+  else if (adventure) touristTypeVal = 'Adventure Travelers'
 
   var schema = {
     "@context": "https://schema.org",
     "@type": "TouristTrip",
     "name": title,
     "description": description,
+    "url": url || undefined,
+    "mainEntityOfPage": url ? { "@type": "WebPage", "@id": url } : undefined,
     "image": images.length ? images : undefined,
-    "touristType": "Adventure Travelers",
+    "touristType": touristTypeVal,
+    "provider": provider,
     "inLanguage": String(targetLang || '').trim() || undefined,
     "offers": offers,
-    "itinerary": destinationName ? { "@type": "Place", "name": destinationName } : undefined,
+    "itinerary": itineraryObj,
     "duration": durationText || undefined
   };
 
   Object.keys(schema).forEach(function(k) { if (schema[k] === undefined) delete schema[k]; });
   if (schema.offers) {
     Object.keys(schema.offers).forEach(function(k) { if (schema.offers[k] === undefined || schema.offers[k] === '') delete schema.offers[k]; });
+  }
+  if (schema.provider) {
+    Object.keys(schema.provider).forEach(function(k) { if (schema.provider[k] === undefined || schema.provider[k] === '') delete schema.provider[k]; });
   }
 
   return schema;

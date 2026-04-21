@@ -2132,6 +2132,52 @@ function fts_render_trip_schema_jsonld() {
 
 add_action('wp_head', 'fts_render_trip_schema_jsonld', 20);
 
+function fts_has_custom_trip_schema_meta($post_id) {
+    if (!$post_id) return false;
+    $trip_schema = get_post_meta($post_id, 'trip_schema_data', true);
+    if (!$trip_schema) $trip_schema = get_post_meta($post_id, 'schema_trip_data', true);
+    $data = fts_normalize_schema_meta_value($trip_schema);
+    return is_array($data) && !empty($data);
+}
+
+function fts_filter_rank_math_schema_for_trip($data, $jsonld = null) {
+    if (is_admin() || is_feed()) return $data;
+    if (!is_singular('trip')) return $data;
+
+    $post_id = get_queried_object_id();
+    if (!$post_id) {
+        global $post;
+        if ($post && isset($post->ID)) $post_id = intval($post->ID);
+    }
+    if (!$post_id) return $data;
+    if (!fts_has_custom_trip_schema_meta($post_id)) return $data;
+    if (!is_array($data)) return $data;
+
+    $out = [];
+    foreach ($data as $node) {
+        if (!is_array($node)) {
+            $out[] = $node;
+            continue;
+        }
+
+        $type = $node['@type'] ?? '';
+        $types = is_array($type) ? $type : [$type];
+        $remove = false;
+        foreach ($types as $t) {
+            $x = strtolower((string)$t);
+            if ($x === 'product' || $x === 'offer' || $x === 'aggregateoffer') {
+                $remove = true;
+                break;
+            }
+        }
+        if ($remove) continue;
+        $out[] = $node;
+    }
+    return $out;
+}
+
+add_filter('rank_math/json_ld', 'fts_filter_rank_math_schema_for_trip', 99, 2);
+
 function fts_render_trip_hreflang_alternates() {
     if (is_admin() || is_feed()) return;
     if (!is_singular('trip')) return;

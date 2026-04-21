@@ -79,6 +79,18 @@ add_action('rest_api_init', function () {
         'permission_callback' => 'fts_trips_permission',
     ]);
 
+    register_rest_route('fts/v1', '/packages/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::EDITABLE, // POST, PUT, PATCH
+        'callback' => 'fts_update_package',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
+    register_rest_route('fts/v1', '/package/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::EDITABLE, // POST, PUT, PATCH
+        'callback' => 'fts_update_package',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
     // 🔹 CLONE media attachment without uploading (POST)
     register_rest_route('fts/v1', '/media/clone', [
         'methods'  => WP_REST_Server::CREATABLE, // POST
@@ -527,6 +539,15 @@ function fts_create_trip(WP_REST_Request $request) {
             $incoming_trip_code = sanitize_text_field($meta['wp_travel_engine_setting']['trip_code']);
         }
 
+        foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data', 'translation_url_map'] as $schema_key) {
+            if (isset($meta[$schema_key])) {
+                $v = $meta[$schema_key];
+                if (is_array($v) || is_object($v)) {
+                    $meta[$schema_key] = wp_json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                }
+            }
+        }
+
         foreach ($meta as $key => $value) {
             $meta_key = sanitize_key($key);
             update_post_meta($trip_id, $meta_key, $value);
@@ -963,6 +984,14 @@ function fts_update_trip(WP_REST_Request $request) {
 
     // Handle generic meta updates
     $meta_keys_updated = [];
+    foreach (['faq_schema_data', 'trip_schema_data', 'schema_trip_data', 'translation_url_map'] as $schema_key) {
+        if (isset($meta_input[$schema_key])) {
+            $v = $meta_input[$schema_key];
+            if (is_array($v) || is_object($v)) {
+                $meta_input[$schema_key] = wp_json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            }
+        }
+    }
     foreach ($meta_input as $key => $value) {
         $meta_key = sanitize_key($key);
         $update_result = update_post_meta($trip_id, $meta_key, $value);
@@ -1739,6 +1768,135 @@ function fts_create_package(WP_REST_Request $request) {
     return rest_ensure_response(['id' => $post_id]);
 }
 
+function fts_update_package(WP_REST_Request $request) {
+    $package_id = intval($request['id']);
+    $post = get_post($package_id);
+
+    if (!$post) {
+        return new WP_Error('not_found', 'Package not found', [
+            'status' => 404,
+            'debug' => [
+                'id' => $package_id,
+                'exists' => false
+            ]
+        ]);
+    }
+    if ($post->post_type !== 'trip-packages') {
+        return new WP_Error('not_found', 'Package not found', [
+            'status' => 404,
+            'debug' => [
+                'id' => $package_id,
+                'exists' => true,
+                'post_type' => $post->post_type,
+                'post_status' => $post->post_status
+            ]
+        ]);
+    }
+
+    $params = $request->get_json_params();
+    if (!$params) $params = $request->get_params();
+
+    $updated_meta_keys = [];
+    $updated_core = false;
+
+    $update = ['ID' => $package_id];
+    if (isset($params['title'])) {
+        $title = sanitize_text_field($params['title']);
+        if ($title !== '') {
+            $update['post_title'] = $title;
+            $updated_core = true;
+        }
+    }
+    if (isset($params['status'])) {
+        $status = sanitize_text_field($params['status']);
+        if ($status !== '') {
+            $update['post_status'] = $status;
+            $updated_core = true;
+        }
+    }
+
+    if ($updated_core) {
+        $res = wp_update_post($update, true);
+        if (is_wp_error($res)) return $res;
+    }
+
+    if (isset($params['trip_id'])) {
+        update_post_meta($package_id, 'trip_id', intval($params['trip_id']));
+        $updated_meta_keys[] = 'trip_id';
+    }
+
+    $pricing_cats = $params['pricing_categories'] ?? null;
+    if (is_array($pricing_cats) && count($pricing_cats) > 0) {
+        $wte_cats = [
+            'c_ids' => [],
+            'labels' => [],
+            'prices' => [],
+            'sale_prices' => [],
+            'min_paxes' => [],
+            'max_paxes' => [],
+            'pricing_types' => [],
+            'enabled_sale' => [],
+            'enabled_group_discount' => []
+        ];
+
+        $group_pricing = [];
+
+        foreach ($pricing_cats as $idx => $cat) {
+            if (!is_array($cat)) continue;
+
+            if (isset($cat['id']) && $cat['id'] !== '') {
+                $cid_str = (string)$cat['id'];
+            } else {
+                $cid_str = (string)($idx + 11);
+            }
+
+            $cid = $cid_str;
+
+            $wte_cats['c_ids'][$cid] = (int)$cid_str;
+            $wte_cats['labels'][$cid] = isset($cat['label']) ? sanitize_text_field($cat['label']) : 'Standard';
+            $wte_cats['prices'][$cid] = isset($cat['regular_price']) ? (string)$cat['regular_price'] : '0';
+            $wte_cats['sale_prices'][$cid] = isset($cat['sale_price']) ? (string)$cat['sale_price'] : '0';
+            $wte_cats['min_paxes'][$cid] = isset($cat['min_pax']) ? intval($cat['min_pax']) : 0;
+            $wte_cats['max_paxes'][$cid] = isset($cat['max_pax']) ? intval($cat['max_pax']) : 100;
+            $wte_cats['pricing_types'][$cid] = isset($cat['pricing_type']) ? sanitize_text_field($cat['pricing_type']) : 'per-person';
+            $wte_cats['enabled_sale'][$cid] = (isset($cat['sale_price']) && floatval($cat['sale_price']) > 0) ? '1' : '0';
+
+            if (isset($cat['group_pricing']) && is_array($cat['group_pricing'])) {
+                $group_pricing[$cid] = $cat['group_pricing'];
+
+                $has_valid_gp = false;
+                foreach ($cat['group_pricing'] as $gp) {
+                    if (isset($gp['price']) && floatval($gp['price']) > 0) {
+                        $has_valid_gp = true;
+                        break;
+                    }
+                }
+                if ($has_valid_gp) {
+                    $wte_cats['enabled_group_discount'][$cid] = '1';
+                }
+            }
+        }
+
+        update_post_meta($package_id, 'package-categories', $wte_cats);
+        $updated_meta_keys[] = 'package-categories';
+
+        if (!empty($group_pricing)) {
+            update_post_meta($package_id, 'group-pricing', $group_pricing);
+            $updated_meta_keys[] = 'group-pricing';
+        }
+    }
+
+    return rest_ensure_response([
+        'id' => $package_id,
+        'success' => true,
+        'post_type' => $post->post_type,
+        'debug_updated_core' => $updated_core,
+        'debug_meta_keys_updated' => $updated_meta_keys,
+        'debug_pricing_updated' => in_array('package-categories', $updated_meta_keys, true),
+        'debug_group_pricing_updated' => in_array('group-pricing', $updated_meta_keys, true)
+    ]);
+}
+
 /**
  * Rank Math Content Analysis Integration for WP Travel Engine
  * Merges trip details (Overview, Itinerary, etc.) into the analysis content.
@@ -1902,3 +2060,166 @@ add_action('enqueue_block_editor_assets', function() {
         })();
     ");
 });
+
+function fts_normalize_schema_meta_value($raw) {
+    if ($raw === null) return null;
+    if (is_string($raw)) {
+        $s = trim($raw);
+        if ($s === '') return null;
+        $maybe = maybe_unserialize($s);
+        if ($maybe !== $s && (is_array($maybe) || is_object($maybe))) {
+            $raw = $maybe;
+        } else {
+            $raw = $s;
+        }
+    }
+
+    if (is_object($raw)) {
+        $raw = json_decode(wp_json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+    }
+
+    if (is_array($raw)) {
+        return $raw;
+    }
+
+    if (!is_string($raw)) return null;
+    $s2 = trim($raw);
+    if ($s2 === '') return null;
+
+    $decoded = json_decode($s2, true);
+    if (json_last_error() !== JSON_ERROR_NONE) return null;
+
+    if (is_string($decoded)) {
+        $decoded2 = json_decode($decoded, true);
+        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded2) || is_object($decoded2))) {
+            $decoded = $decoded2;
+        }
+    }
+
+    if (is_object($decoded)) {
+        $decoded = json_decode(wp_json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+    }
+
+    return is_array($decoded) ? $decoded : null;
+}
+
+function fts_print_jsonld_script($schema) {
+    $data = fts_normalize_schema_meta_value($schema);
+    if (!$data) return;
+    $json = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($json) || $json === '' || $json === 'null') return;
+    $json = str_ireplace('</script', '<\/script', $json);
+    echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
+}
+
+function fts_render_trip_schema_jsonld() {
+    if (is_admin() || is_feed()) return;
+    if (!is_singular('trip')) return;
+    $post_id = get_queried_object_id();
+    if (!$post_id) {
+        global $post;
+        if ($post && isset($post->ID)) $post_id = intval($post->ID);
+    }
+    if (!$post_id) return;
+
+    $trip_schema = get_post_meta($post_id, 'trip_schema_data', true);
+    if (!$trip_schema) $trip_schema = get_post_meta($post_id, 'schema_trip_data', true);
+    $faq_schema = get_post_meta($post_id, 'faq_schema_data', true);
+
+    fts_print_jsonld_script($trip_schema);
+    fts_print_jsonld_script($faq_schema);
+}
+
+add_action('wp_head', 'fts_render_trip_schema_jsonld', 20);
+
+function fts_render_trip_hreflang_alternates() {
+    if (is_admin() || is_feed()) return;
+    if (!is_singular('trip')) return;
+    $post_id = get_queried_object_id();
+    if (!$post_id) {
+        global $post;
+        if ($post && isset($post->ID)) $post_id = intval($post->ID);
+    }
+    if (!$post_id) return;
+
+    $alternates = [];
+
+    if (has_filter('wpml_element_trid') && has_filter('wpml_get_element_translations')) {
+        $trid = apply_filters('wpml_element_trid', null, $post_id, 'post_trip');
+        if ($trid) {
+            $translations = apply_filters('wpml_get_element_translations', null, $trid, 'post_trip');
+            if (is_array($translations)) {
+                foreach ($translations as $t) {
+                    if (!is_object($t)) continue;
+                    $lang = isset($t->language_code) ? strtolower((string)$t->language_code) : '';
+                    $id = isset($t->element_id) ? intval($t->element_id) : 0;
+                    if (!$lang || !$id) continue;
+                    $url = '';
+                    if (isset($t->url) && is_string($t->url) && $t->url !== '') {
+                        $url = $t->url;
+                    } else {
+                        $p = get_permalink($id);
+                        if ($p) {
+                            if (has_filter('wpml_permalink')) $url = apply_filters('wpml_permalink', $p, $lang);
+                            else $url = $p;
+                        }
+                    }
+                    if (!$url) continue;
+                    $alternates[$lang] = $url;
+                }
+            }
+        }
+    }
+
+    if (count($alternates) < 2) {
+        $map_raw = get_post_meta($post_id, 'translation_url_map', true);
+        $map = fts_normalize_schema_meta_value($map_raw);
+        if (is_array($map)) {
+            foreach ($map as $lang => $entry) {
+                $l = strtolower((string)$lang);
+                if (!is_array($entry)) continue;
+                $url = isset($entry['url']) ? (string)$entry['url'] : '';
+                $pid = isset($entry['post_id']) ? intval($entry['post_id']) : 0;
+                if (!$l || !$url) continue;
+                if ($pid > 0) {
+                    $p2 = get_permalink($pid);
+                    if ($p2 && strpos($url, parse_url($p2, PHP_URL_PATH)) === false) {
+                        $url = $p2;
+                    }
+                }
+                if ($url) $alternates[$l] = $url;
+            }
+        }
+    }
+
+    if (count($alternates) < 2) return;
+
+    $uniq_by_url = [];
+    foreach ($alternates as $lang => $url) {
+        $u = (string)$url;
+        if ($u === '') continue;
+        if (isset($uniq_by_url[$u])) continue;
+        $uniq_by_url[$u] = $lang;
+    }
+    if (count($uniq_by_url) < 2) return;
+    $alternates = [];
+    foreach ($uniq_by_url as $url => $lang) {
+        $alternates[$lang] = $url;
+    }
+
+    $x_default = '';
+    if (isset($alternates['en'])) $x_default = $alternates['en'];
+    else {
+        $current = get_permalink($post_id);
+        if ($current) $x_default = $current;
+    }
+
+    foreach ($alternates as $lang => $url) {
+        echo '<link rel="alternate" hreflang="' . esc_attr($lang) . '" href="' . esc_url($url) . '" />' . "\n";
+    }
+    if ($x_default) {
+        echo '<link rel="alternate" hreflang="x-default" href="' . esc_url($x_default) . '" />' . "\n";
+    }
+}
+
+add_action('wp_head', 'fts_render_trip_hreflang_alternates', 5);

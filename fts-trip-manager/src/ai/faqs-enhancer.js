@@ -201,7 +201,7 @@ var PICKUP_ANSWER_TEMPLATE_WITH_TIME =
 var PICKUP_ANSWER_TEMPLATE_GENERIC = 
   "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.";
 
-var PYRAMIDS_KEYWORDS_PATTERN = /(pyramid|giza|sphinx|cheops|kheops|khafre|menkaure)/i;
+var PYRAMIDS_KEYWORDS_PATTERN = /\bpyramids?\b/i;
 
 var PYRAMIDS_QUESTION = 
   "Does this tour include entry inside any pyramid?";
@@ -808,22 +808,38 @@ function upsertPickupFaq_(faqs, ctx, tripFields) {
 function upsertPyramidsFaq_(faqs, ctx) {
   if (!Array.isArray(faqs)) return faqs;
 
-  // Check if context has pyramid keywords
-  var hasPyramids = false;
-  // Combine fields to search in
-  var textToCheck = [
-    ctx.tripTitle, 
-    ctx.tripDescription, 
-    ctx.tripOverview,
-    (ctx.highlights || []).join(' '), 
-    (ctx.itinerary || []).join(' ')
-  ].join(' ').toLowerCase();
-  
-  if (PYRAMIDS_KEYWORDS_PATTERN.test(textToCheck)) {
-    hasPyramids = true;
+  function norm_(s) { return (s || '').toString().toLowerCase() }
+  var signalText = [
+    ctx && ctx.tripTitle ? ctx.tripTitle : '',
+    (ctx && ctx.highlights ? ctx.highlights.join(' ') : ''),
+    (ctx && ctx.itinerary ? ctx.itinerary.join(' ') : ''),
+    (ctx && ctx.facts ? ctx.facts.join(' ') : '')
+  ].join(' ')
+  signalText = norm_(signalText)
+
+  function hasExplicitPyramidsSignal_(t) {
+    if (!t) return false
+    if (/\bgreat\s+pyramids?\b/.test(t)) return true
+    if (/\bpyramids?\b/.test(t)) return true
+    if (/\bgiza\s+plateau\b/.test(t)) return true
+    if (/\bgiza\b/.test(t) && (/\bpyramids?\b/.test(t) || /\bsphinx\b/.test(t))) return true
+    if (/\bsphinx\b/.test(t) && /\bpyramids?\b/.test(t)) return true
+    return false
   }
 
-  if (!hasPyramids) return faqs;
+  var hasPyramids = hasExplicitPyramidsSignal_(signalText)
+  if (!hasPyramids) {
+    var removeRx = /(pyramids?|entry.*inside.*pyramid|inside.*pyramid|enter.*pyramid|giza|sphinx)/i
+    for (var r = 0; r < faqs.length; r++) {
+      var qq = (faqs[r].question || '').toString()
+      var aa = (faqs[r].answer || '').toString()
+      if (removeRx.test(qq) || removeRx.test(aa)) {
+        faqs.splice(r, 1)
+        r--
+      }
+    }
+    return faqs
+  }
 
   // Remove existing similar question to avoid duplicates (AI might have generated one)
   var qPattern = /(entry.*inside.*pyramid|inside.*pyramid|enter.*pyramid)/i;
