@@ -358,25 +358,58 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
   // 🆕 جلب الهايلايتس المرتبطة بالرحلة (إن وجدت) لتقليل الهلوسة
   var linkedHighlights = U && U.highlightsText ? U.highlightsText : "";
 
+  function normPrompt_(v) { return String(v || '').replace(/\s+/g, ' ').trim(); }
+  function isBannedPromptToken_(s) {
+    var t = normPrompt_(s).toLowerCase();
+    if (!t) return true;
+    if (t.indexOf('generate one if missing') !== -1) return true;
+    if (t === 'n/a') return true;
+    if (t === 'undefined' || t === 'null') return true;
+    return false;
+  }
+  function sanitizePromptList_(list) {
+    var arr = [];
+    if (Array.isArray(list)) arr = list.slice(0);
+    else if (list != null) arr = normPrompt_(list).split(/[,;\n]+/);
+    arr = arr.map(function(x) { return normPrompt_(x); }).filter(function(x) { return !!x && !isBannedPromptToken_(x); });
+    var seen = {};
+    var out = [];
+    for (var i = 0; i < arr.length; i++) {
+      var k = arr[i].toLowerCase();
+      if (seen[k]) continue;
+      seen[k] = true;
+      out.push(arr[i]);
+    }
+    return out;
+  }
+
+  var focusKw = normPrompt_(preGeneratedFocusKeyword);
+  if (isBannedPromptToken_(focusKw)) focusKw = '';
+  var relatedList = sanitizePromptList_(preGeneratedKeywordsList);
+  var focusBlock =
+    "TASK 1: FOCUS KEYWORD (CRITICAL)\n" +
+    (focusKw
+      ? ("- Focus Keyword (use verbatim as the primary phrase): '" + focusKw + "'\n")
+      : ("- Focus Keyword: (not provided)\n" +
+         "- Choose ONE focus keyword phrase based on the Trip Title/Slug/SEO keywords.\n" +
+         "- Use the chosen focus keyword consistently and naturally throughout the output.\n")) +
+    (relatedList.length ? ("- Related Keywords (optional, use naturally): " + relatedList.join(', ') + "\n") : "") +
+    "- Do NOT output any placeholder or instruction text as if it were a keyword.\n\n";
+
   var prompt =
     "You are an expert travel copywriter and SEO specialist.\n\n" +
-    "TASK 1: USE THE FOCUS KEYWORD (CRITICAL)\n" +
-    "- The Focus Keyword is: '" + (preGeneratedFocusKeyword || "GENERATE ONE IF MISSING") + "'\n" +
-    "- Related Keywords: " + (Array.isArray(preGeneratedKeywordsList) ? preGeneratedKeywordsList.join(', ') : preGeneratedKeywordsList) + "\n" +
-    "- You MUST use this Focus Keyword naturally 6-8 times throughout the content.\n" +
-    "- If no keyword is provided above, please generate one first.\n\n" +
+    focusBlock +
     
     "TASK 2: GENERATE OPTIMIZED WHY PEOPLE LOVE THIS TRIP (AI_Tab_Content)\n" +
     "You are an SEO expert and persuasive copywriter. Create a compelling 'Why People Love This Trip' section that converts hesitant browsers into confident bookers.\n" +
     "=== TOUR DETAILS (Infer these from the Trip Info below) ===\n" +
-     "- Tour Title: [Title]\n" +
-     "- Destination: [Destination]\n" +
-     "- Main Attractions: [Attractions]\n" +
-     "- Duration: [Duration]\n" +
-     "- Unique Selling Points: [What makes this tour special]\n" +
-     "- Target Audience: [Families/Couples/Solo/Adventure seekers]\n" +
-     "- Common Pain Points: [What problems does this tour solve?]\n" +
-     "- Competitor Comparison: [What do you do better?]\n\n" +
+     "- Tour title (infer from Trip Title)\n" +
+     "- Destination/location (infer from Trip Title/Description)\n" +
+     "- Main attractions (infer from context)\n" +
+     "- Duration (infer from itinerary)\n" +
+     "- Unique selling points (infer from context)\n" +
+     "- Target audience (infer from trip style)\n" +
+     "- Common pain points solved (infer from context)\n\n" +
      
      "=== USER PSYCHOLOGY ===\n" +
      "When users read 'Why People Love This Trip', they're asking:\n" +
@@ -414,9 +447,8 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
      "=== OUTPUT FORMAT ===\n" +
      "IMPORTANT: Do NOT repeat any section title inside body fields that already have a dedicated title field.\n" +
      "Do NOT include headings or title lines like 'Why People Love This Trip ❤️'. Start directly with the content.\n\n" +
-     "<p><strong>[Catchy Title 1]</strong> ⭐ — [2-3 sentences explaining this point with emotional language]</p>\n" +
-     "<p><strong>[Catchy Title 2]</strong> 🚐 — [2-3 sentences explaining this point]</p>\n\n" +
-     "...(continue for 5-7 points)\n\n" +
+     "<p><strong>Expertly Guided Highlights</strong> ⭐ — Enjoy a well-paced experience with the key sights covered in a way that feels effortless and memorable.</p>\n" +
+     "<p><strong>Comfortable, Seamless Logistics</strong> 🚐 — Clear timing, easy transfers, and thoughtful pacing help you focus on the experience instead of the details.</p>\n\n" +
 
      "TASK 7: CALCULATE DURATION FROM ITINERARY (STRICT MATH REQUIRED)\n" +
      "- Analyze the '=== RAW ITINERARY STEPS ===' section in the context.\n" +
@@ -463,7 +495,7 @@ function buildTripPrompt_(fields, tripId, preGeneratedFocusKeyword, preGenerated
     "- DO NOT return the itinerary as a single solid block of text.\n" +
     "- YOU MUST FORMAT THE ITINERARY USING HTML TAGS for clarity.\n" +
     "- For each Day, use this EXACT structure (NO HEADINGS):\n" +
-    "  <p><strong>Day X: [Day Title]</strong> — [Day Description]</p>\n" +
+    "  <p><strong>Day X: Day Title</strong> — Day Description</p>\n" +
     "- Ensure there is a <br> or <p> break between days.\n" +
     "- Use <strong> for key highlights within the description.\n" +
     "- Example Output:\n" +

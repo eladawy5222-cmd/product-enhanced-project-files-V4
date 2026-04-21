@@ -114,10 +114,9 @@ function runAiFaqsEnhancementBatch() {
         faqs = sanitizeFaqs_(faqs);
         faqs = dedupeFaqs_(faqs);
 
-        // 6) Validate count
+        // 6) Validate count (quality-first: do not pad with generic FAQs)
         if (faqs.length < MIN_FAQS_COUNT) {
-          Logger.log('AI FAQs: WARNING - only ' + faqs.length + ' FAQs generated, minimum is ' + MIN_FAQS_COUNT);
-          // Add default FAQs if needed
+          Logger.log('AI FAQs: WARNING - only ' + faqs.length + ' FAQs generated (minimum target is ' + MIN_FAQS_COUNT + ').');
           faqs = ensureMinimumFaqs_(faqs, ctx);
         }
         
@@ -410,7 +409,8 @@ function buildFaqsPrompt_(ctx) {
     "- Use ONLY information from context above (all improved data sources)\n" +
     "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
     "- Output in ENGLISH ONLY\n" +
-    "- MUST generate between " + MIN_FAQS_COUNT + " and " + MAX_FAQS_COUNT + " FAQs\n" +
+    "- Aim for " + MIN_FAQS_COUNT + " to " + MAX_FAQS_COUNT + " trip-specific FAQs, but quality is more important than count.\n" +
+    "- Do NOT add generic filler FAQs just to reach a minimum.\n" +
     "- Try to use the Focus Keyword ('" + (ctx.seoKeywords || '') + "') naturally in 1-2 questions or answers.\n\n" +
     
     "OUTPUT FORMAT (JSON ONLY):\n" +
@@ -591,6 +591,31 @@ function extractPickupTimeFromContext_(ctx, tripFields) {
 function upsertPickupFaq_(faqs, ctx, tripFields) { 
   if (!Array.isArray(faqs)) return faqs; 
 
+  var pickupSignalText = [
+    ctx && ctx.tripTitle ? ctx.tripTitle : '',
+    ctx && ctx.tripDescription ? ctx.tripDescription : '',
+    ctx && ctx.tripOverview ? ctx.tripOverview : '',
+    (ctx && ctx.highlights ? ctx.highlights.join(' ') : ''),
+    (ctx && ctx.itinerary ? ctx.itinerary.join(' ') : ''),
+    (ctx && ctx.includes ? ctx.includes.join(' ') : ''),
+    (ctx && ctx.excludes ? ctx.excludes.join(' ') : ''),
+    tripFields && tripFields.Pickup ? String(tripFields.Pickup) : '',
+    tripFields && tripFields.PickupTime ? String(tripFields.PickupTime) : '',
+    tripFields && tripFields.Pickup_Time ? String(tripFields.Pickup_Time) : ''
+  ].join(' ').toLowerCase();
+
+  var hasPickupSignal = /\bpick\s*up\b|\bpickup\b|\bhotel\s+pick\s*up\b|\bhotel\s+pickup\b|\bhotel\s+transfer\b|\bmeeting\s+point\b/i.test(pickupSignalText);
+  if (!hasPickupSignal) {
+    for (var r = 0; r < faqs.length; r++) {
+      var qq = (faqs[r].question || '').toString();
+      if (PICKUP_Q_PATTERN.test(qq)) {
+        faqs.splice(r, 1);
+        r--;
+      }
+    }
+    return faqs;
+  }
+
   var pickupTime = extractPickupTimeFromContext_(ctx, tripFields); 
   var answer = pickupTime 
     ? PICKUP_ANSWER_TEMPLATE_WITH_TIME.replace("{{TIME}}", pickupTime) 
@@ -661,22 +686,66 @@ function upsertPyramidsFaq_(faqs, ctx) {
 function dedupeFaqs_(faqs) { 
   if (!Array.isArray(faqs)) return faqs; 
 
-  var seen = {}; 
-  var out = []; 
+  function norm_(s) { return String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function stem_(w) {
+    var x = String(w || '').trim();
+    if (x.length <= 3) return x;
+    x = x.replace(/'s$/i, '');
+    x = x.replace(/(ing|ed|es|s)$/i, function(m) { return m.length && x.length - m.length >= 3 ? '' : m; });
+    return x;
+  }
+  var stop = {
+    the: 1, a: 1, an: 1, and: 1, or: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1, with: 1, from: 1,
+    is: 1, are: 1, do: 1, does: 1, can: 1, i: 1, we: 1, you: 1, your: 1, our: 1, this: 1, that: 1,
+    tour: 1, trip: 1, excursion: 1, package: 1, booking: 1
+  };
+  function tokens_(q) {
+    var t = norm_(q);
+    if (!t) return [];
+    t = t.replace(/\bhotel\s+pick\s*up\b/g, 'pickup').replace(/\bhotel\s+pickup\b/g, 'pickup').replace(/\bpick\s*up\b/g, 'pickup');
+    var parts = t.split(' ').filter(function(w) { return !!w && !stop[w]; }).map(stem_);
+    var out = [];
+    var seen = {};
+    for (var i = 0; i < parts.length; i++) {
+      var w = parts[i];
+      if (!w || stop[w]) continue;
+      if (seen[w]) continue;
+      seen[w] = true;
+      out.push(w);
+    }
+    out.sort();
+    return out;
+  }
+  function jaccard_(a, b) {
+    if (!a.length || !b.length) return 0;
+    var i = 0, j = 0;
+    var inter = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) { inter++; i++; j++; }
+      else if (a[i] < b[j]) i++;
+      else j++;
+    }
+    var union = a.length + b.length - inter;
+    return union ? (inter / union) : 0;
+  }
 
-  for (var i = 0; i < faqs.length; i++) { 
-    var q = (faqs[i].question || '').toString().trim().toLowerCase(); 
-    if (!q) continue; 
-
-    // تطبيع بسيط يقلل اختلافات مثل ? و المسافات 
-    var key = q.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim(); 
-    if (seen[key]) continue; 
-
-    seen[key] = true; 
-    out.push(faqs[i]); 
-  } 
-
-  return out; 
+  var out = [];
+  var sigs = [];
+  for (var i = 0; i < faqs.length; i++) {
+    var q = (faqs[i].question || '').toString().trim();
+    var a = (faqs[i].answer || '').toString().trim();
+    if (!q || !a) continue;
+    var tks = tokens_(q);
+    if (!tks.length) continue;
+    var dup = false;
+    for (var k = 0; k < sigs.length; k++) {
+      if (jaccard_(tks, sigs[k]) >= 0.78) { dup = true; break; }
+    }
+    if (dup) continue;
+    sigs.push(tks);
+    out.push(faqs[i]);
+  }
+  return out;
 } 
 
 function sanitizeFaqAnswer_(text) { 
@@ -743,36 +812,15 @@ function deleteOldFaqsForTrip_(tripId, tripNumber) {
 function ensureMinimumFaqs_(faqs, ctx) {
   if (faqs.length >= MIN_FAQS_COUNT) return faqs;
   
-  var defaultFaqs = [
-    {
-      question: "How do I book this tour?",
-      answer: "You can book this tour through our website or by contacting our customer service team. We recommend booking in advance to secure your preferred date.",
-      category: "Booking & Logistics"
-    },
-    {
-      question: "What is the cancellation policy?",
-      answer: "Please refer to our cancellation policy for specific terms. Generally, cancellations made well in advance may be eligible for a refund.",
-      category: "Booking & Logistics"
-    },
-    {
+  var added = 0;
+  if (ctx && ctx.includes && ctx.includes.length) {
+    faqs.push({
       question: "What is included in the tour price?",
-      answer: ctx.includes.length ? "The tour includes: " + ctx.includes.slice(0, 3).join(', ') + "." : "Please check the tour details for what's included in the price.",
-      category: "What's Included/Excluded"
-    },
-    {
-      question: "What should I bring?",
-      answer: "We recommend bringing comfortable walking shoes, weather-appropriate clothing, sunscreen, and a water bottle. A camera is also recommended to capture the experience.",
-      category: "Practical Information"
-    }
-  ];
-  
-  var needed = MIN_FAQS_COUNT - faqs.length;
-  Logger.log('AI FAQs: adding ' + needed + ' default FAQs to reach minimum');
-  
-  for (var i = 0; i < needed && i < defaultFaqs.length; i++) {
-    faqs.push(defaultFaqs[i]);
+      answer: "The tour includes: " + ctx.includes.slice(0, 4).join(', ') + "."
+    });
+    added++;
   }
-  
+  if (added) Logger.log('AI FAQs: added ' + added + ' context-supported FAQs (no generic padding)');
   return faqs;
 }
 

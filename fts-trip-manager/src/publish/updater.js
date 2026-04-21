@@ -824,7 +824,7 @@ async function runUpdaterBatch() {
 
       try {
         var primaryTripInfoForSchema = await getTripInfoFromWpCached_Updater_(primaryWpId);
-        var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang);
+        var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang, { airtableTripId: tripId })
         var primaryFaqSchema = null;
         try {
           primaryFaqSchema = generateFaqSchema_Updater_(enhancedData, primaryTripInfoForSchema, primaryLang);
@@ -1454,7 +1454,7 @@ async function runUpdaterBatch() {
             var transTripInfoForSchema = null;
             try {
               transTripInfoForSchema = await getTripInfoFromWpCached_Updater_(transWpId);
-              var transSchema = generateTripSchema_Updater_(transTripInfoForSchema, targetLang);
+              var transSchema = generateTripSchema_Updater_(transTripInfoForSchema, targetLang, { airtableTripId: tripId })
               var transFaqSchema = null;
               try {
                 transFaqSchema = generateFaqSchema_Updater_(translatedData, transTripInfoForSchema, targetLang);
@@ -4967,12 +4967,148 @@ async function generateLocalizedSEOAssets_Updater_(translatedData, targetLang, p
   return out;
 }
 
-function generateTripSchema_Updater_(tripData, targetLang) {
+function generateTripSchema_Updater_(tripData, targetLang, opts) {
   var d = tripData || {};
   var core = d.core || {};
   var meta = d.meta || {};
   var pricing = d.pricing || {};
   var general = d.general || {};
+
+  var options = opts || {}
+  var airtableTripId = options.airtableTripId ? String(options.airtableTripId) : ''
+
+  function buildSchemaOffersFromAirtable_Updater_(tripId, fallbackCurrency, url) {
+    var out = { offers: null, source: '', currency: '', offerCount: 0 }
+    if (!tripId) return out
+
+    function num_(v) {
+      var n = Number(v)
+      return isFinite(n) ? n : 0
+    }
+    function pickStr_(v) {
+      if (!v) return ''
+      if (Array.isArray(v)) return v[0] != null ? String(v[0]) : ''
+      if (typeof v === 'object') return String(v)
+      return String(v)
+    }
+    function pushPrice_(arr, n) {
+      var x = Number(n)
+      if (isFinite(x) && x > 0) arr.push(x)
+    }
+    function parseGroupPricing_(raw, arr) {
+      var txt = pickStr_(raw)
+      if (!txt) return
+      try {
+        var gp = JSON.parse(txt)
+        if (Array.isArray(gp)) {
+          gp.forEach(function(row) {
+            if (!row) return
+            pushPrice_(arr, row.price != null ? row.price : row.Price)
+          })
+        }
+      } catch (e) {}
+    }
+
+    var prices = []
+    var currency = ''
+    var source = ''
+
+    var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId)
+    if (Array.isArray(priceRecords) && priceRecords.length) {
+      source = 'Prices'
+      priceRecords.forEach(function(rec) {
+        var f = rec && rec.fields ? rec.fields : {}
+        if (!currency) currency = String(pickStr_(f.Currency) || '').trim()
+        var sale = num_(pickStr_(f.SalePrice))
+        var regular = num_(pickStr_(f.RegularPrice))
+        if (sale > 0) pushPrice_(prices, sale)
+        else if (regular > 0) pushPrice_(prices, regular)
+        parseGroupPricing_(f.GroupPricing, prices)
+      })
+    }
+
+    if (!prices.length) {
+      var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId)
+      if (Array.isArray(pkgRecords) && pkgRecords.length) {
+        source = 'Packages'
+        pkgRecords.forEach(function(rec) {
+          var f = rec && rec.fields ? rec.fields : {}
+          if (!currency) currency = String(pickStr_(f.Currency) || '').trim()
+          var sale = num_(pickStr_(f.SalePrice))
+          var regular = num_(pickStr_(f.RegularPrice))
+          if (sale > 0) pushPrice_(prices, sale)
+          else if (regular > 0) pushPrice_(prices, regular)
+          parseGroupPricing_(f.GroupPricing, prices)
+          var catsTxt = pickStr_(f.PricingCategories)
+          if (catsTxt) {
+            try {
+              var cats = JSON.parse(catsTxt)
+              if (Array.isArray(cats)) {
+                cats.forEach(function(cat) {
+                  if (!cat) return
+                  if (!currency && cat.currency) currency = String(cat.currency || '').trim()
+                  var cs = num_(cat.sale_price)
+                  var cr = num_(cat.regular_price)
+                  if (cs > 0) pushPrice_(prices, cs)
+                  else if (cr > 0) pushPrice_(prices, cr)
+                  if (cat.group_pricing) {
+                    if (Array.isArray(cat.group_pricing)) {
+                      cat.group_pricing.forEach(function(gpRow) {
+                        if (!gpRow) return
+                        pushPrice_(prices, gpRow.price != null ? gpRow.price : gpRow.Price)
+                      })
+                    } else {
+                      parseGroupPricing_(cat.group_pricing, prices)
+                    }
+                  }
+                })
+              }
+            } catch (eCats) {}
+          }
+        })
+      }
+    }
+
+    var seen = {}
+    var uniq = []
+    for (var i = 0; i < prices.length; i++) {
+      var p = Number(prices[i])
+      if (!isFinite(p) || p <= 0) continue
+      var key = String(p)
+      if (seen[key]) continue
+      seen[key] = true
+      uniq.push(p)
+    }
+    uniq.sort(function(a, b) { return a - b })
+    if (!uniq.length) return out
+
+    currency = currency || String(fallbackCurrency || '').trim() || 'EUR'
+    out.currency = currency
+    out.source = source || 'unknown'
+    out.offerCount = uniq.length
+
+    if (uniq.length === 1) {
+      out.offers = {
+        "@type": "Offer",
+        "priceCurrency": currency,
+        "price": uniq[0],
+        "availability": "https://schema.org/InStock",
+        "url": url || undefined
+      }
+    } else {
+      out.offers = {
+        "@type": "AggregateOffer",
+        "priceCurrency": currency,
+        "lowPrice": uniq[0],
+        "highPrice": uniq[uniq.length - 1],
+        "offerCount": uniq.length,
+        "availability": "https://schema.org/InStock",
+        "url": url || undefined
+      }
+    }
+    Object.keys(out.offers).forEach(function(k) { if (out.offers[k] === undefined || out.offers[k] === '') delete out.offers[k] })
+    return out
+  }
 
   var lang = String(targetLang || '').toLowerCase()
   var seoTitleRaw = ''
@@ -5015,9 +5151,24 @@ function generateTripSchema_Updater_(tripData, targetLang) {
     return true;
   });
 
-  var currency = String(pricing.currency || 'EUR');
-  var priceVal = pricing.actual_price != null ? pricing.actual_price : pricing.base_price;
-  var price = priceVal == null ? '' : String(priceVal);
+  var currency = String(pricing.currency || 'EUR')
+  var priceVal = pricing.actual_price != null ? pricing.actual_price : pricing.base_price
+  var price = priceVal == null ? '' : String(priceVal)
+
+  var offersResolved = buildSchemaOffersFromAirtable_Updater_(airtableTripId, currency, url)
+  var offers = offersResolved && offersResolved.offers ? offersResolved.offers : null
+  if (!offers) {
+    offers = {
+      "@type": "Offer",
+      "priceCurrency": currency,
+      "price": price,
+      "availability": "https://schema.org/InStock",
+      "url": url || undefined
+    }
+  } else if (lang === 'en') {
+    log('SCHEMA PRICES SOURCE RESOLVED (en, TouristTrip): source=' + offersResolved.source + ' offers=' + (offers['@type'] || 'Offer') + ' count=' + String(offersResolved.offerCount || 0))
+    if (offersResolved.source === 'Prices') log('SCHEMA BYPASSED PACKAGES FALLBACK (en, TouristTrip): used Prices')
+  }
 
   var durationText = '';
   if (general.duration && (general.duration.hours || general.duration.minutes)) {
@@ -5048,13 +5199,7 @@ function generateTripSchema_Updater_(tripData, targetLang) {
     "image": images.length ? images : undefined,
     "touristType": "Adventure Travelers",
     "inLanguage": String(targetLang || '').trim() || undefined,
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": currency,
-      "price": price,
-      "availability": "https://schema.org/InStock",
-      "url": url || undefined
-    },
+    "offers": offers,
     "itinerary": destinationName ? { "@type": "Place", "name": destinationName } : undefined,
     "duration": durationText || undefined
   };

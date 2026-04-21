@@ -1076,17 +1076,7 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
   }
 
   var descSentences = sentenceCount_(desc);
-  if (descSentences < 2) {
-    if (secondary && !containsPhrase_(desc, secondary)) {
-      desc = addSentenceIfFits_(desc, 'A great addition to a ' + secondary + ' itinerary.', 300);
-    } else if (primary && containsPhrase_(desc, primary)) {
-      desc = addSentenceIfFits_(desc, 'A timeless scene for travelers.', 300);
-    }
-  } else if (descSentences < 3) {
-    if (secondary && !containsPhrase_(desc, secondary)) {
-      desc = addSentenceIfFits_(desc, 'A great addition to a ' + secondary + ' itinerary.', 300);
-    }
-  }
+  descSentences = descSentences;
 
   out.description = cleanupEndPunctuation_(desc);
 
@@ -1256,7 +1246,10 @@ function removeGenericItinerarySentenceImageEn_AiImages_(text) {
   var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
   if (!s) return s;
   var before = s;
-  s = s.replace(/\bA great addition to a [^.]{0,55} itinerary\.?\s*/ig, '').trim();
+  s = s.replace(/\bA great addition to (?:a\s+)?[^.]{0,65} itinerary\.?\s*/ig, '').trim();
+  s = s.replace(/\bA memorable highlight on (?:a\s+)?[^.]{0,65} tour\.?\s*/ig, '').trim();
+  s = s.replace(/\bA memorable highlight on (?:a\s+)?[^.]{0,65}\.\s*/ig, '').trim();
+  s = s.replace(/\bA must-visit\b[^.]{0,65}\.\s*/ig, '').trim();
   s = s.replace(/\s{2,}/g, ' ').trim();
   if (!s) return before;
   return s;
@@ -1297,6 +1290,10 @@ function normalizeIncompleteEntityPhraseImageEn_AiImages_(text, ctx) {
   if (ctxHay.indexOf('egyptian civilization') === -1 && ctxHay.indexOf('nmec') === -1 && ctxHay.indexOf('national museum of egyptian civilization') === -1) return s;
 
   var before = s;
+  s = s.replace(/\bEgyptian\s+Civilization\s+Museum\b/ig, canonical);
+  s = s.replace(/\bThe\s+Egyptian\s+Civilization\s+Museum\b/ig, 'The ' + canonical);
+  s = s.replace(/\bNational\s+Museum\s+of\s+National\s+Museum\b/ig, canonical);
+  s = s.replace(/\bNational\s+Museum\s+of\s+the\s+National\s+Museum\b/ig, canonical);
   s = s.replace(/\bThe\s+Egyptian\s+Civilization\b(?=\s+(?:houses|showcases|displays|exhibits|features|stands|is|was|illuminated)\b)/i, 'The ' + canonical);
   s = s.replace(/\bEgyptian\s+Civilization\b(?=\s+(?:houses|showcases|displays|exhibits|features|stands|is|was|illuminated)\b)/i, canonical);
   if (before !== s) return normalizeEnglishImageFluencyWhitespace_AiImages_(s);
@@ -1337,6 +1334,7 @@ function repairObviousJoinedWordsImageEn_AiImages_(text) {
   if (!s) return s;
   s = s.replace(/\bmuseumin\b/ig, 'museum in');
   s = s.replace(/\bmuseum\s+in\s+cairo\s+museum\b/ig, 'museum in Cairo');
+  s = s.replace(/\bin\s+cairo\s+museum\b/ig, 'in a museum in Cairo');
   s = s.replace(/\b(cairo)\s+museum\b/ig, 'Cairo museum');
   s = s.replace(/\bstands\s+proudly\s+in\s+showcasing\b/ig, 'stands proudly, showcasing');
   s = s.replace(/\bstands\s+in\s+showcasing\b/ig, 'stands, showcasing');
@@ -1348,7 +1346,8 @@ function repairObviousJoinedWordsImageEn_AiImages_(text) {
 function isWeakGenericCaptionOrDescImageEn_AiImages_(text) {
   var s = String(text || '').trim();
   if (!s) return true;
-  if (/^A great addition to a [^.]{0,55} itinerary\.?$/i.test(s)) return true;
+  if (/^A great addition to (?:a\s+)?[^.]{0,65} itinerary\.?$/i.test(s)) return true;
+  if (/^A memorable highlight on (?:a\s+)?[^.]{0,65}(?: tour)?\.?$/i.test(s)) return true;
   if (/^A timeless scene for travelers\.?$/i.test(s)) return true;
   return false;
 }
