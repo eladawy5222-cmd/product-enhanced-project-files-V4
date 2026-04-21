@@ -188,7 +188,7 @@ var CANCELLATION_QUESTION =
   "What happens if I need to cancel my booking?";
 
 var CANCELLATION_FIXED_ANSWER = 
-  "If you need to cancel your booking, don’t worry—you can cancel at any time. You’ll receive a full refund if you cancel at least 24 hours before the scheduled trip. Please contact our customer service team and we’ll be happy to help you cancel or reschedule.";
+  "If you need to cancel your booking, you’ll receive a full refund if you cancel at least 24 hours before the scheduled trip. Use the booking details provided after confirmation to cancel or reschedule.";
 
 var PICKUP_Q_PATTERN = /(pickup|pick up|hotel pickup|where.*pickup|when.*pickup)/i;
 
@@ -460,7 +460,7 @@ function buildFaqsPrompt_(ctx) {
   }
 
   var prompt =
-    "You are an SEO expert and customer service specialist. Create a comprehensive FAQ section that answers user questions, removes booking hesitation, and ranks for long-tail keywords.\n\n" +
+    "You are an expert travel content editor. Create a trip-specific FAQ section that answers real traveler questions, reduces booking hesitation, and stays grounded in the trip details.\n\n" +
     
     museumConstraint + 
 
@@ -569,6 +569,7 @@ function buildFaqsPrompt_(ctx) {
     "CRITICAL CONSTRAINTS:\n" +
     "- Use ONLY information from context above (all improved data sources)\n" +
     "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
+    "- Avoid support-template boilerplate (e.g., 'contact our customer service team', 'hotline', vague promises). Keep answers specific and practical.\n" +
     "- Output in ENGLISH ONLY\n" +
     "- Aim for " + MIN_FAQS_COUNT + " to " + MAX_FAQS_COUNT + " trip-specific FAQs, but quality is more important than count.\n" +
     "- Do NOT add generic filler FAQs just to reach a minimum.\n" +
@@ -579,7 +580,7 @@ function buildFaqsPrompt_(ctx) {
     "  \"faqs\": [\n" +
     "    {\n" +
     "      \"question\": \"How do I book this tour?\",\n" +
-    "      \"answer\": \"You can book this tour through our website or contact our customer service team. We recommend booking in advance to secure your preferred date, especially during peak season.\"\n" +
+    "      \"answer\": \"You can book directly on this page. After you book, you’ll receive confirmation details and any pickup or meeting-point information (if applicable).\"\n" +
     "    },\n" +
     "    // ... more FAQs\n" +
     "  ]\n" +
@@ -930,7 +931,7 @@ function sanitizeFaqAnswer_(text) {
 
   // أمثلة كلمات/وعود شائعة تسبب مشاكل (عدّل القائمة حسب احتياجك) 
   var banned = [ 
-    /\bprofessional photographer\b/ig, 
+    /\b(?:our\s+)?professional\s+photographer\b/ig,
     /\bhotline\b/ig, 
     /\bguaranteed\b/ig, 
     /\b100%\b/ig 
@@ -940,8 +941,16 @@ function sanitizeFaqAnswer_(text) {
     s = s.replace(rx, ''); 
   }); 
 
+  s = s.replace(/[—–-]\s*our\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '. ');
+  s = s.replace(/[—–-]\s*our\s+will\b/ig, '. ');
+  s = s.replace(/\bour\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '');
+  s = s.replace(/\bour\s+will\b/ig, 'we will');
+  s = s.replace(/\bwe\s+will\s+also\s+capture[^.?!]*(?:[.?!]|$)/ig, '');
+  s = s.replace(/\bcontact\s+our\s+customer\s+service\s+team\b/ig, 'book directly on this page');
+
   // تنظيف مسافات زائدة 
   s = s.replace(/\s+/g, ' ').replace(/\s+\./g, '.').trim(); 
+  s = s.replace(/\.\s*\./g, '.').replace(/\s+([,.;:!?])/g, '$1').trim();
   return s; 
 } 
 

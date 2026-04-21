@@ -926,13 +926,7 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
     if (containsPhrase_(desc, primary)) {
       log_('FEATURED EXACT PRIMARY ALREADY PRESENT: ' + primary);
     } else if (isExactFeaturedOk_(primary)) {
-      var candidateExact = addSentenceIfFits_(desc, 'Related to ' + primary + '.', 300);
-      if (candidateExact !== desc && containsPhrase_(candidateExact, primary)) {
-        desc = candidateExact;
-        log_('FEATURED EXACT PRIMARY INCLUDED: ' + primary);
-      } else {
-        log_('FEATURED EXACT PRIMARY SKIPPED (NO ROOM): ' + primary);
-      }
+      log_('FEATURED EXACT PRIMARY SKIPPED (QUALITY-FIRST): ' + primary);
     } else {
       log_('FEATURED EXACT PRIMARY SKIPPED (ROUTEY/HEAVY): ' + primary);
     }
@@ -1118,6 +1112,7 @@ function removeGenericItinerarySentenceImageEn_AiImages_(text) {
   s = s.replace(/\bA memorable highlight on (?:a\s+)?[^.]{0,65} tour\.?\s*/ig, '').trim();
   s = s.replace(/\bA memorable highlight on (?:a\s+)?[^.]{0,65}\.\s*/ig, '').trim();
   s = s.replace(/\bA memorable highlight for travelers interested in [^.]{0,85}\.\s*/ig, '').trim();
+  s = s.replace(/\bRelated to [^.]{0,85}\.\s*/ig, '').trim();
   s = s.replace(/\bA must-visit\b[^.]{0,65}\.\s*/ig, '').trim();
   s = s.replace(/\s{2,}/g, ' ').trim();
   if (!s) return before;
@@ -1220,6 +1215,7 @@ function isWeakGenericCaptionOrDescImageEn_AiImages_(text) {
   if (/^A great addition to (?:a\s+)?[^.]{0,65} itinerary\.?$/i.test(s)) return true;
   if (/^A memorable highlight on (?:a\s+)?[^.]{0,65}(?: tour)?\.?$/i.test(s)) return true;
   if (/^A memorable highlight for travelers interested in [^.]{0,85}\.?$/i.test(s)) return true;
+  if (/^Related to [^.]{0,85}\.?$/i.test(s)) return true;
   if (/^A timeless scene for travelers\.?$/i.test(s)) return true;
   return false;
 }

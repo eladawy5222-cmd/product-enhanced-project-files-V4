@@ -1903,7 +1903,8 @@ async function classifyTripActivities_Updater_(tripId, tripFields, aiImprovement
     "- Do NOT invent new categories.\n" +
     "- If it involves a boat/sea, include 'Boat Cruises' or 'Dolphin Swims' or 'Snorkeling' as appropriate.\n" +
     "- If it involves desert/jeep, include 'Desert Safaris' or 'Quads & ATVs'.\n" +
-    "- If it visits museums/temples, include 'Pyramids & History'.";
+    "- If it visits museums, citadels, markets, or historic neighborhoods, include 'City Tours'.\n" +
+    "- Use 'Pyramids & History' ONLY if pyramids/Giza/Sphinx are clearly mentioned.";
 
   // 4. Call AI (using existing helper)
   // We reuse callAi_ from ai_enhancer.gs or similar if available globally, 
@@ -1923,6 +1924,16 @@ async function classifyTripActivities_Updater_(tripId, tripFields, aiImprovement
   }
   
   log('Updater: AI suggested activities: ' + JSON.stringify(selectedNames));
+
+  (function() {
+    if (!Array.isArray(selectedNames) || !selectedNames.length) return
+    var hay = (String(title || '') + ' ' + String(description || '')).toLowerCase()
+    var hasPyramids = (/\bpyramids?\b/.test(hay)) || (hay.indexOf('giza plateau') !== -1) || ((/\bgiza\b/.test(hay)) && (/\bpyramids?\b/.test(hay) || /\bsphinx\b/.test(hay))) || (/\bsphinx\b/.test(hay) && /\bpyramids?\b/.test(hay))
+    if (hasPyramids) return
+    var before = selectedNames.slice(0)
+    selectedNames = selectedNames.filter(function(nm) { return String(nm || '').toLowerCase() !== 'pyramids & history' })
+    if (before.length !== selectedNames.length) log('Updater: Removed Pyramids & History (no explicit pyramids signal)')
+  })()
   
   // 6. Map back to ID/Slug structure
   var finalActivities = [];
@@ -5208,6 +5219,55 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
     uniqPlaces.push(nm2)
     if (uniqPlaces.length >= 6) break
   }
+
+  ;(function() {
+    var hay = (String(title || '') + ' ' + String(description || '') + ' ' + String(core.content_html || '')).replace(/<[^>]*>/g, ' ').toLowerCase()
+    function addPlace_(name) {
+      var nm = String(name || '').trim()
+      if (!nm) return
+      var kk = nm.toLowerCase()
+      if (seenPlace[kk]) return
+      seenPlace[kk] = true
+      uniqPlaces.unshift(nm)
+    }
+    if (/\bnmec\b/.test(hay) || hay.indexOf('national museum of egyptian civilization') !== -1 || hay.indexOf('egyptian civilization museum') !== -1) {
+      addPlace_('National Museum of Egyptian Civilization')
+    }
+    if (hay.indexOf('citadel of saladin') !== -1 || (hay.indexOf('citadel') !== -1 && hay.indexOf('saladin') !== -1)) {
+      addPlace_('Citadel of Saladin')
+    }
+    if (hay.indexOf('old cairo') !== -1) {
+      addPlace_('Old Cairo')
+    }
+    if (/\bkhan\s+el[\s-]?khalili\b/.test(hay)) {
+      addPlace_('Khan El-Khalili')
+    }
+    if (/\bnile\b/.test(hay)) {
+      addPlace_('Nile')
+    }
+
+    if (uniqPlaces.length > 1) {
+      var cleaned = []
+      for (var iP = 0; iP < uniqPlaces.length; iP++) {
+        var n0 = String(uniqPlaces[iP] || '').trim()
+        var k0 = n0.toLowerCase()
+        if (k0 === 'egypt') continue
+        cleaned.push(n0)
+      }
+      uniqPlaces = cleaned
+    }
+    if (uniqPlaces.length > 2) {
+      var cleaned2 = []
+      for (var iP2 = 0; iP2 < uniqPlaces.length; iP2++) {
+        var n1 = String(uniqPlaces[iP2] || '').trim()
+        var k1 = n1.toLowerCase()
+        if (k1 === 'cairo') continue
+        cleaned2.push(n1)
+      }
+      uniqPlaces = cleaned2
+    }
+    if (uniqPlaces.length > 6) uniqPlaces = uniqPlaces.slice(0, 6)
+  })()
   if (uniqPlaces.length === 1) {
     itineraryObj = { "@type": "Place", "name": uniqPlaces[0] }
   } else if (uniqPlaces.length > 1) {
