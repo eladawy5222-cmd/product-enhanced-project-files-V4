@@ -18,6 +18,29 @@
  */
 
 /**
+ * Debug-only helper that returns a compact pipeline summary for logs or
+ * future diagnostics. This function is intentionally side-effect free and
+ * is not referenced by production flow.
+ *
+ * @param {Object} tripFields - Airtable trip fields object
+ * @return {Object} summary object with key pipeline statuses
+ */
+function getPipelineDebugSummary_(tripFields) {
+  var f = tripFields || {};
+  return {
+    pipelineStatus: f.Pipeline_Status || '',
+    content: f.AI_Status || '',
+    addons: f.AI_AddOns_Status || '',
+    highlights: f.AI_Highlights_Status || '',
+    itinerary: f.AI_Itinerary_Status || '',
+    incexc: f.AI_IncExc_Status || '',
+    tripFacts: f.AI_TripFacts_Status || '',
+    faqs: f.AI_FAQs_Status || '',
+    images: f.AI_Images_Status || ''
+  };
+}
+
+/**
  * Initialize enhancement pipeline for a newly imported trip
  * Called from wp_fetch.gs after upsertTrip_()
  * 
