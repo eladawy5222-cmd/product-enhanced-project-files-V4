@@ -179,18 +179,11 @@ function isImageIneligibleKeywordPhrase_AiImages_(phrase) {
   if (!s) return true;
   var low = s.toLowerCase();
 
-  var words = s.split(' ').filter(function(x) { return !!x; });
-  var wc = words.length;
-  if (wc < 3) return true;
   if (low.length > 52) return true;
+  var wc = s.split(' ').filter(function(x) { return !!x; }).length;
   if (wc > 7) return true;
 
-  if (/\b(trip|travel|tour|activity|experience|thing|things|place|places)\b/.test(low)) return true;
-  if (/\b(booking|ticket|tickets|price|prices|cost|cheap|deal)\b/.test(low)) return true;
-  if (/\b(best|top|nice|great)\b/.test(low)) return true;
-  if (/\b(history|culture|information|guide)\b/.test(low)) return true;
-
-  if (/\b(things\s+to\s+do|what\s+to\s+do|discount|offers?)\b/.test(low)) return true;
+  if (/\b(things\s+to\s+do|what\s+to\s+do|best|top|cheap|discount|deal|offers?)\b/.test(low)) return true;
   if (/\b(day\s+(tour|trip)s?|tours?|trip\b|excursions?)\b/.test(low)) return true;
   if (/\b(sightseeing|attractions?)\b/.test(low)) return true;
   if (/\b(book|booking|tickets?|price|prices)\b/.test(low)) return true;
@@ -201,26 +194,19 @@ function isImageIneligibleKeywordPhrase_AiImages_(phrase) {
 }
 
 function filterImageKeywordListEligibility_AiImages_(list, limit) {
-  var arr = Array.isArray(list) ? list : [];
+  var items = normalizeKeywordList_AiImages_(list || [], typeof limit === 'number' ? limit : 30);
   var seen = {};
-  var uniq = [];
-  for (var i = 0; i < arr.length; i++) {
-    var kw = String(arr[i] || '').trim().toLowerCase().replace(/\s+/g, ' ');
-    if (!kw) continue;
-    if (seen[kw]) continue;
-    seen[kw] = true;
-    uniq.push(kw);
-  }
-
   var out = [];
-  for (var j = 0; j < uniq.length; j++) {
-    var x = uniq[j];
-    if (isImageIneligibleKeywordPhrase_AiImages_(x)) continue;
-    out.push(x);
+  for (var i = 0; i < items.length; i++) {
+    var raw = String(items[i] || '').replace(/\s+/g, ' ').trim();
+    if (!raw) continue;
+    var key = raw.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    if (isImageIneligibleKeywordPhrase_AiImages_(raw)) continue;
+    out.push(raw);
   }
-
-  var max = 8;
-  if (typeof limit === 'number' && limit > 0) max = Math.min(max, limit);
+  var max = typeof limit === 'number' && limit > 0 ? limit : 30;
   if (out.length > max) out = out.slice(0, max);
   return out;
 }
@@ -232,57 +218,8 @@ function buildTripKeywordPlans_AiImages_(tripFields, ctx) {
   var focusRaw = (f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? String(f.AI_SEO_FocusKeywords) : String(imp.seoKeywords || '');
   var listRaw = (f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? f.AI_SEO_FocusKeywords_List : (imp.seoKeywordsList || '');
 
-  function normKey_(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
-  function truncateWords_(s, maxWords) {
-    var parts = String(s || '').trim().split(' ').filter(function(x) { return !!x; });
-    if (parts.length > maxWords) parts = parts.slice(0, maxWords);
-    return parts.join(' ').trim();
-  }
-  function expandToVisualKeyword_(kw) {
-    var base = normKey_(kw);
-    if (!base) return '';
-
-    if (/\bnile\b/.test(base) && /\bcruise\b/.test(base)) return 'luxury nile river cruise sunset view';
-    if (/\bcairo\b/.test(base) && /\btour\b/.test(base)) return 'cairo city skyline nile view sunset';
-    if (/\bpyramids?\b/.test(base)) return 'giza pyramids desert landscape golden hour';
-
-    var cleaned = base.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    cleaned = cleaned.replace(/\b(trip|travel|tour|activity|experience|thing|things|place|places)\b/g, ' ');
-    cleaned = cleaned.replace(/\b(booking|ticket|tickets|price|prices|cost|cheap|deal)\b/g, ' ');
-    cleaned = cleaned.replace(/\b(best|top|nice|great)\b/g, ' ');
-    cleaned = cleaned.replace(/\b(history|culture|information|guide)\b/g, ' ');
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-    var toks = cleaned.split(' ').filter(function(x) { return !!x; });
-    if (!toks.length) return '';
-
-    var visual = 'landscape';
-    if (/\b(aerial)\b/.test(base)) visual = 'aerial view';
-    else if (/\b(night|lights)\b/.test(base)) visual = 'night lights';
-    else if (/\b(city|skyline|street|market|bazaar)\b/.test(base)) visual = 'night lights';
-    else if (/\b(temple|mosque|church|cathedral|palace|fort|citadel|castle|bridge|tower|museum|statue|architecture)\b/.test(base)) visual = 'architecture';
-    else if (/\b(river|sea|ocean|lake|coast|beach|harbor)\b/.test(base)) visual = 'sunset';
-    else visual = 'landscape';
-
-    var phrase = '';
-    if (toks.length >= 2) phrase = toks[0] + ' ' + toks.slice(1).join(' ') + ' ' + visual;
-    else phrase = toks[0] + ' ' + visual;
-
-    phrase = phrase.replace(/\s+/g, ' ').trim();
-    phrase = truncateWords_(phrase, 7);
-    if (phrase.length > 52) phrase = phrase.substring(0, 52).trim();
-    phrase = phrase.replace(/\s+/g, ' ').trim();
-
-    if (phrase.split(' ').filter(function(x) { return !!x; }).length < 3) {
-      phrase = truncateWords_((phrase + ' sunset view').replace(/\s+/g, ' ').trim(), 7);
-      if (phrase.length > 52) phrase = phrase.substring(0, 52).trim();
-      phrase = phrase.replace(/\s+/g, ' ').trim();
-    }
-    return phrase;
-  }
-
   var listFromFieldRaw = extractEnglishKeywordsFromListFieldValue_AiImages_(listRaw);
-  listFromFieldRaw = normalizeKeywordList_AiImages_(listFromFieldRaw, 30).map(expandToVisualKeyword_).filter(function(x) { return !!x; });
+  listFromFieldRaw = normalizeKeywordList_AiImages_(listFromFieldRaw, 30);
   var listFromField = filterImageKeywordListEligibility_AiImages_(listFromFieldRaw, 30);
   if (listFromField.length !== listFromFieldRaw.length) {
     Logger.log('AI Images: filtered ineligible SEO phrases for image keywords: removed ' + (listFromFieldRaw.length - listFromField.length));
@@ -293,7 +230,7 @@ function buildTripKeywordPlans_AiImages_(tripFields, ctx) {
   Logger.log('AI IMAGES KEYWORD SOURCE (PRIMARY): ' + (((f.AI_SEO_FocusKeywords != null && String(f.AI_SEO_FocusKeywords).trim()) ? 'Trips.AI_SEO_FocusKeywords' : 'ImprovementWithAI.AI_SEO_FocusKeywords')));
   Logger.log('AI IMAGES KEYWORD SOURCE (LIST): ' + (((f.AI_SEO_FocusKeywords_List != null && (Array.isArray(f.AI_SEO_FocusKeywords_List) ? f.AI_SEO_FocusKeywords_List.length : String(f.AI_SEO_FocusKeywords_List).trim())) ? 'Trips.AI_SEO_FocusKeywords_List' : 'ImprovementWithAI.AI_SEO_FocusKeywords_List')));
 
-  var focusItemsRaw = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focusRaw), 10).map(expandToVisualKeyword_).filter(function(x) { return !!x; });
+  var focusItemsRaw = normalizeKeywordList_AiImages_(splitKeywordsCsv_AiImages_(focusRaw), 10);
   var focusItems = filterImageKeywordListEligibility_AiImages_(focusItemsRaw, 10);
   var featuredPrimary = (focusItems && focusItems.length) ? focusItems[0] : '';
   if (focusItems && focusItems.length > 1) {
