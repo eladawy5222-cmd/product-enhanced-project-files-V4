@@ -1155,6 +1155,318 @@ function enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(meta, ctx, tr
   };
 }
 
+function normalizeEnglishImageFluencyWhitespace_AiImages_(text) {
+  var s = String(text || '');
+  s = s.replace(/\s+/g, ' ');
+  s = s.replace(/\s+([,.;:!?])/g, '$1');
+  s = s.replace(/([,.;:!?])([A-Za-z])/g, '$1 $2');
+  return s.trim();
+}
+
+function stripDanglingEndTokensImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  var weak = { and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1, as: 1, your: 1, our: 1, the: 1, a: 1, an: 1 };
+  for (var i = 0; i < 3; i++) {
+    var cleaned = s.replace(/[|—–\-:;,]+$/g, '').trim();
+    var parts = cleaned.split(' ').filter(function(x) { return !!x; });
+    if (!parts.length) break;
+    var last = String(parts[parts.length - 1] || '').toLowerCase().replace(/[.!?]+$/g, '');
+    if (!weak[last]) break;
+    parts.pop();
+    s = parts.join(' ').trim();
+  }
+  s = s.replace(/[|—–\-:;,]+$/g, '').trim();
+  return s;
+}
+
+function stripTrailingTruncatedWordFragmentImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  s = stripTrailingPunctuationNoiseImageEn_AiImages_(s);
+  var parts = s.split(' ').filter(function(x) { return !!x; });
+  if (!parts.length) return s;
+
+  var last = String(parts[parts.length - 1] || '').replace(/[.!?]+$/g, '');
+  var lastLower = last.toLowerCase();
+  var allowedShort = { a: 1, an: 1, in: 1, of: 1, to: 1, at: 1, by: 1, on: 1, as: 1 };
+  if (lastLower.length <= 2 && /^[a-z]+$/i.test(lastLower) && !allowedShort[lastLower]) {
+    parts.pop();
+    s = parts.join(' ').trim();
+  }
+
+  s = s.replace(/\bas\s+a\s*$/i, '').trim();
+  s = s.replace(/\bas\s+an\s*$/i, '').trim();
+  s = stripTrailingPunctuationNoiseImageEn_AiImages_(s);
+  s = stripDanglingEndTokensImageEn_AiImages_(s);
+  return stripTrailingPunctuationNoiseImageEn_AiImages_(s);
+}
+
+function stripTrailingPunctuationNoiseImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  s = s.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
+  s = s.replace(/\s*[,;:|—–\-]+\s*$/g, '').trim();
+  s = s.replace(/([.!?]){2,}\s*$/g, '$1').trim();
+  s = s.replace(/[…]+$/g, '').trim();
+  return s;
+}
+
+function truncateAtWordBoundaryImageEn_AiImages_(text, maxLen) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  var n = Number(maxLen || 0);
+  if (!n || n <= 0) return s;
+  if (s.length <= n) return s;
+  var slice = s.substring(0, n + 1);
+  var cut = slice.lastIndexOf(' ');
+  if (cut < Math.floor(n * 0.7)) cut = n;
+  return s.substring(0, cut).trim();
+}
+
+function truncatePreferSentenceBoundaryImageEn_AiImages_(text, maxLen) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  var n = Number(maxLen || 0);
+  if (!n || n <= 0) return s;
+  if (s.length <= n) return s;
+  var prefix = s.substring(0, n + 1);
+  var last = -1;
+  for (var i = 0; i < prefix.length; i++) {
+    var ch = prefix.charAt(i);
+    if (ch === '.' || ch === '!' || ch === '?') last = i;
+  }
+  if (last >= Math.floor(n * 0.55)) return prefix.substring(0, last + 1).trim();
+  return truncateAtWordBoundaryImageEn_AiImages_(s, n);
+}
+
+function trimToLastCompleteSentenceWithinLimitImageEn_AiImages_(text, maxLen) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  var n = Number(maxLen || 0);
+  if (n > 0 && s.length > n) s = s.substring(0, n + 1);
+  var last = -1;
+  for (var i = 0; i < s.length; i++) {
+    var ch = s.charAt(i);
+    if (ch === '.' || ch === '!' || ch === '?') last = i;
+  }
+  if (last < 0) return '';
+  return stripTrailingPunctuationNoiseImageEn_AiImages_(s.substring(0, last + 1).trim());
+}
+
+function removeGenericItinerarySentenceImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  var before = s;
+  s = s.replace(/\bA great addition to a [^.]{0,55} itinerary\.?\s*/ig, '').trim();
+  s = s.replace(/\s{2,}/g, ' ').trim();
+  if (!s) return before;
+  return s;
+}
+
+function repairMalformedImageEnglishPhrases_AiImages_(text, ctx) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  var before = s;
+
+  s = s.replace(/\bin\s+'s\s+museum\b/ig, 'in the museum');
+  s = s.replace(/\b(at|in|of)\s+'s\s+\b/ig, '$1 the ');
+  s = s.replace(/\bstands\s+majestically\s+by\s+the\s+water\s+its\b/ig, 'stands majestically by the water, with its');
+  s = s.replace(/\bby\s+the\s+water\s+its\b/ig, 'by the water, with its');
+  s = s.replace(/\bsurrounds\s+the\s+enhancing\b/ig, 'surrounds it, enhancing');
+  s = s.replace(/\bstands\s+proudly\s+in\s+showcasing\b/ig, 'stands proudly, showcasing');
+  s = s.replace(/\bstands\s+in\s+showcasing\b/ig, 'stands, showcasing');
+  s = s.replace(/\s+'\s*s\b/g, "'s");
+
+  if (/^The\s+in\s+[A-Z]/.test(s) && /\b(houses|showcases|displays|exhibits|features)\b/i.test(s)) {
+    s = s.replace(/^The\s+in\s+([A-Z][A-Za-z]+)/, 'The museum in $1');
+  }
+
+  if (before !== s) return normalizeEnglishImageFluencyWhitespace_AiImages_(s);
+  return s;
+}
+
+function normalizeIncompleteEntityPhraseImageEn_AiImages_(text, ctx) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  var canonical = 'National Museum of Egyptian Civilization';
+  var hay = String(s || '').toLowerCase();
+  if (hay.indexOf('national museum of egyptian civilization') !== -1) return s;
+  if (hay.indexOf('nmec') !== -1) return s;
+  if (hay.indexOf('museum') !== -1 && hay.indexOf('egyptian civilization') === -1) return s;
+
+  var ctxHay = String((ctx && ctx.tripTitle ? ctx.tripTitle : '') + ' ' + (ctx && ctx.seoTitle ? ctx.seoTitle : '') + ' ' + (ctx && ctx.seoDesc ? ctx.seoDesc : '')).toLowerCase();
+  if (ctxHay.indexOf('egyptian civilization') === -1 && ctxHay.indexOf('nmec') === -1 && ctxHay.indexOf('national museum of egyptian civilization') === -1) return s;
+
+  var before = s;
+  s = s.replace(/\bThe\s+Egyptian\s+Civilization\b(?=\s+(?:houses|showcases|displays|exhibits|features|stands|is|was|illuminated)\b)/i, 'The ' + canonical);
+  s = s.replace(/\bEgyptian\s+Civilization\b(?=\s+(?:houses|showcases|displays|exhibits|features|stands|is|was|illuminated)\b)/i, canonical);
+  if (before !== s) return normalizeEnglishImageFluencyWhitespace_AiImages_(s);
+  return s;
+}
+
+function isWeakEndingFragmentImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return true;
+  var t = s.replace(/[\s"')\]]+$/g, '').trim();
+  t = t.replace(/[|—–\-:;,]+$/g, '').trim();
+  var noTerm = t.replace(/[.!?]+$/g, '').trim();
+  if (!noTerm) return true;
+
+  var lowered = noTerm.toLowerCase();
+  if (/\bmaking\s+it\s+a\s+must\b$/.test(lowered)) return true;
+  if (/\bas\s+a\s+[a-z]{1,3}\b$/.test(lowered)) return true;
+  if (/\bon\s+display\s+in\b$/.test(lowered)) return true;
+  if (/\bhighlighting\s+the\s+rich\s+history\b$/.test(lowered)) return true;
+  if (/\brich\s+history\b$/.test(lowered) && !/[.!?]$/.test(t)) return true;
+
+  var parts = lowered.split(' ').filter(function(x) { return !!x; });
+  if (!parts.length) return true;
+  var last = String(parts[parts.length - 1] || '').replace(/[.!?]+$/g, '');
+  var weakLast = {
+    and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1,
+    your: 1, our: 1, the: 1, a: 1, an: 1,
+    cultural: 1, historic: 1, historical: 1, guided: 1, unforgettable: 1, immersive: 1, premium: 1, scenic: 1, authentic: 1,
+    must: 1
+  };
+  if (weakLast[last]) return true;
+  if (last.length <= 2 && !weakLast[last]) return true;
+  return false;
+}
+
+function repairObviousJoinedWordsImageEn_AiImages_(text) {
+  var s = normalizeEnglishImageFluencyWhitespace_AiImages_(text);
+  if (!s) return s;
+  s = s.replace(/\bmuseumin\b/ig, 'museum in');
+  s = s.replace(/\bmuseum\s+in\s+cairo\s+museum\b/ig, 'museum in Cairo');
+  s = s.replace(/\b(cairo)\s+museum\b/ig, 'Cairo museum');
+  s = s.replace(/\bstands\s+proudly\s+in\s+showcasing\b/ig, 'stands proudly, showcasing');
+  s = s.replace(/\bstands\s+in\s+showcasing\b/ig, 'stands, showcasing');
+  s = s.replace(/\b(a|an)\s+(El\s+)/g, '$2');
+  s = s.replace(/\b(\w+)\s+\1\b/ig, '$1');
+  return normalizeEnglishImageFluencyWhitespace_AiImages_(s);
+}
+
+function isWeakGenericCaptionOrDescImageEn_AiImages_(text) {
+  var s = String(text || '').trim();
+  if (!s) return true;
+  if (/^A great addition to a [^.]{0,55} itinerary\.?$/i.test(s)) return true;
+  if (/^A timeless scene for travelers\.?$/i.test(s)) return true;
+  return false;
+}
+
+function fluencyCleanupEnglishImageMeta_AiImages_(meta, ctx) {
+  var m = meta || {};
+  var out = {
+    title: String(m.title || '').trim(),
+    caption: String(m.caption || '').trim(),
+    description: String(m.description || '').trim(),
+    alt: String(m.alt || '').trim()
+  };
+
+  function finalizeField_Result_(field, value, maxLen) {
+    var v0 = String(value || '').trim();
+    var v = normalizeEnglishImageFluencyWhitespace_AiImages_(v0);
+
+    var malformedBefore = v;
+    v = repairObviousJoinedWordsImageEn_AiImages_(v);
+    v = repairMalformedImageEnglishPhrases_AiImages_(v, ctx);
+    var malformedRepaired = (v !== malformedBefore);
+
+    var entityBefore = v;
+    v = normalizeIncompleteEntityPhraseImageEn_AiImages_(v, ctx);
+    var entityNormalized = (v !== entityBefore);
+
+    v = removeGenericItinerarySentenceImageEn_AiImages_(v);
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+
+    var truncatedBefore = v;
+    if (field === 'description') v = truncatePreferSentenceBoundaryImageEn_AiImages_(v, maxLen);
+    else v = truncateAtWordBoundaryImageEn_AiImages_(v, maxLen);
+    var midTruncFixed = (v !== truncatedBefore);
+
+    var danglingRemoved = false;
+    var sentenceTrimmed = false;
+
+    var beforeDangling = v;
+    v = stripTrailingTruncatedWordFragmentImageEn_AiImages_(v);
+    v = stripDanglingEndTokensImageEn_AiImages_(v);
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+    danglingRemoved = (v !== beforeDangling);
+
+    if (field === 'description' && isWeakEndingFragmentImageEn_AiImages_(v)) {
+      var sentence = trimToLastCompleteSentenceWithinLimitImageEn_AiImages_(v0, maxLen);
+      if (sentence) {
+        var cand = stripDanglingEndTokensImageEn_AiImages_(stripTrailingPunctuationNoiseImageEn_AiImages_(sentence));
+        cand = stripTrailingPunctuationNoiseImageEn_AiImages_(cand);
+        if (cand && !isWeakEndingFragmentImageEn_AiImages_(cand)) {
+          v = cand;
+          sentenceTrimmed = true;
+        }
+      }
+    }
+
+    if ((field === 'caption' || field === 'description') && v && !/[.!?]$/.test(v) && !isWeakEndingFragmentImageEn_AiImages_(v)) {
+      if (!maxLen || (v.length + 1) <= maxLen) v = v + '.';
+    }
+
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+    v = stripDanglingEndTokensImageEn_AiImages_(v);
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+
+    if ((field === 'caption' || field === 'description') && isWeakGenericCaptionOrDescImageEn_AiImages_(v)) {
+      var subject = String(out.alt || out.title || (ctx && ctx.tripTitle ? ctx.tripTitle : '') || 'Travel photo').trim();
+      if (field === 'caption') v = String(out.title || subject).trim();
+      else v = ('Photo of ' + subject).trim();
+      v = (field === 'description' ? truncatePreferSentenceBoundaryImageEn_AiImages_(v, maxLen) : truncateAtWordBoundaryImageEn_AiImages_(v, maxLen));
+      if (v && !/[.!?]$/.test(v) && (!maxLen || (v.length + 1) <= maxLen)) v += '.';
+      log('AI Images Enhancer: repaired generic weak ' + field);
+    }
+
+    if (field !== 'description' && isWeakEndingFragmentImageEn_AiImages_(v)) {
+      var cleaned = stripDanglingEndTokensImageEn_AiImages_(v);
+      cleaned = stripTrailingPunctuationNoiseImageEn_AiImages_(cleaned);
+      if (cleaned && !isWeakEndingFragmentImageEn_AiImages_(cleaned)) v = cleaned;
+    }
+
+    v = normalizeEnglishImageFluencyWhitespace_AiImages_(v);
+    if (maxLen) {
+      v = (field === 'description' ? truncatePreferSentenceBoundaryImageEn_AiImages_(v, maxLen) : truncateAtWordBoundaryImageEn_AiImages_(v, maxLen));
+    }
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+    v = stripDanglingEndTokensImageEn_AiImages_(v);
+    v = stripTrailingPunctuationNoiseImageEn_AiImages_(v);
+
+    var changed = (v0 !== v);
+    var danglingDetected = danglingRemoved || isWeakEndingFragmentImageEn_AiImages_(v0);
+    return { text: v, changed: changed, danglingDetected: danglingDetected, malformedRepaired: malformedRepaired, entityNormalized: entityNormalized, sentenceTrimmed: sentenceTrimmed, midTruncFixed: midTruncFixed };
+  }
+
+  function apply_(field, maxLen) {
+    var res = finalizeField_Result_(field, out[field], maxLen);
+    out[field] = res.text;
+    if (!out[field]) {
+      if (field === 'title' || field === 'alt') out[field] = 'Travel photo';
+      else if (field === 'caption') out[field] = String(out.title || 'Travel photo').trim();
+      else if (field === 'description') {
+        var subj = String(out.alt || out.title || (ctx && ctx.tripTitle ? ctx.tripTitle : '') || 'travel scene').trim();
+        out[field] = ('Photo of ' + subj).trim();
+        out[field] = truncatePreferSentenceBoundaryImageEn_AiImages_(out[field], maxLen);
+        if (out[field] && !/[.!?]$/.test(out[field]) && (!maxLen || (out[field].length + 1) <= maxLen)) out[field] += '.';
+      }
+    }
+    if (res.changed) log('AI Images Enhancer: fluency cleanup applied (' + field + ')');
+    if (res.danglingDetected && res.changed) log('AI Images Enhancer: dangling ending removed (' + field + ')');
+    if (res.malformedRepaired && res.changed) log('AI Images Enhancer: malformed phrase repaired (' + field + ')');
+    if (res.entityNormalized && res.changed) log('AI Images Enhancer: incomplete entity phrase normalized (' + field + ')');
+    if (res.sentenceTrimmed && res.changed) log('AI Images Enhancer: description trimmed to last complete thought');
+  }
+
+  apply_('title', 60);
+  apply_('caption', 150);
+  apply_('description', 300);
+  apply_('alt', 125);
+  return out;
+}
+
 function englishImageSeoStuffingGuard_AiImages_(meta, ctx, keywordPlan) {
   var m = meta || {};
   var out = {
@@ -1685,23 +1997,37 @@ async function callOpenAiVisionForImageMeta_AiImages_(imageUrl, ctx, keywordPlan
   var secondaryTopic = deriveSoftTopicHint_AiImages_(secondaryKeywords && secondaryKeywords.length ? secondaryKeywords[0] : '') || (secondaryKeywords && secondaryKeywords.length ? secondaryKeywords[0] : '');
 
   var prompt =
-    "You are generating SEO + accessibility metadata for a travel photo.\n" +
+    "You are an expert travel content editor specializing in high-quality English image metadata for tourism websites.\n" +
     "You CAN view the image using the provided Image URL.\n" +
-    "Write like a premium global travel brand (clear, natural, non-spammy).\n" +
-    "Return ONLY valid JSON with keys: title, caption, description, alt.\n" +
-    "Limits: title<=60 chars, caption<=150 chars, description<=300 chars, alt<=125 chars.\n\n" +
-
-    "TITLE: Keep it short and natural. Prefer a visible subject. Optionally add ONE light trip context phrase if it fits naturally.\n" +
-    "TITLE FORMAT (suggested): '<Visible Subject> — <Place>' or '<Visible Subject>'\n" +
-    "Avoid filler like 'Experience'/'Enjoy'.\n" +
+    "Describe only what is visible. Do NOT invent details.\n" +
+    "Use the trip context only for naming/grounding; do NOT claim something is visible unless it is.\n" +
+    "\n" +
+    "CRITICAL RULES (STRICT):\n" +
+    "1) Natural, fluent English ONLY. No fragments. No abrupt endings. Every sentence must end properly.\n" +
+    "2) No repetition (no duplicated words/phrases).\n" +
+    "3) No generic filler (avoid 'and more', 'and beyond', 'etc.').\n" +
+    "4) Visual specificity: describe what is actually visible (architecture, people, artifacts, atmosphere, setting).\n" +
+    "5) Avoid trailing clipped phrases like: 'the rich...', 'a glimpse into...', 'making it a perfect stop on...', 'immersed in the...'.\n" +
+    "\n" +
+    "LENGTH GUIDANCE:\n" +
+    "- Title: 6–10 words (max 60 chars)\n" +
+    "- Alt: 8–12 words (max 125 chars)\n" +
+    "- Caption: 1 short complete sentence (max 150 chars)\n" +
+    "- Description: 1–2 full sentences (max 300 chars)\n" +
+    "\n" +
+    "CONTEXT-AWARE NAMING (only if relevant): Egyptian Civilization Museum / National Museum of Egyptian Civilization, Citadel of Saladin, Old Cairo, Khan El-Khalili, Nile.\n" +
+    "Do NOT force keywords unnaturally.\n" +
+    "\n" +
     "TITLE UNIQUENESS (CRITICAL):\n" +
     "- Each image MUST have a completely different, descriptive title.\n" +
     "- Do NOT just add numbers or suffixes to make titles unique.\n" +
-    "- Use different aspects of the image/trip for each title (landmark/activity/scene, cultural/historical/scenic/experiential angle, different phrasing).\n" +
+    "- Use different aspects of the image/scene for each title.\n" +
     (forbiddenTitles.length ? ("- Previously used titles for this trip (DO NOT reuse or create similar ones): " + JSON.stringify(forbiddenTitles) + "\n") : "") +
-    "KEYWORDS: Use as soft topic grounding only. Do NOT copy-paste keyword phrases. No keyword stuffing.\n" +
-    "ALT: Natural description of what is visible. Do NOT output comma-separated keyword lists.\n" +
-    "CAPTION/DESCRIPTION: Natural language. At most one light contextual mention. Do NOT repeat phrases.\n\n" +
+    "KEYWORDS: soft topic grounding only. Do NOT copy-paste keyword phrases. No keyword stuffing.\n" +
+    "ALT: natural description of what is visible. No comma-separated keyword lists.\n" +
+    "CAPTION/DESCRIPTION: complete, natural sentences. Avoid marketing fluff.\n" +
+    "Return ONLY valid JSON with keys: title, caption, description, alt.\n" +
+    "Limits: title<=60 chars, caption<=150 chars, description<=300 chars, alt<=125 chars.\n\n" +
     "Trip Title: " + tripTitle + "\n" +
     "Trip SEO Title: " + tripSeoTitle + "\n" +
     "Location: " + tripLocation + "\n" +
@@ -1768,7 +2094,28 @@ async function runAiImagesEnhancementBatch() {
     try {
       log('AI Images: processing Trip ' + tripId);
 
-      const claimed = enhancement ? await enhancement.claimStage(tripId, 'Images', 25 * 60) : true
+      let claimed = enhancement ? await enhancement.claimStage(tripId, 'Images', 25 * 60) : true
+      if (!claimed && enhancement) {
+        let retried = false
+        try {
+          const res2 = await airtableGet_(TRIPS_TABLE, { filterByFormula: `RECORD_ID() = '${String(tripId)}'`, maxRecords: 1 })
+          const recs2 = res2 && res2.records ? res2.records : []
+          const f2 = recs2.length ? (recs2[0].fields || {}) : {}
+          const statusNow = String(f2[IMAGES_STATUS_FIELD] || '')
+          if (statusNow === 'Pending') {
+            const cleared = await enhancement.clearStageLeaseIfRecoverableForRequestedStage(tripId, 'Images')
+            if (cleared) {
+              log('AI Images: cleared stale stage lease before Images claim retry for Trip ' + tripId)
+              retried = true
+            }
+          }
+        } catch {
+        }
+        if (retried) {
+          claimed = await enhancement.claimStage(tripId, 'Images', 25 * 60)
+          if (claimed) log('AI Images: recovered stale Images claim; proceeding Trip ' + tripId)
+        }
+      }
       if (!claimed) {
         log('AI Images: stage already claimed; skipping Trip ' + tripId)
         continue
@@ -1993,13 +2340,22 @@ async function runAiImagesEnhancementBatch() {
             kwPlanForImage,
             { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
           );
-          natural0 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural0, ctx, f, tripImprovement);
+          natural0 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural0, ctx, tripFields, tripImprovement);
           title = natural0.title;
           caption = natural0.caption;
           description = natural0.description;
           alt = natural0.alt;
           
           // Validate lengths
+          if (title.length > 60) title = title.substring(0, 60).trim();
+          if (caption.length > 150) caption = caption.substring(0, 150).trim();
+          if (description.length > 300) description = description.substring(0, 300).trim();
+          if (alt.length > 125) alt = alt.substring(0, 125).trim();
+          var flu0 = fluencyCleanupEnglishImageMeta_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx);
+          title = flu0.title;
+          caption = flu0.caption;
+          description = flu0.description;
+          alt = flu0.alt;
           if (title.length > 60) title = title.substring(0, 60).trim();
           if (caption.length > 150) caption = caption.substring(0, 150).trim();
           if (description.length > 300) description = description.substring(0, 300).trim();
@@ -2040,12 +2396,21 @@ async function runAiImagesEnhancementBatch() {
                     kwPlanForImage,
                     { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
                   );
-                  natural1 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural1, ctx, f, tripImprovement);
+                  natural1 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural1, ctx, tripFields, tripImprovement);
                   title = natural1.title;
                   caption = natural1.caption;
                   description = natural1.description;
                   alt = natural1.alt;
                   
+                  if (title.length > 60) title = title.substring(0, 60).trim();
+                  if (caption.length > 150) caption = caption.substring(0, 150).trim();
+                  if (description.length > 300) description = description.substring(0, 300).trim();
+                  if (alt.length > 125) alt = alt.substring(0, 125).trim();
+                  var flu1 = fluencyCleanupEnglishImageMeta_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx);
+                  title = flu1.title;
+                  caption = flu1.caption;
+                  description = flu1.description;
+                  alt = flu1.alt;
                   if (title.length > 60) title = title.substring(0, 60).trim();
                   if (caption.length > 150) caption = caption.substring(0, 150).trim();
                   if (description.length > 300) description = description.substring(0, 300).trim();
@@ -2083,12 +2448,21 @@ async function runAiImagesEnhancementBatch() {
                     kwPlanForImage,
                     { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
                   );
-                  natural2 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural2, ctx, f, tripImprovement);
+                  natural2 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural2, ctx, tripFields, tripImprovement);
                   title = natural2.title;
                   caption = natural2.caption;
                   description = natural2.description;
                   alt = natural2.alt;
                   
+                  if (title.length > 60) title = title.substring(0, 60).trim();
+                  if (caption.length > 150) caption = caption.substring(0, 150).trim();
+                  if (description.length > 300) description = description.substring(0, 300).trim();
+                  if (alt.length > 125) alt = alt.substring(0, 125).trim();
+                  var flu2 = fluencyCleanupEnglishImageMeta_AiImages_({ title: title, caption: caption, description: description, alt: alt }, ctx);
+                  title = flu2.title;
+                  caption = flu2.caption;
+                  description = flu2.description;
+                  alt = flu2.alt;
                   if (title.length > 60) title = title.substring(0, 60).trim();
                   if (caption.length > 150) caption = caption.substring(0, 150).trim();
                   if (description.length > 300) description = description.substring(0, 300).trim();
@@ -2206,7 +2580,8 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
   var secondaryTopic = deriveSoftTopicHint_AiImages_(secondary.length ? secondary[0] : '') || (secondary.length ? secondary[0] : '');
 
   var prompt =
-    "You are an SEO and accessibility expert for a premium global travel website. Enhance the metadata for this travel image.\n\n" +
+    "You are an expert travel content editor specializing in high-quality English image metadata for tourism websites.\n" +
+    "Generate clean, natural, and complete English metadata for a tour image.\n\n" +
     
     "CURRENT IMAGE DATA:\n" +
     "Title: " + (ctx.currentTitle || 'N/A') + "\n" +
@@ -2234,31 +2609,19 @@ function buildImagesPrompt_(ctx, keywordPlan, opts) {
     (preferredTitleKeyword ? ("TOPIC HINT (soft, do NOT copy-paste): " + JSON.stringify(preferredTitleKeyword) + "\n\n") : "") +
     (forbiddenTitles.length ? ("TITLE UNIQUENESS (STRICT): Do NOT reuse any of these titles: " + JSON.stringify(forbiddenTitles) + "\n\n") : "") +
     
-    "🎯 ENHANCEMENT RULES:\n" +
-    "1. Title (max 60 chars):\n" +
-    "   - Must be SHORT and strongly linked to the trip SEO title\n" +
-    "   - Format: '<Short Trip Name> <Visible Subject>'\n" +
-    "   - Clear and concise\n" +
-    "   - Optionally include ONE light context mention if natural\n" +
-    "   - Avoid generic filler like: 'Experience the magic', 'Immerse yourself', 'Unforgettable moment'\n" +
-    "   - Avoid repeated words/phrases\n" +
-    "   - Avoid SEO stacking like 'Day Tours Cairo Egypt Day Tours ...'\n\n" +
-    
-    "2. Caption (max 150 chars):\n" +
-    "   - Short, simple, and quick context\n" +
-    "   - Natural language\n" +
-    "   - Example: 'The Al-Hakim Mosque in Cairo, built in 1013 AD'\n\n" +
-    
-    "3. Description (max 300 chars):\n" +
-    "   - Detailed and helpful, but natural (no SEO keyword stuffing)\n" +
-    "   - Useful for Gallery/Slider context\n" +
-    "   - Include historical/cultural context\n" +
-    "   - Example: 'The Al-Hakim Mosque in Cairo is a stunning example of Fatimid architecture built in 1013 AD. It features unique minarets and a large courtyard, making it a key site for Islamic heritage tours.'\n\n" +
-    
-    "4. Alt Text (max 125 chars):\n" +
-    "   - Descriptive for accessibility, describing only what is visible\n" +
-    "   - Natural sentence, no comma-separated keyword list\n" +
-    "   - Do NOT force-insert keywords or exact-match SEO phrases\n\n" +
+    "CRITICAL RULES (STRICT):\n" +
+    "1) Natural, human-like English ONLY. Grammatically complete. No fragments. No abrupt endings.\n" +
+    "2) No repetition (no duplicated words/phrases).\n" +
+    "3) No generic filler (avoid 'and more', 'and beyond', 'etc.').\n" +
+    "4) Visual specificity: describe what is actually visible (architecture, people, artifacts, atmosphere, setting).\n" +
+    "5) Do NOT end with trailing clipped phrases like: 'the rich...', 'a glimpse into...', 'making it a perfect stop on...', 'immersed in the...'.\n" +
+    "6) Context-aware naming if relevant (do NOT force): Egyptian Civilization Museum / National Museum of Egyptian Civilization, Citadel of Saladin, Old Cairo, Khan El-Khalili, Nile.\n\n" +
+
+    "LENGTH RULES (GUIDANCE):\n" +
+    "- title: 6–10 words (max 60 chars)\n" +
+    "- alt: 8–12 words (max 125 chars)\n" +
+    "- caption: 1 short complete sentence (max 150 chars)\n" +
+    "- description: 1–2 full sentences (max 300 chars)\n\n" +
 
     "- Use current data as base, enhance with trip context\n" +
     "- Do NOT invent details not in context\n" +

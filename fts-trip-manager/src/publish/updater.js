@@ -2693,19 +2693,44 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   
   try {
     payload.meta = payload.meta || {};
-    if (!payload.meta.trip_schema_data) {
-      var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim();
-      var descRaw = String(g.AI_SEO_Meta_Description || g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      var tripSchema = {
-        "@context": "https://schema.org",
-        "@type": "TouristTrip",
-        "name": tripTitle || undefined,
-        "description": descRaw || undefined
-      };
-      Object.keys(tripSchema).forEach(function(k) { if (tripSchema[k] === undefined) delete tripSchema[k]; });
-      payload.meta.trip_schema_data = JSON.stringify(tripSchema);
-      if (!payload.meta.schema_trip_data) payload.meta.schema_trip_data = payload.meta.trip_schema_data;
+    var langNow = String(payload && payload.lang ? payload.lang : '').toLowerCase()
+    var isEn = (!langNow || langNow === 'en')
+    function pickScalar_(v) {
+      if (!v) return ''
+      if (Array.isArray(v)) return v[0] != null ? String(v[0]) : ''
+      if (typeof v === 'object') return String(v)
+      return String(v)
     }
+    function cleanText_(s) { return String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }
+
+    var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim()
+    var schemaSeoTitleRaw = pickScalar_(payload.meta.rank_math_title) || pickScalar_(g.AI_SEO_Title) || tripTitle
+    var schemaSeoDescRaw = pickScalar_(payload.meta.rank_math_description) || pickScalar_(g.AI_SEO_Meta_Description) || pickScalar_(g.AI_Short_Summary) || pickScalar_(g.AI_Excerpt) || pickScalar_(g.AI_Trip_Description) || ''
+
+    var schemaSeoTitle = cleanText_(schemaSeoTitleRaw)
+    var schemaSeoDesc = cleanText_(schemaSeoDescRaw)
+    if (schemaSeoDesc) schemaSeoDesc = truncateAtWordBoundary_Updater_(schemaSeoDesc, 240)
+
+    if (isEn) {
+      var titleSrc = payload.meta.rank_math_title ? 'rank_math_title' : (g.AI_SEO_Title ? 'AI_SEO_Title' : (tripTitle ? 'core.title' : 'missing'))
+      var descSrc = payload.meta.rank_math_description ? 'rank_math_description' : (g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' : (g.AI_Short_Summary ? 'AI_Short_Summary' : (g.AI_Excerpt ? 'AI_Excerpt' : (g.AI_Trip_Description ? 'AI_Trip_Description' : 'missing'))))
+      log('SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=' + titleSrc + ' desc=' + descSrc)
+      if (payload.meta.rank_math_description && (g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description)) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)')
+    }
+
+    var existingTripSchemaRaw = pickScalar_(payload.meta.trip_schema_data || payload.meta.schema_trip_data)
+    var tripSchemaObj = null
+    if (existingTripSchemaRaw) {
+      try { tripSchemaObj = JSON.parse(existingTripSchemaRaw) } catch (e) {}
+    }
+    if (!tripSchemaObj || typeof tripSchemaObj !== 'object') {
+      tripSchemaObj = { "@context": "https://schema.org", "@type": "TouristTrip" }
+    }
+    if (schemaSeoTitle) tripSchemaObj.name = schemaSeoTitle
+    if (schemaSeoDesc) tripSchemaObj.description = schemaSeoDesc
+    Object.keys(tripSchemaObj).forEach(function(k) { if (tripSchemaObj[k] === undefined) delete tripSchemaObj[k]; })
+    payload.meta.trip_schema_data = JSON.stringify(tripSchemaObj)
+    payload.meta.schema_trip_data = payload.meta.trip_schema_data
 
     if (!payload.meta.faq_schema_data && data.faqs && data.faqs.length) {
       var mainEntity = [];
@@ -2719,9 +2744,13 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
         var faqSchema = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          "mainEntity": mainEntity
+          "mainEntity": mainEntity,
+          "name": schemaSeoTitle || undefined,
+          "description": schemaSeoDesc || undefined
         };
+        Object.keys(faqSchema).forEach(function(k) { if (faqSchema[k] === undefined) delete faqSchema[k]; });
         payload.meta.faq_schema_data = JSON.stringify(faqSchema);
+        if (isEn) log('SCHEMA SOURCE RESOLVED (en, FAQPage meta): title=' + (payload.meta.rank_math_title ? 'rank_math_title' : (g.AI_SEO_Title ? 'AI_SEO_Title' : 'missing')) + ' desc=' + (payload.meta.rank_math_description ? 'rank_math_description' : (g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' : 'missing')))
       }
     }
   } catch (eSchema) {}
@@ -4945,18 +4974,30 @@ function generateTripSchema_Updater_(tripData, targetLang) {
   var pricing = d.pricing || {};
   var general = d.general || {};
 
-  var title = String(core.title || '').trim();
+  var lang = String(targetLang || '').toLowerCase()
+  var seoTitleRaw = ''
+  if (meta.rank_math_title && Array.isArray(meta.rank_math_title)) seoTitleRaw = meta.rank_math_title[0]
+  else if (meta.rank_math_title && typeof meta.rank_math_title === 'object') seoTitleRaw = String(meta.rank_math_title)
+  else if (meta.rank_math_title) seoTitleRaw = meta.rank_math_title
+  var title = String(seoTitleRaw || core.title || '').trim();
   var url = String(core.permalink || core.link || '').trim();
 
   var descRaw = ''
-  if (core.content_html) descRaw = core.content_html
-  else if (core.excerpt) descRaw = core.excerpt
-  else if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
+  if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
   else if (meta.rank_math_description && typeof meta.rank_math_description === 'object') descRaw = String(meta.rank_math_description)
   else if (meta.rank_math_description) descRaw = meta.rank_math_description
+  else if (core.excerpt) descRaw = core.excerpt
+  else if (core.content_html) descRaw = core.content_html
 
   var description = String(descRaw || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   description = truncateAtWordBoundary_Updater_(description, 240)
+  if (lang === 'en') {
+    var titleSrc = seoTitleRaw ? 'rank_math_title' : (core.title ? 'core.title' : 'missing')
+    var descSrc = (meta.rank_math_description ? 'rank_math_description' : (core.excerpt ? 'core.excerpt' : (core.content_html ? 'core.content_html' : 'missing')))
+    log('SCHEMA SOURCE RESOLVED (en, TouristTrip): title=' + titleSrc + ' desc=' + descSrc)
+    if (meta.rank_math_description && (core.content_html || core.excerpt)) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_description')
+    if (seoTitleRaw && core.title && String(core.title).trim() !== title) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_title')
+  }
 
   var images = [];
   if (d.featured_image && d.featured_image.url) images.push(String(d.featured_image.url));
@@ -5030,6 +5071,7 @@ function generateFaqSchema_Updater_(enhancedTripData, wpTripInfo, targetLang) {
   var lang = String(targetLang || 'en').toLowerCase()
   var t = wpTripInfo || {}
   var core = t.core || {}
+  var meta = t.meta || {}
   var g = enhancedTripData && enhancedTripData.general ? enhancedTripData.general : {}
   var faqs = enhancedTripData && enhancedTripData.faqs ? enhancedTripData.faqs : []
   if (!Array.isArray(faqs) || faqs.length === 0) return null
@@ -5051,15 +5093,35 @@ function generateFaqSchema_Updater_(enhancedTripData, wpTripInfo, targetLang) {
   })
   if (mainEntity.length === 0) return null
 
-  var title = String(g.AI_SEO_Title || core.title || '').trim()
+  var seoTitleRaw = ''
+  if (meta.rank_math_title && Array.isArray(meta.rank_math_title)) seoTitleRaw = meta.rank_math_title[0]
+  else if (meta.rank_math_title && typeof meta.rank_math_title === 'object') seoTitleRaw = String(meta.rank_math_title)
+  else if (meta.rank_math_title) seoTitleRaw = meta.rank_math_title
+  var title = String(seoTitleRaw || g.AI_SEO_Title || core.title || '').trim()
   var url = String(core.permalink || core.link || '').trim()
+
+  var descRaw = ''
+  if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
+  else if (meta.rank_math_description && typeof meta.rank_math_description === 'object') descRaw = String(meta.rank_math_description)
+  else if (meta.rank_math_description) descRaw = meta.rank_math_description
+  var description = String(descRaw || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (description) description = truncateAtWordBoundary_Updater_(description, 240)
+
+  if (lang === 'en') {
+    var titleSrc2 = seoTitleRaw ? 'rank_math_title' : ((g.AI_SEO_Title || core.title) ? (g.AI_SEO_Title ? 'AI_SEO_Title' : 'core.title') : 'missing')
+    var descSrc2 = meta.rank_math_description ? 'rank_math_description' : (description ? 'resolved' : 'missing')
+    log('SCHEMA SOURCE RESOLVED (en, FAQPage): title=' + titleSrc2 + ' desc=' + descSrc2)
+    if (meta.rank_math_description) log('SCHEMA BYPASSED STALE FALLBACK (en, FAQPage): used rank_math_description')
+  }
 
   var schema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "inLanguage": lang,
-    "mainEntity": mainEntity
+    "mainEntity": mainEntity,
+    "description": description || undefined
   }
+  Object.keys(schema).forEach(function(k) { if (schema[k] === undefined) delete schema[k] })
   if (title) schema.name = title
   if (url) schema.url = url
   return schema

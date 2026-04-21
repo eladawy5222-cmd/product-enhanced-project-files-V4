@@ -31,6 +31,7 @@ var AI_SEO_TITLE_MAX_LEN_ = 100;
 var AI_SEO_META_MAX_LEN_ = 160;
 var AI_SEO_SLUG_MAX_LEN_ = 75;
 var AI_SEO_SLUG_MIN_LEN_ = 18;
+var AI_SEO_KEYWORDS_MAX_LIST_ = 16;
 
 function normalizeWhitespaceSeoEn_(s) {
   return String(s || '').replace(/\s+/g, ' ').trim();
@@ -66,16 +67,225 @@ function stripTrailingConnectorsSeoEn_(text) {
       }
     }
     s = s.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
-    s = s.replace(/[^a-zA-Z0-9)]+$/g, '').trim();
+    s = s.replace(/[^a-zA-Z0-9).!?]+$/g, '').trim();
   }
+  return s;
+}
+
+function stripDanglingEndTokensSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  var weak = {
+    and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1,
+    your: 1, our: 1, the: 1, a: 1, an: 1,
+    cultural: 1, historic: 1, historical: 1, guided: 1, unforgettable: 1, immersive: 1, premium: 1, scenic: 1, authentic: 1,
+    perfect: 1, ideal: 1, great: 1
+  };
+  for (var i = 0; i < 6; i++) {
+    var cleaned = s.replace(/[|—–\-:;,]+$/g, '').trim();
+    var parts = cleaned.split(' ').filter(function(x) { return !!x; });
+    if (!parts.length) break;
+    var last = String(parts[parts.length - 1] || '').toLowerCase().replace(/[.!?]+$/g, '');
+    if (!weak[last]) break;
+    parts.pop();
+    s = parts.join(' ').trim();
+  }
+  return s;
+}
+
+function stripDanglingCtaTailSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  var verbs = '(?:book|discover|explore|enjoy|visit|experience|reserve|plan|join|start|learn)';
+  var det = '(?:your|our|the|a|an)';
+  var weakTail = '(?:cultural|historic|historical|guided|unforgettable|immersive|premium|scenic|authentic|perfect|ideal|great)';
+  var before = s;
+  s = s.replace(/[|—–\-:;,]+$/g, '').trim();
+  s = s.replace(new RegExp('\\b' + verbs + '\\b\\s*$', 'i'), '').trim();
+  s = s.replace(new RegExp('\\b' + verbs + '\\s+' + det + '\\b\\s*$', 'i'), '').trim();
+  s = s.replace(new RegExp('\\b' + verbs + '\\s+' + det + '\\s+' + weakTail + '(?:\\s+' + weakTail + ')?\\b\\s*$', 'i'), '').trim();
+  s = s.replace(new RegExp('\\b' + verbs + '\\s+' + weakTail + '(?:\\s+' + weakTail + ')?\\b\\s*$', 'i'), '').trim();
+  s = s.replace(/\b(?:perfect|ideal|great)\s+for\b(?:\s+(?:your|our|the|a|an))?\s*$/i, '').trim();
+  s = s.replace(/\bbook\s+your\b\s*$/i, '').trim();
+  s = s.replace(/[|—–\-:;,]+$/g, '').trim();
+  return s === before ? s : s;
+}
+
+function stripTrailingPunctuationNoiseSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  s = s.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
+  s = s.replace(/\s*[,;:|—–\-]+\s*$/g, '').trim();
+  s = s.replace(/([.!?]){2,}\s*$/g, '$1').trim();
+  s = s.replace(/[…]+$/g, '').trim();
+  return s;
+}
+
+function isWeakEndingFragmentSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return false;
+  var t = s.replace(/[\s"')\]]+$/g, '').trim();
+  t = t.replace(/[|—–\-:;,]+$/g, '').trim();
+  var noTerm = t.replace(/[.!?]+$/g, '').trim();
+  if (!noTerm) return true;
+
+  var lowered = noTerm.toLowerCase();
+  var verbEnding = /(?:\bbook|\bdiscover|\bexplore|\bexperience|\benjoy|\bvisit|\bplan|\bstart|\bjoin)\b(?:\s+(?:your|our|the|a|an))?(?:\s+[a-z]{2,}){0,2}$/.test(lowered);
+  if (verbEnding) return true;
+
+  var parts = lowered.split(' ').filter(function(x) { return !!x; });
+  if (!parts.length) return true;
+  var last = String(parts[parts.length - 1] || '').replace(/[.!?]+$/g, '');
+  var weakLast = {
+    and: 1, or: 1, but: 1, with: 1, for: 1, to: 1, from: 1, of: 1, in: 1, on: 1, at: 1, by: 1,
+    your: 1, our: 1, the: 1, a: 1, an: 1,
+    cultural: 1, historic: 1, historical: 1, guided: 1, unforgettable: 1, immersive: 1, premium: 1, scenic: 1, authentic: 1,
+    perfect: 1, ideal: 1, great: 1
+  };
+  if (weakLast[last]) return true;
+  if (parts.length >= 2) {
+    var last2 = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
+    if (/^(?:book your|plan your|start your|join our)$/.test(last2)) return true;
+  }
+  return false;
+}
+
+function trimToLastCompleteSentenceWithinLimitSeoEn_(text, maxLen) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  var n = Number(maxLen || 0);
+  if (n > 0 && s.length > n) s = s.substring(0, n + 1);
+  var last = -1;
+  for (var i = 0; i < s.length; i++) {
+    var ch = s.charAt(i);
+    if (ch === '.' || ch === '!' || ch === '?') last = i;
+  }
+  if (last < 0) return '';
+  var cut = s.substring(0, last + 1).trim();
+  cut = stripTrailingPunctuationNoiseSeoEn_(cut);
+  return cut;
+}
+
+function truncatePreferSentenceBoundarySeoEn_(text, maxLen) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  var n = Number(maxLen || 0);
+  if (!n || n <= 0) return s;
+  if (s.length <= n) return s;
+  var prefix = s.substring(0, n + 1);
+  var last = -1;
+  for (var i = 0; i < prefix.length; i++) {
+    var ch = prefix.charAt(i);
+    if (ch === '.' || ch === '!' || ch === '?') last = i;
+  }
+  if (last >= Math.floor(n * 0.55)) return prefix.substring(0, last + 1).trim();
+  return truncateAtWordBoundarySeoEn_(s, n);
+}
+
+function fallbackToCompleteSentenceSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  var idx = Math.max(s.lastIndexOf('.'), s.lastIndexOf('!'), s.lastIndexOf('?'));
+  if (idx >= 0 && idx >= Math.floor(s.length * 0.55)) return s.substring(0, idx + 1).trim();
   return s;
 }
 
 function finalizeSeoTextFieldEn_(text, maxLen) {
   var before = String(text || '');
   var s = stripTrailingConnectorsSeoEn_(truncateAtWordBoundarySeoEn_(before, maxLen));
-  s = stripTrailingConnectorsSeoEn_(s);
+  s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+  s = s.replace(/[.!?]+$/g, '').trim();
   return s;
+}
+
+function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
+  var before = String(text || '');
+  var raw = normalizeWhitespaceSeoEn_(before);
+  var base0 = truncatePreferSentenceBoundarySeoEn_(raw, maxLen);
+  base0 = stripTrailingPunctuationNoiseSeoEn_(base0);
+  var base = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(base0));
+
+  var repaired = false;
+  var danglingDetected = false;
+  var weakCtaRemoved = false;
+  var trimmedToSentence = false;
+  var fallbackUsed = false;
+
+  var s = base;
+
+  var afterCta = stripDanglingCtaTailSeoEn_(s);
+  if (afterCta !== s) {
+    weakCtaRemoved = true;
+    s = afterCta;
+  }
+
+  var afterDangling = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+  if (afterDangling !== s) {
+    danglingDetected = true;
+    s = afterDangling;
+  }
+
+  s = stripTrailingPunctuationNoiseSeoEn_(s);
+  if (isWeakEndingFragmentSeoEn_(s)) {
+    danglingDetected = true;
+    var loop = 0;
+    while (loop < 6 && isWeakEndingFragmentSeoEn_(s)) {
+      var prev = s;
+      s = stripDanglingCtaTailSeoEn_(s);
+      s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+      s = stripTrailingPunctuationNoiseSeoEn_(s);
+      if (s === prev) break;
+      loop++;
+    }
+  }
+
+  if (isWeakEndingFragmentSeoEn_(s)) {
+    var sentence = trimToLastCompleteSentenceWithinLimitSeoEn_(raw, maxLen);
+    if (sentence) {
+      var candidate = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(sentence));
+      candidate = stripTrailingPunctuationNoiseSeoEn_(candidate);
+      if (candidate && !isWeakEndingFragmentSeoEn_(candidate)) {
+        s = candidate;
+        trimmedToSentence = true;
+      }
+    }
+  }
+
+  if (isWeakEndingFragmentSeoEn_(s)) {
+    var fallback = fallbackToCompleteSentenceSeoEn_(base0);
+    fallback = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(fallback));
+    fallback = stripTrailingPunctuationNoiseSeoEn_(fallback);
+    if (fallback && !isWeakEndingFragmentSeoEn_(fallback)) {
+      s = fallback;
+      fallbackUsed = true;
+    }
+  }
+
+  if (!s) {
+    s = base;
+    s = stripDanglingCtaTailSeoEn_(s);
+    s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+    s = stripTrailingPunctuationNoiseSeoEn_(s);
+  }
+  s = truncatePreferSentenceBoundarySeoEn_(s, maxLen);
+  s = stripTrailingPunctuationNoiseSeoEn_(s);
+  s = stripDanglingCtaTailSeoEn_(s);
+  s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+  s = stripTrailingPunctuationNoiseSeoEn_(s);
+  if (isWeakEndingFragmentSeoEn_(s)) {
+    var guard = 0;
+    while (guard < 6 && isWeakEndingFragmentSeoEn_(s)) {
+      var prev2 = s;
+      s = stripDanglingCtaTailSeoEn_(s);
+      s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+      s = stripTrailingPunctuationNoiseSeoEn_(s);
+      if (s === prev2) break;
+      guard++;
+    }
+    if (isWeakEndingFragmentSeoEn_(s)) s = '';
+  }
+
+  if (s !== base) repaired = true;
+  return { text: s, repaired: repaired, danglingDetected: danglingDetected, weakCtaRemoved: weakCtaRemoved, trimmedToSentence: trimmedToSentence, fallbackUsed: fallbackUsed };
 }
 
 function normalizeSlugEn_(slug) {
@@ -107,7 +317,7 @@ function finalizeSeoSlugEn_(candidate, fallbackSlug, tripTitle) {
 /************************************************************
  * KEYWORDS HELPERS
  ************************************************************/
-function isEnglishSeoKeywordPhrase_(s) {
+function isLatinScriptSeoKeywordPhrase_(s) {
   var t = String(s || '').trim();
   if (!t) return false;
   if (/[\u0600-\u06FF]/.test(t)) return false;
@@ -116,6 +326,139 @@ function isEnglishSeoKeywordPhrase_(s) {
   if (!/[A-Za-z]/.test(t)) return false;
   if (/[^A-Za-z0-9 '&\-\.,/()]/.test(t)) return false;
   return true;
+}
+
+function englishSeoTokenize_(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .split(/[\s\-\/,.;:()&]+/)
+    .map(function(x) { return String(x || '').trim(); })
+    .filter(function(x) { return !!x; });
+}
+
+function detectLanguageSafeSeo_Keyword_(text) {
+  try {
+    var s = String(text || '');
+    if (!s) return '';
+    if(/[\u0400-\u04FF]/.test(s)) return 'ru';
+    if(/[\u4E00-\u9FFF]/.test(s)) return 'zh';
+    if(/[\u3040-\u30FF]/.test(s)) return 'ja';
+    if(/[\uAC00-\uD7AF]/.test(s)) return 'ko';
+    if (/[ğşıçöüİ]/i.test(s)) return 'tr';
+    if (/[áéíóúñ¿¡]/i.test(s)) return 'es';
+    if (/[àâçéèêëîïôûùüÿœ]/i.test(s)) return 'fr';
+    if (/[äöüß]/i.test(s)) return 'de';
+    return '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function normalizeForLocalePhraseMatchSeo_Keyword_(text) {
+  var s = String(text || '').toLowerCase();
+  s = s.replace(/['"]/g, '');
+  s = s.replace(/[^a-z0-9\s\-]/g, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function detectTranslatedLocaleMarkerForEnglishKeyword_(phrase) {
+  var t = String(phrase || '').trim();
+  if (!t) return '';
+  var det = detectLanguageSafeSeo_Keyword_(t);
+  if (det && det !== 'en') return 'detected_lang_' + det;
+  var n = normalizeForLocalePhraseMatchSeo_Keyword_(t);
+  if (!n) return '';
+  if (n.indexOf('kairo') !== -1) return 'locale_de_kairo';
+  if (n.indexOf('ausflug') !== -1) return 'locale_de_ausflug';
+  if (n.indexOf('pyramiden') !== -1) return 'locale_de_pyramiden';
+  if (n.indexOf('kahire') !== -1) return 'locale_tr_kahire';
+  if (n.indexOf('turu') !== -1) return 'locale_tr_turu';
+  if (n.indexOf('turlari') !== -1 || n.indexOf('turlari') !== -1) return 'locale_tr_turlari';
+  if (n.indexOf('misir') !== -1) return 'locale_tr_misir';
+  if (n.indexOf('gunubirlik') !== -1) return 'locale_tr_gunubirlik';
+  if (n.indexOf('gezilecek') !== -1) return 'locale_tr_gezilecek';
+  if (n.indexOf('yerler') !== -1) return 'locale_tr_yerler';
+  if (n.indexOf('piramit') !== -1) return 'locale_tr_piramit';
+  if (n.indexOf('musee') !== -1) return 'locale_fr_musee';
+  if (n.indexOf('visite') !== -1) return 'locale_fr_visite';
+  if (n.indexOf('museo') !== -1) return 'locale_es_museo';
+  if (n.indexOf('visita') !== -1) return 'locale_es_visita';
+  return '';
+}
+
+function getEnglishSeoAllowedTokens_() {
+  return {
+    cairo: true, giza: true, luxor: true, aswan: true, hurghada: true, sharm: true, dahab: true, alexandria: true, marsa: true, alam: true, siwa: true,
+    egypt: true, nile: true,
+    tour: true, tours: true, trip: true, package: true, itinerary: true, excursion: true, excursions: true, transfer: true,
+    day: true, full: true, half: true, private: true, guided: true, vip: true, group: true,
+    museum: true, museums: true, civilization: true, grand: true, egyptian: true, national: true,
+    pyramids: true, pyramid: true, sphinx: true, citadel: true, bazaar: true, market: true, mosque: true, church: true,
+    cruise: true, snorkeling: true, safari: true, desert: true, quad: true, biking: true, boat: true,
+    from: true, to: true, in: true, on: true, at: true, of: true, and: true, with: true, for: true, by: true
+  };
+}
+
+function getEnglishSeoDenyTokens_() {
+  return {
+    // German
+    kairo: true, ausflug: true, pyramiden: true,
+    // Turkish
+    kahire: true, turu: true, tur: true, turlar: true, turlari: true, gezilecek: true, yerler: true, gezi: true, gezisi: true, piramit: true, piramitler: true,
+    // French/Spanish common travel tokens
+    visite: true, visita: true, musee: true, museo: true, excursiones: true,
+    // Common non-English stopwords that frequently leak
+    und: true, oder: true, mit: true, ohne: true, fur: true, von: true, zum: true, zur: true
+  };
+}
+
+function passesEnglishLexicalGuard_(phrase) {
+  var tokens = englishSeoTokenize_(phrase);
+  if (!tokens.length) return false;
+  var localeMarker = detectTranslatedLocaleMarkerForEnglishKeyword_(phrase);
+  if (localeMarker) return false;
+  var allow = getEnglishSeoAllowedTokens_();
+  var deny = getEnglishSeoDenyTokens_();
+  var allowCount = 0;
+  var unknownCount = 0;
+  for (var i = 0; i < tokens.length; i++) {
+    var w = tokens[i];
+    if (!w) continue;
+    if (deny[w]) return false;
+    if (/^\d+$/.test(w)) continue;
+    if (allow[w]) { allowCount++; continue; }
+    if (w.length <= 2) continue;
+    unknownCount++;
+  }
+  if (allowCount === 0) return false;
+  if (unknownCount >= 2 && allowCount <= 1) return false;
+  return true;
+}
+
+function isEnglishSeoKeywordPhrase_(s) {
+  if (!isLatinScriptSeoKeywordPhrase_(s)) return false;
+  return passesEnglishLexicalGuard_(s);
+}
+
+function normalizeEnglishSeoKeywordPhrase_(value) {
+  var s = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (!isEnglishSeoKeywordPhrase_(s)) return '';
+  return s;
+}
+
+function parseRawKeywordsListForCount_(value) {
+  var raw = value;
+  var list = [];
+  if (Array.isArray(raw)) {
+    list = raw.map(function(x) { return String(x || '').trim(); });
+  } else if (raw) {
+    list = String(raw).split(/[,;\n]+/).map(function(x) { return String(x || '').trim(); });
+  }
+  list = list.filter(function(x) { return !!x; });
+  return list;
 }
 
 function normalizeKeywordsListToEnglish_(value) {
@@ -139,8 +482,198 @@ function normalizeKeywordsListToEnglish_(value) {
     uniq.push(x);
   });
 
-  if (uniq.length > 8) uniq = uniq.slice(0, 8);
+  if (uniq.length > AI_SEO_KEYWORDS_MAX_LIST_) uniq = uniq.slice(0, AI_SEO_KEYWORDS_MAX_LIST_);
   return uniq;
+}
+
+function filterEnglishKeywordsWithLocaleDiagnostics_(rawList, label) {
+  var list = Array.isArray(rawList) ? rawList : parseRawKeywordsListForCount_(rawList);
+  var out = [];
+  var rejectedLocale = 0;
+  var rejectedScript = 0;
+  var examples = [];
+  for (var i = 0; i < list.length; i++) {
+    var p = String(list[i] || '').trim();
+    if (!p) continue;
+    if (!isLatinScriptSeoKeywordPhrase_(p)) { rejectedScript++; continue; }
+    var marker = detectTranslatedLocaleMarkerForEnglishKeyword_(p);
+    if (marker) {
+      rejectedLocale++;
+      if (examples.length < 3) examples.push({ phrase: p.substring(0, 70), marker: marker });
+      continue;
+    }
+    if (!passesEnglishLexicalGuard_(p)) continue;
+    out.push(p);
+  }
+  var seen = {};
+  var uniq = [];
+  out.forEach(function(x) {
+    var k = x.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    uniq.push(x);
+  });
+  if (rejectedLocale) Logger.log('AI SEO Enhancer: rejected locale phrases (' + label + '): ' + rejectedLocale + (examples.length ? (' examples=' + JSON.stringify(examples)) : ''));
+  return { list: uniq, rejectedLocale: rejectedLocale, rejectedScript: rejectedScript };
+}
+
+function buildRawKeywordCandidatePoolSeoEn_(fields) {
+  var f = fields || {};
+  var pool = [];
+  var focus = String(f.SEO_FocusKeywords || '').trim();
+  if (focus) pool.push(focus);
+  var listRaw = parseRawKeywordsListForCount_(f.SEO_FocusKeywords_List || '');
+  listRaw.forEach(function(x) { if (x) pool.push(String(x).trim()); });
+  pool = pool.map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  var seen = {};
+  var uniq = [];
+  pool.forEach(function(x) {
+    var k = x.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    uniq.push(x);
+  });
+  return uniq.slice(0, 40);
+}
+
+function buildKeywordCleaningPromptSeoEn_(fields, linkedTextBlocks, rawPool) {
+  var f = fields || {};
+  var title = String(f.Title || '').trim();
+  var desc = String(f.AI_Trip_Description || f.Trip_Description || '').trim();
+  if (desc.length > 420) desc = desc.substring(0, 420);
+  var ctx = String(desc || '').trim();
+  var candidates = (rawPool || []).map(function(x) { return '- ' + String(x || '').trim(); }).join('\n');
+
+  return (
+    "You are an English SEO keyword curator for Egypt travel/tour pages.\n" +
+    "Your job: from the mixed-language candidate pool, EXTRACT ALL valid ENGLISH SEO-safe keyword phrases.\n\n" +
+    "STRICT RULES:\n" +
+    "- Output ENGLISH ONLY. Reject any non-English phrase even if it uses Latin letters.\n" +
+    "- Reject translated locale phrases (e.g. German/French/Turkish travel wording).\n" +
+    "- Keep every trip-relevant English phrase from the pool; do NOT over-prune to a tiny shortlist.\n" +
+    "- Preserve attraction-specific/destination/landmark English phrases when relevant.\n" +
+    "- Prefer phrases that match the trip title/context.\n" +
+    "- Keep phrases short and SEO-friendly (2-6 words).\n" +
+    "- Do NOT invent unrelated keywords.\n" +
+    "- If none are valid, return an empty list and empty primary.\n\n" +
+    "TRIP TITLE: " + title + "\n" +
+    (ctx ? ("TRIP CONTEXT (excerpt): " + ctx + "\n") : "") +
+    "\nCANDIDATE KEYWORDS:\n" + candidates + "\n\n" +
+    "OUTPUT JSON ONLY:\n" +
+    "{\n" +
+    '  "primary": "....",\n' +
+    '  "list": ["....", "...."]\n' +
+    "}\n"
+  );
+}
+
+function mergeKeywordListsPreserveBreadthSeoEn_(aiList, sourceList, maxCount) {
+  var m = Number(maxCount || AI_SEO_KEYWORDS_MAX_LIST_ || 16);
+  if (m <= 0) m = 16;
+  var out = [];
+  var seen = {};
+  function pushMany(arr) {
+    (arr || []).forEach(function(x) {
+      var v = String(x || '').trim();
+      if (!v) return;
+      var k = v.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = true;
+      out.push(v);
+    });
+  }
+  pushMany(aiList || []);
+  pushMany(sourceList || []);
+  if (out.length > m) out = out.slice(0, m);
+  return out;
+}
+
+function detectTranslatedLocaleMarkerStrictFinalSeoEn_(phrase) {
+  var n = normalizeForLocalePhraseMatchSeo_Keyword_(phrase);
+  if (!n) return '';
+  if (/\bexcursion\s+le\s+caire\b/.test(n)) return 'final_fr_excursion_le_caire';
+  if (/\bexcursion\s+el\s+cairo\b/.test(n)) return 'final_es_excursion_el_cairo';
+  if (/\ble\s+caire\b/.test(n)) return 'final_fr_le_caire';
+  if (/\bdepuis\b/.test(n)) return 'final_fr_depuis';
+  if (/\bpiramides\b/.test(n)) return 'final_es_piramides';
+  if (/\bde\s+giza\b/.test(n)) return 'final_romance_de_giza';
+  return '';
+}
+
+function isStrictFinalEnglishKeywordPhraseSeoEn_(phrase) {
+  var p = String(phrase || '').trim();
+  if (!p) return false;
+  if (!isEnglishSeoKeywordPhrase_(p)) return false;
+  if (detectTranslatedLocaleMarkerStrictFinalSeoEn_(p)) return false;
+  return true;
+}
+
+function applyFinalEnglishKeywordGateSeoEn_(candidateList, sourceSafePool) {
+  var list = Array.isArray(candidateList) ? candidateList : parseRawKeywordsListForCount_(candidateList);
+  var rawCount = list.length;
+  var rejected = 0;
+  var out = [];
+  var seen = {};
+  for (var i = 0; i < list.length; i++) {
+    var p = String(list[i] || '').trim();
+    if (!p) continue;
+    if (!isStrictFinalEnglishKeywordPhraseSeoEn_(p)) { rejected++; continue; }
+    var k = p.toLowerCase();
+    if (seen[k]) continue;
+    seen[k] = true;
+    out.push(p);
+  }
+  var refillUsed = 0;
+  var pool = Array.isArray(sourceSafePool) ? sourceSafePool : [];
+  for (var j = 0; j < pool.length && out.length < AI_SEO_KEYWORDS_MAX_LIST_; j++) {
+    var s = String(pool[j] || '').trim();
+    if (!s) continue;
+    if (!isStrictFinalEnglishKeywordPhraseSeoEn_(s)) continue;
+    var ks = s.toLowerCase();
+    if (seen[ks]) continue;
+    seen[ks] = true;
+    out.push(s);
+    refillUsed++;
+  }
+  if (out.length > AI_SEO_KEYWORDS_MAX_LIST_) out = out.slice(0, AI_SEO_KEYWORDS_MAX_LIST_);
+  return { rawCount: rawCount, rejected: rejected, refillUsed: refillUsed, list: out };
+}
+
+function cleanEnglishKeywordsWithAiSeoEn_(combinedFields, linkedTextBlocks) {
+  var rawPool = buildRawKeywordCandidatePoolSeoEn_(combinedFields);
+  Logger.log('AI SEO Enhancer: keyword candidates pool=' + rawPool.length);
+  if (!rawPool.length) return { primary: '', list: [] };
+
+  var prompt = buildKeywordCleaningPromptSeoEn_(combinedFields, linkedTextBlocks, rawPool);
+  var ai = null;
+  try { ai = callAi_(prompt); } catch (e) { ai = null; }
+  if (!ai || typeof ai !== 'object') {
+    Logger.log('AI SEO Enhancer: keyword cleaning AI output invalid; using fallback');
+    var fallback = filterEnglishKeywordsWithLocaleDiagnostics_(rawPool, 'source_fallback');
+    var p = fallback.list.length ? fallback.list[0] : '';
+    return { primary: p, list: fallback.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_), sourceSafeList: fallback.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_) };
+  }
+
+  var aiPrimary = normalizeEnglishSeoKeywordPhrase_(ai.primary);
+  var aiListDiag = filterEnglishKeywordsWithLocaleDiagnostics_(ai.list || [], 'ai_keyword_cleaning');
+  var aiList = aiListDiag.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_);
+  var sourceDiag = filterEnglishKeywordsWithLocaleDiagnostics_(rawPool, 'source_preserve');
+  var mergedList = mergeKeywordListsPreserveBreadthSeoEn_(aiList, sourceDiag.list, AI_SEO_KEYWORDS_MAX_LIST_);
+  var preserved = Math.max(0, mergedList.length - aiList.length);
+  if (preserved > 0) Logger.log('AI SEO Enhancer: preserved valid English phrases from source pool: ' + preserved);
+  aiList = mergedList;
+  if (!aiPrimary && aiList.length) aiPrimary = normalizeEnglishSeoKeywordPhrase_(aiList[0]);
+  Logger.log('AI SEO Enhancer: cleaned English extraction count=' + aiList.length);
+  Logger.log('AI SEO Enhancer: AI-cleaned primary="' + (aiPrimary || '') + '" list=' + aiList.length);
+
+  if (!aiPrimary && !aiList.length) {
+    Logger.log('AI SEO Enhancer: keyword cleaning produced empty; using fallback');
+    var fallback2 = filterEnglishKeywordsWithLocaleDiagnostics_(rawPool, 'source_fallback');
+    var p2 = fallback2.list.length ? fallback2.list[0] : '';
+    return { primary: p2, list: fallback2.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_), sourceSafeList: fallback2.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_) };
+  }
+  if (!aiList.length && aiPrimary) aiList = [aiPrimary];
+  return { primary: aiPrimary || '', list: aiList, sourceSafeList: sourceDiag.list.slice(0, AI_SEO_KEYWORDS_MAX_LIST_) };
 }
 
 /************************************************************
@@ -175,8 +708,31 @@ function runAiSeoEnhancementBatch() {
         Logger.log('AI SEO Enhancer: processing Trip ' + tripId);
 
         if (!claimStage_(tripId, 'SEO', 20 * 60)) {
-          Logger.log('AI SEO Enhancer: stage already claimed; skipping Trip ' + tripId);
-          return;
+          var retried = false;
+          try {
+            var impStatus = '';
+            if (improvementId) {
+              try {
+                var impRes = airtableGet_(AI_IMPROVEMENT_TABLE, { filterByFormula: "RECORD_ID() = '" + String(improvementId) + "'", maxRecords: 1 });
+                if (impRes && impRes.records && impRes.records.length) {
+                  impStatus = String((impRes.records[0].fields || {}).AI_SEO_Status || '');
+                }
+              } catch (eImpFetch) {}
+            }
+            if (!impStatus) impStatus = String((improvementFields && improvementFields.AI_SEO_Status) ? improvementFields.AI_SEO_Status : '');
+            if (impStatus === 'Pending') {
+              if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'SEO')) {
+                Logger.log('AI SEO Enhancer: cleared stale stage lease before SEO claim retry for Trip ' + tripId);
+                retried = true;
+              }
+            }
+          } catch (eRecover) {}
+
+          if (!(retried && claimStage_(tripId, 'SEO', 20 * 60))) {
+            Logger.log('AI SEO Enhancer: stage already claimed; skipping Trip ' + tripId);
+            return;
+          }
+          Logger.log('AI SEO Enhancer: recovered stale SEO claim; proceeding Trip ' + tripId);
         }
 
         // 1) Update status to Processing (in Improvement table)
@@ -224,9 +780,14 @@ function runAiSeoEnhancementBatch() {
           }
         }
 
+        // 5) Keyword cleaning (AI-only selection for enhanced fields)
+        var cleanedKw = cleanEnglishKeywordsWithAiSeoEn_(combinedFields, linkedTextBlocks);
+        combinedFields._EN_Cleaned_Seo_Focus = cleanedKw.primary || '';
+        combinedFields._EN_Cleaned_Seo_Keywords_List = cleanedKw.list || [];
+
         var prompt = buildSeoPromptFromImprovedContent_(combinedFields, linkedTextBlocks);
 
-        // 5) Call AI
+        // 6) Call AI
         if (typeof callAi_ !== 'function') {
           throw new Error('callAi_ function is not defined');
         }
@@ -238,13 +799,63 @@ function runAiSeoEnhancementBatch() {
         }
 
         if (aiResult.AI_SEO_FocusKeywords_List !== undefined) {
-          var englishList = normalizeKeywordsListToEnglish_(aiResult.AI_SEO_FocusKeywords_List);
+          var rawAiList = parseRawKeywordsListForCount_(aiResult.AI_SEO_FocusKeywords_List);
+          var rawAiCount = rawAiList.length;
+          var diagAi = filterEnglishKeywordsWithLocaleDiagnostics_(rawAiList, 'ai_output');
+          var englishList = diagAi.list;
+          Logger.log('AI SEO Enhancer: final AI keyword list raw=' + rawAiCount + ' english=' + englishList.length);
           if (!englishList.length && aiResult.AI_SEO_FocusKeywords) {
             var fk = String(aiResult.AI_SEO_FocusKeywords || '').trim();
             if (fk && isEnglishSeoKeywordPhrase_(fk)) englishList = [fk];
           }
           aiResult.AI_SEO_FocusKeywords_List = englishList;
         }
+
+        var sourceEnglishListForRecovery = normalizeKeywordsListToEnglish_(combinedFields.SEO_FocusKeywords_List || '');
+        var sourceEnglishFocusForRecovery = normalizeEnglishSeoKeywordPhrase_(combinedFields.SEO_FocusKeywords || '');
+
+        var aiFocus = normalizeEnglishSeoKeywordPhrase_(aiResult.AI_SEO_FocusKeywords);
+        if (!aiFocus) {
+          if (aiResult.AI_SEO_FocusKeywords) Logger.log('AI SEO Enhancer: AI focus keyword rejected as non-English: ' + String(aiResult.AI_SEO_FocusKeywords));
+          if (aiResult.AI_SEO_FocusKeywords_List && Array.isArray(aiResult.AI_SEO_FocusKeywords_List) && aiResult.AI_SEO_FocusKeywords_List.length) {
+            aiFocus = normalizeEnglishSeoKeywordPhrase_(aiResult.AI_SEO_FocusKeywords_List[0]);
+            if (aiFocus) Logger.log('AI SEO Enhancer: recovered English primary keyword from AI keyword list');
+          }
+          if (!aiFocus && sourceEnglishFocusForRecovery) {
+            aiFocus = sourceEnglishFocusForRecovery;
+            Logger.log('AI SEO Enhancer: recovered English primary keyword from source focus keyword');
+          }
+          if (!aiFocus && sourceEnglishListForRecovery.length) {
+            aiFocus = normalizeEnglishSeoKeywordPhrase_(sourceEnglishListForRecovery[0]);
+            if (aiFocus) Logger.log('AI SEO Enhancer: recovered English primary keyword from source keyword list');
+          }
+        }
+        aiResult.AI_SEO_FocusKeywords = aiFocus || '';
+        if (!Array.isArray(aiResult.AI_SEO_FocusKeywords_List)) aiResult.AI_SEO_FocusKeywords_List = [];
+        aiResult.AI_SEO_FocusKeywords_List = normalizeKeywordsListToEnglish_(aiResult.AI_SEO_FocusKeywords_List);
+        if (!aiResult.AI_SEO_FocusKeywords_List.length && sourceEnglishListForRecovery.length) {
+          aiResult.AI_SEO_FocusKeywords_List = sourceEnglishListForRecovery;
+          Logger.log('AI SEO Enhancer: recovered final English keyword list from clean source');
+        }
+        if (!aiResult.AI_SEO_FocusKeywords_List.length && aiResult.AI_SEO_FocusKeywords) {
+          aiResult.AI_SEO_FocusKeywords_List = [aiResult.AI_SEO_FocusKeywords];
+        }
+
+        var sourceSafePoolFinal = (cleanedKw && cleanedKw.sourceSafeList && cleanedKw.sourceSafeList.length) ? cleanedKw.sourceSafeList : sourceEnglishListForRecovery;
+        var extractedList = (cleanedKw && cleanedKw.list && cleanedKw.list.length) ? cleanedKw.list : aiResult.AI_SEO_FocusKeywords_List;
+        var finalGate = applyFinalEnglishKeywordGateSeoEn_(extractedList, sourceSafePoolFinal);
+        Logger.log('AI SEO Enhancer: AI extracted phrase count=' + finalGate.rawCount);
+        if (finalGate.rejected) Logger.log('AI SEO Enhancer: final English gate rejected extracted phrases=' + finalGate.rejected);
+        if (finalGate.refillUsed) Logger.log('AI SEO Enhancer: refill used clean English-safe pool count=' + finalGate.refillUsed);
+        aiResult.AI_SEO_FocusKeywords_List = finalGate.list;
+
+        var finalPrimary = (cleanedKw && cleanedKw.primary) ? cleanedKw.primary : aiResult.AI_SEO_FocusKeywords;
+        if (!isStrictFinalEnglishKeywordPhraseSeoEn_(finalPrimary)) finalPrimary = '';
+        if (!finalPrimary && aiResult.AI_SEO_FocusKeywords_List.length) finalPrimary = aiResult.AI_SEO_FocusKeywords_List[0];
+        if (!finalPrimary && isStrictFinalEnglishKeywordPhraseSeoEn_(sourceEnglishFocusForRecovery)) finalPrimary = sourceEnglishFocusForRecovery;
+        aiResult.AI_SEO_FocusKeywords = finalPrimary || '';
+        if (!aiResult.AI_SEO_FocusKeywords_List.length && aiResult.AI_SEO_FocusKeywords) aiResult.AI_SEO_FocusKeywords_List = [aiResult.AI_SEO_FocusKeywords];
+        Logger.log('AI SEO Enhancer: final saved keyword list count=' + (Array.isArray(aiResult.AI_SEO_FocusKeywords_List) ? aiResult.AI_SEO_FocusKeywords_List.length : 0));
 
         // --- DUPLICATE CHECK SYSTEM ---
         // Verify keyword uniqueness and resolve if necessary
@@ -269,7 +880,12 @@ function runAiSeoEnhancementBatch() {
         }
         if (aiResult.AI_SEO_Meta_Description) {
           var beforeMeta = String(aiResult.AI_SEO_Meta_Description || '').trim();
-          aiResult.AI_SEO_Meta_Description = finalizeSeoTextFieldEn_(aiResult.AI_SEO_Meta_Description, AI_SEO_META_MAX_LEN_);
+          var metaRes = finalizeSeoMetaDescriptionEn_Result_(aiResult.AI_SEO_Meta_Description, AI_SEO_META_MAX_LEN_);
+          aiResult.AI_SEO_Meta_Description = metaRes.text;
+          if (metaRes.danglingDetected) Logger.log('AI SEO Enhancer: SEO description dangling ending detected');
+          if (metaRes.weakCtaRemoved) Logger.log('AI SEO Enhancer: SEO description weak CTA tail removed');
+          if (metaRes.trimmedToSentence) Logger.log('AI SEO Enhancer: SEO description trimmed to last complete sentence');
+          if (metaRes.fallbackUsed) Logger.log('AI SEO Enhancer: SEO description fallback complete sentence used');
           if (beforeMeta !== aiResult.AI_SEO_Meta_Description) Logger.log('AI SEO Enhancer: SEO meta description cleaned');
         }
         if (aiResult.AI_SEO_Permalink) {
@@ -427,13 +1043,26 @@ function buildSeoPromptFromImprovedContent_(fields, linkedTextBlocks) {
   var originalSeoTitle        = fields.SEO_Title || '';
   var originalMetaDesc        = fields.SEO_Meta_Description || '';
   var originalPermalink       = fields.Permalink || '';
-  var originalSeoFocus        = fields.SEO_FocusKeywords || '';
+  var originalSeoFocusRaw     = fields._EN_Cleaned_Seo_Focus ? fields._EN_Cleaned_Seo_Focus : (fields.SEO_FocusKeywords || '');
   var originalSeoKeywordsList = fields.SEO_FocusKeywords_List || '';
 
+  var rawCount = parseRawKeywordsListForCount_(originalSeoKeywordsList).length;
   var seoKeywordsJoined = '';
-  var englishProvidedList = normalizeKeywordsListToEnglish_(originalSeoKeywordsList);
+  var rawList = parseRawKeywordsListForCount_(originalSeoKeywordsList);
+  var englishProvidedList = [];
+  if (fields._EN_Cleaned_Seo_Keywords_List && Array.isArray(fields._EN_Cleaned_Seo_Keywords_List) && fields._EN_Cleaned_Seo_Keywords_List.length) {
+    englishProvidedList = filterEnglishKeywordsWithLocaleDiagnostics_(fields._EN_Cleaned_Seo_Keywords_List, 'cleaned_override').list;
+  } else {
+    var diagSrc = filterEnglishKeywordsWithLocaleDiagnostics_(rawList, 'source');
+    englishProvidedList = diagSrc.list;
+  }
+  Logger.log('AI SEO Enhancer: source keyword list raw=' + rawCount + ' english=' + englishProvidedList.length);
   if (englishProvidedList.length) {
     seoKeywordsJoined = englishProvidedList.join(', ');
+  }
+  var originalSeoFocus = normalizeEnglishSeoKeywordPhrase_(originalSeoFocusRaw);
+  if (originalSeoFocusRaw && !originalSeoFocus) {
+    Logger.log('AI SEO Enhancer: original focus keyword rejected as non-English: ' + String(originalSeoFocusRaw));
   }
 
   var prompt =

@@ -167,12 +167,17 @@ function progressTripPipeline_(tripId, f) {
   }
   
   // Fetch Improvement Record to check SEO Status (Stage 8)
-  var improvementRec = findImprovementRecordForTrip_(tripId);
+  var improvementRec = resolveImprovementRecordForTripRobust_(tripId, f, false);
   var seoStatus = improvementRec ? (improvementRec.fields.AI_SEO_Status || 'Waiting') : 'Waiting';
   
   // Stage 1 (Content) → Stage 2 (AddOns)
   if (f.AI_Status === 'Done' && f.AI_AddOns_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_AddOns_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'AddOns')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before AddOns start');
+      }
+    } catch (eLeaseAdd) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 1 (Content) → Stage 2 (AddOns)');
     updated = true;
   }
@@ -180,6 +185,11 @@ function progressTripPipeline_(tripId, f) {
   // Stage 2 → Stage 3 (Highlights)
   if (f.AI_AddOns_Status === 'Done' && f.AI_Highlights_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Highlights_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Highlights')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before Highlights start');
+      }
+    } catch (eLeaseHi) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 2 (AddOns) → Stage 3 (Highlights)');
     updated = true;
   }
@@ -187,6 +197,11 @@ function progressTripPipeline_(tripId, f) {
   // Stage 3 → Stage 4 (Itinerary)
   if (f.AI_Highlights_Status === 'Done' && f.AI_Itinerary_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Itinerary_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Itinerary')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before Itinerary start');
+      }
+    } catch (eLeaseIt) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 3 (Highlights) → Stage 4 (Itinerary)');
     updated = true;
   }
@@ -194,6 +209,11 @@ function progressTripPipeline_(tripId, f) {
   // Stage 4 → Stage 5 (Inc/Exc)
   if (f.AI_Itinerary_Status === 'Done' && f.AI_IncExc_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_IncExc_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Inc/Exc')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before Inc/Exc start');
+      }
+    } catch (eLeaseIE) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 4 (Itinerary) → Stage 5 (Inc/Exc)');
     updated = true;
   }
@@ -201,6 +221,11 @@ function progressTripPipeline_(tripId, f) {
   // Stage 5 → Stage 6 (Trip Facts)
   if (f.AI_IncExc_Status === 'Done' && f.AI_TripFacts_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_TripFacts_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Trip Facts')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before Trip Facts start');
+      }
+    } catch (eLeaseTF) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 5 (Inc/Exc) → Stage 6 (Trip Facts)');
     updated = true;
   }
@@ -208,24 +233,41 @@ function progressTripPipeline_(tripId, f) {
   // Stage 6 → Stage 7 (FAQs)
   if (f.AI_TripFacts_Status === 'Done' && f.AI_FAQs_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_FAQs_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'FAQs')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before FAQs start');
+      }
+    } catch (eLeaseFaq) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 6 (Trip Facts) → Stage 7 (FAQs)');
     updated = true;
   }
   
   // Stage 7 → Stage 8 (SEO)
   if (f.AI_FAQs_Status === 'Done' && seoStatus === 'Waiting') {
-    if (improvementRec) {
-      airtableUpdate_('Improvement With AI', improvementRec.id, { AI_SEO_Status: 'Pending' });
+    var recForSeo = improvementRec || resolveImprovementRecordForTripRobust_(tripId, f, true);
+    if (recForSeo && recForSeo.id) {
+      if (!improvementRec) Logger.log('✅ Trip ' + tripId + ': Improvement record recovered/created for SEO transition: ' + recForSeo.id);
+      airtableUpdate_('Improvement With AI', recForSeo.id, { AI_SEO_Status: 'Pending' });
+      try {
+        if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'SEO')) {
+          Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before SEO start');
+        }
+      } catch (eLease) {}
       Logger.log('📍 Trip ' + tripId + ': Stage 7 (FAQs) → Stage 8 (SEO)');
       updated = true;
     } else {
-      Logger.log('❌ Trip ' + tripId + ': Missing Improvement record; cannot start SEO');
+      Logger.log('❌ Trip ' + tripId + ': Failed to find/create Improvement record; cannot start SEO');
     }
   }
 
   // Stage 8 → Stage 9 (Images)
   if (seoStatus === 'Done' && f.AI_Images_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Images_Status', 'Pending');
+    try {
+      if (clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Images')) {
+        Logger.log('✅ Trip ' + tripId + ': Cleared stale stage lease before Images start');
+      }
+    } catch (eLeaseImg) {}
     Logger.log('📍 Trip ' + tripId + ': Stage 8 (SEO) → Stage 9 (Images)');
     updated = true;
   }
@@ -379,4 +421,55 @@ function findImprovementRecordForTrip_(tripId) {
     Logger.log('Error finding Improvement record: ' + e.message);
     return null;
   }
+}
+
+function getLinkedImprovementRecordIdFromTripFields_(tripFields) {
+  var f = tripFields || {};
+  var linked = f['Improvement With AI'];
+  if (Array.isArray(linked) && linked.length) return String(linked[0] || '').trim();
+  return '';
+}
+
+function resolveImprovementRecordForTripRobust_(tripId, tripFields, allowCreate) {
+  var id = String(tripId || '').trim();
+  if (!id) return null;
+  var f = tripFields || {};
+
+  var linkedId = getLinkedImprovementRecordIdFromTripFields_(f);
+  if (linkedId) {
+    try {
+      var direct = ImprovementRepository.fetchImprovementRecordForTrip({
+        tripRecordId: id,
+        directRecordId: linkedId,
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip'
+      });
+      if (direct && direct.id) return direct;
+    } catch (e0) {}
+  }
+
+  var found = null;
+  try {
+    found = ImprovementRepository.fetchImprovementRecordForTrip({
+      tripRecordId: id,
+      tableName: 'Improvement With AI',
+      tripLinkField: 'Trip'
+    });
+  } catch (e1) {}
+  if (found && found.id) return found;
+
+  if (allowCreate) {
+    try {
+      var created = ImprovementRepository.getOrCreateActive({
+        tripRecordId: id,
+        tripFields: f,
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip',
+        initialFields: { AI_SEO_Status: 'Waiting' }
+      });
+      if (created && created.id) return created;
+    } catch (e2) {}
+  }
+
+  return null;
 }

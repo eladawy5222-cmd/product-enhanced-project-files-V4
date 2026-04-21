@@ -221,8 +221,17 @@ function claimStage_(tripRecordId, stageName, ttlSeconds) {
   var currentStage = String(f.Stage_Name || '');
 
   if (currentLeaseMs && currentLeaseMs > now) {
-    if (currentOwner && currentOwner !== workerId) return false;
-    if (currentStage && currentStage !== stageName) return false;
+    var mismatch = (currentStage && currentStage !== stageName);
+    var foreignOwner = (currentOwner && currentOwner !== workerId);
+    if ((foreignOwner || mismatch) && isRecoverableStaleStageLease_(f, stageName, now, tripRecordId)) {
+      clearStageLeaseForTrip_(tripRecordId, 'recoverable_stale_lease_for_' + stageName);
+      currentLeaseMs = 0;
+      currentOwner = '';
+      currentStage = '';
+    } else {
+      if (foreignOwner) return false;
+      if (mismatch) return false;
+    }
   }
 
   try {
@@ -244,5 +253,120 @@ function claimStage_(tripRecordId, stageName, ttlSeconds) {
     return String(vf.Stage_RunId || '') === runId;
   } catch (e3) {
     return true;
+  }
+}
+
+function getStatusFieldForStageName_(stageName) {
+  var s = String(stageName || '').trim();
+  if (s === 'Content') return 'AI_Status';
+  if (s === 'AddOns') return 'AI_AddOns_Status';
+  if (s === 'Highlights') return 'AI_Highlights_Status';
+  if (s === 'Itinerary') return 'AI_Itinerary_Status';
+  if (s === 'Inc/Exc' || s === 'IncExc' || s === 'Includes/Excludes') return 'AI_IncExc_Status';
+  if (s === 'Trip Facts' || s === 'TripFacts') return 'AI_TripFacts_Status';
+  if (s === 'FAQs' || s === 'Faqs') return 'AI_FAQs_Status';
+  if (s === 'Images') return 'AI_Images_Status';
+  return '';
+}
+
+function getStageOrderIndex_(stageName) {
+  var s = String(stageName || '').trim();
+  if (s === 'Content') return 1;
+  if (s === 'AddOns') return 2;
+  if (s === 'Highlights') return 3;
+  if (s === 'Itinerary') return 4;
+  if (s === 'Inc/Exc' || s === 'IncExc' || s === 'Includes/Excludes') return 5;
+  if (s === 'Trip Facts' || s === 'TripFacts') return 6;
+  if (s === 'FAQs' || s === 'Faqs') return 7;
+  if (s === 'SEO') return 8;
+  if (s === 'Images') return 9;
+  return 0;
+}
+
+function isRecoverableStaleStageLease_(tripFields, requestedStage, nowMs, tripRecordId) {
+  var f = tripFields || {};
+  var now = Number(nowMs || Date.now());
+  var leaseRaw = f.Stage_LeaseUntil;
+  var leaseMs = 0;
+  if (leaseRaw) {
+    var d = new Date(leaseRaw);
+    if (!isNaN(d.getTime())) leaseMs = d.getTime();
+  }
+  if (!leaseMs || leaseMs <= now) return false;
+  var currentStage = String(f.Stage_Name || '').trim();
+  var req = String(requestedStage || '').trim();
+  if (!req) return false;
+  if (!currentStage) {
+    if (req !== 'Images') return false;
+    if (String(f.AI_Images_Status || '') !== 'Pending') return false;
+    var statusFields = ['AI_Status','AI_AddOns_Status','AI_Highlights_Status','AI_Itinerary_Status','AI_IncExc_Status','AI_TripFacts_Status','AI_FAQs_Status','AI_Images_Status'];
+    for (var pi = 0; pi < statusFields.length; pi++) {
+      if (String(f[statusFields[pi]] || '') === 'Processing') return false;
+    }
+    try {
+      var rec2 = ImprovementRepository.fetchImprovementRecordForTrip({
+        tripRecordId: String(tripRecordId || '') || null,
+        tripPublicId: f.TripID || '',
+        tripName: f.Title || '',
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip'
+      });
+      if (rec2 && rec2.fields && String(rec2.fields.AI_SEO_Status || '') === 'Processing') return false;
+    } catch (eNoStageSeo) {}
+    return true;
+  }
+  if (currentStage === req) return false;
+  var curOrder = getStageOrderIndex_(currentStage);
+  var reqOrder = getStageOrderIndex_(req);
+  if (curOrder && reqOrder && reqOrder <= curOrder) return false;
+
+  if (currentStage === 'SEO') {
+    try {
+      var rec = ImprovementRepository.fetchImprovementRecordForTrip({
+        tripRecordId: String(tripRecordId || '') || null,
+        tripPublicId: f.TripID || '',
+        tripName: f.Title || '',
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip'
+      });
+      if (rec && rec.fields) {
+        var seoSt = String(rec.fields.AI_SEO_Status || '');
+        if (seoSt === 'Done' || seoSt === 'Error') return true;
+      }
+    } catch (eSeoLease) {}
+    return false;
+  }
+
+  var statusField = getStatusFieldForStageName_(currentStage);
+  if (!statusField) return false;
+  var st = String(f[statusField] || '');
+  if (!(st === 'Done' || st === 'Error')) return false;
+  return true;
+}
+
+function clearStageLeaseForTrip_(tripRecordId, reason) {
+  try {
+    airtableUpdate_('Trips', tripRecordId, {
+      Stage_Name: '',
+      Stage_Owner: '',
+      Stage_RunId: '',
+      Stage_LeaseUntil: ''
+    });
+    Logger.log('Stage lease cleared for Trip ' + tripRecordId + (reason ? (' (' + reason + ')') : ''));
+  } catch (e) {}
+}
+
+function clearStageLeaseIfRecoverableForRequestedStage_(tripRecordId, requestedStage) {
+  try {
+    var res = airtableGet_('Trips', { filterByFormula: "RECORD_ID() = '" + String(tripRecordId) + "'", maxRecords: 1 });
+    var recs = res && res.records ? res.records : [];
+    if (!recs.length) return false;
+    var f = recs[0].fields || {};
+    var now = Date.now();
+    if (!isRecoverableStaleStageLease_(f, requestedStage, now, tripRecordId)) return false;
+    clearStageLeaseForTrip_(tripRecordId, 'pre_' + String(requestedStage || '') + '_transition');
+    return true;
+  } catch (e) {
+    return false;
   }
 }

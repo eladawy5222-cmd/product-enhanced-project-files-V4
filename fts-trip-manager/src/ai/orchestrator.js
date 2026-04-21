@@ -245,12 +245,17 @@ async function progressTripPipeline_(tripId, f) {
   // Fetch Improvement Record to check SEO Status (Stage 8)
   const tripNumber = f && f.TripID ? f.TripID : ''
   const tripName = f && f.Title ? f.Title : ''
-  const improvementRec = await findImprovementRecordForTrip_(tripId, tripNumber, tripName)
+  const improvementRec = await resolveImprovementRecordForTripRobust_(tripId, f, tripNumber, tripName, false)
   const seoStatus = improvementRec ? (improvementRec.fields.AI_SEO_Status || 'Waiting') : 'Waiting'
   
   // Stage 1 (Content) → Stage 2 (AddOns)
   if (f.AI_Status === 'Done' && f.AI_AddOns_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_AddOns_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'AddOns')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before AddOns start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 1 (Content) → Stage 2 (AddOns)');
     updated = true;
   }
@@ -258,6 +263,11 @@ async function progressTripPipeline_(tripId, f) {
   // Stage 2 → Stage 3 (Highlights)
   if (f.AI_AddOns_Status === 'Done' && f.AI_Highlights_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_Highlights_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Highlights')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before Highlights start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 2 (AddOns) → Stage 3 (Highlights)');
     updated = true;
   }
@@ -265,6 +275,11 @@ async function progressTripPipeline_(tripId, f) {
   // Stage 3 → Stage 4 (Itinerary)
   if (f.AI_Highlights_Status === 'Done' && f.AI_Itinerary_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_Itinerary_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Itinerary')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before Itinerary start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 3 (Highlights) → Stage 4 (Itinerary)');
     updated = true;
   }
@@ -272,6 +287,11 @@ async function progressTripPipeline_(tripId, f) {
   // Stage 4 → Stage 5 (Inc/Exc)
   if (f.AI_Itinerary_Status === 'Done' && f.AI_IncExc_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_IncExc_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Inc/Exc')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before Inc/Exc start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 4 (Itinerary) → Stage 5 (Inc/Exc)');
     updated = true;
   }
@@ -279,6 +299,11 @@ async function progressTripPipeline_(tripId, f) {
   // Stage 5 → Stage 6 (Trip Facts)
   if (f.AI_IncExc_Status === 'Done' && f.AI_TripFacts_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_TripFacts_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Trip Facts')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before Trip Facts start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 5 (Inc/Exc) → Stage 6 (Trip Facts)');
     updated = true;
   }
@@ -286,24 +311,41 @@ async function progressTripPipeline_(tripId, f) {
   // Stage 6 → Stage 7 (FAQs)
   if (f.AI_TripFacts_Status === 'Done' && f.AI_FAQs_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_FAQs_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'FAQs')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before FAQs start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 6 (Trip Facts) → Stage 7 (FAQs)');
     updated = true;
   }
   
   // Stage 7 → Stage 8 (SEO)
   if (f.AI_FAQs_Status === 'Done' && seoStatus === 'Waiting') {
-    if (improvementRec) {
-      await airtableUpdate_('Improvement With AI', improvementRec.id, { AI_SEO_Status: 'Pending' })
+    const recForSeo = improvementRec || await resolveImprovementRecordForTripRobust_(tripId, f, tripNumber, tripName, true)
+    if (recForSeo && recForSeo.id) {
+      if (!improvementRec) log('✅ Trip ' + tripId + ': Improvement record recovered/created for SEO transition: ' + recForSeo.id)
+      await airtableUpdate_('Improvement With AI', recForSeo.id, { AI_SEO_Status: 'Pending' })
+      try {
+        const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'SEO')
+        if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before SEO start')
+      } catch {
+      }
       log('📍 Trip ' + tripId + ': Stage 7 (FAQs) → Stage 8 (SEO)');
       updated = true
     } else {
-      log('❌ Trip ' + tripId + ': Missing Improvement record; cannot start SEO')
+      log('❌ Trip ' + tripId + ': Failed to find/create Improvement record; cannot start SEO')
     }
   }
 
   // Stage 8 → Stage 9 (Images)
   if (seoStatus === 'Done' && f.AI_Images_Status === 'Waiting') {
     await updateEnhancementStatus_(tripId, 'AI_Images_Status', 'Pending')
+    try {
+      const cleared = await clearStageLeaseIfRecoverableForRequestedStage_(tripId, 'Images')
+      if (cleared) log('✅ Trip ' + tripId + ': Cleared stale stage lease before Images start')
+    } catch {
+    }
     log('📍 Trip ' + tripId + ': Stage 8 (SEO) → Stage 9 (Images)');
     updated = true;
   }
@@ -437,6 +479,140 @@ async function findImprovementRecordForTrip_(tripId, tripNumber, tripName) {
   }
 }
 
+function getStatusFieldForStageName_(stageName) {
+  const s = String(stageName || '').trim()
+  if (s === 'Content') return 'AI_Status'
+  if (s === 'Images') return 'AI_Images_Status'
+  return ''
+}
+
+function getStageOrderIndex_(stageName) {
+  const s = String(stageName || '').trim()
+  if (s === 'Content') return 1
+  if (s === 'AddOns') return 2
+  if (s === 'Highlights') return 3
+  if (s === 'Itinerary') return 4
+  if (s === 'Inc/Exc' || s === 'IncExc' || s === 'Includes/Excludes') return 5
+  if (s === 'Trip Facts' || s === 'TripFacts') return 6
+  if (s === 'FAQs' || s === 'Faqs') return 7
+  if (s === 'SEO') return 8
+  if (s === 'Images') return 9
+  return 0
+}
+
+function getStatusFieldForStageName_(stageName) {
+  const s = String(stageName || '').trim()
+  if (s === 'Content') return 'AI_Status'
+  if (s === 'AddOns') return 'AI_AddOns_Status'
+  if (s === 'Highlights') return 'AI_Highlights_Status'
+  if (s === 'Itinerary') return 'AI_Itinerary_Status'
+  if (s === 'Inc/Exc' || s === 'IncExc' || s === 'Includes/Excludes') return 'AI_IncExc_Status'
+  if (s === 'Trip Facts' || s === 'TripFacts') return 'AI_TripFacts_Status'
+  if (s === 'FAQs' || s === 'Faqs') return 'AI_FAQs_Status'
+  if (s === 'Images') return 'AI_Images_Status'
+  return ''
+}
+
+async function isRecoverableStaleStageLease_(tripFields, requestedStage, tripRecordId) {
+  const f = tripFields || {}
+  const now = Date.now()
+  const leaseRaw = f.Stage_LeaseUntil
+  let leaseMs = 0
+  if (leaseRaw) {
+    const d = new Date(leaseRaw)
+    if (!Number.isNaN(d.getTime())) leaseMs = d.getTime()
+  }
+  if (!leaseMs || leaseMs <= now) return false
+
+  const currentStage = String(f.Stage_Name || '').trim()
+  const req = String(requestedStage || '').trim()
+  if (!currentStage || !req) return false
+  if (currentStage === req) return false
+  const curOrder = getStageOrderIndex_(currentStage)
+  const reqOrder = getStageOrderIndex_(req)
+  if (curOrder && reqOrder && reqOrder <= curOrder) return false
+
+  if (currentStage === 'SEO') {
+    try {
+      const rec = await ImprovementRepository.fetchImprovementRecordForTrip({
+        tripRecordId: String(tripRecordId || ''),
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip'
+      })
+      const st = rec && rec.fields ? String(rec.fields.AI_SEO_Status || '') : ''
+      return st === 'Done' || st === 'Error'
+    } catch {
+      return false
+    }
+  }
+
+  const statusField = getStatusFieldForStageName_(currentStage)
+  if (!statusField) return false
+  const st2 = String(f[statusField] || '')
+  return st2 === 'Done' || st2 === 'Error'
+}
+
+async function clearStageLeaseIfRecoverableForRequestedStage_(tripRecordId, requestedStage) {
+  let res = null
+  try {
+    res = await airtableGet_('Trips', { filterByFormula: `RECORD_ID() = '${String(tripRecordId)}'`, maxRecords: 1 })
+  } catch {
+    return false
+  }
+  const recs = res && res.records ? res.records : []
+  if (!recs.length) return false
+  const f = recs[0].fields || {}
+  const ok = await isRecoverableStaleStageLease_(f, requestedStage, tripRecordId)
+  if (!ok) return false
+  try {
+    await airtableUpdate_('Trips', tripRecordId, { Stage_Name: '', Stage_Owner: '', Stage_RunId: '', Stage_LeaseUntil: '' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function isRecoverableStaleStageLease_(tripFields, requestedStage, nowMs) {
+  const f = tripFields || {}
+  const now = Number(nowMs || Date.now())
+  const leaseRaw = f.Stage_LeaseUntil
+  let leaseMs = 0
+  if (leaseRaw) {
+    const d = new Date(leaseRaw)
+    if (!Number.isNaN(d.getTime())) leaseMs = d.getTime()
+  }
+  if (!leaseMs || leaseMs <= now) return false
+  const currentStage = String(f.Stage_Name || '').trim()
+  const req = String(requestedStage || '').trim()
+  if (!currentStage || !req) return false
+  if (currentStage === req) return false
+  const statusField = getStatusFieldForStageName_(currentStage)
+  if (!statusField) return false
+  const st = String(f[statusField] || '')
+  if (!(st === 'Done' || st === 'Error')) return false
+  return true
+}
+
+async function clearStageLeaseIfRecoverableForRequestedStage_(tripRecordId, requestedStage) {
+  let res = null
+  try {
+    res = await airtableGet_('Trips', { filterByFormula: `RECORD_ID() = '${String(tripRecordId)}'`, maxRecords: 1 })
+  } catch {
+    return false
+  }
+  const recs = res && res.records ? res.records : []
+  if (!recs.length) return false
+  const f = recs[0].fields || {}
+  const now = Date.now()
+  if (!isRecoverableStaleStageLease_(f, requestedStage, now)) return false
+  try {
+    await airtableUpdate_('Trips', tripRecordId, { Stage_Name: '', Stage_Owner: '', Stage_RunId: '', Stage_LeaseUntil: '' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 function createOrchestrator(options) {
   let inited = false
   async function ensureInit() {
@@ -463,6 +639,66 @@ function createOrchestrator(options) {
       return createOrchestratorTriggers(...args)
     }
   }
+}
+
+function getLinkedImprovementRecordIdFromTripFields_(tripFields) {
+  const f = tripFields || {}
+  const linked = f['Improvement With AI']
+  if (Array.isArray(linked) && linked.length) return String(linked[0] || '').trim()
+  return ''
+}
+
+async function resolveImprovementRecordForTripRobust_(tripId, tripFields, tripNumber, tripName, allowCreate) {
+  const id = String(tripId || '').trim()
+  if (!id) return null
+  const f = tripFields || {}
+
+  const linkedId = getLinkedImprovementRecordIdFromTripFields_(f)
+  if (linkedId) {
+    try {
+      const direct = await ImprovementRepository.fetchImprovementRecordForTrip({
+        tripRecordId: id,
+        tripPublicId: tripNumber || '',
+        tripName: tripName || '',
+        directRecordId: linkedId,
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip'
+      })
+      if (direct && direct.id) return direct
+    } catch {
+    }
+  }
+
+  let found = null
+  try {
+    found = await ImprovementRepository.fetchImprovementRecordForTrip({
+      tripRecordId: id,
+      tripPublicId: tripNumber || '',
+      tripName: tripName || '',
+      tableName: 'Improvement With AI',
+      tripLinkField: 'Trip'
+    })
+  } catch {
+  }
+  if (found && found.id) return found
+
+  if (allowCreate) {
+    try {
+      const created = await ImprovementRepository.getOrCreateActive({
+        tripRecordId: id,
+        tripFields: f,
+        tripPublicId: tripNumber || '',
+        tripName: tripName || '',
+        tableName: 'Improvement With AI',
+        tripLinkField: 'Trip',
+        initialFields: { AI_SEO_Status: 'Waiting' }
+      })
+      if (created && created.id) return created
+    } catch {
+    }
+  }
+
+  return null
 }
 
 module.exports = { createOrchestrator }
