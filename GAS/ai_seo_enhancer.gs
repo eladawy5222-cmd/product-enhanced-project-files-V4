@@ -27,6 +27,83 @@ if (typeof AI_IMPROVEMENT_TABLE === 'undefined') {
 // عدد السجلات التي يتم تحسينها في كل تشغيل
 var AI_SEO_BATCH_SIZE = 1;  // Process one trip at a time
 
+var AI_SEO_TITLE_MAX_LEN_ = 100;
+var AI_SEO_META_MAX_LEN_ = 160;
+var AI_SEO_SLUG_MAX_LEN_ = 75;
+var AI_SEO_SLUG_MIN_LEN_ = 18;
+
+function normalizeWhitespaceSeoEn_(s) {
+  return String(s || '').replace(/\s+/g, ' ').trim();
+}
+
+function truncateAtWordBoundarySeoEn_(text, maxLen) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  var n = Number(maxLen || 0);
+  if (!n || n <= 0) return s;
+  if (s.length <= n) return s;
+  var slice = s.substring(0, n + 1);
+  var cut = slice.lastIndexOf(' ');
+  if (cut < Math.floor(n * 0.7)) cut = n;
+  return s.substring(0, cut).trim();
+}
+
+function stripTrailingConnectorsSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  var badSuffixes = [
+    ' &', ' -', ':', ';', ',', '|',
+    ' and', ' or', ' but',
+    ' with', ' for', ' to', ' of', ' in', ' on', ' at', ' by', ' from'
+  ];
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (var i = 0; i < badSuffixes.length; i++) {
+      var suf = badSuffixes[i];
+      if (s.length > suf.length && s.toLowerCase().lastIndexOf(suf) === s.length - suf.length) {
+        s = s.substring(0, s.length - suf.length).trim();
+        changed = true;
+      }
+    }
+    s = s.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
+    s = s.replace(/[^a-zA-Z0-9)]+$/g, '').trim();
+  }
+  return s;
+}
+
+function finalizeSeoTextFieldEn_(text, maxLen) {
+  var before = String(text || '');
+  var s = stripTrailingConnectorsSeoEn_(truncateAtWordBoundarySeoEn_(before, maxLen));
+  s = stripTrailingConnectorsSeoEn_(s);
+  return s;
+}
+
+function normalizeSlugEn_(slug) {
+  var s = String(slug || '').toLowerCase().trim();
+  s = s.replace(/\s+/g, '-');
+  s = s.replace(/[^a-z0-9\-]/g, '');
+  s = s.replace(/-+/g, '-');
+  s = s.replace(/^-+|-+$/g, '');
+  return s;
+}
+
+function finalizeSeoSlugEn_(candidate, fallbackSlug, tripTitle) {
+  var s = normalizeSlugEn_(candidate);
+  var fb = normalizeSlugEn_(fallbackSlug);
+  var tt = normalizeSlugEn_(tripTitle);
+  if (s.length > AI_SEO_SLUG_MAX_LEN_) {
+    var cut = s.substring(0, AI_SEO_SLUG_MAX_LEN_);
+    var lastHyphen = cut.lastIndexOf('-');
+    if (lastHyphen > Math.floor(AI_SEO_SLUG_MAX_LEN_ * 0.6)) cut = cut.substring(0, lastHyphen);
+    s = cut.replace(/-+$/g, '');
+  }
+  if (s.length < AI_SEO_SLUG_MIN_LEN_) {
+    if (fb.length >= AI_SEO_SLUG_MIN_LEN_) s = fb;
+    else if (tt.length >= AI_SEO_SLUG_MIN_LEN_) s = tt;
+  }
+  return s;
+}
+
 /************************************************************
  * KEYWORDS HELPERS
  ************************************************************/
@@ -175,66 +252,32 @@ function runAiSeoEnhancementBatch() {
         // ensureUniqueKeyword_(aiResult, tripId, improvementId);
         // ------------------------------
 
-        // --- SAFETY NET: HARD TRUNCATION TO ENFORCE LIMITS ---
-        function truncateText_(text, maxLength) {
-          if (!text) return '';
-          text = String(text).trim();
-          if (text.length <= maxLength) return text;
-          // Try to cut at the last space to avoid breaking words, if possible
-          var truncated = text.substring(0, maxLength);
-          var lastSpace = truncated.lastIndexOf(' ');
-          if (lastSpace > maxLength * 0.8) { // Only cut at space if it's not too far back
-             return truncated.substring(0, lastSpace).trim();
-          }
-          return truncated.trim();
-        }
+        var improvedSignals = [
+          combinedFields.AI_Trip_Description,
+          combinedFields.AI_Overview_Section_Title,
+          combinedFields.AI_Itinerary_Description,
+          combinedFields.AI_Tab_Content,
+          combinedFields.AI_Why_People_Love_This_Trip_Section_Title
+        ].map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+        if (improvedSignals.length) Logger.log('AI SEO Enhancer: Using improved content as primary SEO source');
+        else Logger.log('AI SEO Enhancer: Using raw fallback content for SEO source');
 
         if (aiResult.AI_SEO_Title) {
-            // Relaxed limit to avoid cutting off full titles as per user request
-            aiResult.AI_SEO_Title = truncateText_(aiResult.AI_SEO_Title, 100);
-            
-            // --- ENFORCE SENTIMENT WORD ---
-            // DISABLED: The new prompt logic handles strict formatting (e.g. "From X: Y") 
-            // which might be broken by blindly prepending words here.
-            // We now rely on the AI prompt to include sentiment words if space permits.
-         
-         // Final safety check: remove trailing symbols
-         var badSuffixes = [' &', ' -', ':', ' and', ' with', ' for'];
-         for (var k = 0; k < badSuffixes.length; k++) {
-            if (aiResult.AI_SEO_Title.endsWith(badSuffixes[k])) {
-                aiResult.AI_SEO_Title = aiResult.AI_SEO_Title.substring(0, aiResult.AI_SEO_Title.length - badSuffixes[k].length).trim();
-            }
-         }
-         // Also general trim of non-alphanumeric at end?
-         aiResult.AI_SEO_Title = aiResult.AI_SEO_Title.replace(/[^a-zA-Z0-9)]+$/, '');
-      }
-      // ------------------------------
-        if (aiResult.AI_SEO_Permalink) {
-           // Ensure strict slug format: lowercase, hyphens, no special chars
-           var slug = String(aiResult.AI_SEO_Permalink).toLowerCase().trim();
-           slug = slug.replace(/\s+/g, '-');        // Spaces to hyphens
-           slug = slug.replace(/[^a-z0-9\-]/g, ''); // Remove invalid chars
-           slug = slug.replace(/-+/g, '-');         // Collapse multiple hyphens
-           
-           // Hard truncate to 45
-           if (slug.length > 45) {
-             slug = slug.substring(0, 45);
-             // Don't cut in middle of word if possible, but for slug, cutting at hyphen is safer
-             var lastHyphen = slug.lastIndexOf('-');
-             if (lastHyphen > 20) { // Only cut at hyphen if it's not too short
-               slug = slug.substring(0, lastHyphen);
-             }
-           }
-           
-           // Remove trailing hyphen
-           slug = slug.replace(/-$/, '');
-           
-           aiResult.AI_SEO_Permalink = slug;
+          var beforeTitle = String(aiResult.AI_SEO_Title || '').trim();
+          aiResult.AI_SEO_Title = finalizeSeoTextFieldEn_(aiResult.AI_SEO_Title, AI_SEO_TITLE_MAX_LEN_);
+          if (beforeTitle !== aiResult.AI_SEO_Title) Logger.log('AI SEO Enhancer: SEO title cleaned');
         }
         if (aiResult.AI_SEO_Meta_Description) {
-           aiResult.AI_SEO_Meta_Description = truncateText_(aiResult.AI_SEO_Meta_Description, 160);
+          var beforeMeta = String(aiResult.AI_SEO_Meta_Description || '').trim();
+          aiResult.AI_SEO_Meta_Description = finalizeSeoTextFieldEn_(aiResult.AI_SEO_Meta_Description, AI_SEO_META_MAX_LEN_);
+          if (beforeMeta !== aiResult.AI_SEO_Meta_Description) Logger.log('AI SEO Enhancer: SEO meta description cleaned');
         }
-        // -----------------------------------------------------
+        if (aiResult.AI_SEO_Permalink) {
+          var beforeSlug = String(aiResult.AI_SEO_Permalink || '').trim();
+          var originalPermalink = combinedFields.Permalink || '';
+          aiResult.AI_SEO_Permalink = finalizeSeoSlugEn_(aiResult.AI_SEO_Permalink, originalPermalink, combinedFields.Title || '');
+          if (beforeSlug !== aiResult.AI_SEO_Permalink) Logger.log('AI SEO Enhancer: slug trimmed/repaired');
+        }
 
         // 6) Prepare Update for Improvement With AI
         var updateFields = {
@@ -260,11 +303,9 @@ function runAiSeoEnhancementBatch() {
           airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { AI_SEO_Status: 'Done' });
         }
 
-        // 9) Update Trips table with new optimized Slug AND AI_Status = Processing (as requested)
+        // 9) Update Trips table with new optimized Slug
         if (tripId) {
-          var tripUpdates = {
-            AI_Status: 'Processing' // Signal that SEO is done and Content is next
-          };
+          var tripUpdates = {};
           
           if (aiResult.AI_SEO_Permalink) {
             tripUpdates.Slug = String(aiResult.AI_SEO_Permalink);
@@ -337,13 +378,13 @@ function fetchTripsNeedingSeo_(limit) {
  * 
  * Generates a prompt for AI to produce RankMath-compliant SEO data.
  * - Title: HARD MAX 60 characters
- * - Slug (AI_SEO_Permalink): HARD MAX 45 characters
- * - Meta Description: HARD MAX 155 characters (أقصر لضمان رضا Rank Math)
+ * - Slug (AI_SEO_Permalink): HARD MAX 70 characters
+ * - Meta Description: HARD MAX 160 characters
  */
 function buildSeoPromptFromImprovedContent_(fields, linkedTextBlocks) {
   // 1. Determine Content Source (Improved vs Raw)
-  // Since this now runs as Stage 1, improved fields will likely be empty.
-  // We fallback to raw fields.
+  // This stage is designed to benefit from improved content when available.
+  // Fallback to raw fields only if improved fields are missing.
   
   var overviewTitle   = fields.AI_Overview_Section_Title || fields.Overview_Section_Title || '';
   var tripDescription = fields.AI_Trip_Description || fields.Trip_Description || '';
@@ -541,7 +582,7 @@ function buildSeoPromptFromImprovedContent_(fields, linkedTextBlocks) {
     "3) AI_SEO_Permalink:\n" +
     "- Original Permalink: '" + originalPermalink + "'\n" +
     "- CRITICAL: FIRST, evaluate if the original permalink is ALREADY SEO-FRIENDLY:\n" +
-    "  ✓ Is it 45 characters or less?\n" +
+    "  ✓ Is it 75 characters or less?\n" +
     "  ✓ Is it in lowercase English with hyphens only (no underscores, no spaces, no special chars)?\n" +
     "  ✓ Does it contain the Focus Keyword or semantically related terms?\n" +
     "  ✓ Is it clear, descriptive, and uses important words only?\n" +

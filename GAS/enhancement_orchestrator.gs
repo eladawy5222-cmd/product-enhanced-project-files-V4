@@ -6,15 +6,15 @@
  * the next one begins.
  * 
  * Pipeline Stages:
- * 1. ai_enhancer (Base Content)
+ * 1. ai_enhancer (Content)
  * 2. ai_addons_enhancer (Add-ons)
- * 3.1. ai_highlights (Highlights)
- * 3.2. ai_itinerary_enhancer (Itinerary)
- * 3.3. ai_includes_excludes (Includes/Excludes)
- * 3.4. ai_trip_facts (Trip Facts)
- * 3.5. ai_faqs_enhancer (FAQs)
- * 3.6. ai_seo_enhancer (SEO)
- * 3.7. ai_images_enhancer (Images)
+ * 3. ai_highlights (Highlights)
+ * 4. ai_itinerary_enhancer (Itinerary)
+ * 5. ai_includes_excludes (Includes/Excludes)
+ * 6. ai_trip_facts (Trip Facts)
+ * 7. ai_faqs_enhancer (FAQs)
+ * 8. ai_seo_enhancer (SEO)
+ * 9. ai_images_enhancer (Images)
  */
 
 /**
@@ -142,7 +142,7 @@ function progressTripPipeline_(tripId, f) {
   var updated = false;
   
   // 🆕 SPECIAL CASE: Detect newly initialized pipelines
-  // When Pipeline_Status = 'Initialized', reset and activate Stage 1 (SEO)
+  // When Pipeline_Status = 'Initialized', reset and activate Stage 1 (Content)
   if (f.Pipeline_Status === 'Initialized') {
     Logger.log('🚀 Trip ' + tripId + ': Initializing Pipeline (Reset & Start)...');
     
@@ -151,13 +151,13 @@ function progressTripPipeline_(tripId, f) {
       tripFields: f,
       tableName: 'Improvement With AI',
       tripLinkField: 'Trip',
-      initialFields: { AI_SEO_Status: 'Pending', AI_Status: 'Waiting' }
+      initialFields: { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' }
     });
 
     if (imp && imp.id) {
-      airtableUpdate_('Improvement With AI', imp.id, { AI_SEO_Status: 'Pending', AI_Status: 'Waiting' });
-      Logger.log('✅ Ensured Improvement record with SEO = Pending');
-      airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress' });
+      airtableUpdate_('Improvement With AI', imp.id, { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' });
+      Logger.log('✅ Ensured Improvement record with Content = Pending (SEO = Waiting)');
+      airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress', AI_Status: 'Pending' });
       Logger.log('✅ Trip ' + tripId + ': Pipeline moved to In Progress');
     } else {
       Logger.log('❌ Failed to ensure Improvement record for Trip ' + tripId);
@@ -166,71 +166,67 @@ function progressTripPipeline_(tripId, f) {
     return; // Exit - next iteration will progress normally
   }
   
-  // Fetch Improvement Record to check SEO Status (Stage 1)
+  // Fetch Improvement Record to check SEO Status (Stage 8)
   var improvementRec = findImprovementRecordForTrip_(tripId);
-  var seoStatus = improvementRec ? (improvementRec.fields.AI_SEO_Status || 'Pending') : 'Pending';
+  var seoStatus = improvementRec ? (improvementRec.fields.AI_SEO_Status || 'Waiting') : 'Waiting';
   
-  // Stage 1 (SEO) → Stage 2 (Content)
-  // Accept 'Waiting' OR 'Processing' (since SEO enhancer sets it to Processing)
-  if (seoStatus === 'Done' && (f.AI_Status === 'Waiting' || f.AI_Status === 'Processing')) {
-    updateEnhancementStatus_(tripId, 'AI_Status', 'Pending');
-    
-    // Also update AI_Status in Improvement table to Pending (Critical for ai_enhancer.gs)
-    if (improvementRec) {
-      airtableUpdate_('Improvement With AI', improvementRec.id, { AI_Status: 'Pending' });
-    }
-    
-    airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress' });
-    Logger.log('📍 Trip ' + tripId + ': Stage 1 (SEO) → Stage 2 (Content)');
-    updated = true;
-  }
-  
-  // Stage 2 (Content) → Stage 3 (AddOns)
+  // Stage 1 (Content) → Stage 2 (AddOns)
   if (f.AI_Status === 'Done' && f.AI_AddOns_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_AddOns_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 2 (Content) → Stage 3 (AddOns)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 1 (Content) → Stage 2 (AddOns)');
     updated = true;
   }
   
-  // Stage 3 → Stage 4 (Highlights)
+  // Stage 2 → Stage 3 (Highlights)
   if (f.AI_AddOns_Status === 'Done' && f.AI_Highlights_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Highlights_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 3 (AddOns) → Stage 4 (Highlights)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 2 (AddOns) → Stage 3 (Highlights)');
     updated = true;
   }
   
-  // Stage 4 → Stage 5 (Itinerary)
+  // Stage 3 → Stage 4 (Itinerary)
   if (f.AI_Highlights_Status === 'Done' && f.AI_Itinerary_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Itinerary_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 4 (Highlights) → Stage 5 (Itinerary)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 3 (Highlights) → Stage 4 (Itinerary)');
     updated = true;
   }
   
-  // Stage 5 → Stage 6 (Inc/Exc)
+  // Stage 4 → Stage 5 (Inc/Exc)
   if (f.AI_Itinerary_Status === 'Done' && f.AI_IncExc_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_IncExc_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 5 (Itinerary) → Stage 6 (Inc/Exc)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 4 (Itinerary) → Stage 5 (Inc/Exc)');
     updated = true;
   }
   
-  // Stage 6 → Stage 7 (Trip Facts)
+  // Stage 5 → Stage 6 (Trip Facts)
   if (f.AI_IncExc_Status === 'Done' && f.AI_TripFacts_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_TripFacts_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 6 (Inc/Exc) → Stage 7 (Trip Facts)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 5 (Inc/Exc) → Stage 6 (Trip Facts)');
     updated = true;
   }
   
-  // Stage 7 → Stage 8 (FAQs)
+  // Stage 6 → Stage 7 (FAQs)
   if (f.AI_TripFacts_Status === 'Done' && f.AI_FAQs_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_FAQs_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 7 (Trip Facts) → Stage 8 (FAQs)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 6 (Trip Facts) → Stage 7 (FAQs)');
     updated = true;
   }
   
+  // Stage 7 → Stage 8 (SEO)
+  if (f.AI_FAQs_Status === 'Done' && seoStatus === 'Waiting') {
+    if (improvementRec) {
+      airtableUpdate_('Improvement With AI', improvementRec.id, { AI_SEO_Status: 'Pending' });
+      Logger.log('📍 Trip ' + tripId + ': Stage 7 (FAQs) → Stage 8 (SEO)');
+      updated = true;
+    } else {
+      Logger.log('❌ Trip ' + tripId + ': Missing Improvement record; cannot start SEO');
+    }
+  }
+
   // Stage 8 → Stage 9 (Images)
-  if (f.AI_FAQs_Status === 'Done' && f.AI_Images_Status === 'Waiting') {
+  if (seoStatus === 'Done' && f.AI_Images_Status === 'Waiting') {
     updateEnhancementStatus_(tripId, 'AI_Images_Status', 'Pending');
-    Logger.log('📍 Trip ' + tripId + ': Stage 8 (FAQs) → Stage 9 (Images)');
+    Logger.log('📍 Trip ' + tripId + ': Stage 8 (SEO) → Stage 9 (Images)');
     updated = true;
   }
 

@@ -1109,6 +1109,52 @@ function applyNaturalSeoPlacementForEnglishImageMetadata_AiImages_(meta, ctx, ke
   return out;
 }
 
+function shouldEnforceCivilizationMuseumEntity_AiImages_(ctx, tripFields, tripImprovement) {
+  var parts = [];
+  parts.push(ctx && ctx.tripTitle ? ctx.tripTitle : '');
+  parts.push(ctx && ctx.seoTitle ? ctx.seoTitle : '');
+  parts.push(ctx && ctx.seoDesc ? ctx.seoDesc : '');
+  parts.push(ctx && ctx.overview ? ctx.overview : '');
+  parts.push(ctx && ctx.itinerary ? ctx.itinerary : '');
+  parts.push(tripFields && tripFields.Title ? tripFields.Title : '');
+  parts.push(tripImprovement && tripImprovement.AI_SEO_Title ? tripImprovement.AI_SEO_Title : '');
+  parts.push(tripImprovement && tripImprovement.AI_SEO_Meta_Description ? tripImprovement.AI_SEO_Meta_Description : '');
+  var hay = parts.join(' ').toLowerCase();
+  if (!hay) return false;
+  if (hay.indexOf('nmec') !== -1) return true;
+  if (hay.indexOf('national museum of egyptian civilization') !== -1) return true;
+  if (hay.indexOf('egyptian civilization') !== -1) return true;
+  if (hay.indexOf('civilization museum') !== -1) return true;
+  return false;
+}
+
+function enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(meta, ctx, tripFields, tripImprovement) {
+  var m = meta || {};
+  if (!shouldEnforceCivilizationMuseumEntity_AiImages_(ctx, tripFields, tripImprovement)) return m;
+
+  var canonical = 'National Museum of Egyptian Civilization';
+  function hasCivilization_(s) {
+    var x = String(s || '').toLowerCase();
+    return x.indexOf('civilization') !== -1 || x.indexOf('nmec') !== -1;
+  }
+  function fix_(field, value) {
+    var v = String(value || '');
+    if (!v) return v;
+    if (hasCivilization_(v)) return v;
+    var before = v;
+    v = v.replace(/\bthe\s+egyptian\s+museum\b/ig, canonical);
+    v = v.replace(/\begyptian\s+museum\b/ig, canonical);
+    if (v !== before) log('AI Images Enhancer: entity rewrite (' + field + '): egyptian museum -> civilization museum family');
+    return v;
+  }
+  return {
+    title: fix_('title', m.title),
+    caption: fix_('caption', m.caption),
+    description: fix_('description', m.description),
+    alt: fix_('alt', m.alt)
+  };
+}
+
 function englishImageSeoStuffingGuard_AiImages_(meta, ctx, keywordPlan) {
   var m = meta || {};
   var out = {
@@ -1947,6 +1993,7 @@ async function runAiImagesEnhancementBatch() {
             kwPlanForImage,
             { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
           );
+          natural0 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural0, ctx, f, tripImprovement);
           title = natural0.title;
           caption = natural0.caption;
           description = natural0.description;
@@ -1993,6 +2040,7 @@ async function runAiImagesEnhancementBatch() {
                     kwPlanForImage,
                     { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
                   );
+                  natural1 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural1, ctx, f, tripImprovement);
                   title = natural1.title;
                   caption = natural1.caption;
                   description = natural1.description;
@@ -2035,6 +2083,7 @@ async function runAiImagesEnhancementBatch() {
                     kwPlanForImage,
                     { extraCandidates: phraseForNaturalUseForImage ? [phraseForNaturalUseForImage] : [], featuredExactPrimary: role === 'featured', featuredAltKeyword: role === 'featured' }
                   );
+                  natural2 = enforceCanonicalMuseumEntityForEnglishImageMeta_AiImages_(natural2, ctx, f, tripImprovement);
                   title = natural2.title;
                   caption = natural2.caption;
                   description = natural2.description;
