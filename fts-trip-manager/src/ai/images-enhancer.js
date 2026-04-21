@@ -288,7 +288,7 @@ function isImageIneligibleKeywordPhrase_AiImages_(phrase) {
   if (wc > 7) return true;
 
   if (/\b(things\s+to\s+do|what\s+to\s+do|best|top|cheap|discount|deal|offers?)\b/.test(low)) return true;
-  if (/\b(day\s+(tour|trip)s?|tours?|trip\b|excursions?)\b/.test(low)) return true;
+  if (/\b(day\s+(tour|trip)s?|tours?|excursions?)\b/.test(low)) return true;
   if (/\b(sightseeing|attractions?)\b/.test(low)) return true;
   if (/\b(book|booking|tickets?|price|prices)\b/.test(low)) return true;
   if (/^(?:from|to|near|around)\b/.test(low)) return true;
