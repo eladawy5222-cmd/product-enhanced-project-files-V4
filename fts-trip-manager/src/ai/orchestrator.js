@@ -1,5 +1,6 @@
 const { sleep } = require('../core/runtime')
 const { createImprovementRepository } = require('./enhancement-helpers')
+const { createConversionEnforcer } = require('./conversion-enforcer')
 
 let airtable
 let http
@@ -10,6 +11,7 @@ let store
 let aiProvider
 
 let ImprovementRepository
+let ConversionEnforcer
 
 function initOrchestrator(options) {
   if (!options) throw new Error('createOrchestrator: missing options')
@@ -38,6 +40,7 @@ function initOrchestrator(options) {
   }
 
   ImprovementRepository = createImprovementRepository({ airtable, http })
+  ConversionEnforcer = createConversionEnforcer({ airtable, http, config, logger, lock, store, aiProvider })
 }
 
 function loadConfigSecrets_() {
@@ -364,6 +367,10 @@ async function progressTripPipeline_(tripId, f) {
     f.AI_Images_Status === 'Done';
 
   if (allStagesDone) {
+    try {
+      await ConversionEnforcer.runConversionEnforcer({ id: tripId, fields: f })
+    } catch {
+    }
     await airtableUpdate_('Trips', tripId, {
       Pipeline_Status: 'Completed',
       Publish_Status: 'Pending'

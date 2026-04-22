@@ -309,6 +309,7 @@ function progressTripPipeline_(tripId, f) {
     f.AI_Images_Status === 'Done';
 
   if (allStagesDone) {
+    try { runConversionEnforcer({ id: tripId, fields: f }); } catch (eConv) {}
     airtableUpdate_('Trips', tripId, {
       Pipeline_Status: 'Completed',
       Publish_Status: 'Pending'

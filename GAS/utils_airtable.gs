@@ -2,6 +2,8 @@
  * AIRTABLE UTILITIES — API v0
  ************************************************************/
 
+var AIRTABLE_MAX_PAGE_SIZE = 100;
+
 function airtableBaseUrl_(tableName) {
   return 'https://api.airtable.com/v0/' +
     CONFIG.AIRTABLE_BASE_ID + '/' +
@@ -23,6 +25,8 @@ function airtableHeaders_() {
  * Generic GET to Airtable (returns parsed JSON).
  */
 function airtableGet_(tableName, params) {
+  params = params || {};
+  params.pageSize = Math.min(params.pageSize || AIRTABLE_MAX_PAGE_SIZE, AIRTABLE_MAX_PAGE_SIZE);
   var url = airtableBaseUrl_(tableName);
   if (params) {
     var qs = [];

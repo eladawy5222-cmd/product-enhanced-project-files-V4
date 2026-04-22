@@ -2,6 +2,8 @@ function escapeFormulaValue(s) {
   return String(s || '').replace(/"/g, '\\"')
 }
 
+const AIRTABLE_MAX_PAGE_SIZE = 100
+
 function chunkArray(arr, size) {
   const out = []
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
@@ -39,6 +41,12 @@ function createAirtableClient(options) {
   }
 
   async function airtableGet(tableName, params) {
+    params = params || {}
+    const before = params.pageSize
+    params.pageSize = Math.min(params.pageSize || AIRTABLE_MAX_PAGE_SIZE, AIRTABLE_MAX_PAGE_SIZE)
+    if (before && Number(before) > AIRTABLE_MAX_PAGE_SIZE) {
+      console.warn('Airtable pageSize reduced to 100')
+    }
     const url = baseUrl(tableName) + buildQuery(params)
     return http.getJson(url, headers())
   }
@@ -123,4 +131,3 @@ function createAirtableClient(options) {
 }
 
 module.exports = { createAirtableClient, escapeFormulaValue }
-
