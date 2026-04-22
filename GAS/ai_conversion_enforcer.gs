@@ -1,10 +1,17 @@
 function runConversionEnforcer(record) {
   try { loadConfigSecrets_(); } catch (e0) {}
+  var _logTripId = (record && typeof record === 'object' && record.id) ? record.id : String(record || '');
+  var _success = false;
+  try { Logger.log('🚀 Conversion Enforcer START for Trip: ' + _logTripId); } catch (eLog0) {}
   try {
     var trip = convEnf_normalizeTripRecord_(record);
     if (!trip || !trip.id) return;
     var tripId = trip.id;
     var tripFields = trip.fields || {};
+    try {
+      Logger.log('📥 Input Data:');
+      Logger.log(JSON.stringify(tripFields, null, 2));
+    } catch (eLog1) {}
     var tripNumber = tripFields.TripID || '';
     var imp = convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber);
     if (!imp || !imp.id) return;
@@ -14,6 +21,14 @@ function runConversionEnforcer(record) {
     var existingItinerary = convEnf_fetchItinerary_(tripId);
     var existingIncludes = convEnf_fetchIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem');
     var existingExcludes = convEnf_fetchIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem');
+    try {
+      Logger.log('🔹 Processing Highlights...');
+      Logger.log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0));
+      Logger.log('🔹 Processing Itinerary...');
+      Logger.log('Original Steps: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0));
+      Logger.log('🔹 Processing Includes...');
+      Logger.log('Original Includes: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0));
+    } catch (eLog2) {}
     var payload = {
       trip: {
         id: tripId,
@@ -39,28 +54,51 @@ function runConversionEnforcer(record) {
     if (descHtml && descHtml.length >= 80) updateMain.AI_Trip_Description = descHtml;
     var whyHtml = convEnf_getString_(ai, ['why_people_love', 'html']);
     if (whyHtml && whyHtml.length >= 100) updateMain.AI_Tab_Content = whyHtml;
+    try { Logger.log('📤 Writing updates to Airtable...'); } catch (eLog3) {}
     if (Object.keys(updateMain).length) {
       updateMain.AI_LastUpdated = nowIso;
       airtableUpdate_('Improvement With AI', imp.id, updateMain);
     }
     var newHighlights = convEnf_getArray_(ai, ['highlights', 'items']);
     if (newHighlights && newHighlights.length >= 3) {
+      try {
+        Logger.log('✅ Improved Highlights:');
+        Logger.log(JSON.stringify(newHighlights, null, 2));
+      } catch (eLog4) {}
       convEnf_replaceHighlights_(tripId, newHighlights, nowIso);
     }
     var newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps']);
     if (newItinerary && newItinerary.length >= 2) {
+      try {
+        Logger.log('✅ Improved Itinerary:');
+        Logger.log(JSON.stringify(newItinerary, null, 2));
+      } catch (eLog5) {}
       convEnf_replaceItinerary_(tripId, newItinerary, nowIso);
     }
     var newIncluded = convEnf_mergeOptionalItems_(ai, ['included', 'items'], ['included', 'optional_items']);
     if (newIncluded && newIncluded.length >= 3) {
+      try {
+        Logger.log('✅ Improved Includes:');
+        Logger.log(JSON.stringify(newIncluded, null, 2));
+      } catch (eLog6) {}
       convEnf_replaceIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso);
     }
     var newExcluded = convEnf_mergeOptionalItems_(ai, ['excluded', 'items'], ['excluded', 'optional_items']);
     if (newExcluded && newExcluded.length >= 2) {
       convEnf_replaceIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso);
     }
+    _success = true;
   } catch (e) {
-    try { Logger.log('Conversion Enforcer error: ' + e.message); } catch (e2) {}
+    try {
+      Logger.log('❌ Conversion Enforcer ERROR:');
+      Logger.log(e && e.message ? e.message : String(e));
+      Logger.log(e && e.stack ? e.stack : '');
+    } catch (e2) {}
+  } finally {
+    if (_success) {
+      try { Logger.log('✅ Airtable update SUCCESS for Trip: ' + _logTripId); } catch (eLog4b) {}
+    }
+    try { Logger.log('🏁 Conversion Enforcer FINISHED for Trip: ' + _logTripId); } catch (eLogF) {}
   }
 }
 

@@ -59,11 +59,16 @@ async function callAi_(prompt) {
 }
 
 async function runConversionEnforcer(data) {
+  const _logTripId = (data && typeof data === 'object' && data.id) ? data.id : String(data || '')
+  let _success = false
   try {
+    console.log('🚀 Conversion Enforcer START for Trip: ' + _logTripId)
     const trip = await convEnf_normalizeTripRecord_(data)
     if (!trip || !trip.id) return
     const tripId = trip.id
     const tripFields = trip.fields || {}
+    console.log('📥 Input Data:')
+    console.log(JSON.stringify(tripFields, null, 2))
     const tripNumber = tripFields.TripID || ''
     const imp = await convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber)
     if (!imp || !imp.id) return
@@ -74,6 +79,12 @@ async function runConversionEnforcer(data) {
     const existingItinerary = await convEnf_fetchItinerary_(tripId)
     const existingIncludes = await convEnf_fetchIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem')
     const existingExcludes = await convEnf_fetchIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem')
+    console.log('🔹 Processing Highlights...')
+    console.log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
+    console.log('🔹 Processing Itinerary...')
+    console.log('Original Steps: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
+    console.log('🔹 Processing Includes...')
+    console.log('Original Includes: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
 
     const payload = {
       trip: {
@@ -102,6 +113,7 @@ async function runConversionEnforcer(data) {
     if (descHtml && descHtml.length >= 80) updateMain.AI_Trip_Description = descHtml
     const whyHtml = convEnf_getString_(ai, ['why_people_love', 'html'])
     if (whyHtml && whyHtml.length >= 100) updateMain.AI_Tab_Content = whyHtml
+    console.log('📤 Writing updates to Airtable...')
     if (Object.keys(updateMain).length) {
       updateMain.AI_LastUpdated = nowIso
       await airtableUpdate_('Improvement With AI', imp.id, updateMain)
@@ -109,16 +121,22 @@ async function runConversionEnforcer(data) {
 
     const newHighlights = convEnf_getArray_(ai, ['highlights', 'items'])
     if (newHighlights && newHighlights.length >= 3) {
+      console.log('✅ Improved Highlights:')
+      console.log(JSON.stringify(newHighlights, null, 2))
       await convEnf_replaceHighlights_(tripId, newHighlights, nowIso)
     }
 
     const newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps'])
     if (newItinerary && newItinerary.length >= 2) {
+      console.log('✅ Improved Itinerary:')
+      console.log(JSON.stringify(newItinerary, null, 2))
       await convEnf_replaceItinerary_(tripId, newItinerary, nowIso)
     }
 
     const newIncluded = convEnf_mergeOptionalItems_(ai, ['included', 'items'], ['included', 'optional_items'])
     if (newIncluded && newIncluded.length >= 3) {
+      console.log('✅ Improved Includes:')
+      console.log(JSON.stringify(newIncluded, null, 2))
       await convEnf_replaceIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso)
     }
 
@@ -126,11 +144,14 @@ async function runConversionEnforcer(data) {
     if (newExcluded && newExcluded.length >= 2) {
       await convEnf_replaceIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso)
     }
+    _success = true
   } catch (e) {
-    try {
-      log('Conversion Enforcer error: ' + (e && e.message ? e.message : String(e)))
-    } catch {
-    }
+    console.log('❌ Conversion Enforcer ERROR:')
+    console.log(e && e.message ? e.message : String(e))
+    console.log(e && e.stack ? e.stack : '')
+  } finally {
+    if (_success) console.log('✅ Airtable update SUCCESS for Trip: ' + _logTripId)
+    console.log('🏁 Conversion Enforcer FINISHED for Trip: ' + _logTripId)
   }
 }
 
