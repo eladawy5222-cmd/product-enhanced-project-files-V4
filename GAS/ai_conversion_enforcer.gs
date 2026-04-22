@@ -17,10 +17,19 @@ function runConversionEnforcer(record) {
     if (!imp || !imp.id) return;
     var impFields = imp.fields || {};
     var nowIso = new Date().toISOString();
-    var existingHighlights = convEnf_fetchHighlights_(tripId);
-    var existingItinerary = convEnf_fetchItinerary_(tripId);
-    var existingIncludes = convEnf_fetchIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem');
-    var existingExcludes = convEnf_fetchIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem');
+    var tripLinkValue = String(tripNumber || tripId || '').trim();
+    var existingHighlights = convEnf_fetchHighlights_(tripLinkValue);
+    var existingItinerary = convEnf_fetchItinerary_(tripLinkValue);
+    var existingIncludes = convEnf_fetchIncExc_(tripLinkValue, 'TripIncludes Improvement With AI', 'IncludeItem');
+    var existingExcludes = convEnf_fetchIncExc_(tripLinkValue, 'TripExcludes Improvement With AI', 'ExcludeItem');
+    try {
+      Logger.log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0));
+      Logger.log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0));
+      Logger.log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0));
+      if (!existingHighlights.items.length) Logger.log('⚠️ No Highlights found using TripID filter');
+      if (!existingItinerary.steps.length) Logger.log('⚠️ No Itinerary found using TripID filter');
+      if (!existingIncludes.items.length) Logger.log('⚠️ No Includes found using TripID filter');
+    } catch (eLogFetch) {}
     try {
       Logger.log('🔹 Processing Highlights...');
       Logger.log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0));
@@ -65,7 +74,7 @@ function runConversionEnforcer(record) {
         Logger.log('✅ Improved Highlights:');
         Logger.log(JSON.stringify(newHighlights, null, 2));
       } catch (eLog4) {}
-      convEnf_replaceHighlights_(tripId, newHighlights, nowIso);
+      convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso);
     }
     var newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps']);
     if (newItinerary && newItinerary.length >= 2) {
@@ -73,7 +82,7 @@ function runConversionEnforcer(record) {
         Logger.log('✅ Improved Itinerary:');
         Logger.log(JSON.stringify(newItinerary, null, 2));
       } catch (eLog5) {}
-      convEnf_replaceItinerary_(tripId, newItinerary, nowIso);
+      convEnf_replaceItinerary_(tripId, existingItinerary.records, newItinerary, nowIso);
     }
     var newIncluded = convEnf_mergeOptionalItems_(ai, ['included', 'items'], ['included', 'optional_items']);
     if (newIncluded && newIncluded.length >= 3) {
@@ -81,11 +90,11 @@ function runConversionEnforcer(record) {
         Logger.log('✅ Improved Includes:');
         Logger.log(JSON.stringify(newIncluded, null, 2));
       } catch (eLog6) {}
-      convEnf_replaceIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso);
+      convEnf_replaceIncExc_(tripId, existingIncludes.records, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso);
     }
     var newExcluded = convEnf_mergeOptionalItems_(ai, ['excluded', 'items'], ['excluded', 'optional_items']);
     if (newExcluded && newExcluded.length >= 2) {
-      convEnf_replaceIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso);
+      convEnf_replaceIncExc_(tripId, existingExcludes.records, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso);
     }
     _success = true;
   } catch (e) {
@@ -142,8 +151,9 @@ function convEnf_getPath_(obj, pathArr) {
 
 function convEnf_normalizeTripRecord_(record) {
   if (!record) return null;
-  if (typeof record === 'object' && record.id) return record;
-  var id = String(record || '').trim();
+  var id = '';
+  if (typeof record === 'object' && record.id) id = String(record.id || '').trim();
+  if (!id) id = String(record || '').trim();
   if (!id) return null;
   var res = airtableGet_('Trips', { filterByFormula: "RECORD_ID() = '" + convEnf_escapeFormulaString_(id) + "'", maxRecords: 1 });
   if (!res || !res.records || !res.records.length) return null;
@@ -166,9 +176,9 @@ function convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber) {
   return res.records[0];
 }
 
-function convEnf_fetchHighlights_(tripId) {
+function convEnf_fetchHighlights_(tripLinkValue) {
   var res = airtableGet_('Highlights Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
+    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
     pageSize: 100
   });
   var recs = res && res.records ? res.records : [];
@@ -187,9 +197,9 @@ function convEnf_fetchHighlights_(tripId) {
   return { records: recs, items: items };
 }
 
-function convEnf_fetchItinerary_(tripId) {
+function convEnf_fetchItinerary_(tripLinkValue) {
   var res = airtableGet_('Itinerary Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
+    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
     pageSize: 100
   });
   var recs = res && res.records ? res.records : [];
@@ -215,9 +225,9 @@ function convEnf_fetchItinerary_(tripId) {
   return { records: recs, steps: steps };
 }
 
-function convEnf_fetchIncExc_(tripId, tableName, textField) {
+function convEnf_fetchIncExc_(tripLinkValue, tableName, textField) {
   var res = airtableGet_(tableName, {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
+    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
     pageSize: 200
   });
   var recs = res && res.records ? res.records : [];
@@ -230,8 +240,11 @@ function convEnf_fetchIncExc_(tripId, tableName, textField) {
   return { records: recs, items: items };
 }
 
-function convEnf_replaceHighlights_(tripId, items, nowIso) {
-  convEnf_deleteLinked_(tripId, 'Highlights Improvement With AI', 'Trip');
+function convEnf_replaceHighlights_(tripId, existingRecords, items, nowIso) {
+  var recs = Array.isArray(existingRecords) ? existingRecords : [];
+  var ids = recs.map(function(r) { return r && r.id ? r.id : ''; }).filter(function(x) { return !!x; });
+  if (ids.length) airtableBatchDelete_('Highlights Improvement With AI', ids);
+  Logger.log('Deleted old records: ' + ids.length);
   var fieldsArray = [];
   for (var i = 0; i < items.length; i++) {
     var t = String(items[i] || '').replace(/\s+/g, ' ').trim();
@@ -245,10 +258,14 @@ function convEnf_replaceHighlights_(tripId, items, nowIso) {
     });
   }
   airtableBatchCreate_('Highlights Improvement With AI', fieldsArray);
+  Logger.log('Created new records: ' + fieldsArray.length);
 }
 
-function convEnf_replaceItinerary_(tripId, steps, nowIso) {
-  convEnf_deleteLinked_(tripId, 'Itinerary Improvement With AI', 'Trip');
+function convEnf_replaceItinerary_(tripId, existingRecords, steps, nowIso) {
+  var recs = Array.isArray(existingRecords) ? existingRecords : [];
+  var ids = recs.map(function(r) { return r && r.id ? r.id : ''; }).filter(function(x) { return !!x; });
+  if (ids.length) airtableBatchDelete_('Itinerary Improvement With AI', ids);
+  Logger.log('Deleted old records: ' + ids.length);
   var fieldsArray = [];
   for (var i = 0; i < steps.length; i++) {
     var st = steps[i] || {};
@@ -276,10 +293,14 @@ function convEnf_replaceItinerary_(tripId, steps, nowIso) {
     });
   }
   airtableBatchCreate_('Itinerary Improvement With AI', fieldsArray);
+  Logger.log('Created new records: ' + fieldsArray.length);
 }
 
-function convEnf_replaceIncExc_(tripId, tableName, textField, items, nowIso) {
-  convEnf_deleteLinked_(tripId, tableName, 'Trip');
+function convEnf_replaceIncExc_(tripId, existingRecords, tableName, textField, items, nowIso) {
+  var recs = Array.isArray(existingRecords) ? existingRecords : [];
+  var ids = recs.map(function(r) { return r && r.id ? r.id : ''; }).filter(function(x) { return !!x; });
+  if (ids.length) airtableBatchDelete_(tableName, ids);
+  Logger.log('Deleted old records: ' + ids.length);
   var fieldsArray = [];
   for (var i = 0; i < items.length; i++) {
     var t = String(items[i] || '').replace(/\s+/g, ' ').trim();
@@ -289,6 +310,7 @@ function convEnf_replaceIncExc_(tripId, tableName, textField, items, nowIso) {
     fieldsArray.push(f);
   }
   airtableBatchCreate_(tableName, fieldsArray);
+  Logger.log('Created new records: ' + fieldsArray.length);
 }
 
 function convEnf_deleteLinked_(tripId, tableName, linkField) {

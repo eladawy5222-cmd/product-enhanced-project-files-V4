@@ -75,10 +75,17 @@ async function runConversionEnforcer(data) {
     const impFields = imp.fields || {}
     const nowIso = new Date().toISOString()
 
-    const existingHighlights = await convEnf_fetchHighlights_(tripId)
-    const existingItinerary = await convEnf_fetchItinerary_(tripId)
-    const existingIncludes = await convEnf_fetchIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem')
-    const existingExcludes = await convEnf_fetchIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem')
+    const tripLinkValue = String(tripNumber || tripId || '').trim()
+    const existingHighlights = await convEnf_fetchHighlights_(tripLinkValue)
+    const existingItinerary = await convEnf_fetchItinerary_(tripLinkValue)
+    const existingIncludes = await convEnf_fetchIncExc_(tripLinkValue, 'TripIncludes Improvement With AI', 'IncludeItem')
+    const existingExcludes = await convEnf_fetchIncExc_(tripLinkValue, 'TripExcludes Improvement With AI', 'ExcludeItem')
+    console.log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
+    console.log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
+    console.log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
+    if (!existingHighlights.items.length) console.log('⚠️ No Highlights found using TripID filter')
+    if (!existingItinerary.steps.length) console.log('⚠️ No Itinerary found using TripID filter')
+    if (!existingIncludes.items.length) console.log('⚠️ No Includes found using TripID filter')
     console.log('🔹 Processing Highlights...')
     console.log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
     console.log('🔹 Processing Itinerary...')
@@ -123,26 +130,26 @@ async function runConversionEnforcer(data) {
     if (newHighlights && newHighlights.length >= 3) {
       console.log('✅ Improved Highlights:')
       console.log(JSON.stringify(newHighlights, null, 2))
-      await convEnf_replaceHighlights_(tripId, newHighlights, nowIso)
+      await convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso)
     }
 
     const newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps'])
     if (newItinerary && newItinerary.length >= 2) {
       console.log('✅ Improved Itinerary:')
       console.log(JSON.stringify(newItinerary, null, 2))
-      await convEnf_replaceItinerary_(tripId, newItinerary, nowIso)
+      await convEnf_replaceItinerary_(tripId, existingItinerary.records, newItinerary, nowIso)
     }
 
     const newIncluded = convEnf_mergeOptionalItems_(ai, ['included', 'items'], ['included', 'optional_items'])
     if (newIncluded && newIncluded.length >= 3) {
       console.log('✅ Improved Includes:')
       console.log(JSON.stringify(newIncluded, null, 2))
-      await convEnf_replaceIncExc_(tripId, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso)
+      await convEnf_replaceIncExc_(tripId, existingIncludes.records, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso)
     }
 
     const newExcluded = convEnf_mergeOptionalItems_(ai, ['excluded', 'items'], ['excluded', 'optional_items'])
     if (newExcluded && newExcluded.length >= 2) {
-      await convEnf_replaceIncExc_(tripId, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso)
+      await convEnf_replaceIncExc_(tripId, existingExcludes.records, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso)
     }
     _success = true
   } catch (e) {
@@ -195,8 +202,9 @@ function convEnf_getPath_(obj, pathArr) {
 
 async function convEnf_normalizeTripRecord_(data) {
   if (!data) return null
-  if (typeof data === 'object' && data.id) return data
-  const id = String(data || '').trim()
+  let id = ''
+  if (typeof data === 'object' && data.id) id = String(data.id || '').trim()
+  if (!id) id = String(data || '').trim()
   if (!id) return null
   const res = await airtableGet_('Trips', { filterByFormula: "RECORD_ID() = '" + convEnf_escapeFormulaString_(id) + "'", maxRecords: 1 })
   if (!res || !res.records || !res.records.length) return null
@@ -283,8 +291,11 @@ async function convEnf_fetchIncExc_(tripId, tableName, textField) {
   return { records: recs, items }
 }
 
-async function convEnf_replaceHighlights_(tripId, items, nowIso) {
-  await convEnf_deleteLinked_(tripId, 'Highlights Improvement With AI', 'Trip')
+async function convEnf_replaceHighlights_(tripId, existingRecords, items, nowIso) {
+  const recs = Array.isArray(existingRecords) ? existingRecords : []
+  const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
+  if (ids.length) await airtableBatchDelete_('Highlights Improvement With AI', ids)
+  console.log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < items.length; i++) {
     const t = String(items[i] || '').replace(/\s+/g, ' ').trim()
@@ -298,10 +309,14 @@ async function convEnf_replaceHighlights_(tripId, items, nowIso) {
     })
   }
   await airtableBatchCreate_('Highlights Improvement With AI', fieldsArray)
+  console.log('Created new records: ' + fieldsArray.length)
 }
 
-async function convEnf_replaceItinerary_(tripId, steps, nowIso) {
-  await convEnf_deleteLinked_(tripId, 'Itinerary Improvement With AI', 'Trip')
+async function convEnf_replaceItinerary_(tripId, existingRecords, steps, nowIso) {
+  const recs = Array.isArray(existingRecords) ? existingRecords : []
+  const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
+  if (ids.length) await airtableBatchDelete_('Itinerary Improvement With AI', ids)
+  console.log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < steps.length; i++) {
     const st = steps[i] || {}
@@ -329,10 +344,14 @@ async function convEnf_replaceItinerary_(tripId, steps, nowIso) {
     })
   }
   await airtableBatchCreate_('Itinerary Improvement With AI', fieldsArray)
+  console.log('Created new records: ' + fieldsArray.length)
 }
 
-async function convEnf_replaceIncExc_(tripId, tableName, textField, items, nowIso) {
-  await convEnf_deleteLinked_(tripId, tableName, 'Trip')
+async function convEnf_replaceIncExc_(tripId, existingRecords, tableName, textField, items, nowIso) {
+  const recs = Array.isArray(existingRecords) ? existingRecords : []
+  const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
+  if (ids.length) await airtableBatchDelete_(tableName, ids)
+  console.log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < items.length; i++) {
     const t = String(items[i] || '').replace(/\s+/g, ' ').trim()
@@ -342,6 +361,7 @@ async function convEnf_replaceIncExc_(tripId, tableName, textField, items, nowIs
     fieldsArray.push(f)
   }
   await airtableBatchCreate_(tableName, fieldsArray)
+  console.log('Created new records: ' + fieldsArray.length)
 }
 
 async function convEnf_deleteLinked_(tripId, tableName, linkField) {
