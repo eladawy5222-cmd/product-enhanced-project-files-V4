@@ -431,6 +431,11 @@ function mapAirtableToWordPress_(data, tripFields) {
 
   Logger.log('Publisher: Direct Mapping - dUnit: ' + dUnit + ', dHours: ' + dHours + ', dMinutes: ' + dMinutes + ', tourType: ' + tourType + ', Title: ' + (g.AI_SEO_Title || 'No Title'));
 
+  var seoFlags = pub_buildStrictFlags_(data, tripFields);
+  var rawSeoTitle = String(g.AI_SEO_Title || '').trim();
+  var rawSeoMeta = String(g.AI_SEO_Meta_Description || '').trim();
+  var rawExcerpt = String(g.AI_Excerpt || g.AI_Short_Summary || '').trim();
+
   payload.general = {
     trip_code: tripFields.TripCode || '',
     duration_type: dUnit,
@@ -446,7 +451,13 @@ function mapAirtableToWordPress_(data, tripFields) {
   // --- Core Fields ---
   // Only update if AI generated a new title/slug, otherwise keep original?
   // Usually we want to use the AI SEO Title if available, or fallback to existing.
-  if (g.AI_SEO_Title) payload.core.title = g.AI_SEO_Title;
+  var fallbackTitle = String(rawSeoTitle || tripFields.Title || '').trim();
+  var safeTitle = pub_removeUnsupportedHighRiskParts_(pub_sanitizeSeoText_(fallbackTitle), seoFlags);
+  if (!safeTitle) safeTitle = pub_removeUnsupportedHighRiskParts_(pub_sanitizeSeoText_(String(tripFields.Title || '').trim()), seoFlags);
+  if (!safeTitle) safeTitle = 'Guided Tour Experience';
+  payload.core.title = safeTitle;
+  payload.meta.rank_math_title = safeTitle;
+  if (rawSeoTitle && safeTitle !== rawSeoTitle) Logger.log('Publisher: Sanitized SEO Title (unsupported claims removed)');
   
   // 🆕 Use Slug from Trips table (for migrated trips) or AI SEO Permalink
   if (tripFields.Slug) {
@@ -461,15 +472,17 @@ function mapAirtableToWordPress_(data, tripFields) {
   }
   
   // 🆕 Use AI_Excerpt for WordPress Excerpt if available
-  if (g.AI_Excerpt) {
-    payload.core.excerpt = g.AI_Excerpt;
-  } else if (g.AI_Short_Summary) {
-    payload.core.excerpt = g.AI_Short_Summary;
+  if (rawExcerpt) {
+    var safeExcerpt = pub_truncateText_(pub_removeUnsupportedHighRiskParts_(pub_sanitizeSeoText_(rawExcerpt), seoFlags), 220);
+    if (safeExcerpt) payload.core.excerpt = safeExcerpt;
+    if (safeExcerpt && safeExcerpt !== rawExcerpt) Logger.log('Publisher: Sanitized Excerpt (unsupported claims removed)');
   }
-  
-  // --- RankMath SEO ---
-  if (g.AI_SEO_Title) payload.meta.rank_math_title = g.AI_SEO_Title;
-  if (g.AI_SEO_Meta_Description) payload.meta.rank_math_description = g.AI_SEO_Meta_Description;
+
+  if (rawSeoMeta) {
+    var safeMeta = pub_truncateText_(pub_removeUnsupportedHighRiskParts_(pub_sanitizeSeoText_(rawSeoMeta), seoFlags), 160);
+    if (safeMeta) payload.meta.rank_math_description = safeMeta;
+    if (safeMeta && safeMeta !== rawSeoMeta) Logger.log('Publisher: Sanitized SEO Meta Description (unsupported claims removed)');
+  }
   
   // Combine Focus Keyword and Keywords List (comma-separated) for RankMath
   var allKeywords = [];
@@ -788,6 +801,110 @@ function mapAirtableToWordPress_(data, tripFields) {
   return payload;
 }
 
+function pub_buildStrictFlags_(data, tripFields) {
+  var d = data || {};
+  var tf = tripFields || {};
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function stripHtml_(s) { return norm_(String(s || '').replace(/<[^>]*>/g, ' ')); }
+  var parts = [];
+  parts.push(stripHtml_(tf.Title || ''));
+  if (d.tripDetails && d.tripDetails.TourType) parts.push(stripHtml_(d.tripDetails.TourType));
+  if (Array.isArray(d.highlights)) {
+    d.highlights.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.AI_Highlight : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  if (Array.isArray(d.itinerary)) {
+    d.itinerary.forEach(function(rec) {
+      var f = (rec && rec.fields) ? rec.fields : {};
+      var t = stripHtml_(f.AI_Step_Title || '');
+      var x = stripHtml_(f.AI_Step_Description || '');
+      var l = stripHtml_(f.AI_Step_Label || '');
+      if (t) parts.push(t);
+      if (l) parts.push(l);
+      if (x) parts.push(x);
+    });
+  }
+  if (Array.isArray(d.includes)) {
+    d.includes.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.IncludeItem : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  if (Array.isArray(d.excludes)) {
+    d.excludes.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.ExcludeItem : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  var lc = norm_(parts.filter(function(x) { return !!x; }).join(' | ')).toLowerCase();
+  return {
+    has_nile: /\bnile\b/.test(lc),
+    has_felucca: /\b(felucca|faluka)\b/.test(lc),
+    has_boat: /\bboat\b/.test(lc),
+    has_cruise: /\bcruise\b/.test(lc),
+    has_flights: /\b(flight|flights|airfare|air ticket|air tickets)\b/.test(lc),
+    has_snorkel: /\b(snorkel|snorkeling|diving)\b/.test(lc),
+    has_safari: /\b(safari|quad|atv)\b/.test(lc),
+    has_private: /\bprivate\b/.test(lc),
+    has_tickets: /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(lc),
+    has_lunch: /\blunch\b/.test(lc),
+    has_pickup: /\b(pick-?up|hotel pick-?up|pickup)\b/.test(lc)
+  };
+}
+
+function pub_hasUnsupportedHighRiskClaims_(text, flags) {
+  var t = String(text || '').toLowerCase();
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (!f.has_nile && /\bnile\b/.test(t)) return true;
+  if (!f.has_felucca && /\b(felucca|faluka)\b/.test(t)) return true;
+  if (!f.has_boat && /\bboat\b/.test(t)) return true;
+  if (!f.has_cruise && /\bcruise\b/.test(t)) return true;
+  if (!f.has_flights && /\b(flight|flights|airfare|air ticket|air tickets)\b/.test(t)) return true;
+  if (!f.has_snorkel && /\b(snorkel|snorkeling|diving)\b/.test(t)) return true;
+  if (!f.has_safari && /\b(safari|quad|atv)\b/.test(t)) return true;
+  if (!f.has_private && /\bprivate\b/.test(t)) return true;
+  if (!f.has_tickets && /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(t)) return true;
+  if (!f.has_lunch && /\blunch\b/.test(t)) return true;
+  if (!f.has_pickup && /\b(pick-?up|hotel pick-?up|pickup)\b/.test(t)) return true;
+  return false;
+}
+
+function pub_sanitizeSeoText_(s) {
+  return String(s || '').replace(/\s+/g, ' ').trim();
+}
+
+function pub_truncateText_(s, maxLen) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (!maxLen || t.length <= maxLen) return t;
+  var cut = t.substring(0, maxLen);
+  var lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace >= 80) return cut.substring(0, lastSpace).trim().replace(/[,\-–—:;]\s*$/g, '');
+  return cut.trim().replace(/[,\-–—:;]\s*$/g, '');
+}
+
+function pub_removeUnsupportedHighRiskParts_(text, flags) {
+  var t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (!pub_hasUnsupportedHighRiskClaims_(t, flags)) return t;
+  var parts = t.split(/[|•]|(?:\s+[–—-]\s+)|(?:\s*;\s*)|[.!?]\s+/).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  var kept = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (pub_hasUnsupportedHighRiskClaims_(p, flags)) continue;
+    kept.push(p);
+  }
+  var out = kept.join('. ').replace(/\s+/g, ' ').trim();
+  out = out.replace(/^(and|with|including|plus|also)\b\s*/i, '');
+  out = out.replace(/[,\-–—:;]\s*$/g, '').trim();
+  return out;
+}
+
 // ----------------------------------------------------------
 // API TRANSMISSION
 // ----------------------------------------------------------
@@ -996,6 +1113,9 @@ function publishPackagesSafe_(tripId, wpTripId) {
          status: 'publish', 
          pricing_categories: [] 
        };
+
+       if (pkgFields.excerpt) payload.excerpt = String(pkgFields.excerpt);
+       if (pkgFields.content_html) payload.content_html = String(pkgFields.content_html);
        
        if (linkedPrices && linkedPrices.length > 0) {
           linkedPrices.forEach(function(prRecord) {

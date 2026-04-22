@@ -783,6 +783,8 @@ async function runUpdaterBatch() {
         }
       }
 
+      payload = upd_applyFinalSeoSafetyBelt_Updater_(payload, enhancedData, f);
+
       if (!wpId) {
         log('Updater: Creating NEW trip on WordPress for Airtable Trip ' + tripId);
         payload.meta = payload.meta || {};
@@ -1345,6 +1347,7 @@ async function runUpdaterBatch() {
               try {
                 if (translatedPayload.core) delete translatedPayload.core.slug
                 if (translatedPayload.slug !== undefined) delete translatedPayload.slug
+                translatedPayload = upd_applyFinalSeoSafetyBelt_Updater_(translatedPayload, translatedData, f)
                 await pushToWordPress_Updater_(transWpId, translatedPayload)
                 log('Updater: Successfully UPDATED translation ' + transWpId)
                 log('EXISTING PERMALINK PRESERVED (' + targetLang + ')')
@@ -1435,6 +1438,7 @@ async function runUpdaterBatch() {
               translatedPayload.core.slug = candidateSlug
               translatedPayload.slug = candidateSlug
 
+              translatedPayload = upd_applyFinalSeoSafetyBelt_Updater_(translatedPayload, translatedData, f)
               transWpId = await createNewTripOnWordPress_Updater_(translatedPayload)
               log('Updater: Successfully CREATED translation ' + transWpId)
               if (translatedPayload && translatedPayload.core && translatedPayload.core.slug) {
@@ -2413,6 +2417,32 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   // --- RankMath SEO ---
   if (g.AI_SEO_Title) payload.meta.rank_math_title = g.AI_SEO_Title;
   if (g.AI_SEO_Meta_Description) payload.meta.rank_math_description = g.AI_SEO_Meta_Description;
+
+  try {
+    var seoFlags = upd_buildStrictFlags_Updater_(data, tripFields);
+    if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'title') && payload.core.title) {
+      var safeCoreTitle = upd_removeUnsupportedHighRiskParts_Updater_(payload.core.title, seoFlags);
+      safeCoreTitle = String(safeCoreTitle || '').trim();
+      if (safeCoreTitle) payload.core.title = safeCoreTitle; else delete payload.core.title;
+    }
+    if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'excerpt') && payload.core.excerpt) {
+      var safeExcerpt = upd_removeUnsupportedHighRiskParts_Updater_(payload.core.excerpt, seoFlags);
+      safeExcerpt = upd_truncateText_Updater_(safeExcerpt, 240);
+      if (safeExcerpt) payload.core.excerpt = safeExcerpt; else delete payload.core.excerpt;
+    }
+    if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_title') && payload.meta.rank_math_title) {
+      var safeRmTitle = upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_title, seoFlags);
+      safeRmTitle = String(safeRmTitle || '').trim();
+      if (safeRmTitle) payload.meta.rank_math_title = safeRmTitle; else delete payload.meta.rank_math_title;
+    }
+    if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_description') && payload.meta.rank_math_description) {
+      var safeRmDesc = upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_description, seoFlags);
+      safeRmDesc = upd_truncateText_Updater_(safeRmDesc, 160);
+      if (safeRmDesc) payload.meta.rank_math_description = safeRmDesc; else delete payload.meta.rank_math_description;
+    }
+    if (payload.core && payload.core.title) payload.title = payload.core.title; else if (payload.title !== undefined) delete payload.title;
+    if (payload.core && payload.core.excerpt) payload.excerpt = payload.core.excerpt; else if (payload.excerpt !== undefined) delete payload.excerpt;
+  } catch (eSeoBeltMap) {}
   
   // Combine Focus Keyword and Keywords List (comma-separated) for RankMath
   var allKeywords = [];
@@ -2715,16 +2745,16 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     function cleanText_(s) { return String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }
 
     var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim()
-    var schemaSeoTitleRaw = pickScalar_(payload.meta.rank_math_title) || pickScalar_(g.AI_SEO_Title) || tripTitle
-    var schemaSeoDescRaw = pickScalar_(payload.meta.rank_math_description) || pickScalar_(g.AI_SEO_Meta_Description) || pickScalar_(g.AI_Short_Summary) || pickScalar_(g.AI_Excerpt) || pickScalar_(g.AI_Trip_Description) || ''
+    var schemaSeoTitleRaw = pickScalar_(g.AI_SEO_Title) || pickScalar_(payload.meta.rank_math_title) || tripTitle
+    var schemaSeoDescRaw = pickScalar_(g.AI_SEO_Meta_Description) || pickScalar_(payload.meta.rank_math_description) || pickScalar_(g.AI_Short_Summary) || pickScalar_(g.AI_Excerpt) || pickScalar_(g.AI_Trip_Description) || ''
 
     var schemaSeoTitle = cleanText_(schemaSeoTitleRaw)
     var schemaSeoDesc = cleanText_(schemaSeoDescRaw)
     if (schemaSeoDesc) schemaSeoDesc = truncateAtWordBoundary_Updater_(schemaSeoDesc, 240)
 
     if (isEn) {
-      var titleSrc = payload.meta.rank_math_title ? 'rank_math_title' : (g.AI_SEO_Title ? 'AI_SEO_Title' : (tripTitle ? 'core.title' : 'missing'))
-      var descSrc = payload.meta.rank_math_description ? 'rank_math_description' : (g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' : (g.AI_Short_Summary ? 'AI_Short_Summary' : (g.AI_Excerpt ? 'AI_Excerpt' : (g.AI_Trip_Description ? 'AI_Trip_Description' : 'missing'))))
+      var titleSrc = g.AI_SEO_Title ? 'AI_SEO_Title' : (payload.meta.rank_math_title ? 'rank_math_title' : (tripTitle ? 'core.title' : 'missing'))
+      var descSrc = g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' : (payload.meta.rank_math_description ? 'rank_math_description' : (g.AI_Short_Summary ? 'AI_Short_Summary' : (g.AI_Excerpt ? 'AI_Excerpt' : (g.AI_Trip_Description ? 'AI_Trip_Description' : 'missing'))))
       log('SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=' + titleSrc + ' desc=' + descSrc)
       if (payload.meta.rank_math_description && (g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description)) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)')
     }
@@ -2739,6 +2769,12 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     }
     if (schemaSeoTitle) tripSchemaObj.name = schemaSeoTitle
     if (schemaSeoDesc) tripSchemaObj.description = schemaSeoDesc
+    try {
+      var strict = upd_buildStrictFlags_Updater_(data, null)
+      if (strict && strict.has_nile === false) {
+        tripSchemaObj = upd_removeDisallowedPlacesFromTripSchema_Updater_(tripSchemaObj, ['Nile'])
+      }
+    } catch {}
     Object.keys(tripSchemaObj).forEach(function(k) { if (tripSchemaObj[k] === undefined) delete tripSchemaObj[k]; })
     payload.meta.trip_schema_data = JSON.stringify(tripSchemaObj)
     payload.meta.schema_trip_data = payload.meta.trip_schema_data
@@ -2765,6 +2801,229 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
       }
     }
   } catch (eSchema) {}
+
+  return payload;
+}
+
+function upd_removeDisallowedPlacesFromTripSchema_Updater_(schemaObj, disallowedNames) {
+  var o = schemaObj
+  if (!o || typeof o !== 'object') return o
+  var dis = {}
+  if (Array.isArray(disallowedNames)) {
+    disallowedNames.forEach(function(n) {
+      var k = String(n || '').trim().toLowerCase()
+      if (k) dis[k] = true
+    })
+  }
+  if (!Object.keys(dis).length) return o
+
+  function isDisallowedName_(name) {
+    var k = String(name || '').trim().toLowerCase()
+    return !!(k && dis[k])
+  }
+
+  function getPlaceName_(node) {
+    if (!node) return ''
+    if (typeof node === 'string') return node
+    if (typeof node !== 'object') return ''
+    if (node.name) return String(node.name)
+    if (node.item && node.item.name) return String(node.item.name)
+    return ''
+  }
+
+  var it = o.itinerary
+  if (!it) return o
+
+  if (typeof it === 'object' && it['@type'] === 'Place') {
+    var nm0 = getPlaceName_(it)
+    if (isDisallowedName_(nm0)) delete o.itinerary
+    return o
+  }
+
+  if (typeof it === 'object' && it['@type'] === 'ItemList' && Array.isArray(it.itemListElement)) {
+    var kept = []
+    for (var i = 0; i < it.itemListElement.length; i++) {
+      var el = it.itemListElement[i]
+      var nm = getPlaceName_(el && el.item ? el.item : el)
+      if (isDisallowedName_(nm)) continue
+      kept.push(el)
+    }
+    if (!kept.length) {
+      delete o.itinerary
+      return o
+    }
+    for (var j = 0; j < kept.length; j++) {
+      if (kept[j] && typeof kept[j] === 'object') kept[j].position = j + 1
+    }
+    o.itinerary.itemListElement = kept
+    return o
+  }
+
+  return o
+}
+
+function upd_buildStrictFlags_Updater_(data, tripFields) {
+  var d = data || {};
+  var tf = tripFields || {};
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim(); }
+  function stripHtml_(s) { return norm_(String(s || '').replace(/<[^>]*>/g, ' ')); }
+  var parts = [];
+  parts.push(stripHtml_(tf.Title || ''));
+  if (d.tripDetails && d.tripDetails.TourType) parts.push(stripHtml_(d.tripDetails.TourType));
+  if (Array.isArray(d.highlights)) {
+    d.highlights.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.AI_Highlight : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  if (Array.isArray(d.itinerary)) {
+    d.itinerary.forEach(function(rec) {
+      var f = (rec && rec.fields) ? rec.fields : {};
+      var t = stripHtml_(f.AI_Step_Title || '');
+      var x = stripHtml_(f.AI_Step_Description || '');
+      var l = stripHtml_(f.AI_Step_Label || '');
+      if (t) parts.push(t);
+      if (l) parts.push(l);
+      if (x) parts.push(x);
+    });
+  }
+  if (Array.isArray(d.includes)) {
+    d.includes.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.IncludeItem : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  if (Array.isArray(d.excludes)) {
+    d.excludes.forEach(function(rec) {
+      var t = rec && rec.fields ? rec.fields.ExcludeItem : '';
+      t = stripHtml_(t);
+      if (t) parts.push(t);
+    });
+  }
+  var lc = norm_(parts.filter(Boolean).join(' | ')).toLowerCase();
+  return {
+    has_nile: /\bnile\b/.test(lc),
+    has_felucca: /\b(felucca|faluka)\b/.test(lc),
+    has_boat: /\bboat\b/.test(lc),
+    has_cruise: /\bcruise\b/.test(lc),
+    has_flights: /\b(flight|flights|airfare|air ticket|air tickets)\b/.test(lc),
+    has_snorkel: /\b(snorkel|snorkeling|diving)\b/.test(lc),
+    has_safari: /\b(safari|quad|atv)\b/.test(lc),
+    has_private: /\bprivate\b/.test(lc),
+    has_tickets: /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(lc),
+    has_lunch: /\blunch\b/.test(lc),
+    has_pickup: /\b(pick-?up|hotel pick-?up|pickup)\b/.test(lc)
+  };
+}
+
+function upd_hasUnsupportedHighRiskClaims_Updater_(text, flags) {
+  var t = String(text || '').toLowerCase();
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (!f.has_nile && /\bnile\b/.test(t)) return true;
+  if (!f.has_felucca && /\b(felucca|faluka)\b/.test(t)) return true;
+  if (!f.has_boat && /\bboat\b/.test(t)) return true;
+  if (!f.has_cruise && /\bcruise\b/.test(t)) return true;
+  if (!f.has_flights && /\b(flight|flights|airfare|air ticket|air tickets)\b/.test(t)) return true;
+  if (!f.has_snorkel && /\b(snorkel|snorkeling|diving)\b/.test(t)) return true;
+  if (!f.has_safari && /\b(safari|quad|atv)\b/.test(t)) return true;
+  if (!f.has_private && /\bprivate\b/.test(t)) return true;
+  if (!f.has_tickets && /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(t)) return true;
+  if (!f.has_lunch && /\blunch\b/.test(t)) return true;
+  if (!f.has_pickup && /\b(pick-?up|hotel pick-?up|pickup)\b/.test(t)) return true;
+  return false;
+}
+
+function upd_truncateText_Updater_(s, maxLen) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (!maxLen || t.length <= maxLen) return t;
+  var cut = t.slice(0, maxLen);
+  var lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace >= 80) return cut.slice(0, lastSpace).trim().replace(/[,\-–—:;]\s*$/g, '');
+  return cut.trim().replace(/[,\-–—:;]\s*$/g, '');
+}
+
+function upd_removeUnsupportedHighRiskParts_Updater_(text, flags) {
+  var t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (!upd_hasUnsupportedHighRiskClaims_Updater_(t, flags)) return t;
+  var parts = t
+    .split(/[|•]|(?:\s+[–—-]\s+)|(?:\s*;\s*)|[.!?]\s+/)
+    .map(function(x) { return String(x || '').trim(); })
+    .filter(Boolean);
+  var kept = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (upd_hasUnsupportedHighRiskClaims_Updater_(p, flags)) continue;
+    kept.push(p);
+  }
+  var out = kept.join('. ').replace(/\s+/g, ' ').trim();
+  out = out.replace(/^(and|with|including|plus|also)\b\s*/i, '');
+  out = out.replace(/[,\-–—:;]\s*$/g, '').trim();
+  return out;
+}
+
+function upd_applyFinalSeoSafetyBelt_Updater_(payload, data, tripFields) {
+  if (!payload || typeof payload !== 'object') return payload;
+  var flags = upd_buildStrictFlags_Updater_(data, tripFields);
+  var safeTitle = '';
+  var safeDesc = '';
+
+  try {
+    if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'title') && payload.core.title) {
+      safeTitle = String(upd_removeUnsupportedHighRiskParts_Updater_(payload.core.title, flags) || '').trim();
+      if (safeTitle) payload.core.title = safeTitle; else delete payload.core.title;
+    }
+    if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_title') && payload.meta.rank_math_title) {
+      var t1 = String(upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_title, flags) || '').trim();
+      if (t1) payload.meta.rank_math_title = t1; else delete payload.meta.rank_math_title;
+      if (!safeTitle && t1) safeTitle = t1;
+    }
+    if (payload.title !== undefined) {
+      var t2 = String(upd_removeUnsupportedHighRiskParts_Updater_(payload.title, flags) || '').trim();
+      if (t2) payload.title = t2; else delete payload.title;
+      if (!safeTitle && t2) safeTitle = t2;
+    }
+
+    if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_description') && payload.meta.rank_math_description) {
+      safeDesc = upd_truncateText_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_description, flags), 160);
+      if (safeDesc) payload.meta.rank_math_description = safeDesc; else delete payload.meta.rank_math_description;
+    }
+    if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'excerpt') && payload.core.excerpt) {
+      var ex = upd_truncateText_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(payload.core.excerpt, flags), 240);
+      if (ex) payload.core.excerpt = ex; else delete payload.core.excerpt;
+    }
+    if (payload.excerpt !== undefined) {
+      var ex2 = upd_truncateText_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(payload.excerpt, flags), 240);
+      if (ex2) payload.excerpt = ex2; else delete payload.excerpt;
+    }
+
+    if (payload.meta) {
+      if (payload.meta.trip_schema_data && typeof payload.meta.trip_schema_data === 'string') {
+        try {
+          var ts = JSON.parse(payload.meta.trip_schema_data);
+          if (ts && typeof ts === 'object') {
+            if (safeTitle) ts.name = safeTitle;
+            if (safeDesc) ts.description = safeDesc;
+            payload.meta.trip_schema_data = JSON.stringify(ts);
+            payload.meta.schema_trip_data = payload.meta.trip_schema_data;
+          }
+        } catch (eTs) {}
+      }
+      if (payload.meta.faq_schema_data && typeof payload.meta.faq_schema_data === 'string') {
+        try {
+          var fs = JSON.parse(payload.meta.faq_schema_data);
+          if (fs && typeof fs === 'object') {
+            if (safeTitle) fs.name = safeTitle;
+            if (safeDesc) fs.description = safeDesc;
+            payload.meta.faq_schema_data = JSON.stringify(fs);
+          }
+        } catch (eFs) {}
+      }
+    }
+  } catch (eBelt) {}
 
   return payload;
 }
@@ -8608,6 +8867,17 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
          status: 'publish', 
          pricing_categories: [] 
        };
+
+       var excerpt = (pkgFields && (pkgFields.excerpt || pkgFields.Excerpt || pkgFields.EXCERPT));
+       var contentHtml = (pkgFields && (pkgFields.content_html || pkgFields.Content_HTML || pkgFields.CONTENT_HTML || pkgFields.Content_html));
+       if (excerpt !== undefined && excerpt !== null) {
+         var ex = String(excerpt).replace(/\s+/g, ' ').trim();
+         if (ex) payload.excerpt = ex;
+       }
+       if (contentHtml !== undefined && contentHtml !== null) {
+         var ch = String(contentHtml).trim();
+         if (ch) payload.content_html = ch;
+       }
        
        if (linkedPrices && linkedPrices.length > 0) {
           linkedPrices.forEach(function(prRecord) {
@@ -8760,6 +9030,7 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
              log('NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (package ' + String(targetLang || '') + '): airtable_pkg=' + pkId);
            }
            log('Updater: Sending package "' + payload.title + '" to WP...');
+           log('Updater: Package copy -> excerpt_chars=' + (payload.excerpt ? String(payload.excerpt).length : 0) + ', content_html_chars=' + (payload.content_html ? String(payload.content_html).length : 0));
            var sendRes = await sendPackageToWp_Updater_(payload, { lang: targetLang })
            var newId = sendRes && sendRes.id ? String(sendRes.id) : ''
            if (!newId && existingWpPkgId && sendRes && String(sendRes.error_code || '') === 'not_found') {

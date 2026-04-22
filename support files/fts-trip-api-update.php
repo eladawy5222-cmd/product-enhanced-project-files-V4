@@ -1686,17 +1686,23 @@ function fts_create_package(WP_REST_Request $request) {
     $title = sanitize_text_field($request->get_param('title'));
     $status = $request->get_param('status') ?: 'publish';
     $trip_id = intval($request->get_param('trip_id')); // Optional: for future use or logging
+    $excerpt = sanitize_text_field($request->get_param('excerpt'));
+    $content_html = $request->get_param('content_html');
+    if ($content_html !== null) $content_html = wp_kses_post($content_html);
 
     if (empty($title)) {
         return new WP_Error('rest_invalid_param', 'title is required', ['status' => 400]);
     }
     
     // Create Post
-    $post_id = wp_insert_post([
+    $post_data = [
         'post_title' => $title,
         'post_type' => 'trip-packages',
         'post_status' => $status
-    ]);
+    ];
+    if (!empty($excerpt)) $post_data['post_excerpt'] = $excerpt;
+    if (!empty($content_html)) $post_data['post_content'] = $content_html;
+    $post_id = wp_insert_post($post_data);
     
     if (is_wp_error($post_id)) {
         return $post_id;
@@ -1806,6 +1812,17 @@ function fts_update_package(WP_REST_Request $request) {
             $update['post_title'] = $title;
             $updated_core = true;
         }
+    }
+    if (isset($params['excerpt'])) {
+        $excerpt = sanitize_text_field($params['excerpt']);
+        $update['post_excerpt'] = $excerpt;
+        $updated_core = true;
+    }
+    if (isset($params['content_html']) || isset($params['content'])) {
+        $content = isset($params['content_html']) ? $params['content_html'] : $params['content'];
+        $content = wp_kses_post($content);
+        $update['post_content'] = $content;
+        $updated_core = true;
     }
     if (isset($params['status'])) {
         $status = sanitize_text_field($params['status']);
