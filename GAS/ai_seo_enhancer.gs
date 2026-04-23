@@ -121,6 +121,42 @@ function stripTrailingPunctuationNoiseSeoEn_(text) {
   return s;
 }
 
+function normalizePunctuationNoiseSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return s;
+  s = s.replace(/\s+([,.;!?])/g, '$1');
+  s = s.replace(/,\s*([.!?])/g, '$1');
+  s = s.replace(/([.!?])\s*,/g, '$1');
+  s = s.replace(/\.{2,}/g, '.').replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?');
+  s = s.replace(/\s*\.\s*\./g, '.').replace(/\s*,\s*,/g, ',');
+  s = s.replace(/\s+,/g, ',');
+  return s;
+}
+
+function isCivilizationMuseumContextSeoEn_(title, slug, meta) {
+  var s = String(slug || '').toLowerCase();
+  var t = String(title || '').toLowerCase();
+  var m = String(meta || '').toLowerCase();
+  if (s && s.indexOf('civilization') !== -1 && s.indexOf('museum') !== -1) return true;
+  if (t.indexOf('civilization museum') !== -1 || /\bnmec\b/.test(t)) return true;
+  if (m.indexOf('civilization museum') !== -1) return true;
+  if (m.indexOf('national museum of egyptian civilization') !== -1) return true;
+  return false;
+}
+
+function normalizeCivilizationMuseumPhraseSeoEn_(text, isCivilizationContext) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return '';
+  if (!isCivilizationContext) return s;
+  if (/egyptian civilization museum/i.test(s)) return s;
+  if (/museum of egyptian civilization/i.test(s)) return s;
+  if (/\bnmec\b/i.test(s)) return s;
+  if (/\bcivilization museum\b/i.test(s) && !/\begyptian\b/i.test(s)) {
+    s = s.replace(/\bCivilization Museum\b/gi, 'Egyptian Civilization Museum');
+  }
+  return s;
+}
+
 function isWeakEndingFragmentSeoEn_(text) {
   var s = normalizeWhitespaceSeoEn_(text);
   if (!s) return false;
@@ -192,7 +228,9 @@ function fallbackToCompleteSentenceSeoEn_(text) {
 function finalizeSeoTextFieldEn_(text, maxLen) {
   var before = String(text || '');
   var s = stripTrailingConnectorsSeoEn_(truncateAtWordBoundarySeoEn_(before, maxLen));
+  s = normalizePunctuationNoiseSeoEn_(s);
   s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+  s = normalizePunctuationNoiseSeoEn_(s);
   s = s.replace(/[.!?]+$/g, '').trim();
   return s;
 }
@@ -301,6 +339,7 @@ function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
   var before = String(text || '');
   var raw = normalizeWhitespaceSeoEn_(before);
   var base0 = truncatePreferSentenceBoundarySeoEn_(raw, maxLen);
+  base0 = normalizePunctuationNoiseSeoEn_(base0);
   base0 = stripTrailingPunctuationNoiseSeoEn_(base0);
   var base = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(base0));
 
@@ -367,9 +406,11 @@ function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
     s = stripTrailingPunctuationNoiseSeoEn_(s);
   }
   s = truncatePreferSentenceBoundarySeoEn_(s, maxLen);
+  s = normalizePunctuationNoiseSeoEn_(s);
   s = stripTrailingPunctuationNoiseSeoEn_(s);
   s = stripDanglingCtaTailSeoEn_(s);
   s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+  s = normalizePunctuationNoiseSeoEn_(s);
   s = stripTrailingPunctuationNoiseSeoEn_(s);
   if (isWeakEndingFragmentSeoEn_(s)) {
     var guard = 0;
@@ -377,6 +418,7 @@ function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
       var prev2 = s;
       s = stripDanglingCtaTailSeoEn_(s);
       s = stripDanglingEndTokensSeoEn_(stripTrailingConnectorsSeoEn_(s));
+      s = normalizePunctuationNoiseSeoEn_(s);
       s = stripTrailingPunctuationNoiseSeoEn_(s);
       if (s === prev2) break;
       guard++;
@@ -973,14 +1015,20 @@ function runAiSeoEnhancementBatch() {
         if (improvedSignals.length) Logger.log('AI SEO Enhancer: Using improved content as primary SEO source');
         else Logger.log('AI SEO Enhancer: Using raw fallback content for SEO source');
 
+        var slugNowForSeo = String(combinedFields.Slug || combinedFields.slug || aiResult.AI_SEO_Permalink || combinedFields.Permalink || '').trim();
+        var civCtxSeo = isCivilizationMuseumContextSeoEn_(combinedFields.Title || '', slugNowForSeo, (aiResult.AI_SEO_Meta_Description || '') + ' ' + (aiResult.AI_SEO_Title || ''));
+
         if (aiResult.AI_SEO_Title) {
           var beforeTitle = String(aiResult.AI_SEO_Title || '').trim();
+          aiResult.AI_SEO_Title = normalizeCivilizationMuseumPhraseSeoEn_(aiResult.AI_SEO_Title, civCtxSeo);
           aiResult.AI_SEO_Title = finalizeSeoTextFieldEn_(aiResult.AI_SEO_Title, AI_SEO_TITLE_MAX_LEN_);
           if (beforeTitle !== aiResult.AI_SEO_Title) Logger.log('AI SEO Enhancer: SEO title cleaned');
         }
         if (aiResult.AI_SEO_Meta_Description) {
           var beforeMeta = String(aiResult.AI_SEO_Meta_Description || '').trim();
           var metaRes = finalizeSeoMetaDescriptionEn_Result_(aiResult.AI_SEO_Meta_Description, AI_SEO_META_MAX_LEN_);
+          var normalizedMeta = normalizeCivilizationMuseumPhraseSeoEn_(metaRes.text, civCtxSeo);
+          if (normalizedMeta !== metaRes.text) metaRes = finalizeSeoMetaDescriptionEn_Result_(normalizedMeta, AI_SEO_META_MAX_LEN_);
           aiResult.AI_SEO_Meta_Description = metaRes.text;
           if (metaRes.danglingDetected) Logger.log('AI SEO Enhancer: SEO description dangling ending detected');
           if (metaRes.weakCtaRemoved) Logger.log('AI SEO Enhancer: SEO description weak CTA tail removed');
@@ -1001,7 +1049,7 @@ function runAiSeoEnhancementBatch() {
           .join(' | ');
         var uspSuffix = detectUspSuffixFromTextSeoEn_(uspTextPool);
         var computedH1 = buildH1FromSeoSignalsSeoEn_(aiResult.AI_SEO_FocusKeywords, aiResult.AI_SEO_Title, combinedFields.Title || '', uspSuffix);
-        if (computedH1) aiResult.AI_Titel_H1 = computedH1;
+        if (computedH1) aiResult.AI_Titel_H1 = normalizeCivilizationMuseumPhraseSeoEn_(computedH1, civCtxSeo);
 
         // 6) Prepare Update for Improvement With AI
         var updateFields = {

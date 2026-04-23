@@ -2548,16 +2548,31 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     function cleanText_(s) { return String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
 
     var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim();
-    var schemaSeoTitleRaw = pickScalar_(g.AI_SEO_Title) || pickScalar_(payload.meta.rank_math_title) || tripTitle;
-    var schemaSeoDescRaw = pickScalar_(g.AI_SEO_Meta_Description) || pickScalar_(payload.meta.rank_math_description) || pickScalar_(g.AI_Short_Summary) || pickScalar_(g.AI_Excerpt) || pickScalar_(g.AI_Trip_Description) || '';
+    var strict = upd_buildStrictFlags_Updater_(data, null);
+    var schemaSeoTitleRaw = tripTitle || pickScalar_(g.AI_SEO_Title) || pickScalar_(payload.meta.rank_math_title);
+    var schemaSeoDescRaw =
+      pickScalar_(g.AI_Short_Summary) ||
+      pickScalar_(g.AI_Excerpt) ||
+      pickScalar_(g.AI_Trip_Description) ||
+      pickScalar_(g.AI_SEO_Meta_Description) ||
+      pickScalar_(payload.meta.rank_math_description) ||
+      '';
+    var slugNow = String((payload.core && payload.core.slug) ? payload.core.slug : (g && (g.Slug || g.slug) ? (g.Slug || g.slug) : '')).trim();
+    var civCtx = upd_isCivilizationMuseumContext_Updater_(schemaSeoTitleRaw, slugNow, schemaSeoDescRaw);
 
-    var schemaSeoTitle = cleanText_(schemaSeoTitleRaw);
-    var schemaSeoDesc = cleanText_(schemaSeoDescRaw);
-    if (schemaSeoDesc) schemaSeoDesc = truncateAtWordBoundary_Updater_(schemaSeoDesc, 240);
+    var schemaSeoTitle = upd_normalizeMuseumEntityText_Updater_(cleanText_(schemaSeoTitleRaw), civCtx);
+    var schemaSeoDesc = upd_normalizeMuseumEntityText_Updater_(cleanText_(schemaSeoDescRaw), civCtx);
+    schemaSeoDesc = upd_removeUnsupportedHighRiskParts_Updater_(schemaSeoDesc, strict);
+    if (schemaSeoDesc) schemaSeoDesc = upd_finalizeSeoMetaDescription_Updater_(schemaSeoDesc, 240);
 
     if (isEn) {
-      var titleSrc = g.AI_SEO_Title ? 'AI_SEO_Title' : (payload.meta.rank_math_title ? 'rank_math_title' : (tripTitle ? 'core.title' : 'missing'));
-      var descSrc = g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' : (payload.meta.rank_math_description ? 'rank_math_description' : (g.AI_Short_Summary ? 'AI_Short_Summary' : (g.AI_Excerpt ? 'AI_Excerpt' : (g.AI_Trip_Description ? 'AI_Trip_Description' : 'missing'))));
+      var titleSrc = tripTitle ? 'core.title' : (g.AI_SEO_Title ? 'AI_SEO_Title' : (payload.meta.rank_math_title ? 'rank_math_title' : 'missing'));
+      var descSrc =
+        g.AI_Short_Summary ? 'AI_Short_Summary' :
+        (g.AI_Excerpt ? 'AI_Excerpt' :
+        (g.AI_Trip_Description ? 'AI_Trip_Description' :
+        (g.AI_SEO_Meta_Description ? 'AI_SEO_Meta_Description' :
+        (payload.meta.rank_math_description ? 'rank_math_description' : 'missing'))));
       Logger.log('SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=' + titleSrc + ' desc=' + descSrc);
       if (payload.meta.rank_math_description && (g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description)) Logger.log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)');
     }
@@ -2573,7 +2588,6 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     if (schemaSeoTitle) tripSchemaObj.name = schemaSeoTitle;
     if (schemaSeoDesc) tripSchemaObj.description = schemaSeoDesc;
     try {
-      var strict = upd_buildStrictFlags_Updater_(data, null);
       if (strict && strict.has_nile === false) {
         tripSchemaObj = upd_removeDisallowedPlacesFromTripSchema_Updater_(tripSchemaObj, ['Nile']);
       }
@@ -2764,6 +2778,12 @@ function upd_finalizeSeoMetaDescription_Updater_(s, maxLen) {
   var n = Number(maxLen || 0);
   if (!t) return '';
   if (n > 0 && t.length > n) t = upd_truncateAtWordBoundary_Updater_(t, n);
+  t = t.replace(/\s+([,.;!?])/g, '$1');
+  t = t.replace(/,\s*([.!?])/g, '$1');
+  t = t.replace(/([.!?])\s*,/g, '$1');
+  t = t.replace(/\.{2,}/g, '.').replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?');
+  t = t.replace(/\s*\.\s*\./g, '.').replace(/\s*,\s*,/g, ',');
+  t = t.replace(/\s+,/g, ',');
   t = t.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
   var guard = 0;
   while (guard < 6 && upd_isWeakMetaEnding_Updater_(t)) {
@@ -2799,6 +2819,9 @@ function upd_normalizeMuseumEntityText_Updater_(text, isCivilizationContext) {
   if (/egyptian civilization museum/i.test(s)) return s;
   if (/museum of egyptian civilization/i.test(s)) return s;
   if (/\bnmec\b/i.test(s)) return s;
+  if (/\bcivilization museum\b/i.test(s) && !/\begyptian\b/i.test(s)) {
+    s = s.replace(/\bCivilization Museum\b/gi, 'Egyptian Civilization Museum');
+  }
   return s.replace(/\bEgyptian Museum\b/gi, 'Egyptian Civilization Museum');
 }
 
@@ -2895,6 +2918,9 @@ function upd_extractAttractionsFromTitle_Updater_(title) {
 function upd_shortenAttractionForSeoTitle_Updater_(s) {
   var t = String(s || '').replace(/\s+/g, ' ').trim();
   if (!t) return '';
+  if (/\b(nmec|egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization|civilization museum)\b/i.test(t)) {
+    return 'Egyptian Civilization Museum';
+  }
   t = t.replace(/\b(egyptian|national)\b/ig, '').replace(/\s+/g, ' ').trim();
   t = t.replace(/\bmuseum of\b/ig, 'Museum').replace(/\s+/g, ' ').trim();
   if (t.length > 26) t = upd_truncateAtWordBoundary_Updater_(t, 26);

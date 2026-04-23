@@ -781,12 +781,20 @@ function mapAirtableToWordPress_(data, tripFields) {
     payload.meta = payload.meta || {};
     if (!payload.meta.trip_schema_data) {
       var tripTitle = String(payload.core && payload.core.title ? payload.core.title : '').trim();
-      var descRaw = String(g.AI_SEO_Meta_Description || g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      var strict = pub_buildStrictFlags_(data, tripFields);
+      var rmDesc = payload.meta && payload.meta.rank_math_description ? String(payload.meta.rank_math_description) : '';
+      var descRaw = String(g.AI_Short_Summary || g.AI_Excerpt || g.AI_Trip_Description || g.AI_SEO_Meta_Description || rmDesc || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      var slugNow = tripFields && (tripFields.Slug || tripFields.slug) ? String(tripFields.Slug || tripFields.slug) : '';
+      var civCtx = pub_isCivilizationMuseumContext_(tripTitle, slugNow, descRaw);
+      var schemaTitle = pub_normalizeMuseumEntityText_(tripTitle, civCtx);
+      var schemaDesc = pub_normalizeMuseumEntityText_(descRaw, civCtx);
+      schemaDesc = pub_removeUnsupportedHighRiskParts_(schemaDesc, strict);
+      schemaDesc = pub_finalizeSeoMetaDescription_(schemaDesc, 240);
       var tripSchema = {
         "@context": "https://schema.org",
         "@type": "TouristTrip",
-        "name": tripTitle || undefined,
-        "description": descRaw || undefined
+        "name": schemaTitle || undefined,
+        "description": schemaDesc || undefined
       };
       Object.keys(tripSchema).forEach(function(k) { if (tripSchema[k] === undefined) delete tripSchema[k]; });
       payload.meta.trip_schema_data = JSON.stringify(tripSchema);
@@ -805,8 +813,11 @@ function mapAirtableToWordPress_(data, tripFields) {
         var faqSchema = {
           "@context": "https://schema.org",
           "@type": "FAQPage",
-          "mainEntity": mainEntity
+          "mainEntity": mainEntity,
+          "name": schemaTitle || undefined,
+          "description": schemaDesc || undefined
         };
+        Object.keys(faqSchema).forEach(function(k) { if (faqSchema[k] === undefined) delete faqSchema[k]; });
         payload.meta.faq_schema_data = JSON.stringify(faqSchema);
       }
     }
@@ -918,6 +929,12 @@ function pub_finalizeSeoMetaDescription_(s, maxLen) {
   var n = Number(maxLen || 0);
   if (!t) return '';
   if (n > 0 && t.length > n) t = pub_truncateAtWordBoundary_(t, n);
+  t = t.replace(/\s+([,.;!?])/g, '$1');
+  t = t.replace(/,\s*([.!?])/g, '$1');
+  t = t.replace(/([.!?])\s*,/g, '$1');
+  t = t.replace(/\.{2,}/g, '.').replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?');
+  t = t.replace(/\s*\.\s*\./g, '.').replace(/\s*,\s*,/g, ',');
+  t = t.replace(/\s+,/g, ',');
   t = t.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
   var guard = 0;
   while (guard < 6 && pub_isWeakMetaEnding_(t)) {
@@ -953,6 +970,9 @@ function pub_normalizeMuseumEntityText_(text, isCivilizationContext) {
   if (/egyptian civilization museum/i.test(s)) return s;
   if (/museum of egyptian civilization/i.test(s)) return s;
   if (/\bnmec\b/i.test(s)) return s;
+  if (/\bcivilization museum\b/i.test(s) && !/\begyptian\b/i.test(s)) {
+    s = s.replace(/\bCivilization Museum\b/gi, 'Egyptian Civilization Museum');
+  }
   return s.replace(/\bEgyptian Museum\b/gi, 'Egyptian Civilization Museum');
 }
 
@@ -1046,6 +1066,9 @@ function pub_extractAttractionsFromTitle_(title) {
 function pub_shortenAttractionForSeoTitle_(s) {
   var t = pub_sanitizeSeoText_(s);
   if (!t) return '';
+  if (/\b(nmec|egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization|civilization museum)\b/i.test(t)) {
+    return 'Egyptian Civilization Museum';
+  }
   t = t.replace(/\b(egyptian|national)\b/ig, '').replace(/\s+/g, ' ').trim();
   t = t.replace(/\bmuseum of\b/ig, 'Museum').replace(/\s+/g, ' ').trim();
   if (t.length > 26) t = pub_truncateAtWordBoundary_(t, 26);
