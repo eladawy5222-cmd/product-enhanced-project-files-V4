@@ -210,6 +210,29 @@ class FTS_Trip_Redesign_V2 {
         $settings = get_post_meta( $trip_id, 'wp_travel_engine_setting', true );
         if ( ! is_array( $settings ) ) $settings = array();
 
+        $bold_promise = '';
+        if ( array_key_exists( 'bold_promise', $settings ) && is_string( $settings['bold_promise'] ) ) {
+            $bold_promise = trim( $settings['bold_promise'] );
+        }
+        if ( $bold_promise === '' ) {
+            $bold_promise = trim( (string) get_post_meta( $trip_id, 'AI_Bold_Promise', true ) );
+        }
+        if ( $bold_promise === '' ) {
+            $bold_promise = trim( (string) get_post_meta( $trip_id, 'ai_bold_promise', true ) );
+        }
+
+        $at_a_glance = array();
+        $at_raw = null;
+        if ( array_key_exists( 'at_a_glance', $settings ) ) $at_raw = $settings['at_a_glance'];
+        if ( empty( $at_raw ) ) $at_raw = get_post_meta( $trip_id, 'AI_At_A_Glance', true );
+        if ( empty( $at_raw ) ) $at_raw = get_post_meta( $trip_id, 'ai_at_a_glance', true );
+        if ( is_array( $at_raw ) ) {
+            $at_a_glance = $at_raw;
+        } elseif ( is_string( $at_raw ) && trim( $at_raw ) !== '' ) {
+            $decoded = json_decode( $at_raw, true );
+            if ( is_array( $decoded ) ) $at_a_glance = $decoded;
+        }
+
         $trip_obj = null;
         if ( class_exists( '\WPTravelEngine\Core\Models\Post\Trip' ) ) {
             try {
@@ -803,6 +826,7 @@ class FTS_Trip_Redesign_V2 {
 
         self::$trip_data = compact(
             'trip_id', 'settings', 'trip_obj',
+            'bold_promise', 'at_a_glance',
             'price', 'sale_price', 'has_sale', 'display_price', 'old_price', 'discount_pct',
             'review_data', 'avg_rating', 'review_count', 'reviews', 'reviews_tab_content',
             'duration', 'duration_unit', 'nights', 'duration_text',

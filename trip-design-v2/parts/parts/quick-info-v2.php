@@ -10,6 +10,20 @@ $dest_names_list = ( ! empty( $destination_terms ) && ! is_wp_error( $destinatio
     : array();
 $trending_location = ! empty( $dest_names_list ) ? implode( ', ', array_slice( $dest_names_list, 0, 2 ) ) : '';
 $last_booked_html = '<span class="fts-v2-last-booked">23</span>';
+$at_items = array();
+if ( is_array( $at_a_glance ) ) {
+    $map = array(
+        'duration' => __( 'Duration', 'fts' ),
+        'meeting_point' => __( 'Meeting point', 'fts' ),
+        'group_size' => __( 'Group size', 'fts' ),
+        'includes' => __( 'Includes', 'fts' ),
+        'excludes' => __( 'Excludes', 'fts' ),
+    );
+    foreach ( $map as $k => $label ) {
+        $v = isset( $at_a_glance[ $k ] ) ? trim( (string) $at_a_glance[ $k ] ) : '';
+        if ( $v !== '' ) $at_items[] = array( 'label' => $label, 'value' => $v );
+    }
+}
 ?>
 
 <!-- Quick Price + Hook -->
@@ -18,6 +32,13 @@ $last_booked_html = '<span class="fts-v2-last-booked">23</span>';
         <div class="fts-v2-quick-bar-inner">
             <div class="fts-v2-quick-text">
                 <p class="fts-v2-hook-text"><?php echo esc_html( $overview_excerpt ); ?></p>
+                <?php if ( ! empty( $at_items ) ) : ?>
+                <ul class="fts-v2-at-a-glance">
+                    <?php foreach ( $at_items as $it ) : ?>
+                        <li><strong><?php echo esc_html( $it['label'] ); ?>:</strong> <?php echo esc_html( $it['value'] ); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php endif; ?>
             </div>
             <div class="fts-v2-quick-price-cta">
                 <div class="fts-v2-price-block">

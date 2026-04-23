@@ -32,6 +32,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 </button>
             </div>
         </div>
+        <?php if ( ! empty( $bold_promise ) ) : ?>
+        <p class="fts-v2-bold-promise"><?php echo esc_html( $bold_promise ); ?></p>
+        <?php endif; ?>
 
         <!-- Meta Row -->
         <div class="fts-v2-meta-row">

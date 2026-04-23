@@ -2285,6 +2285,29 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   // --- WP Travel Engine Settings ---
   var wte = payload.meta.wp_travel_engine_setting;
 
+  var boldPromise = String(g.AI_Bold_Promise || '').replace(/\s+/g, ' ').trim();
+  if (boldPromise) {
+    payload.meta.AI_Bold_Promise = boldPromise;
+    wte.bold_promise = boldPromise;
+  }
+
+  var atAGlanceRaw = g.AI_At_A_Glance;
+  if (atAGlanceRaw) {
+    var atAGlanceStr = '';
+    if (typeof atAGlanceRaw === 'string') atAGlanceStr = String(atAGlanceRaw || '').trim();
+    else {
+      try { atAGlanceStr = JSON.stringify(atAGlanceRaw); } catch (eAtStr) { atAGlanceStr = ''; }
+    }
+    if (atAGlanceStr) {
+      payload.meta.AI_At_A_Glance = atAGlanceStr;
+      var atAGlanceObj = null;
+      try { atAGlanceObj = JSON.parse(atAGlanceStr); } catch (eAt) { atAGlanceObj = null; }
+      if (atAGlanceObj && typeof atAGlanceObj === 'object' && !Array.isArray(atAGlanceObj)) {
+        wte.at_a_glance = atAGlanceObj;
+      }
+    }
+  }
+
   // --- Duration Mapping (Direct) ---
   wte.trip_duration = dHours;
   wte.trip_duration_unit = dUnit;

@@ -1181,6 +1181,38 @@ function fts_format_trip($id) {
     $pricing = fts_collect_pricing_from_meta($meta);
     $general = fts_collect_general_from_meta($meta);
 
+    $settings = null;
+    if (isset($meta['wp_travel_engine_setting'])) $settings = $meta['wp_travel_engine_setting'];
+    if (!$settings && isset($meta['wpte_trip_settings'])) $settings = $meta['wpte_trip_settings'];
+    if (is_string($settings)) {
+        $tmp = json_decode($settings, true);
+        if (is_array($tmp)) $settings = $tmp;
+    }
+    if (!is_array($settings)) $settings = [];
+
+    $ai_bold_promise = fts_pick($settings, $meta, ['bold_promise', 'ai_bold_promise', 'AI_Bold_Promise']);
+    if (is_string($ai_bold_promise)) $ai_bold_promise = trim($ai_bold_promise);
+    if (!is_string($ai_bold_promise) || $ai_bold_promise === '') $ai_bold_promise = null;
+
+    $ai_at_a_glance_raw = fts_pick($settings, $meta, ['at_a_glance', 'ai_at_a_glance', 'AI_At_A_Glance']);
+    $ai_at_a_glance = null;
+    if (is_array($ai_at_a_glance_raw)) {
+        $ai_at_a_glance = $ai_at_a_glance_raw;
+    } elseif (is_string($ai_at_a_glance_raw) && trim($ai_at_a_glance_raw) !== '') {
+        $decoded = json_decode($ai_at_a_glance_raw, true);
+        if (is_array($decoded)) $ai_at_a_glance = $decoded;
+    }
+
+    if ($ai_bold_promise !== null && !array_key_exists('bold_promise', $settings)) {
+        $settings['bold_promise'] = $ai_bold_promise;
+    }
+    if ($ai_at_a_glance !== null && !array_key_exists('at_a_glance', $settings)) {
+        $settings['at_a_glance'] = $ai_at_a_glance;
+    }
+    if (!empty($settings)) {
+        $meta['wp_travel_engine_setting'] = $settings;
+    }
+
     // Get Language Info (WPML)
     $language = [
         'code' => 'en', // default
@@ -1222,6 +1254,8 @@ function fts_format_trip($id) {
         'gallery' => $gallery,
         'general' => $general,
         'pricing' => $pricing,
+        'ai_bold_promise' => $ai_bold_promise,
+        'ai_at_a_glance' => $ai_at_a_glance,
     ];
 }
 

@@ -1,0 +1,83 @@
+This patch describes how to extend the existing conversion enforcer scripts in
+both the Google Apps Script (`GAS/ai_conversion_enforcer.gs`) and the Node/Electron
+implementation (`fts-trip-manager/src/ai/conversion-enforcer.js`) to include
+two new features: a **bold promise** tagline and an **at‑a‑glance** section.
+
+## Modifications to `GAS/ai_conversion_enforcer.gs`
+
+1. **Extend the output JSON schema**
+
+   Locate the `OUTPUT JSON SCHEMA` definition inside `convEnf_buildPrompt_`.  Add
+   two new fields, `bold_promise` and `at_a_glance`, alongside the existing
+   sections (`seo`, `description`, `why_people_love`, `highlights`, etc.).  Use
+   the same structure (score, action, and value) that other fields employ.  For
+   example:
+
+   ```js
+     "packages": {
+       "score": 0,
+       "action": "polish",
+       "value": []
+     },
+     // NEW FIELDS FOR BOLD PROMISE AND AT‑A‑GLANCE
+     "bold_promise": {
+       "score": 0,
+       "action": "polish",
+       "value": ""
+     },
+     "at_a_glance": {
+       "score": 0,
+       "action": "polish",
+       "value": {
+         "duration": "",
+         "meeting_point": "",
+         "group_size": "",
+         "includes": "",
+         "excludes": ""
+       }
+     }
+   ```
+
+2. **Update the AI prompt instructions**
+
+   In the prompt assembly within `convEnf_buildPrompt_`, add two bullet points
+   under the transformation rules:
+
+   - **Bold promise:** instruct the model to produce a short, benefit‑driven
+     sub‑headline that follows the pattern “Enjoy [desire] without [pain], even
+     if [objection]”【828440733758879†L479-L503】.  Emphasise that this
+     tagline should summarise the unique selling proposition of the trip and
+     leverage the existing highlights and why‑people‑love context.
+
+   - **At a glance:** request an `at_a_glance` object summarising key facts
+     about the trip—duration, meeting point, group size, what’s included and
+     excluded—presented succinctly as part of the JSON output【828440733758879†L573-L589】.
+
+3. **Parse and persist the new fields**
+
+   In `runConversionEnforcer`, after the AI response is parsed, extract the
+   `bold_promise` and `at_a_glance` values using existing helper functions
+   (`convEnf_getString_` and a new `convEnf_getObject_` helper you define).
+   Then assign these values to the improvement record’s fields (e.g.,
+   `AI_Bold_Promise` and `AI_At_A_Glance`) via the `updateMain` object so
+   they’re saved back to Airtable.
+
+## Modifications to `fts-trip-manager/src/ai/conversion-enforcer.js`
+
+Mirror the changes made to the Google Apps Script version:
+
+1. **Extend the JSON schema** in the `convEnf_buildPrompt_` function to add
+   `bold_promise` and `at_a_glance` entries matching the structure above.
+
+2. **Update the prompt instructions** to tell the AI to produce these new
+   fields (bold promise tagline and at‑a‑glance summary).
+
+3. **Extract and store** the new fields in `runConversionEnforcer` after
+   deserialising the AI output.  Use helper functions to read the values and
+   assign them to the appropriate fields on the `updateMain` object before
+   saving the improvement record.
+
+By applying these modifications to both files, the conversion enforcer will
+generate a persuasive sub‑headline and a concise summary section for each
+trip, aligning the product with best‑practice guidelines from leading travel
+platforms【828440733758879†L479-L503】【828440733758879†L573-L589】.
