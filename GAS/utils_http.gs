@@ -83,6 +83,10 @@ function httpRequestJson(url, options, maxRetries, backoffMs) {
       if (CONFIG.DEBUG) {
         Logger.log('HTTP ' + code + ' for ' + url + ' attempt ' + attempt + ' body=' + text);
       }
+      if ((code === 429 || code === 403) && text && text.indexOf('Bandwidth quota exceeded') !== -1 && attempt < maxRetries - 1) {
+        Utilities.sleep(Math.max(backoffMs, 1000) * Math.pow(2, attempt));
+        continue;
+      }
       // retry only on 5xx
       if (code >= 500 && attempt < maxRetries - 1) {
         Utilities.sleep(backoffMs * Math.pow(2, attempt));
