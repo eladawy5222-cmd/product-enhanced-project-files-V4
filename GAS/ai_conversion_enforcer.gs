@@ -107,11 +107,32 @@ function runConversionEnforcer(record) {
     if (whyHtml) whyHtml = convEnf_sanitizeWhyPeopleLoveHtml_(whyHtml);
     if (whyHtml) whyHtml = convEnf_rewriteUnsupportedContentText_(whyHtml, flags, evidence);
     if (whyHtml && whyHtml.length >= 100) updateMain.AI_Tab_Content = whyHtml;
+    var boldPromise = convEnf_getString_(ai, ['bold_promise', 'value']);
+    if (!boldPromise) boldPromise = convEnf_getString_(ai, ['bold_promise', 'text']);
+    if (!boldPromise) boldPromise = convEnf_getString_(ai, ['bold_promise']);
+    if (boldPromise) boldPromise = String(boldPromise).replace(/\s+/g, ' ').trim();
+    if (boldPromise && boldPromise.length >= 20) updateMain.AI_Bold_Promise = boldPromise;
+    var atAGlanceObj = convEnf_getObject_(ai, ['at_a_glance', 'value']);
+    if (!atAGlanceObj) atAGlanceObj = convEnf_getObject_(ai, ['at_a_glance']);
+    if (atAGlanceObj) {
+      var atAGlance = {
+        duration: String(atAGlanceObj.duration || '').replace(/\s+/g, ' ').trim(),
+        meeting_point: String(atAGlanceObj.meeting_point || atAGlanceObj.meeting || atAGlanceObj.meet || '').replace(/\s+/g, ' ').trim(),
+        group_size: String(atAGlanceObj.group_size || atAGlanceObj.group || '').replace(/\s+/g, ' ').trim(),
+        includes: String(atAGlanceObj.includes || atAGlanceObj.included || '').replace(/\s+/g, ' ').trim(),
+        excludes: String(atAGlanceObj.excludes || atAGlanceObj.excluded || '').replace(/\s+/g, ' ').trim()
+      };
+      var hasAnyAtAGlance = false;
+      for (var k0 in atAGlance) {
+        if (atAGlance[k0]) { hasAnyAtAGlance = true; break; }
+      }
+      if (hasAnyAtAGlance) updateMain.AI_At_A_Glance = JSON.stringify(atAGlance);
+    }
     try { Logger.log('📤 Writing updates to Airtable...'); } catch (eLog3) {}
     if (Object.keys(updateMain).length) {
       updateMain.AI_LastUpdated = nowIso;
       convEnf_logAirtableFields_('UPDATE', 'Improvement With AI', imp.id, updateMain);
-      airtableUpdate_('Improvement With AI', imp.id, updateMain);
+      convEnf_airtableUpdateSafe_('Improvement With AI', imp.id, updateMain);
     }
     var newHighlights = convEnf_getArray_(ai, ['highlights', 'items']);
     newHighlights = convEnf_sanitizeStringList_(newHighlights, { max: 12 });
@@ -1293,6 +1314,12 @@ function convEnf_getArray_(obj, pathArr) {
   return Array.isArray(v) ? v : null;
 }
 
+function convEnf_getObject_(obj, pathArr) {
+  var v = convEnf_getPath_(obj, pathArr);
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  return v;
+}
+
 function convEnf_getPath_(obj, pathArr) {
   var cur = obj;
   for (var i = 0; i < pathArr.length; i++) {
@@ -1300,6 +1327,26 @@ function convEnf_getPath_(obj, pathArr) {
     cur = cur[pathArr[i]];
   }
   return cur;
+}
+
+function convEnf_airtableUpdateSafe_(tableName, recordId, fields) {
+  try {
+    airtableUpdate_(tableName, recordId, fields);
+    return;
+  } catch (e) {
+    var msg = (e && e.message) ? e.message : String(e);
+    var unknown = [];
+    var re = /Unknown field name:\s*(?:\\"([^\\"]+)\\"|"([^"]+)")/g;
+    var m;
+    while ((m = re.exec(msg)) !== null) unknown.push(m[1] || m[2]);
+    if (!unknown.length) throw e;
+    var filtered = {};
+    for (var k in fields) {
+      if (unknown.indexOf(k) === -1) filtered[k] = fields[k];
+    }
+    if (!Object.keys(filtered).length) return;
+    airtableUpdate_(tableName, recordId, filtered);
+  }
 }
 
 function convEnf_normalizeTripRecord_(record) {
@@ -1595,6 +1642,12 @@ function convEnf_buildPrompt_(payload, standardContext) {
     "- Enforce emotional hooks, clear benefits, decision triggers.",
     "- 5-7 points, each as <p><strong>Title</strong> — ...</p> (HTML only).",
     "- Each point must be concrete and must not introduce new inclusions beyond INPUT JSON.",
+    "BOLD PROMISE:",
+    "- Write bold_promise.value as one short, benefit-driven sub-headline following: \"Enjoy [desire] without [pain], even if [objection]\".",
+    "- Keep it specific and factual; do not add inclusions or logistics not supported by INPUT JSON.",
+    "AT A GLANCE:",
+    "- Fill at_a_glance.value with: duration, meeting_point, group_size, includes, excludes.",
+    "- Use short strings. If unknown, use empty string (do not guess).",
     "PACKAGES:",
     "- For each package in INPUT JSON packages[], write 1 excerpt and 1 content_html for the package card.",
     "- excerpt: plain text, 1-2 short sentences, max 180 characters.",
@@ -1631,7 +1684,9 @@ function convEnf_buildPrompt_(payload, standardContext) {
       included: { score: 0, action: "polish", items: [""], optional_items: [""] },
       excluded: { score: 0, action: "polish", items: [""], optional_items: [""] },
       faqs: { score: 0, action: "polish", items: [{ question: "", answer: "" }] },
-      packages: { items: [{ airtable_record_id: "", action: "keep", severity: "low", reason: "", excerpt: "", content_html: "" }] }
+      packages: { items: [{ airtable_record_id: "", action: "keep", severity: "low", reason: "", excerpt: "", content_html: "" }] },
+      bold_promise: { score: 0, action: "polish", value: "" },
+      at_a_glance: { score: 0, action: "polish", value: { duration: "", meeting_point: "", group_size: "", includes: "", excludes: "" } }
     })
   ].join("\n");
 }
