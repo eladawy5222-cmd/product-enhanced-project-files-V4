@@ -41,6 +41,10 @@ var UPDATER_WP_STAGE_DELAY_MS = 1200;
 var UPDATER_WP_HEAVY_STAGE_DELAY_MS = 2200;
 var UPDATER_SCHEMA_STAGE_DELAY_MS = 900;
 var UPDATER_ENABLE_STAGE_THROTTLING = true;
+var UPDATER_MEDIA_VERIFY_DELAY_MS = 600;
+var UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS = 900;
+var UPDATER_ENSURE_FILENAME_DELAY_MS = 1400;
+var UPDATER_SKIP_FILENAME_ON_QUOTA = true;
 
 function sleep_Updater_(ms) {
   var n = Number(ms) || 0;
@@ -80,6 +84,16 @@ function runNonCriticalStage_Updater_(label, fn, delayMs) {
 function runCriticalStage_Updater_(label, fn, delayMs) {
   throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
   return fn();
+}
+
+function throttleMediaItem_Updater_(label) {
+  throttleStage_Updater_(label, UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS);
+}
+
+function shouldSkipEnsureFilenameForError_Updater_(err) {
+  if (!err) return false;
+  if (!UPDATER_SKIP_FILENAME_ON_QUOTA) return false;
+  return isQuotaLikeError_Updater_(err);
 }
 
 function buildUpdaterCacheKey_(tableName, params) {
@@ -8687,6 +8701,19 @@ function detectLanguageSafe_Updater_(text) {
   }
 }
 
+function langMatchesOrBase_Updater_(detected, targetLang) {
+  var d = String(detected || '').toLowerCase().trim();
+  var t = String(targetLang || '').toLowerCase().trim();
+  if (!d || !t) return false;
+  if (d === t) return true;
+  var dBase = d.split('-')[0];
+  var tBase = t.split('-')[0];
+  if (dBase && dBase === t) return true;
+  if (tBase && tBase === d) return true;
+  if (dBase && tBase && dBase === tBase) return true;
+  return false;
+}
+
 function collectStringsForLangValidation_Updater_(value, out, depth) {
   if (depth > 4) return;
   if (value === null || value === undefined) return;
@@ -9487,20 +9514,40 @@ function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
                  if (rawRec) {
                     var rawAtts = rawRec.fields.Image || rawRec.fields.Attachments || rawRec.fields.File;
                     var rawUrl = rawRec.fields.URL || rawRec.fields.Url || rawRec.fields.url;
-                    
-                    var targetUrl = null;
-                    if (rawAtts && rawAtts.length > 0) targetUrl = rawAtts[0].url;
-                    else if (rawUrl) targetUrl = rawUrl;
-                    
-                    if (targetUrl) {
+                    var rawSourceUrl = rawRec.fields.Source_URL || rawRec.fields.SourceUrl || rawRec.fields.SourceURL || rawRec.fields.Original_URL || rawRec.fields.OriginalUrl || rawRec.fields.OriginalURL || '';
+
+                    var candidates = [];
+                    if (rawAtts && rawAtts.length > 0 && rawAtts[0] && rawAtts[0].url) candidates.push(String(rawAtts[0].url));
+                    if (rawSourceUrl) candidates.push(String(rawSourceUrl));
+
+                    var wpUploadsCandidate = '';
+                    if (rawUrl) {
+                      var ru = String(rawUrl);
+                      if (ru.indexOf('/wp-content/uploads/') !== -1) wpUploadsCandidate = ru;
+                      else candidates.push(ru);
+                    }
+                    if (wpUploadsCandidate) candidates.push(wpUploadsCandidate);
+
+                    var seenC = {};
+                    candidates = candidates.map(function(u) { return String(u || '').trim(); }).filter(function(u) {
+                      if (!u) return false;
+                      if (seenC[u]) return false;
+                      seenC[u] = true;
+                      return true;
+                    });
+
+                    if (candidates.length) {
                        Logger.log('Updater: Image ' + linkedId + ' missing WP ID. Uploading from URL...');
-                       var newId = uploadMediaFromUrl_Updater_(targetUrl, (tripFields.Title || 'trip') + '-image-' + linkedId);
+                       var newId = null;
+                       for (var cIdx = 0; cIdx < candidates.length; cIdx++) {
+                          var srcUrl = candidates[cIdx];
+                          Logger.log('Updater: Upload-from-URL source ' + (cIdx + 1) + '/' + candidates.length + ': ' + srcUrl);
+                          newId = uploadMediaFromUrl_Updater_(srcUrl, (tripFields.Title || 'trip') + '-image-' + linkedId);
+                          if (newId) break;
+                       }
                        if (newId) {
                           wpMediaId = newId;
-                          // Update the mapping so we don't upload it again if referenced twice
                           imageMap[linkedId] = newId;
-                          
-                          // Optional: Update the Raw Images table with the new ID to avoid re-uploading next time
                           try {
                              airtableUpdate_(rawImagesTable, linkedId, { ImageID: String(newId) });
                           } catch(e) {
@@ -9585,8 +9632,20 @@ function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
                  if (pref._field_sources && pref._field_sources.description === 'airtable_ai' && pref.description) payloadAi.description = pref.description;
 
                  if (payloadAi.title || payloadAi.caption || payloadAi.alt_text || payloadAi.description) {
+                   throttleMediaItem_Updater_('update media ' + wpMediaId);
                    updateMediaOnWordPress_Updater_(wpMediaId, payloadAi);
-                   if (payloadAi.title) ensureFilenameForMedia_Updater_(wpMediaId, payloadAi.title);
+                   if (payloadAi.title) {
+                     throttleStage_Updater_('ensure filename ' + wpMediaId, UPDATER_ENSURE_FILENAME_DELAY_MS);
+                     try {
+                       ensureFilenameForMedia_Updater_(wpMediaId, payloadAi.title);
+                     } catch (eEnsure) {
+                       if (shouldSkipEnsureFilenameForError_Updater_(eEnsure)) {
+                         Logger.log('Updater: Skipping ensure filename for Media ' + wpMediaId + ' due to quota/rate-limit: ' + (eEnsure && eEnsure.message ? eEnsure.message : String(eEnsure)));
+                       } else {
+                         throw eEnsure;
+                       }
+                     }
+                   }
                    Utilities.sleep(200);
                  }
                } else if (aiAllEmpty2 && wpMissingAny) {
@@ -9750,7 +9809,7 @@ function updateMediaOnWordPress_Updater_(mediaId, data) {
           Logger.log('Updater: Updated Media ' + mediaId + ' metadata (Title: ' + (data.title ? 'Yes' : 'No') + ', Alt: ' + (data.alt_text ? 'Yes' : 'No') + ')');
 
           if (data.alt_text) {
-            Utilities.sleep(500);
+            sleep_Updater_(UPDATER_MEDIA_VERIFY_DELAY_MS);
             try {
               var verifyJson = getMediaFromWordPress_Updater_(String(mediaId));
               var savedAlt = verifyJson && verifyJson.alt_text ? String(verifyJson.alt_text).trim() : '';
@@ -9813,9 +9872,16 @@ function ensureFilenameForMedia_Updater_(mediaId, desiredTitle) {
     if (code >= 200 && code < 300) {
       Logger.log('Updater: Filename ensured for Media ' + id);
     } else {
-      Logger.log('Updater: Failed to ensure filename for Media ' + id + ': ' + resp.getContentText());
+      var body = resp.getContentText() || '';
+      if ((code === 403 || code === 429) && isQuotaLikeError_Updater_({ message: body })) {
+        throw new Error(body);
+      }
+      Logger.log('Updater: Failed to ensure filename for Media ' + id + ': ' + body);
     }
   } catch (e) {
+    if (shouldSkipEnsureFilenameForError_Updater_(e)) {
+      throw e;
+    }
     Logger.log('Updater: Error ensuring filename for Media ' + id + ': ' + e.message);
   }
 }
@@ -9921,8 +9987,20 @@ function ensureEnglishMediaMetadataForAttachment_Updater_(mediaId, tripFields, t
   if (needsDescription) payload.description = description || caption;
 
   if (payload.title || payload.caption || payload.alt_text || payload.description) {
+    throttleMediaItem_Updater_('update media ' + id);
     updateMediaOnWordPress_Updater_(id, payload);
-    if (payload.title) ensureFilenameForMedia_Updater_(id, payload.title);
+    if (payload.title) {
+      throttleStage_Updater_('ensure filename ' + id, UPDATER_ENSURE_FILENAME_DELAY_MS);
+      try {
+        ensureFilenameForMedia_Updater_(id, payload.title);
+      } catch (eEnsure2) {
+        if (shouldSkipEnsureFilenameForError_Updater_(eEnsure2)) {
+          Logger.log('Updater: Skipping ensure filename for Media ' + id + ' due to quota/rate-limit: ' + (eEnsure2 && eEnsure2.message ? eEnsure2.message : String(eEnsure2)));
+        } else {
+          throw eEnsure2;
+        }
+      }
+    }
     Utilities.sleep(150);
   }
 }
@@ -10914,7 +10992,7 @@ function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, targetLang, 
         keywordMissing = current.alt.toLowerCase().indexOf(kwLow) === -1;
       }
     }
-    if (!hasEmptyFields && detected && detected === lang && !keywordMissing) return;
+    if (!hasEmptyFields && detected && langMatchesOrBase_Updater_(detected, lang) && !keywordMissing) return;
 
     var sourceEn = englishMap[sourceId] || null;
     if (!sourceEn || !sourceEn.title || !sourceEn.caption || !sourceEn.alt || !sourceEn.description) {
@@ -10947,6 +11025,7 @@ function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, targetLang, 
     translated = enforceCanonicalMuseumFamilyFidelityInImageMetadata_Updater_(translated, lang, o.specConstraints || null);
     Logger.log('IMAGE METADATA TRANSLATED (' + lang + '): ' + targetId);
 
+    throttleMediaItem_Updater_('update media ' + targetId);
     updateMediaOnWordPress_Updater_(targetId, {
       alt_text: translated.alt,
       title: translated.title,
@@ -10956,7 +11035,16 @@ function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, targetLang, 
     var englishTitle = sourceEn && sourceEn.title ? String(sourceEn.title).trim() : (current && current.title ? String(current.title).trim() : '');
     var langPrefix = String(lang || '').toLowerCase().split('-')[0];
     if (englishTitle) {
-      ensureFilenameForMedia_Updater_(targetId, (langPrefix ? (langPrefix + '-') : '') + englishTitle);
+      throttleStage_Updater_('ensure filename ' + targetId, UPDATER_ENSURE_FILENAME_DELAY_MS);
+      try {
+        ensureFilenameForMedia_Updater_(targetId, (langPrefix ? (langPrefix + '-') : '') + englishTitle);
+      } catch (eEnsure3) {
+        if (shouldSkipEnsureFilenameForError_Updater_(eEnsure3)) {
+          Logger.log('Updater: Skipping ensure filename for Media ' + targetId + ' due to quota/rate-limit: ' + (eEnsure3 && eEnsure3.message ? eEnsure3.message : String(eEnsure3)));
+        } else {
+          throw eEnsure3;
+        }
+      }
     }
 
     Logger.log('IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: ' + targetId);
@@ -11015,9 +11103,17 @@ function uploadMediaFromUrl_Updater_(imageUrl, title) {
   Logger.log('Updater: Attempting to upload image from URL: ' + imageUrl);
   
   try {
-    // 1. Download image from URL
-    var response = UrlFetchApp.fetch(imageUrl);
-    var imageBlob = response.getBlob();
+    var fetchResp = UrlFetchApp.fetch(imageUrl, { muteHttpExceptions: true, followRedirects: true });
+    var fetchCode = fetchResp.getResponseCode();
+    if (fetchCode === 403 && imageUrl.indexOf('/wp-content/uploads/') !== -1) {
+      Logger.log('Updater: Upload by public WP URL blocked (403). Will skip this source and keep pipeline alive.');
+      return null;
+    }
+    if (fetchCode < 200 || fetchCode >= 300) {
+      Logger.log('Updater: Failed to fetch image URL (code=' + fetchCode + '): ' + String(fetchResp.getContentText() || '').slice(0, 200));
+      return null;
+    }
+    var imageBlob = fetchResp.getBlob();
     
     // CHECK: Verify Content-Type is actually an image
     var contentType = imageBlob.getContentType();

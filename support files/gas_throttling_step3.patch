@@ -1,0 +1,113 @@
+*** Begin Patch
+*** Update File: GAS/updater.gs
+@@
+ var UPDATER_WP_STAGE_DELAY_MS = 1200;
+ var UPDATER_WP_HEAVY_STAGE_DELAY_MS = 2200;
+ var UPDATER_SCHEMA_STAGE_DELAY_MS = 900;
+ var UPDATER_ENABLE_STAGE_THROTTLING = true;
++var UPDATER_MEDIA_VERIFY_DELAY_MS = 600;
++var UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS = 900;
++var UPDATER_ENSURE_FILENAME_DELAY_MS = 1400;
++var UPDATER_SKIP_FILENAME_ON_QUOTA = true;
+@@
+ function runCriticalStage_Updater_(label, fn, delayMs) {
+   throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
+   return fn();
+ }
++
++function throttleMediaItem_Updater_(label) {
++  throttleStage_Updater_(label, UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS);
++}
++
++function shouldSkipEnsureFilenameForError_Updater_(err) {
++  if (!err) return false;
++  if (!UPDATER_SKIP_FILENAME_ON_QUOTA) return false;
++  return isQuotaLikeError_Updater_(err);
++}
+*** End Patch
+
+
+/*
+STEP 3 IMAGE-FLOW CHANGES TO APPLY IN GAS/updater.gs
+
+1) In publishImagesSafe_Updater_:
+   - Add logging before Type resolution:
+     Logger.log('Updater: Image record ' + imgRec.id + ' Type raw value: ' + JSON.stringify(f.Type) + ', wpMediaId: ' + wpMediaId);
+
+   - Replace the strict Type handling with:
+     var declaredType = getTypeNameFromAirtable_Updater_(f.Type).trim().toLowerCase();
+
+     // Fallback 1: infer from linked/raw image caption if Type is empty
+     if (!declaredType && linkedIdForRaw) {
+       var rawRec = rawImagesRecords ? rawImagesRecords.find(function(r) { return r.id === linkedIdForRaw; }) : null;
+       if (rawRec) {
+         var role = getImageRoleFromCaption_Updater_(rawRec.fields.Caption || rawRec.fields.Notes || '');
+         if (role) {
+           declaredType = role;
+           Logger.log('Updater: Type inferred from raw image caption: ' + declaredType);
+         }
+       }
+     }
+
+     // Fallback 2: default to gallery instead of skipping
+     if (!declaredType) {
+       declaredType = 'gallery';
+       Logger.log('Updater: WARNING - Image ' + imgRec.id + ' has no Type. Defaulting to gallery.');
+     }
+
+   - Before each media update call inside the images loop:
+     throttleMediaItem_Updater_('update media ' + wpMediaId);
+
+   - Before each ensure-filename call:
+     throttleStage_Updater_('ensure filename ' + wpMediaId, UPDATER_ENSURE_FILENAME_DELAY_MS);
+
+   - Wrap ensure-filename in try/catch:
+     try {
+       // existing ensure filename call
+     } catch (eEnsure) {
+       if (shouldSkipEnsureFilenameForError_Updater_(eEnsure)) {
+         Logger.log('Updater: Skipping ensure filename for Media ' + wpMediaId + ' due to quota/rate-limit: ' + (eEnsure && eEnsure.message ? eEnsure.message : String(eEnsure)));
+       } else {
+         throw eEnsure;
+       }
+     }
+
+2) In updateMediaOnWordPress_Updater_:
+   - Before sending the payload:
+     Logger.log('Updater: Media ' + mediaId + ' update payload: ' + JSON.stringify(payload));
+
+   - After successful 200 response and if data.alt_text exists:
+     Utilities.sleep(UPDATER_MEDIA_VERIFY_DELAY_MS);
+     try {
+       var verifyJson = getMediaFromWordPress_Updater_(String(mediaId));
+       var savedAlt = verifyJson && verifyJson.alt_text ? String(verifyJson.alt_text).trim() : '';
+       if (!savedAlt) {
+         Logger.log('Updater: Alt text NOT saved for Media ' + mediaId + ' despite 200 OK. Retrying...');
+         // retry with alt_text-only payload
+       }
+     } catch (eVerify) {
+       Logger.log('Updater: Could not verify alt for Media ' + mediaId + ': ' + eVerify.message);
+     }
+
+3) In localizeTripImagesMetadataForLang_Updater_:
+   - Replace the skip condition:
+     var hasEmptyFields = !current.alt || !current.title || !current.caption || !current.description;
+     if (hasEmptyFields) {
+       Logger.log('IMAGE METADATA INCOMPLETE (' + lang + '): ' + targetId + ' — will re-translate (alt: ' + (current.alt ? 'OK' : 'EMPTY') + ', title: ' + (current.title ? 'OK' : 'EMPTY') + ')');
+     } else if (detected && langMatchesOrBase_Updater_(detected, lang) && !keywordMissing) {
+       continue;
+     }
+
+4) In the image-upload-from-URL path:
+   - Add a staged fallback order:
+     a) original Airtable attachment URL
+     b) raw/original source URL
+     c) public WordPress uploads URL as last fallback only
+
+   - If the fetch returns 403 for the WordPress uploads URL:
+     Logger.log('Updater: Upload by public WP URL blocked (403). Will skip this source and keep pipeline alive.');
+     // do not abort image pipeline
+
+NOTE:
+This step-3 file is a guided patch draft built on the repository's own image-fixes feedback doc.
+Apply these edits in the matching functions inside GAS/updater.gs.
