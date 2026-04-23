@@ -197,6 +197,106 @@ function finalizeSeoTextFieldEn_(text, maxLen) {
   return s;
 }
 
+function joinListWithAmpSeoEn_(items) {
+  var xs = (Array.isArray(items) ? items : []).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  if (xs.length <= 1) return xs.join('');
+  if (xs.length === 2) return xs[0] + ' & ' + xs[1];
+  return xs.slice(0, xs.length - 1).join(', ') + ' & ' + xs[xs.length - 1];
+}
+
+function extractAttractionsFromTitleSeoEn_(title) {
+  var t = normalizeWhitespaceSeoEn_(title);
+  if (!t) return [];
+  var rhs = t;
+  if (t.indexOf(':') !== -1) rhs = String(t.split(':').slice(1).join(':') || '').trim();
+  rhs = rhs.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+  rhs = rhs.replace(/&\s*amp;?/gi, '&').replace(/&amp;?/gi, '&');
+  rhs = rhs.replace(/\s*&\s*/g, ', ').replace(/\s+and\s+/gi, ', ');
+  rhs = rhs.replace(/\s*\+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  var parts = rhs.split(',').map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x && !/^amp;?$/i.test(x); });
+  var seen = {};
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (!p) continue;
+    if (p.length > 48) continue;
+    if (/\blunch\b/i.test(p)) continue;
+    if (/\bhotel\s+pick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpickup\b/i.test(p)) continue;
+    var key = p.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(p);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function extractPrimaryFromTitleSeoEn_(title) {
+  var t = normalizeWhitespaceSeoEn_(title);
+  if (!t) return '';
+  if (t.indexOf(':') !== -1) return String(t.split(':')[0] || '').trim();
+  if (t.indexOf(' - ') !== -1) return String(t.split(' - ')[0] || '').trim();
+  if (t.indexOf(' | ') !== -1) return String(t.split(' | ')[0] || '').trim();
+  return '';
+}
+
+function detectUspSuffixFromTextSeoEn_(text) {
+  var t = String(text || '').toLowerCase();
+  if (!t) return '';
+  var hasLunch = /\blunch\b/.test(t);
+  var hasPickup = /\b(hotel\s+pick\s*-?\s*up|hotel\s+pickup|pick\s*-?\s*up|pickup)\b/.test(t);
+  if (hasLunch && hasPickup) return 'with Lunch & Hotel Pickup';
+  if (hasLunch) return 'with Lunch';
+  if (hasPickup) return 'with Hotel Pickup';
+  return '';
+}
+
+function buildH1FromSeoSignalsSeoEn_(focusKeyword, seoTitle, tripTitle, uspSuffix) {
+  var primary = normalizeWhitespaceSeoEn_(focusKeyword);
+  if (!primary) primary = extractPrimaryFromTitleSeoEn_(seoTitle);
+  if (!primary) primary = extractPrimaryFromTitleSeoEn_(tripTitle);
+  if (!primary) primary = normalizeWhitespaceSeoEn_(seoTitle) || normalizeWhitespaceSeoEn_(tripTitle) || '';
+  if (!primary) return '';
+
+  var atts = extractAttractionsFromTitleSeoEn_(seoTitle);
+  if (!atts.length) atts = extractAttractionsFromTitleSeoEn_(tripTitle);
+  var h1 = primary;
+  if (atts.length) h1 = primary + ': ' + joinListWithAmpSeoEn_(atts);
+  h1 = truncateAtWordBoundarySeoEn_(h1, 90);
+  h1 = stripTrailingPunctuationNoiseSeoEn_(h1);
+  var usp = normalizeWhitespaceSeoEn_(uspSuffix);
+  if (usp) {
+    var candidate = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim();
+    if (candidate.length <= 90) h1 = candidate;
+  }
+  return h1;
+}
+
+function tryUpdateImprovementH1FieldSeoEn_(improvementId, h1Value) {
+  var v = normalizeWhitespaceSeoEn_(h1Value);
+  if (!improvementId || !v) return;
+  try {
+    airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { AI_Titel_H1: v });
+    return;
+  } catch (e1) {}
+  try {
+    airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { 'AI Titel H1': v });
+    return;
+  } catch (e1b) {}
+  try {
+    airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { 'AI Title H1': v });
+    return;
+  } catch (e2) {}
+  try {
+    airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { AI_Title_H1: v });
+    return;
+  } catch (e3) {
+    Logger.log('AI SEO Enhancer: could not save H1 field — ' + String(e3 && e3.message ? e3.message : e3));
+  }
+}
+
 function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
   var before = String(text || '');
   var raw = normalizeWhitespaceSeoEn_(before);
@@ -895,6 +995,14 @@ function runAiSeoEnhancementBatch() {
           if (beforeSlug !== aiResult.AI_SEO_Permalink) Logger.log('AI SEO Enhancer: slug trimmed/repaired');
         }
 
+        var uspTextPool = []
+          .concat(linkedTextBlocks || [])
+          .concat(improvedSignals || [])
+          .join(' | ');
+        var uspSuffix = detectUspSuffixFromTextSeoEn_(uspTextPool);
+        var computedH1 = buildH1FromSeoSignalsSeoEn_(aiResult.AI_SEO_FocusKeywords, aiResult.AI_SEO_Title, combinedFields.Title || '', uspSuffix);
+        if (computedH1) aiResult.AI_Titel_H1 = computedH1;
+
         // 6) Prepare Update for Improvement With AI
         var updateFields = {
           AI_SEO_Title:              aiResult.AI_SEO_Title || '',
@@ -915,6 +1023,7 @@ function runAiSeoEnhancementBatch() {
         // 7) Update Improvement Record
         if (improvementId) {
           airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, updateFields);
+          if (aiResult.AI_Titel_H1) tryUpdateImprovementH1FieldSeoEn_(improvementId, aiResult.AI_Titel_H1);
           // 8) Ensure status is Done
           airtableUpdate_(AI_IMPROVEMENT_TABLE, improvementId, { AI_SEO_Status: 'Done' });
         }

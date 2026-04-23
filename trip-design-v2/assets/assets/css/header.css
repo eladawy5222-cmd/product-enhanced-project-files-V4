@@ -1,0 +1,737 @@
+/* ==========================================================================
+   FTS Header (Scoped Override)
+   File: header.css
+   Purpose:
+   - Clean final override layer
+   - Scoped to trip header only
+   - Prevent conflicts with homepage and other layouts
+   ========================================================================== */
+
+/* ==========================================================================
+   ROOT HEADER CONTAINER
+   ========================================================================== */
+
+#fts-v2-trip-header.fts-v2-trip-header-bar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10000 !important;
+    background: #1a2b49 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    padding: 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   LOGO
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-logo,
+#fts-v2-trip-header .fts-v2-thb-logo a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 0 auto !important;
+    min-width: 70px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-logo img,
+#fts-v2-trip-header .fts-v2-thb-logo-img,
+#fts-v2-trip-header .fts-v2-thb-logo-image {
+    display: block !important;
+    width: auto !important;
+    height: 40px !important;
+    max-height: 40px !important;
+    max-width: 180px !important;
+    object-fit: contain !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-logo-text {
+    font-family: var(--v2-font-heading, "Outfit", sans-serif) !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.5px !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   DESKTOP NAV
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-nav {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu,
+#fts-v2-trip-header .fts-v2-thb-menu ul {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu li {
+    position: relative !important;
+    list-style: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu > li > a {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    color: rgba(255, 255, 255, 0.78) !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    transition: color 0.2s ease, background 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu > li > a:hover,
+#fts-v2-trip-header .fts-v2-thb-menu > li.current-menu-item > a,
+#fts-v2-trip-header .fts-v2-thb-menu > li.current-menu-parent > a,
+#fts-v2-trip-header .fts-v2-thb-menu > li.current-menu-ancestor > a,
+#fts-v2-trip-header .fts-v2-thb-menu > li.current-trip-ancestor > a {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Desktop submenu */
+#fts-v2-trip-header .fts-v2-thb-menu .sub-menu {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    min-width: 190px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+    padding: 6px 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(8px) !important;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease !important;
+    z-index: 1002 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu li:hover > .sub-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu .sub-menu li {
+    list-style: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu .sub-menu li a {
+    display: block !important;
+    padding: 9px 14px !important;
+    color: #334155 !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-radius: 0 !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-menu .sub-menu li a:hover {
+    background: #f8fafc !important;
+    color: #1a2b49 !important;
+}
+
+/* ==========================================================================
+   RIGHT UTILITIES
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-utils {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-item,
+#fts-v2-trip-header .fts-v2-thb-utils > * {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ==========================================================================
+   CURRENCY SWITCHER
+   Make it visually aligned with language switcher
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-currency {
+    position: relative !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-currency-switcher,
+#fts-v2-trip-header .fts-v2-thb-currency .currency-switcher {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
+#fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency,
+#fts-v2-trip-header .fts-v2-thb-currency button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current:hover,
+#fts-v2-trip-header .fts-v2-thb-currency .selected-currency:hover,
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover,
+#fts-v2-trip-header .fts-v2-thb-currency button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-flag,
+#fts-v2-trip-header .fts-v2-thb-currency .currency-symbol {
+    font-size: 12px !important;
+    line-height: 1 !important;
+    color: #f59e0b !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-code {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.2px !important;
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-arrow {
+    font-size: 9px !important;
+    line-height: 1 !important;
+    opacity: 0.75 !important;
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-dropdown {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    min-width: 140px !important;
+    margin: 0 !important;
+    padding: 6px 0 !important;
+    list-style: none !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16) !important;
+    z-index: 1003 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-height: 34px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item:hover {
+    background: #f8fafc !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item.active {
+    color: #e8501e !important;
+    font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   LANGUAGE SWITCHER
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-lang {
+    position: relative !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-switcher {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-current {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    background: #e79a45 !important;
+    border: 1px solid rgba(231, 154, 69, 0.45) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-current:hover,
+#fts-v2-trip-header .fts-v2-lang-switcher.open .fts-v2-lang-current {
+    background: #e79a45 !important;
+    border-color: rgba(231, 154, 69, 0.6) !important;
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-current svg {
+    stroke: currentColor !important;
+    color: currentColor !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-flag {
+    width: 15px !important;
+    height: 11px !important;
+    border-radius: 2px !important;
+    object-fit: cover !important;
+    flex: 0 0 auto !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    min-width: 236px !important;
+    max-width: 260px !important;
+    margin: 0 !important;
+    padding: 7px !important;
+    list-style: none !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16) !important;
+    z-index: 1003 !important;
+    display: none !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-switcher.open .fts-v2-lang-dropdown {
+    display: grid !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown li {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+    border-radius: 8px !important;
+    color: #1f2937 !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown a:hover {
+    background: #f8fafc !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown li.active a {
+    color: #e8501e !important;
+    font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   SEARCH + BURGER
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-search,
+#fts-v2-trip-header .fts-v2-thb-burger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-search .fts-smart-search-wrapper {
+    position: relative !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger,
+#fts-v2-trip-header .fts-v2-thb-burger {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger {
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger {
+    flex-direction: column !important;
+    gap: 4px !important;
+    margin-left: 2px !important;
+    cursor: pointer !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger span {
+    display: block !important;
+    width: 18px !important;
+    height: 2px !important;
+    margin: 0 !important;
+    border-radius: 2px !important;
+    background: #ffffff !important;
+    transition: transform 0.25s ease, opacity 0.25s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(2) {
+    opacity: 0 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg) !important;
+}
+
+/* ==========================================================================
+   MOBILE MENU
+   ========================================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-mobile-menu {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    background: #1a2b49 !important;
+    border-top: 0 solid transparent !important;
+    padding: 0 24px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0) !important;
+    transition:
+        max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        border-top-color 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-menu.open {
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 10px 24px 14px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav,
+#fts-v2-trip-header .fts-v2-thb-mobile-nav ul {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li {
+    list-style: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li:last-child {
+    border-bottom: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li > a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    text-decoration: none !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li > a:hover,
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li.current-menu-item > a,
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li.current-menu-ancestor > a,
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li.current-trip-ancestor > a {
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav .sub-menu {
+    display: none;
+    margin: 0 !important;
+    padding: 0 0 10px 16px !important;
+    list-style: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav .sub-menu li {
+    list-style: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav .sub-menu li a {
+    display: block !important;
+    padding: 8px 0 !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav .sub-menu li a:hover {
+    color: #ffffff !important;
+}
+
+/* Mobile submenu arrow */
+#fts-v2-trip-header .fts-v2-mob-submenu-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    margin-left: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+}
+
+#fts-v2-trip-header .fts-v2-mob-submenu-toggle svg {
+    width: 12px !important;
+    height: 12px !important;
+    display: block !important;
+    stroke: currentColor !important;
+    fill: none !important;
+    transition: transform 0.25s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav li.sub-open > a .fts-v2-mob-submenu-toggle {
+    color: #e79a45 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav li.sub-open > a .fts-v2-mob-submenu-toggle svg {
+    transform: rotate(180deg) !important;
+}
+
+/* Mobile language shortcuts */
+#fts-v2-trip-header .fts-v2-thb-mobile-utils {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 10px 12px !important;
+    padding-top: 12px !important;
+    margin-top: 8px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+#fts-v2-trip-header .fts-v2-mob-lang-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-mob-lang-link:hover {
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-mob-lang-link.active {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   Hide desktop nav and show burger
+   ========================================================================== */
+
+@media (max-width: 992px) {
+    #fts-v2-trip-header .fts-v2-thb-nav {
+        display: none !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-burger {
+        display: inline-flex !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-inner {
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #fts-v2-trip-header .fts-v2-thb-inner {
+        min-height: 56px !important;
+        height: 56px !important;
+        padding: 0 16px !important;
+        gap: 10px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-logo img,
+    #fts-v2-trip-header .fts-v2-thb-logo-img,
+    #fts-v2-trip-header .fts-v2-thb-logo-image {
+        height: 36px !important;
+        max-height: 36px !important;
+        max-width: 160px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-utils {
+        gap: 8px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency button {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 9px !important;
+        font-size: 12px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-current > svg:last-child,
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-arrow {
+        display: none !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger,
+    #fts-v2-trip-header .fts-v2-thb-burger {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-dropdown {
+        min-width: 236px !important;
+        max-width: 248px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #fts-v2-trip-header .fts-v2-thb-inner {
+        min-height: 54px !important;
+        height: 54px !important;
+        padding: 0 12px !important;
+        gap: 8px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-logo img,
+    #fts-v2-trip-header .fts-v2-thb-logo-img,
+    #fts-v2-trip-header .fts-v2-thb-logo-image {
+        height: 32px !important;
+        max-height: 32px !important;
+        max-width: 140px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-utils {
+        gap: 7px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency button {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: 11px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger,
+    #fts-v2-trip-header .fts-v2-thb-burger {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-dropdown {
+        min-width: 228px !important;
+        max-width: 240px !important;
+    }
+}

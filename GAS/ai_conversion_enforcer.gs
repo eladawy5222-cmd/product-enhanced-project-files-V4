@@ -60,6 +60,7 @@ function runConversionEnforcer(record) {
         Duration_Unit: tripFields.Duration_Unit || ''
       },
       seo: {
+        h1: String(impFields.AI_Titel_H1 || ''),
         title: String(impFields.AI_SEO_Title || ''),
         meta_description: String(impFields.AI_SEO_Meta_Description || ''),
         short_summary: String(impFields.AI_Short_Summary || ''),
@@ -93,6 +94,7 @@ function runConversionEnforcer(record) {
     var flags = (standardContext && standardContext.flags) ? standardContext.flags : {};
     var evidence = (standardContext && standardContext.evidence) ? standardContext.evidence : {};
     var fixedSeo = convEnf_finalizeSeoFields_(ai, payload, flags);
+    if (fixedSeo.h1 && fixedSeo.h1.length >= 15) updateMain.AI_Titel_H1 = fixedSeo.h1;
     if (fixedSeo.title && fixedSeo.title.length >= 20) updateMain.AI_SEO_Title = fixedSeo.title;
     if (fixedSeo.meta_description && fixedSeo.meta_description.length >= 60) updateMain.AI_SEO_Meta_Description = fixedSeo.meta_description;
     if (fixedSeo.excerpt && fixedSeo.excerpt.length >= 40) updateMain.AI_Excerpt = fixedSeo.excerpt;
@@ -363,7 +365,9 @@ function convEnf_buildStandardContext_(payload) {
     has_private: /\bprivate\b/.test(lc),
     has_tickets: /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(lc),
     has_lunch: /\blunch\b/.test(lc),
-    has_pickup: /\b(pick-?up|hotel pick-?up|pickup)\b/.test(lc),
+    has_pickup: /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/.test(lc),
+    has_egyptian_museum: /\begyptian museum\b/.test(lc),
+    has_civ_museum: /\b(egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization)\b/.test(lc),
     has_languages: /\b(language|languages|english|french|german|spanish|italian|arabic)\b/.test(lc),
     has_group_size: /\b(group size|max|maximum|small group|up to \d+|\d+ travelers|\d+ people|\d+ persons)\b/.test(lc)
   };
@@ -482,34 +486,116 @@ function convEnf_hasUnsupportedHighRiskClaims_(text, flags) {
   if (!f.has_private && /\bprivate\b/.test(t)) return true;
   if (!f.has_tickets && /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/.test(t)) return true;
   if (!f.has_lunch && /\blunch\b/.test(t)) return true;
-  if (!f.has_pickup && /\b(pick-?up|hotel pick-?up|pickup)\b/.test(t)) return true;
+  if (!f.has_pickup && /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/.test(t)) return true;
   return false;
 }
 
+function convEnf_joinListWithAmp_(items) {
+  var xs = (Array.isArray(items) ? items : []).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  if (xs.length <= 1) return xs.join('');
+  if (xs.length === 2) return xs[0] + ' & ' + xs[1];
+  return xs.slice(0, xs.length - 1).join(', ') + ' & ' + xs[xs.length - 1];
+}
+
+function convEnf_extractAttractionsFromTripTitle_(title) {
+  var t = String(title || '').replace(/\s+/g, ' ').trim();
+  if (!t) return [];
+  var rhs = t;
+  if (t.indexOf(':') !== -1) rhs = String(t.split(':').slice(1).join(':') || '').trim();
+  rhs = rhs.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+  rhs = rhs.replace(/\s*&\s*/g, ', ').replace(/\s+and\s+/gi, ', ');
+  var parts = rhs.split(',').map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  var seen = {};
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (!p) continue;
+    if (p.length > 48) continue;
+    var key = p.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(p);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function convEnf_extractPrimaryFromTitle_(title) {
+  var t = String(title || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (t.indexOf(':') !== -1) return String(t.split(':')[0] || '').trim();
+  if (t.indexOf(' - ') !== -1) return String(t.split(' - ')[0] || '').trim();
+  if (t.indexOf(' | ') !== -1) return String(t.split(' | ')[0] || '').trim();
+  return '';
+}
+
+function convEnf_buildUspSuffixFromFlags_(flags) {
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  var hasLunch = !!f.has_lunch;
+  var hasPickup = !!f.has_pickup;
+  if (hasLunch && hasPickup) return 'with Lunch & Hotel Pickup';
+  if (hasLunch) return 'with Lunch';
+  if (hasPickup) return 'with Hotel Pickup';
+  return '';
+}
+
+function convEnf_buildH1Fallback_(payload, flags, seoTitle) {
+  var p = payload || {};
+  var trip = p.trip || {};
+  var pSeo = p.seo || {};
+  var primary = String(pSeo.focus_keywords || '').replace(/\s+/g, ' ').trim();
+  if (!primary) primary = convEnf_extractPrimaryFromTitle_(seoTitle);
+  if (!primary) primary = convEnf_extractPrimaryFromTitle_(trip.Title);
+  if (!primary) primary = String(seoTitle || trip.Title || '').replace(/\s+/g, ' ').trim();
+  if (!primary) return '';
+  var atts = convEnf_extractAttractionsFromTripTitle_(trip.Title);
+  var h1 = primary;
+  if (atts.length) h1 = primary + ': ' + convEnf_joinListWithAmp_(atts);
+  h1 = convEnf_truncateText_(h1, 90);
+  h1 = h1.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+  var usp = convEnf_buildUspSuffixFromFlags_(flags);
+  if (usp) {
+    var cand = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim();
+    if (cand.length <= 90) h1 = cand;
+  }
+  return h1;
+}
+
 function convEnf_finalizeSeoFields_(ai, payload, flags) {
-  var out = { title: '', meta_description: '', excerpt: '', short_summary: '' };
+  var out = { h1: '', title: '', meta_description: '', excerpt: '', short_summary: '' };
   var pSeo = (payload && payload.seo) ? payload.seo : {};
+  var aiH1 = convEnf_getString_(ai, ['seo', 'h1', 'text']);
   var aiTitle = convEnf_getString_(ai, ['seo', 'title', 'text']);
   var aiMeta = convEnf_getString_(ai, ['seo', 'meta_description', 'text']);
   var aiExcerpt = convEnf_getString_(ai, ['seo', 'excerpt', 'text']);
   var aiShort = convEnf_getString_(ai, ['seo', 'short_summary', 'text']);
 
+  var fallbackH1 = String(pSeo.h1 || '').trim();
   var fallbackTitle = String(pSeo.title || (payload && payload.trip ? payload.trip.Title : '') || '').trim();
   var fallbackMeta = String(pSeo.meta_description || pSeo.excerpt || pSeo.short_summary || '').trim();
   var fallbackExcerpt = String(pSeo.excerpt || pSeo.short_summary || '').trim();
 
+  var h1Candidate = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiH1 || fallbackH1), flags);
+  if (!h1Candidate || h1Candidate.length < 15) h1Candidate = convEnf_buildH1Fallback_(payload, flags, aiTitle || fallbackTitle);
+  h1Candidate = convEnf_truncateText_(convEnf_sanitizeSeoText_(h1Candidate), 90);
+  h1Candidate = h1Candidate.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+  out.h1 = h1Candidate;
+
   out.title = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiTitle || fallbackTitle), flags);
   if (!out.title || out.title.length < 20) out.title = convEnf_sanitizeSeoText_(fallbackTitle);
+  out.title = convEnf_optimizeSeoTitleForSerp_(out.title, payload, flags);
 
   out.meta_description = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiMeta || fallbackMeta), flags);
   out.meta_description = convEnf_truncateText_(out.meta_description, 160);
   out.meta_description = convEnf_finalizeMetaDescriptionQuality_(out.meta_description, 160);
+  out.meta_description = convEnf_optimizeMetaDescriptionForKeyword_(out.meta_description, payload, 160, flags);
   if (!out.meta_description || out.meta_description.length < 60) {
     var fromDesc = convEnf_sanitizeSeoText_(String((payload && payload.description) || '').replace(/<[^>]*>/g, ' '));
     var cleaned = convEnf_truncateText_(convEnf_removeUnsupportedHighRiskParts_(fromDesc, flags), 160);
     cleaned = convEnf_finalizeMetaDescriptionQuality_(cleaned, 160);
     if (cleaned && cleaned.length >= 60) out.meta_description = cleaned;
   }
+  out.meta_description = convEnf_optimizeMetaDescriptionForKeyword_(out.meta_description, payload, 160, flags);
 
   out.excerpt = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiExcerpt || fallbackExcerpt), flags);
   out.excerpt = convEnf_truncateText_(out.excerpt, 220);
@@ -522,6 +608,79 @@ function convEnf_finalizeSeoFields_(ai, payload, flags) {
 
 function convEnf_sanitizeSeoText_(s) {
   return String(s || '').replace(/\s+/g, ' ').trim();
+}
+
+function convEnf_buildSeoEvidenceText_(payload) {
+  try {
+    var p = payload || {};
+    var trip = p.trip || {};
+    var parts = [
+      trip.Title,
+      p.title,
+      p.description,
+      (p.seo ? p.seo.h1 : ''),
+      (p.seo ? p.seo.title : ''),
+      (p.seo ? p.seo.meta_description : ''),
+      (p.seo ? p.seo.excerpt : ''),
+      (p.seo ? p.seo.short_summary : '')
+    ];
+    return String(parts.filter(function(x) { return x != null && x !== ''; }).join(' ')).replace(/\s+/g, ' ').trim();
+  } catch (e) {
+    return '';
+  }
+}
+
+function convEnf_optimizeSeoTitleForSerp_(title, payload, flags) {
+  var t = convEnf_sanitizeSeoText_(title);
+  if (!t) return '';
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (f.has_civ_museum && !/egyptian civilization museum/i.test(t) && /egyptian museum/i.test(t)) {
+    t = t.replace(/egyptian museum/ig, 'Egyptian Civilization Museum');
+  } else if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+    t = t.replace(/egyptian civilization museum/ig, 'Egyptian Museum');
+  }
+  t = t.replace(/\s+and\s+/ig, ' & ');
+  t = t.replace(/\s+/g, ' ').trim();
+  var target = 60;
+  if (t.length > target) {
+    t = t
+      .replace(/\s+with\s+lunch\s*(?:&|and)?\s*hotel\s*pick-?up(?:\s*&\s*drop-?off)?\b/ig, '')
+      .replace(/\s+with\s+hotel\s*pick-?up(?:\s*&\s*drop-?off)?\b/ig, '')
+      .replace(/\s+with\s+lunch\b/ig, '')
+      .replace(/\s*&\s*hotel\s*pick-?up(?:\s*&\s*drop-?off)?\b/ig, '')
+      .replace(/\s+hotel\s*pick-?up(?:\s*&\s*drop-?off)?\b/ig, '');
+    t = t.replace(/\s+/g, ' ').trim();
+    t = t.replace(/[|—–\-:;,]\s*$/g, '').trim();
+  }
+  if (t.length > target) t = convEnf_truncateText_(t, target);
+  if (/\bold$/i.test(t)) {
+    var src = String((payload && payload.trip ? payload.trip.Title : '') || '') + ' ' + String(title || '');
+    if (/old cairo/i.test(src)) {
+      if (t.length + 6 <= target) t = (t + ' Cairo').trim();
+      else t = t.replace(/\bold$/i, '').replace(/[,&]\s*$/g, '').trim();
+    }
+  }
+  return t;
+}
+
+function convEnf_optimizeMetaDescriptionForKeyword_(meta, payload, maxLen, flags) {
+  var t = convEnf_sanitizeSeoText_(meta);
+  if (!t) return '';
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+    var rep0 = t.replace(/egyptian civilization museum/ig, 'Egyptian Museum');
+    rep0 = convEnf_finalizeMetaDescriptionQuality_(rep0, maxLen);
+    if (rep0 && rep0.length <= maxLen) return rep0;
+  }
+  if (!f.has_civ_museum) return t;
+  if (/egyptian civilization museum/i.test(t) || /national museum of egyptian civilization/i.test(t) || /museum of egyptian civilization/i.test(t)) return t;
+  var keyword = 'Egyptian Civilization Museum';
+  if (/egyptian museum/i.test(t)) {
+    var rep = t.replace(/egyptian museum/i, keyword);
+    rep = convEnf_finalizeMetaDescriptionQuality_(rep, maxLen);
+    if (rep && rep.length <= maxLen) return rep;
+  }
+  return t;
 }
 
 function convEnf_finalizeMetaDescriptionQuality_(s, maxLen) {
@@ -885,7 +1044,7 @@ function convEnf_rewriteUnsupportedFaqAnswer_(question, answer, flags, ctx) {
     return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";
   }
   if (/private\b/.test(qLc) && !f.has_private) return "Tour details depend on the option selected and availability. You'll receive the exact details after booking.";
-  if (/pickup|pick-?up|drop-?off/.test(qLc) && !f.has_pickup) return "Pickup details depend on the option selected. You'll receive the meeting point information after booking.";
+  if (/pickup|pick\s*-?\s*up|drop-?off/.test(qLc) && !f.has_pickup) return "Pickup details depend on the option selected. You'll receive the meeting point information after booking.";
   if (/lunch|meal|food/.test(qLc) && !f.has_lunch) return "Meal details depend on the option selected. Please refer to the What's Included/Excluded section.";
   if (/flight|airfare|air ticket/.test(qLc) && !f.has_flights) return "Flights are not included unless explicitly listed in What's Included.";
   if (/cruise|boat|felucca|nile/.test(qLc) && (!f.has_cruise || !f.has_boat || !f.has_felucca || !f.has_nile)) return "Activities depend on the option selected. Please refer to the itinerary and What's Included/Excluded section.";
@@ -911,7 +1070,7 @@ function convEnf_rewriteUnsupportedContentText_(text, flags, evidence) {
   if (!f.has_private && /\bprivate\b/.test(lc) && evText.indexOf('private') === -1) t = t.replace(/\bprivate\b/gi, 'guided');
   if (!f.has_tickets && /\b(ticket|tickets|admission|entrance fee|entrance fees)\b/i.test(lc) && !hasEv_(/\b(ticket|tickets|admission|entrance fee|entrance fees)\b/)) t = t.replace(/\b(ticket|tickets|admission|entrance fee|entrance fees)\b/gi, 'site visits');
   if (!f.has_lunch && /\blunch\b/.test(lc) && evText.indexOf('lunch') === -1) t = t.replace(/\blunch\b/gi, 'meal time');
-  if (!f.has_pickup && /\b(pick-?up|hotel pick-?up|pickup)\b/i.test(lc) && !hasEv_(/\b(pick-?up|hotel pick-?up|pickup)\b/)) t = t.replace(/\b(pick-?up|hotel pick-?up|pickup)\b/gi, 'meeting point');
+  if (!f.has_pickup && /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/i.test(lc) && !hasEv_(/\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/)) t = t.replace(/\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/gi, 'meeting point');
 
   return t.replace(/\s+/g, ' ').trim();
 }
@@ -1303,6 +1462,7 @@ function convEnf_buildPrompt_(payload, standardContext) {
     "- Prefer pulling inclusions from package_copy_source.guaranteed_inclusions[]; do not add anything outside it.",
     "- Keep content_html to 3-5 bullets, benefit-led.",
     "SEO:",
+    "- Improve seo.h1 (page H1) for clarity and conversion; target 60-90 characters.",
     "- Improve seo.title and seo.meta_description for CTR and clarity.",
     "- NEVER mention any high-risk items unless supported by standard_context.flags (e.g., Nile/boat/cruise/flights/snorkeling/safari/private/tickets/lunch/pickup).",
     "",
@@ -1317,6 +1477,7 @@ function convEnf_buildPrompt_(payload, standardContext) {
     "OUTPUT JSON SCHEMA:",
     JSON.stringify({
       seo: {
+        h1: { score: 0, action: "keep", text: "" },
         title: { score: 0, action: "keep", text: "" },
         meta_description: { score: 0, action: "keep", text: "" },
         excerpt: { score: 0, action: "keep", text: "" },

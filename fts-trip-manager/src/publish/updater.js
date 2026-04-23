@@ -2420,9 +2420,35 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
 
   try {
     var seoFlags = upd_buildStrictFlags_Updater_(data, tripFields);
+    if (payload.lang === 'en') {
+      var storedH1 = String(g.AI_Titel_H1 || g.AI_Title_H1 || g['AI Title H1'] || g['AI Titel H1'] || '').trim();
+      var usingStoredH1 = false;
+      if (storedH1) {
+        var safeH1 = upd_truncateAtWordBoundary_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(storedH1, seoFlags), 90);
+        if (safeH1) {
+          payload.core.title = safeH1;
+          usingStoredH1 = true;
+        }
+      }
+      var baseTitleCandidate = String(g.AI_SEO_Title || payload.core.title || tripFields.Title || '').trim();
+      var baseMetaCandidate = String(g.AI_SEO_Meta_Description || payload.meta.rank_math_description || '').trim();
+      var snippet = upd_applySeoSnippetPolicy_Updater_(baseTitleCandidate, baseMetaCandidate, tripFields, seoFlags);
+      if (!usingStoredH1 && snippet && snippet.h1) payload.core.title = snippet.h1;
+      if (snippet && snippet.seo_title) payload.meta.rank_math_title = snippet.seo_title;
+      if (snippet && snippet.meta_description) payload.meta.rank_math_description = snippet.meta_description;
+      if (snippet && snippet.primary_keyword && (!payload.meta.rank_math_focus_keyword || !String(payload.meta.rank_math_focus_keyword).trim())) {
+        payload.meta.rank_math_focus_keyword = snippet.primary_keyword;
+      }
+    }
+    var civCtx = upd_isCivilizationMuseumContext_Updater_(
+      payload.meta && payload.meta.rank_math_title ? payload.meta.rank_math_title : (payload.core ? payload.core.title : ''),
+      (payload.core && payload.core.slug) ? payload.core.slug : (tripFields.Slug || g.AI_SEO_Permalink || ''),
+      payload.meta && payload.meta.rank_math_description ? payload.meta.rank_math_description : ''
+    );
     if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'title') && payload.core.title) {
       var safeCoreTitle = upd_removeUnsupportedHighRiskParts_Updater_(payload.core.title, seoFlags);
       safeCoreTitle = String(safeCoreTitle || '').trim();
+      safeCoreTitle = upd_normalizeMuseumEntityText_Updater_(safeCoreTitle, civCtx);
       if (safeCoreTitle) payload.core.title = safeCoreTitle; else delete payload.core.title;
     }
     if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'excerpt') && payload.core.excerpt) {
@@ -2433,11 +2459,13 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_title') && payload.meta.rank_math_title) {
       var safeRmTitle = upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_title, seoFlags);
       safeRmTitle = String(safeRmTitle || '').trim();
+      safeRmTitle = upd_normalizeMuseumEntityText_Updater_(safeRmTitle, civCtx);
       if (safeRmTitle) payload.meta.rank_math_title = safeRmTitle; else delete payload.meta.rank_math_title;
     }
     if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_description') && payload.meta.rank_math_description) {
       var safeRmDesc = upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_description, seoFlags);
-      safeRmDesc = upd_truncateText_Updater_(safeRmDesc, 160);
+      safeRmDesc = upd_finalizeSeoMetaDescription_Updater_(safeRmDesc, 160);
+      safeRmDesc = upd_normalizeMuseumEntityText_Updater_(safeRmDesc, civCtx);
       if (safeRmDesc) payload.meta.rank_math_description = safeRmDesc; else delete payload.meta.rank_math_description;
     }
     if (payload.core && payload.core.title) payload.title = payload.core.title; else if (payload.title !== undefined) delete payload.title;
@@ -2935,6 +2963,70 @@ function upd_hasUnsupportedHighRiskClaims_Updater_(text, flags) {
   return false;
 }
 
+function upd_isWeakMetaEnding_Updater_(s) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return true;
+  t = t.replace(/[.!?]+$/g, '').trim();
+  if (!t) return true;
+  var lc = t.toLowerCase();
+  if (/\b(with|and|or|but|for|to|from|of|in|on|at|by|a|an|the)\b\s*$/.test(lc)) return true;
+  if (/\bwith\s+(?:a|an|the|your|our)\b\s*$/.test(lc)) return true;
+  return false;
+}
+
+function upd_trimToLastSentence_Updater_(s, maxLen) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  var n = Number(maxLen || 0);
+  if (!t) return '';
+  if (n > 0 && t.length > n) t = t.substring(0, n + 1);
+  var last = Math.max(t.lastIndexOf('.'), t.lastIndexOf('!'), t.lastIndexOf('?'));
+  if (last < 0) return '';
+  return t.substring(0, last + 1).trim();
+}
+
+function upd_finalizeSeoMetaDescription_Updater_(s, maxLen) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  var n = Number(maxLen || 0);
+  if (!t) return '';
+  if (n > 0 && t.length > n) t = upd_truncateAtWordBoundary_Updater_(t, n);
+  t = t.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
+  var guard = 0;
+  while (guard < 6 && upd_isWeakMetaEnding_Updater_(t)) {
+    t = t.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim();
+    t = t.replace(/\b(?:and|or|but|with|for|to|from|of|in|on|at|by|a|an|the)\b[\s.]*$/i, '').trim();
+    guard++;
+  }
+  if (upd_isWeakMetaEnding_Updater_(t)) {
+    var sentence = upd_trimToLastSentence_Updater_(s, n);
+    if (sentence) t = sentence;
+  }
+  if (n > 0 && t.length > n) t = upd_truncateAtWordBoundary_Updater_(t, n);
+  if (t && !/[.!?]$/.test(t) && (!n || t.length <= (n - 1))) t = (t + '.').trim();
+  if (n > 0 && t.length > n) t = upd_truncateAtWordBoundary_Updater_(t, n);
+  return t;
+}
+
+function upd_isCivilizationMuseumContext_Updater_(title, slug, meta) {
+  var s = String(slug || '').toLowerCase();
+  var t = String(title || '').toLowerCase();
+  var m = String(meta || '').toLowerCase();
+  if (s && s.indexOf('civilization') !== -1 && s.indexOf('museum') !== -1) return true;
+  if (t.indexOf('civilization museum') !== -1 || /\bnmec\b/.test(t)) return true;
+  if (m.indexOf('civilization museum') !== -1) return true;
+  if (m.indexOf('national museum of egyptian civilization') !== -1) return true;
+  return false;
+}
+
+function upd_normalizeMuseumEntityText_Updater_(text, isCivilizationContext) {
+  var s = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (!isCivilizationContext) return s;
+  if (/egyptian civilization museum/i.test(s)) return s;
+  if (/museum of egyptian civilization/i.test(s)) return s;
+  if (/\bnmec\b/i.test(s)) return s;
+  return s.replace(/\bEgyptian Museum\b/gi, 'Egyptian Civilization Museum');
+}
+
 function upd_truncateText_Updater_(s, maxLen) {
   var t = String(s || '').replace(/\s+/g, ' ').trim();
   if (!t) return '';
@@ -2965,6 +3057,176 @@ function upd_removeUnsupportedHighRiskParts_Updater_(text, flags) {
   return out;
 }
 
+function upd_truncateAtWordBoundary_Updater_(s, maxLen) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  if (!maxLen || t.length <= maxLen) return t;
+  var cut = t.slice(0, maxLen);
+  var lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace >= Math.floor(maxLen * 0.6)) return cut.slice(0, lastSpace).trim().replace(/[,\-–—:;]\s*$/g, '');
+  return cut.trim().replace(/[,\-–—:;]\s*$/g, '');
+}
+
+function upd_joinListWithAmp_Updater_(items) {
+  var xs = (Array.isArray(items) ? items : []).map(function(x) { return String(x || '').trim(); }).filter(Boolean);
+  if (xs.length <= 1) return xs.join('');
+  if (xs.length === 2) return xs[0] + ' & ' + xs[1];
+  return xs.slice(0, xs.length - 1).join(', ') + ' & ' + xs[xs.length - 1];
+}
+
+function upd_extractPrimaryKeywordFromTitle_Updater_(title) {
+  var t = String(title || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  var candidates = [];
+  if (t.indexOf(':') !== -1) candidates.push(String(t.split(':')[0] || '').trim());
+  if (t.indexOf(' - ') !== -1) candidates.push(String(t.split(' - ')[0] || '').trim());
+  if (t.indexOf(' | ') !== -1) candidates.push(String(t.split(' | ')[0] || '').trim());
+  for (var i = 0; i < candidates.length; i++) {
+    var c = candidates[i];
+    if (!c) continue;
+    if (/\b(tour|trip|cruise|package)\b/i.test(c) && c.length >= 8 && c.length <= 40) return c;
+  }
+  return '';
+}
+
+function upd_extractAttractionsFromTitle_Updater_(title) {
+  var t = String(title || '').replace(/\s+/g, ' ').trim();
+  if (!t) return [];
+  var rhs = t;
+  if (t.indexOf(':') !== -1) rhs = String(t.split(':').slice(1).join(':') || '').trim();
+  rhs = rhs.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+  rhs = rhs.replace(/\s*&\s*/g, ', ').replace(/\s+and\s+/gi, ', ');
+  rhs = rhs.replace(/\s*\+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  var parts = rhs.split(',').map(function(x) { return String(x || '').trim(); }).filter(Boolean);
+  var seen = {};
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (!p) continue;
+    if (p.length > 48) continue;
+    if (/\blunch\b/i.test(p)) continue;
+    if (/\bhotel\s+pick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpickup\b/i.test(p)) continue;
+    var key = p.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(p);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function upd_shortenAttractionForSeoTitle_Updater_(s) {
+  var t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return '';
+  t = t.replace(/\b(egyptian|national)\b/ig, '').replace(/\s+/g, ' ').trim();
+  t = t.replace(/\bmuseum of\b/ig, 'Museum').replace(/\s+/g, ' ').trim();
+  if (t.length > 26) t = upd_truncateAtWordBoundary_Updater_(t, 26);
+  return t;
+}
+
+function upd_buildUspText_Updater_(flags) {
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (f.has_lunch && f.has_pickup) return 'Lunch & Hotel Pickup Included';
+  if (f.has_lunch) return 'Lunch Included';
+  if (f.has_pickup) return 'Hotel Pickup Included';
+  if (f.has_private) return 'Private Tour';
+  if (f.has_tickets) return 'Entry Fees Included';
+  return '';
+}
+
+function upd_buildUspShort_Updater_(flags) {
+  var f = (flags && typeof flags === 'object') ? flags : {};
+  if (f.has_lunch) return 'Lunch';
+  if (f.has_pickup) return 'Pickup';
+  if (f.has_private) return 'Private';
+  if (f.has_tickets) return 'Tickets';
+  return '';
+}
+
+function upd_formatFromPrice_Updater_(tripFields) {
+  var f = (tripFields && typeof tripFields === 'object') ? tripFields : {};
+  var raw = f.Price_From || f.PriceFrom || f.price_from || f['Price From'] || '';
+  var n = Number(raw);
+  if (!isFinite(n) || n <= 0) return '';
+  var currency = String(f.Currency || f.currency || f.Currency_Code || f['Currency Code'] || '').trim().toUpperCase();
+  var symbol = '';
+  if (currency === 'USD') symbol = '$';
+  else if (currency === 'EUR') symbol = '€';
+  else if (currency === 'GBP') symbol = '£';
+  else if (currency === 'AED') symbol = 'AED ';
+  else if (currency) symbol = currency + ' ';
+  var v = Math.round(n) === n ? String(Math.round(n)) : String(n.toFixed(2)).replace(/\.00$/g, '');
+  return symbol + v;
+}
+
+function upd_applySeoSnippetPolicy_Updater_(baseTitle, baseMeta, tripFields, seoFlags) {
+  var title = upd_removeUnsupportedHighRiskParts_Updater_(String(baseTitle || '').replace(/\s+/g, ' ').trim(), seoFlags);
+  var primary = upd_extractPrimaryKeywordFromTitle_Updater_(title) || title;
+  var attractions = upd_extractAttractionsFromTitle_Updater_(title);
+  var usp = upd_buildUspText_Updater_(seoFlags);
+  var uspShort = upd_buildUspShort_Updater_(seoFlags);
+  var price = upd_formatFromPrice_Updater_(tripFields);
+
+  var h1Attractions = attractions.slice(0, 3);
+  var h1 = primary;
+  if (h1Attractions.length) h1 = primary + ': ' + upd_joinListWithAmp_Updater_(h1Attractions);
+  if (usp) {
+    var withUsp = h1 + ' (' + usp + ')';
+    if (withUsp.length <= 90) h1 = withUsp;
+  }
+  if (h1.length > 90) h1 = upd_truncateAtWordBoundary_Updater_(h1, 90);
+
+  var seoTitle = primary;
+  var seoAtts = attractions.slice(0, 2).map(upd_shortenAttractionForSeoTitle_Updater_).filter(Boolean);
+  if (seoAtts.length) seoTitle = primary + ': ' + upd_joinListWithAmp_Updater_(seoAtts);
+  if (uspShort) seoTitle = seoTitle + ' + ' + uspShort;
+  seoTitle = upd_truncateAtWordBoundary_Updater_(seoTitle, 60);
+
+  var metaRaw = String(baseMeta || '').replace(/\s+/g, ' ').trim();
+  if (metaRaw && upd_isWeakMetaEnding_Updater_(metaRaw) && !/[.!?]/.test(metaRaw)) metaRaw = '';
+  var meta = '';
+  if (metaRaw) {
+    meta = upd_finalizeSeoMetaDescription_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(metaRaw, seoFlags), 155);
+  } else {
+    var metaAtts = attractions.slice(0, 3);
+    var s1 = primary + (metaAtts.length ? ': ' + upd_joinListWithAmp_Updater_(metaAtts) + '.' : '.');
+    var s2 = usp ? (usp + '.') : '';
+    var s3 = 'Plan your day easily.';
+    var s4 = price ? ('From ' + price + '.') : '';
+    var s5 = 'Reserve now.';
+    meta = [s1, s2, s3, s4, s5].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    if (meta.length > 155) {
+      s3 = '';
+      meta = [s1, s2, s4, s5].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    }
+    if (meta.length > 155) {
+      metaAtts = attractions.slice(0, 2);
+      s1 = primary + (metaAtts.length ? ': ' + upd_joinListWithAmp_Updater_(metaAtts) + '.' : '.');
+      meta = [s1, s2, s4, s5].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    }
+    if (meta.length > 155) {
+      s2 = '';
+      meta = [s1, s4, s5].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    }
+    if (meta.length > 155) meta = upd_truncateAtWordBoundary_Updater_(meta, 155);
+    if (meta.length < 140) {
+      var pad = 'Book online in minutes.';
+      var meta2 = (meta + ' ' + pad).replace(/\s+/g, ' ').trim();
+      if (meta2.length <= 155) meta = meta2;
+    }
+    meta = upd_finalizeSeoMetaDescription_Updater_(meta, 155);
+  }
+
+  return {
+    h1: h1,
+    seo_title: seoTitle,
+    meta_description: meta,
+    primary_keyword: primary
+  };
+}
+
 function upd_applyFinalSeoSafetyBelt_Updater_(payload, data, tripFields) {
   if (!payload || typeof payload !== 'object') return payload;
   var flags = upd_buildStrictFlags_Updater_(data, tripFields);
@@ -2988,7 +3250,13 @@ function upd_applyFinalSeoSafetyBelt_Updater_(payload, data, tripFields) {
     }
 
     if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_description') && payload.meta.rank_math_description) {
-      safeDesc = upd_truncateText_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_description, flags), 160);
+      var civCtx = upd_isCivilizationMuseumContext_Updater_(
+        (payload.meta && payload.meta.rank_math_title) ? payload.meta.rank_math_title : safeTitle,
+        (payload.core && payload.core.slug) ? payload.core.slug : (payload.slug || ''),
+        payload.meta.rank_math_description
+      );
+      safeDesc = upd_finalizeSeoMetaDescription_Updater_(upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_description, flags), 160);
+      safeDesc = upd_normalizeMuseumEntityText_Updater_(safeDesc, civCtx);
       if (safeDesc) payload.meta.rank_math_description = safeDesc; else delete payload.meta.rank_math_description;
     }
     if (payload.core && Object.prototype.hasOwnProperty.call(payload.core, 'excerpt') && payload.core.excerpt) {
@@ -5381,15 +5649,29 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   }
 
   var lang = String(targetLang || '').toLowerCase()
+  var aiSeoTitle = ''
+  var aiSeoDesc = ''
+  if (lang === 'en' && airtableTripId) {
+    try {
+      var impRecords = findRecordsByLinkedId_Updater_('Improvement With AI', 'Trip', airtableTripId)
+      if (Array.isArray(impRecords) && impRecords.length) {
+        var impF = impRecords[0] && impRecords[0].fields ? impRecords[0].fields : {}
+        aiSeoTitle = String(impF.AI_SEO_Title || '').trim()
+        aiSeoDesc = String(impF.AI_SEO_Meta_Description || '').trim()
+      }
+    } catch {}
+  }
+
   var seoTitleRaw = ''
   if (meta.rank_math_title && Array.isArray(meta.rank_math_title)) seoTitleRaw = meta.rank_math_title[0]
   else if (meta.rank_math_title && typeof meta.rank_math_title === 'object') seoTitleRaw = String(meta.rank_math_title)
   else if (meta.rank_math_title) seoTitleRaw = meta.rank_math_title
-  var title = String(seoTitleRaw || core.title || '').trim();
+  var title = String(aiSeoTitle || seoTitleRaw || core.title || '').trim();
   var url = String(core.permalink || core.link || '').trim();
 
   var descRaw = ''
-  if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
+  if (aiSeoDesc) descRaw = aiSeoDesc
+  else if (meta.rank_math_description && Array.isArray(meta.rank_math_description)) descRaw = meta.rank_math_description[0]
   else if (meta.rank_math_description && typeof meta.rank_math_description === 'object') descRaw = String(meta.rank_math_description)
   else if (meta.rank_math_description) descRaw = meta.rank_math_description
   else if (core.excerpt) descRaw = core.excerpt
@@ -5398,11 +5680,11 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   var description = String(descRaw || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   description = truncateAtWordBoundary_Updater_(description, 240)
   if (lang === 'en') {
-    var titleSrc = seoTitleRaw ? 'rank_math_title' : (core.title ? 'core.title' : 'missing')
-    var descSrc = (meta.rank_math_description ? 'rank_math_description' : (core.excerpt ? 'core.excerpt' : (core.content_html ? 'core.content_html' : 'missing')))
+    var titleSrc = aiSeoTitle ? 'AI_SEO_Title' : (seoTitleRaw ? 'rank_math_title' : (core.title ? 'core.title' : 'missing'))
+    var descSrc = (aiSeoDesc ? 'AI_SEO_Meta_Description' : (meta.rank_math_description ? 'rank_math_description' : (core.excerpt ? 'core.excerpt' : (core.content_html ? 'core.content_html' : 'missing'))))
     log('SCHEMA SOURCE RESOLVED (en, TouristTrip): title=' + titleSrc + ' desc=' + descSrc)
-    if (meta.rank_math_description && (core.content_html || core.excerpt)) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_description')
-    if (seoTitleRaw && core.title && String(core.title).trim() !== title) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_title')
+    if (!aiSeoDesc && meta.rank_math_description && (core.content_html || core.excerpt)) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_description')
+    if (!aiSeoTitle && seoTitleRaw && core.title && String(core.title).trim() !== String(seoTitleRaw).trim()) log('SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_title')
   }
 
   var images = [];

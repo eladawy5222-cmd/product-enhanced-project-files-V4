@@ -391,6 +391,83 @@ function finalizeSeoTextFieldEn_(text, maxLen) {
   return s;
 }
 
+function detectUspSuffixFromTextSeoEn_(text) {
+  var t = String(text || '').toLowerCase()
+  if (!t) return ''
+  var hasLunch = /\blunch\b/.test(t)
+  var hasPickup = /\b(hotel\s+pick\s*-?\s*up|hotel\s+pickup|pick\s*-?\s*up|pickup)\b/.test(t)
+  if (hasLunch && hasPickup) return 'with Lunch & Hotel Pickup'
+  if (hasLunch) return 'with Lunch'
+  if (hasPickup) return 'with Hotel Pickup'
+  return ''
+}
+
+function joinListWithAmpSeoEn_(items) {
+  var xs = (Array.isArray(items) ? items : []).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  if (xs.length <= 1) return xs.join('');
+  if (xs.length === 2) return xs[0] + ' & ' + xs[1];
+  return xs.slice(0, xs.length - 1).join(', ') + ' & ' + xs[xs.length - 1];
+}
+
+function extractAttractionsFromTitleSeoEn_(title) {
+  var t = normalizeWhitespaceSeoEn_(title);
+  if (!t) return [];
+  var rhs = t;
+  if (t.indexOf(':') !== -1) rhs = String(t.split(':').slice(1).join(':') || '').trim();
+  rhs = rhs.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+  rhs = rhs.replace(/&\s*amp;?/gi, '&').replace(/&amp;?/gi, '&');
+  rhs = rhs.replace(/\s*&\s*/g, ', ').replace(/\s+and\s+/gi, ', ');
+  rhs = rhs.replace(/\s*\+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  var parts = rhs.split(',').map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x && !/^amp;?$/i.test(x); });
+  var seen = {};
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (!p) continue;
+    if (p.length > 48) continue;
+    if (/\blunch\b/i.test(p)) continue;
+    if (/\bhotel\s+pick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpick\s*-?\s*up\b/i.test(p)) continue;
+    if (/\bpickup\b/i.test(p)) continue;
+    var key = p.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = true;
+    out.push(p);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function extractPrimaryFromTitleSeoEn_(title) {
+  var t = normalizeWhitespaceSeoEn_(title);
+  if (!t) return '';
+  if (t.indexOf(':') !== -1) return String(t.split(':')[0] || '').trim();
+  if (t.indexOf(' - ') !== -1) return String(t.split(' - ')[0] || '').trim();
+  if (t.indexOf(' | ') !== -1) return String(t.split(' | ')[0] || '').trim();
+  return '';
+}
+
+function buildH1FromSeoSignalsSeoEn_(focusKeyword, seoTitle, tripTitle, uspSuffix) {
+  var primary = normalizeWhitespaceSeoEn_(focusKeyword);
+  if (!primary) primary = extractPrimaryFromTitleSeoEn_(seoTitle);
+  if (!primary) primary = extractPrimaryFromTitleSeoEn_(tripTitle);
+  if (!primary) primary = normalizeWhitespaceSeoEn_(seoTitle) || normalizeWhitespaceSeoEn_(tripTitle) || '';
+  if (!primary) return '';
+
+  var atts = extractAttractionsFromTitleSeoEn_(seoTitle);
+  if (!atts.length) atts = extractAttractionsFromTitleSeoEn_(tripTitle);
+  var h1 = primary;
+  if (atts.length) h1 = primary + ': ' + joinListWithAmpSeoEn_(atts);
+  h1 = truncateAtWordBoundarySeoEn_(h1, 90);
+  h1 = stripTrailingPunctuationNoiseSeoEn_(h1);
+  var usp = normalizeWhitespaceSeoEn_(uspSuffix)
+  if (usp) {
+    var candidate = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim()
+    if (candidate.length <= 90) h1 = candidate
+  }
+  return h1;
+}
+
 function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
   var before = String(text || '');
   var raw = normalizeWhitespaceSeoEn_(before);
@@ -1088,6 +1165,18 @@ async function runAiSeoEnhancementBatch() {
           if (beforeSlug !== aiResult.AI_SEO_Permalink) log('AI SEO Enhancer: slug trimmed/repaired');
         }
 
+        var existingH1 = String(combinedFields.AI_Titel_H1 || combinedFields.AI_Title_H1 || combinedFields['AI Titel H1'] || combinedFields['AI Title H1'] || '').trim();
+        if (!existingH1) {
+          var uspTextPool = []
+            .concat(linkedTextBlocks || [])
+            .concat(improvedSignals || [])
+            .join(' | ')
+          var uspSuffix = detectUspSuffixFromTextSeoEn_(uspTextPool)
+          aiResult.AI_Titel_H1 = buildH1FromSeoSignalsSeoEn_(aiResult.AI_SEO_FocusKeywords, aiResult.AI_SEO_Title, combinedFields.Title || '', uspSuffix);
+        } else {
+          aiResult.AI_Titel_H1 = existingH1;
+        }
+
         // 6) Prepare Update for Improvement With AI
         var updateFields = {
           AI_SEO_Title:              aiResult.AI_SEO_Title || '',
@@ -1099,6 +1188,7 @@ async function runAiSeoEnhancementBatch() {
           AI_SEO_Permalink:          aiResult.AI_SEO_Permalink || '',
           AI_SEO_FocusKeywords:      aiResult.AI_SEO_FocusKeywords || '',
           AI_SEO_FocusKeywords_List: aiResult.AI_SEO_FocusKeywords_List || '',
+          AI_Titel_H1:               aiResult.AI_Titel_H1 || '',
           AI_Excerpt:                aiResult.AI_Excerpt || '',
 
           AI_SEO_Status:             'Done',
