@@ -1,0 +1,89 @@
+*** Begin Patch
+*** Update File: GAS/updater.gs
+@@
+ var UPDATER_AIRTABLE_QUERY_CACHE = {};
+ var UPDATER_AIRTABLE_PAGE_SIZE = 25;
+ var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
+ var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
++var UPDATER_WP_STAGE_DELAY_MS = 1200;
++var UPDATER_WP_HEAVY_STAGE_DELAY_MS = 2200;
++var UPDATER_SCHEMA_STAGE_DELAY_MS = 900;
++var UPDATER_ENABLE_STAGE_THROTTLING = true;
+@@
+ function sleep_Updater_(ms) {
+   var n = Number(ms) || 0;
+   if (n > 0) Utilities.sleep(n);
+ }
++
++function throttleStage_Updater_(label, ms) {
++  if (!UPDATER_ENABLE_STAGE_THROTTLING) return;
++  var waitMs = Math.max(0, Number(ms) || 0);
++  if (!waitMs) return;
++  Logger.log('Updater: Throttling before ' + label + ' for ' + waitMs + ' ms');
++  sleep_Updater_(waitMs);
++}
++
++function isQuotaLikeError_Updater_(err) {
++  var msg = err && err.message ? String(err.message) : String(err || '');
++  var lc = msg.toLowerCase();
++  return lc.indexOf('bandwidth quota exceeded') !== -1 ||
++         lc.indexOf('too many requests') !== -1 ||
++         lc.indexOf('rate limit') !== -1 ||
++         lc.indexOf('quota exceeded') !== -1;
++}
++
++function runNonCriticalStage_Updater_(label, fn, delayMs) {
++  throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
++  try {
++    return fn();
++  } catch (e) {
++    if (isQuotaLikeError_Updater_(e)) {
++      Logger.log('Updater: Non-critical stage throttled/soft-failed [' + label + ']: ' + (e && e.message ? e.message : String(e)));
++      return null;
++    }
++    throw e;
++  }
++}
++
++function runCriticalStage_Updater_(label, fn, delayMs) {
++  throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
++  return fn();
++}
+@@
+-      if (wantsPackages) publishPackagesSafe_Updater_(tripId, primaryWpId);
+-      if (wantsImages) publishImagesSafe_Updater_(tripId, primaryWpId, f);
++      if (wantsPackages) {
++        runCriticalStage_Updater_('publish packages', function() {
++          publishPackagesSafe_Updater_(tripId, primaryWpId);
++        }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
++      }
++      if (wantsImages) {
++        runNonCriticalStage_Updater_('publish images', function() {
++          publishImagesSafe_Updater_(tripId, primaryWpId, f);
++        }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
++      }
+
+       try {
++        throttleStage_Updater_('generate primary schema', UPDATER_SCHEMA_STAGE_DELAY_MS);
+         var primaryTripInfoForSchema = getTripInfoFromWpCached_Updater_(primaryWpId);
+         var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang, { airtableTripId: tripId });
+         var primaryFaqSchema = null;
+         try {
+           primaryFaqSchema = generateFaqSchema_Updater_(enhancedData, primaryTripInfoForSchema, primaryLang);
+@@
+       try {
++        throttleStage_Updater_('store SEO validation', UPDATER_SCHEMA_STAGE_DELAY_MS);
+         var validationTripInfo = null;
+         try { validationTripInfo = getTripInfoFromWpCached_Updater_(primaryWpId); } catch (eValInfo) {}
+         var vRes = computeSeoValidationOutputs_Updater_(enhancedData, f, payload, validationTripInfo);
+         storeSeoValidationOutputs_Updater_(tripId, vRes);
+         seoValidationByLanguage[primaryLang] = formatSeoValidationForLanguageMap_Updater_(vRes);
+@@
+       try {
++        throttleStage_Updater_('store translation url map', UPDATER_SCHEMA_STAGE_DELAY_MS);
+         var infoForUrl = null;
+         try { infoForUrl = getTripInfoFromWpCached_Updater_(primaryWpId); } catch (eUrlPrimary) {}
+         if (infoForUrl && infoForUrl.meta && infoForUrl.meta.translation_url_map) {
+           translationUrlMap = mergeTranslationUrlMap_Updater_(translationUrlMap, parseTranslationUrlMap_Updater_(infoForUrl.meta.translation_url_map));
+         }
+*** End Patch
