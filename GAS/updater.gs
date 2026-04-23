@@ -187,22 +187,42 @@ function getRawImagesTableName_Updater_() {
 
 function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
   if (!filterByFormula) return [];
+  var stateKey = String(tableName || '') + '::formula::' + String(filterByFormula || '');
   var all = [];
   var offset = null;
   var pages = 0;
+  var meta = {
+    quotaHit: false,
+    pageCapHit: false,
+    partial: false
+  };
   do {
     var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: filterByFormula };
     if (offset) params.offset = offset;
-    var res = airtableGetCached_Updater_(tableName, params);
+    var res = null;
+    try {
+      res = airtableGetCached_Updater_(tableName, params);
+    } catch (e) {
+      if (isQuotaLikeError_Updater_(e)) {
+        meta.quotaHit = true;
+        meta.partial = true;
+        UPDATER_AIRTABLE_QUERY_CACHE[stateKey + '::meta'] = meta;
+        throw e;
+      }
+      throw e;
+    }
     if (res && res.records && res.records.length) all = all.concat(res.records);
     offset = res ? res.offset : null;
     pages++;
     if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
     if (pages >= 20) {
       Logger.log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
+      meta.pageCapHit = true;
+      meta.partial = true;
       break;
     }
   } while (offset);
+  UPDATER_AIRTABLE_QUERY_CACHE[stateKey + '::meta'] = meta;
   return all;
 }
 
@@ -240,8 +260,12 @@ function findImageRecordsForTrip_Updater_(tripRecordId, tripNumberOrWpId) {
     var formula = parts.length === 1 ? parts[0] : ("OR(" + parts.join(',') + ")");
     try {
       var recs = airtableGetAllByFormula_Updater_(table, formula);
+      var formulaMeta = UPDATER_AIRTABLE_QUERY_CACHE[String(table || '') + '::formula::' + String(formula || '') + '::meta'] || {};
       Logger.log('IMAGES LOOKUP FIELD USED: ' + field);
       if (recs && recs.length) {
+        lookupState.pageCapHit = !!formulaMeta.pageCapHit;
+        lookupState.partial = !!formulaMeta.partial;
+        lookupState.formulaQuotaHit = !!formulaMeta.quotaHit;
         lookupState.recordsCount = recs.length;
         setLookupState_Updater_(table, 'SourceTrip|Trip', lookupTarget, 'image_lookup', lookupState);
         return recs;
@@ -9615,9 +9639,10 @@ function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
    var rawImagesTable = getRawImagesTableName_Updater_();
    var rawImagesState = getLookupState_Updater_(rawImagesTable, 'SourceTrip|Trip', tripId || wpTripId, 'image_lookup');
    if (isLookupStateIncomplete_Updater_(rawImagesState)) {
-       Logger.log('Updater: Raw image lookup is incomplete for Trip ' + tripId + '. Continuing only with already-resolved image links. ' + describeLookupState_Updater_(rawImagesState));
+      Logger.log('Updater: Skipping image publish for Trip ' + tripId + ' because raw image lookup is incomplete. ' + describeLookupState_Updater_(rawImagesState));
+      return;
    }
-   
+
    if (rawImagesRecords && rawImagesRecords.length > 0) {
        logVerbose_Updater_('Updater: Found ' + rawImagesRecords.length + ' raw images. First record fields: ' + JSON.stringify(rawImagesRecords[0].fields));
    }
