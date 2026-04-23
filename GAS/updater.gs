@@ -760,7 +760,9 @@ function runUpdaterBatch() {
       // 5. Publish Packages & Images (Primary)
       if (wantsPackages) {
         runCriticalStage_Updater_('publish packages', function() {
-          publishPackagesSafe_Updater_(tripId, primaryWpId, {}, f);
+          publishPackagesSafe_Updater_(tripId, primaryWpId, {
+            tripPublicId: (f && f.TripID ? String(f.TripID) : '')
+          });
         }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
       }
       if (wantsImages) {
@@ -772,7 +774,10 @@ function runUpdaterBatch() {
       try {
         throttleStage_Updater_('generate primary schema', UPDATER_SCHEMA_STAGE_DELAY_MS);
         var primaryTripInfoForSchema = getTripInfoFromWpCached_Updater_(primaryWpId);
-        var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang, { airtableTripId: tripId });
+        var primarySchema = generateTripSchema_Updater_(primaryTripInfoForSchema, primaryLang, {
+          airtableTripId: tripId,
+          airtableTripPublicId: (f && f.TripID ? String(f.TripID) : '')
+        });
         var primaryFaqSchema = null;
         try {
           primaryFaqSchema = generateFaqSchema_Updater_(enhancedData, primaryTripInfoForSchema, primaryLang);
@@ -1489,14 +1494,22 @@ function runUpdaterBatch() {
             }
 
             if (wantsPackages) {
-              publishPackagesSafe_Updater_(tripId, transWpId, { lang: targetLang, skipAirtableSync: true, tripTitle: imageTripTitleForLang }, f);
+              publishPackagesSafe_Updater_(tripId, transWpId, {
+                lang: targetLang,
+                skipAirtableSync: true,
+                tripTitle: imageTripTitleForLang,
+                tripPublicId: (f && f.TripID ? String(f.TripID) : '')
+              });
               Logger.log('Updater: Linked packages for translation (' + targetLang + ') Trip ' + transWpId);
             }
 
             var transTripInfoForSchema = null;
             try {
               transTripInfoForSchema = getTripInfoFromWpCached_Updater_(transWpId);
-              var transSchema = generateTripSchema_Updater_(transTripInfoForSchema, targetLang, { airtableTripId: tripId });
+              var transSchema = generateTripSchema_Updater_(transTripInfoForSchema, targetLang, {
+                airtableTripId: tripId,
+                airtableTripPublicId: (f && f.TripID ? String(f.TripID) : '')
+              });
               var transFaqSchema = null;
               try {
                 transFaqSchema = generateFaqSchema_Updater_(translatedData, transTripInfoForSchema, targetLang);
@@ -8283,8 +8296,9 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
 
   var options = opts || {};
   var airtableTripId = options.airtableTripId ? String(options.airtableTripId) : '';
+  var airtableTripPublicId = options.airtableTripPublicId ? String(options.airtableTripPublicId) : '';
 
-  function buildSchemaOffersFromAirtable_Updater_(tripId, fallbackCurrency, url) {
+  function buildSchemaOffersFromAirtable_Updater_(tripId, fallbackCurrency, url, tripPublicId) {
     var out = { offers: null, source: '', currency: '', offerCount: 0 };
     if (!tripId) return out;
 
@@ -8320,7 +8334,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
     var currency = '';
     var source = '';
 
-    var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId);
+    var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId, null, tripPublicId);
     if (Array.isArray(priceRecords) && priceRecords.length) {
       source = 'Prices';
       priceRecords.forEach(function(rec) {
@@ -8335,7 +8349,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
     }
 
     if (!prices.length) {
-      var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId);
+      var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId, null, tripPublicId);
       if (Array.isArray(pkgRecords) && pkgRecords.length) {
         source = 'Packages';
         pkgRecords.forEach(function(rec) {
@@ -8422,7 +8436,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   var aiSeoDesc = '';
   if (lang === 'en' && airtableTripId) {
     try {
-      var impRecords = findRecordsByLinkedId_Updater_('Improvement With AI', 'Trip', airtableTripId);
+      var impRecords = findRecordsByLinkedId_Updater_('Improvement With AI', 'Trip', airtableTripId, null, airtableTripPublicId);
       if (Array.isArray(impRecords) && impRecords.length) {
         var impF = impRecords[0] && impRecords[0].fields ? impRecords[0].fields : {};
         aiSeoTitle = String(impF.AI_SEO_Title || '').trim();
@@ -8476,7 +8490,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   var priceVal = pricing.actual_price != null ? pricing.actual_price : pricing.base_price;
   var price = priceVal == null ? '' : String(priceVal);
 
-  var offersResolved = buildSchemaOffersFromAirtable_Updater_(airtableTripId, currency, url);
+  var offersResolved = buildSchemaOffersFromAirtable_Updater_(airtableTripId, currency, url, airtableTripPublicId);
   var offers = offersResolved && offersResolved.offers ? offersResolved.offers : null;
   if (!offers) {
     offers = {
@@ -9147,9 +9161,9 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
    var targetLang = opts.lang ? String(opts.lang) : '';
    var skipAirtableSync = !!opts.skipAirtableSync;
    var tripTitleForPackage = opts.tripTitle ? String(opts.tripTitle) : '';
-   var tripPublicId = '';
+   var tripPublicId = opts.tripPublicId ? String(opts.tripPublicId) : '';
    if (tripFields) {
-     tripPublicId = tripFields.TripID || tripFields['TripID'] || '';
+     if (!tripPublicId) tripPublicId = tripFields.TripID || tripFields['TripID'] || '';
      if (Array.isArray(tripPublicId)) tripPublicId = tripPublicId.length ? tripPublicId[0] : '';
      tripPublicId = String(tripPublicId || '').trim();
    }
