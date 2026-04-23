@@ -9114,13 +9114,12 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
      var priceState = getLookupState_Updater_('Prices', 'Trip', tripId, 'multi');
 
      if (isLookupStateIncomplete_Updater_(pkgState) || isLookupStateIncomplete_Updater_(priceState)) {
-       Logger.log(
-         'Updater: Skipping package publish for Trip ' + tripId +
-         ' because Airtable package/price dataset is incomplete. ' +
-         'Packages[' + describeLookupState_Updater_(pkgState) + '] ' +
-         'Prices[' + describeLookupState_Updater_(priceState) + ']'
-       );
-       return;
+      throw new Error(
+        'Updater: Package publish aborted for Trip ' + tripId +
+        ' because Airtable package/price dataset is incomplete. ' +
+        'Packages[' + describeLookupState_Updater_(pkgState) + '] ' +
+        'Prices[' + describeLookupState_Updater_(priceState) + ']'
+      );
      }
      
      if (pkgRecords.length === 0 && priceRecords.length === 0) {
@@ -9712,8 +9711,10 @@ function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
    var impRecords = findRecordsByLinkedId_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId);
    var impState = getLookupState_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId, 'multi');
    if (isLookupStateIncomplete_Updater_(impState)) {
-      Logger.log('Updater: Skipping image publish for Trip ' + tripId + ' because Images Improvement dataset is incomplete. ' + describeLookupState_Updater_(impState));
-      return;
+     throw new Error(
+       'Updater: Image publish aborted for Trip ' + tripId +
+       ' because Images Improvement dataset is incomplete. ' + describeLookupState_Updater_(impState)
+     );
    }
    
    // 2. Fetch Raw Images Records (for Featured Image Matching by Attachment)
@@ -9722,8 +9723,7 @@ function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
    var rawImagesTable = getRawImagesTableName_Updater_();
    var rawImagesState = getLookupState_Updater_(rawImagesTable, 'SourceTrip|Trip', tripId || wpTripId, 'image_lookup');
    if (isLookupStateIncomplete_Updater_(rawImagesState)) {
-      Logger.log('Updater: Skipping image publish for Trip ' + tripId + ' because raw image lookup is incomplete. ' + describeLookupState_Updater_(rawImagesState));
-      return;
+     throw new Error('Updater: Raw image lookup is incomplete for Trip ' + tripId + '. ' + describeLookupState_Updater_(rawImagesState));
    }
 
    if (rawImagesRecords && rawImagesRecords.length > 0) {

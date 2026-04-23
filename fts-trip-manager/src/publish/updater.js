@@ -330,15 +330,64 @@ var UPDATER_DEBUG_VERBOSE = false;
 
 var UPDATER_WP_TRIP_INFO_CACHE = {};
 var UPDATER_AIRTABLE_TABLE_CACHE = {};
+var UPDATER_AIRTABLE_TABLE_CACHE_META = {};
+var UPDATER_AIRTABLE_QUERY_CACHE = {};
+var UPDATER_LINKED_LOOKUP_STATE = {};
 
 function clearUpdaterCaches_Updater_() {
   UPDATER_WP_TRIP_INFO_CACHE = {};
   UPDATER_AIRTABLE_TABLE_CACHE = {};
+  UPDATER_AIRTABLE_TABLE_CACHE_META = {};
+  UPDATER_AIRTABLE_QUERY_CACHE = {};
+  UPDATER_LINKED_LOOKUP_STATE = {};
   log('Updater: Cleared in-memory caches');
 }
 
 function logVerbose_Updater_(msg) {
   if (UPDATER_DEBUG_VERBOSE) log(msg);
+}
+
+function isQuotaLikeError_Updater_(err) {
+  var msg = err && err.message ? String(err.message) : String(err || '');
+  var lc = msg.toLowerCase();
+  return lc.indexOf('bandwidth quota exceeded') !== -1 ||
+         lc.indexOf('too many requests') !== -1 ||
+         lc.indexOf('rate limit') !== -1 ||
+         lc.indexOf('quota exceeded') !== -1;
+}
+
+function buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode) {
+  return [
+    String(tableName || ''),
+    String(linkFieldName || ''),
+    String(targetId || ''),
+    String(mode || 'multi')
+  ].join('::');
+}
+
+function setLookupState_Updater_(tableName, linkFieldName, targetId, mode, state) {
+  var key = buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode);
+  UPDATER_LINKED_LOOKUP_STATE[key] = state || {};
+  return UPDATER_LINKED_LOOKUP_STATE[key];
+}
+
+function getLookupState_Updater_(tableName, linkFieldName, targetId, mode) {
+  var key = buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode);
+  return UPDATER_LINKED_LOOKUP_STATE[key] || null;
+}
+
+function isLookupStateIncomplete_Updater_(state) {
+  if (!state) return false;
+  return !!(state.partial || state.formulaQuotaHit || state.cacheQuotaHit || state.pageCapHit);
+}
+
+function describeLookupState_Updater_(state) {
+  if (!state) return 'no-state';
+  return 'records=' + Number(state.recordsCount || 0) +
+    ', formulaQuotaHit=' + (!!state.formulaQuotaHit) +
+    ', cacheQuotaHit=' + (!!state.cacheQuotaHit) +
+    ', pageCapHit=' + (!!state.pageCapHit) +
+    ', usedFallback=' + (!!state.usedFallback);
 }
 
 async function getTripInfoFromWpCached_Updater_(wpId) {
@@ -362,16 +411,43 @@ function getRawImagesTableName_Updater_() {
 }
 
 async function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
+  if (!filterByFormula) return [];
+  var stateKey = String(tableName || '') + '::formula::' + String(filterByFormula || '');
   var all = [];
   var offset = null;
+  var pages = 0;
+  var meta = {
+    quotaHit: false,
+    pageCapHit: false,
+    partial: false
+  };
   do {
     var params = { pageSize: 100, filterByFormula: filterByFormula };
     if (offset) params.offset = offset;
-    var res = await airtableGet_(tableName, params);
+    var res = null;
+    try {
+      res = await airtableGet_(tableName, params);
+    } catch (e) {
+      if (isQuotaLikeError_Updater_(e)) {
+        meta.quotaHit = true;
+        meta.partial = true;
+        UPDATER_AIRTABLE_QUERY_CACHE[stateKey + '::meta'] = meta;
+        throw e;
+      }
+      throw e;
+    }
     if (res && res.records && res.records.length) all = all.concat(res.records);
     offset = res ? res.offset : null;
+    pages++;
     if (offset) await sleep(50);
+    if (pages >= 20) {
+      log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
+      meta.pageCapHit = true;
+      meta.partial = true;
+      break;
+    }
   } while (offset);
+  UPDATER_AIRTABLE_QUERY_CACHE[stateKey + '::meta'] = meta;
   return all;
 }
 
@@ -385,7 +461,19 @@ async function findImageRecordsForTrip_Updater_(tripRecordId, tripNumberOrWpId) 
   var n2 = String(tripRecordId || '').trim();
   if (n1) needles.push(n1);
   if (n2 && needles.indexOf(n2) === -1) needles.push(n2);
-  if (!needles.length) return [];
+  var lookupTarget = tripRecordId || tripNumberOrWpId;
+  var lookupState = {
+    recordsCount: 0,
+    formulaQuotaHit: false,
+    cacheQuotaHit: false,
+    pageCapHit: false,
+    partial: false,
+    usedFallback: false
+  };
+  if (!needles.length) {
+    setLookupState_Updater_(table, 'SourceTrip|Trip', lookupTarget, 'image_lookup', lookupState);
+    return [];
+  }
 
   for (var i = 0; i < candidates.length; i++) {
     var field = candidates[i];
@@ -397,19 +485,34 @@ async function findImageRecordsForTrip_Updater_(tripRecordId, tripNumberOrWpId) 
     var formula = parts.length === 1 ? parts[0] : ("OR(" + parts.join(',') + ")");
     try {
       var recs = await airtableGetAllByFormula_Updater_(table, formula);
+      var formulaMeta = UPDATER_AIRTABLE_QUERY_CACHE[String(table || '') + '::formula::' + String(formula || '') + '::meta'] || {};
       log('IMAGES LOOKUP FIELD USED: ' + field);
-      if (recs && recs.length) return recs;
+      if (recs && recs.length) {
+        lookupState.pageCapHit = !!formulaMeta.pageCapHit;
+        lookupState.partial = !!formulaMeta.partial;
+        lookupState.formulaQuotaHit = !!formulaMeta.quotaHit;
+        lookupState.recordsCount = recs.length;
+        setLookupState_Updater_(table, 'SourceTrip|Trip', lookupTarget, 'image_lookup', lookupState);
+        return recs;
+      }
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
         missing.push(field);
         continue;
       }
+      if (isQuotaLikeError_Updater_(e)) {
+        lookupState.formulaQuotaHit = true;
+        lookupState.partial = true;
+        log('Updater: Image lookup aborted for table ' + table + ' due to quota/rate-limit on field ' + field + ': ' + msg);
+        break;
+      }
       throw e;
     }
   }
 
   log('IMAGES LOOKUP FIELD NOT FOUND (checked: ' + candidates.join(', ') + ')');
+  setLookupState_Updater_(table, 'SourceTrip|Trip', lookupTarget, 'image_lookup', lookupState);
   return [];
 }
 
@@ -458,18 +561,43 @@ async function getAllAirtableRecordsCached_Updater_(tableName) {
 
   var all = [];
   var offset = null;
+  var pages = 0;
+  var meta = {
+    quotaHit: false,
+    pageCapHit: false,
+    partial: false
+  };
   do {
     var params = { pageSize: 100 };
     if (offset) params.offset = offset;
-    var res = await airtableGet_(t, params);
+    var res = null;
+    try {
+      res = await airtableGet_(t, params);
+    } catch (e) {
+      if (isQuotaLikeError_Updater_(e)) {
+        meta.quotaHit = true;
+        meta.partial = true;
+        log('Updater: Full-table cache aborted for ' + t + ' due to quota/rate-limit: ' + (e && e.message ? e.message : String(e)));
+        break;
+      }
+      throw e;
+    }
     if (res && res.records && res.records.length) {
       all = all.concat(res.records);
     }
     offset = res ? res.offset : null;
+    pages++;
     if (offset) await sleep(50);
+    if (pages >= 20) {
+      log('Updater: Full-table cache capped for ' + t + ' after ' + pages + ' pages');
+      meta.pageCapHit = true;
+      meta.partial = true;
+      break;
+    }
   } while (offset);
 
   UPDATER_AIRTABLE_TABLE_CACHE[t] = all;
+  UPDATER_AIRTABLE_TABLE_CACHE_META[t] = meta;
   return all;
 }
 
@@ -2063,6 +2191,15 @@ async function classifyTripTypes_Updater_(tripId, tripFields, aiImprovementField
 
 // Helper: Find SINGLE record by Linked Record ID (Client-Side) with Pagination
 async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
+  var state = {
+    lookupMode: 'single',
+    recordsCount: 0,
+    formulaQuotaHit: false,
+    cacheQuotaHit: false,
+    pageCapHit: false,
+    partial: false,
+    usedFallback: false
+  };
   var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
   var offset = null;
   do {
@@ -2076,6 +2213,13 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
         log('Updater: Airtable lookup skipped invalid filterByFormula for table ' + tableName + ' field ' + linkFieldName);
         break;
+      }
+      if (isQuotaLikeError_Updater_(e)) {
+        state.formulaQuotaHit = true;
+        state.partial = true;
+        log('Updater: Linked lookup aborted for ' + tableName + ' due to quota/rate-limit: ' + msg);
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+        return null;
       }
       throw e;
     }
@@ -2084,9 +2228,17 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
       var rec = records[i];
       var links = rec.fields[linkFieldName];
       if (Array.isArray(links)) {
-        if (links.indexOf(targetId) !== -1) return rec;
+        if (links.indexOf(targetId) !== -1) {
+          state.recordsCount = 1;
+          setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+          return rec;
+        }
       } else if (typeof links === 'string') {
-        if (links === targetId) return rec;
+        if (links === targetId) {
+          state.recordsCount = 1;
+          setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+          return rec;
+        }
       }
     }
     offset = res ? res.offset : null;
@@ -2094,16 +2246,30 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
   } while (offset);
 
   var cached = await getAllAirtableRecordsCached_Updater_(tableName);
+  var cacheMeta = UPDATER_AIRTABLE_TABLE_CACHE_META[String(tableName || '')] || {};
+  state.usedFallback = true;
+  state.cacheQuotaHit = !!cacheMeta.quotaHit;
+  state.pageCapHit = !!cacheMeta.pageCapHit;
+  state.partial = !!(state.partial || cacheMeta.partial);
   for (var j = 0; j < cached.length; j++) {
     var rec2 = cached[j];
     if (!rec2 || !rec2.fields) continue;
     var links2 = rec2.fields[linkFieldName];
     if (Array.isArray(links2)) {
-      if (links2.indexOf(targetId) !== -1) return rec2;
+      if (links2.indexOf(targetId) !== -1) {
+        state.recordsCount = 1;
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+        return rec2;
+      }
     } else if (typeof links2 === 'string') {
-      if (links2 === targetId) return rec2;
+      if (links2 === targetId) {
+        state.recordsCount = 1;
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+        return rec2;
+      }
     }
   }
+  setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
   return null;
 }
 
@@ -2111,6 +2277,15 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
 // Modified to support PAGINATION to ensure we scan all records, not just the first page.
 async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sortField) {
   var matches = [];
+  var state = {
+    lookupMode: 'multi',
+    recordsCount: 0,
+    formulaQuotaHit: false,
+    cacheQuotaHit: false,
+    pageCapHit: false,
+    partial: false,
+    usedFallback: false
+  };
   var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
   var offset = null;
   do {
@@ -2124,6 +2299,13 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
         log('Updater: Airtable lookup skipped invalid filterByFormula for table ' + tableName + ' field ' + linkFieldName);
         break;
+      }
+      if (isQuotaLikeError_Updater_(e)) {
+        state.formulaQuotaHit = true;
+        state.partial = true;
+        log('Updater: Linked lookup aborted for ' + tableName + ' due to quota/rate-limit: ' + msg);
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
+        return matches;
       }
       throw e;
     }
@@ -2142,6 +2324,11 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
 
   if (matches.length === 0) {
     var cached = await getAllAirtableRecordsCached_Updater_(tableName);
+    var cacheMeta2 = UPDATER_AIRTABLE_TABLE_CACHE_META[String(tableName || '')] || {};
+    state.usedFallback = true;
+    state.cacheQuotaHit = !!cacheMeta2.quotaHit;
+    state.pageCapHit = !!cacheMeta2.pageCapHit;
+    state.partial = !!(state.partial || cacheMeta2.partial);
     for (var j = 0; j < cached.length; j++) {
       var rec2 = cached[j];
       if (!rec2 || !rec2.fields) continue;
@@ -2165,6 +2352,8 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
     });
   }
   
+  state.recordsCount = matches.length;
+  setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
   return matches;
 }
 
@@ -8900,6 +9089,18 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
      var pkgRecords = await findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId);
      var priceRecords = await findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId);
+
+     var pkgState = getLookupState_Updater_('Packages', 'Trip', tripId, 'multi');
+     var priceState = getLookupState_Updater_('Prices', 'Trip', tripId, 'multi');
+
+     if (isLookupStateIncomplete_Updater_(pkgState) || isLookupStateIncomplete_Updater_(priceState)) {
+       throw new Error(
+         'Updater: Package publish aborted for Trip ' + tripId +
+         ' because Airtable package/price dataset is incomplete. ' +
+         'Packages[' + describeLookupState_Updater_(pkgState) + '] ' +
+         'Prices[' + describeLookupState_Updater_(priceState) + ']'
+       );
+     }
      
      if (pkgRecords.length === 0 && priceRecords.length === 0) {
        log('Updater: No packages or prices found for Trip ' + tripId);
@@ -9510,11 +9711,22 @@ async function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
    var imageTranslationMapForAttachments = parseImageTranslationMap_Updater_(tripFields && tripFields.Image_Translation_Map);
    // 1. Fetch Improvement Records (for Metadata & Gallery)
    var impRecords = await findRecordsByLinkedId_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId);
+   var impState = getLookupState_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId, 'multi');
+   if (isLookupStateIncomplete_Updater_(impState)) {
+      throw new Error(
+        'Updater: Image publish aborted for Trip ' + tripId +
+        ' because Images Improvement dataset is incomplete. ' + describeLookupState_Updater_(impState)
+      );
+   }
    
    // 2. Fetch Raw Images Records (for Featured Image Matching by Attachment)
    // We need this because Improvement table has IDs but NOT the attachment files for matching
    var rawImagesRecords = await findImageRecordsForTrip_Updater_(tripId, wpTripId);
    var rawImagesTable = getRawImagesTableName_Updater_();
+   var rawImagesState = getLookupState_Updater_(rawImagesTable, 'SourceTrip|Trip', tripId || wpTripId, 'image_lookup');
+   if (isLookupStateIncomplete_Updater_(rawImagesState)) {
+      throw new Error('Updater: Raw image lookup is incomplete for Trip ' + tripId + '. ' + describeLookupState_Updater_(rawImagesState));
+   }
    
    if (rawImagesRecords && rawImagesRecords.length > 0) {
        logVerbose_Updater_('Updater: Found ' + rawImagesRecords.length + ' raw images. First record fields: ' + JSON.stringify(rawImagesRecords[0].fields));
