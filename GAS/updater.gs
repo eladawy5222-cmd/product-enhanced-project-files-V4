@@ -111,6 +111,43 @@ function buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode) 
   ].join('::');
 }
 
+function buildLinkedLookupTargets_Updater_(targetId, targetPublicId) {
+  var out = [];
+  function addOne(v) {
+    var s = String(v || '').trim();
+    if (!s) return;
+    if (out.indexOf(s) === -1) out.push(s);
+  }
+  addOne(targetId);
+  addOne(targetPublicId);
+  return out;
+}
+
+function buildLinkedLookupFormula_Updater_(linkFieldName, targets) {
+  var list = (targets || []).filter(function(v) { return !!String(v || '').trim(); });
+  if (!list.length) return '';
+  var parts = list.map(function(v) {
+    return "FIND('" + String(v).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  });
+  return parts.length === 1 ? parts[0] : ("OR(" + parts.join(',') + ")");
+}
+
+function linkedValueMatchesTarget_Updater_(links, targets) {
+  var list = targets || [];
+  if (!list.length || links === undefined || links === null) return false;
+  if (Array.isArray(links)) {
+    for (var i = 0; i < list.length; i++) {
+      if (links.indexOf(list[i]) !== -1) return true;
+    }
+    return false;
+  }
+  var s = String(links).trim();
+  for (var j = 0; j < list.length; j++) {
+    if (s === list[j]) return true;
+  }
+  return false;
+}
+
 function setLookupState_Updater_(tableName, linkFieldName, targetId, mode, state) {
   var key = buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode);
   UPDATER_LINKED_LOOKUP_STATE[key] = state || {};
@@ -723,7 +760,7 @@ function runUpdaterBatch() {
       // 5. Publish Packages & Images (Primary)
       if (wantsPackages) {
         runCriticalStage_Updater_('publish packages', function() {
-          publishPackagesSafe_Updater_(tripId, primaryWpId);
+          publishPackagesSafe_Updater_(tripId, primaryWpId, {}, f);
         }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
       }
       if (wantsImages) {
@@ -1452,7 +1489,7 @@ function runUpdaterBatch() {
             }
 
             if (wantsPackages) {
-              publishPackagesSafe_Updater_(tripId, transWpId, { lang: targetLang, skipAirtableSync: true, tripTitle: imageTripTitleForLang });
+              publishPackagesSafe_Updater_(tripId, transWpId, { lang: targetLang, skipAirtableSync: true, tripTitle: imageTripTitleForLang }, f);
               Logger.log('Updater: Linked packages for translation (' + targetLang + ') Trip ' + transWpId);
             }
 
@@ -1777,8 +1814,15 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   // We will fetch records and find the match in JS. This is 100% robust.
   
   Logger.log('Updater: Fetching General Improvement using Client-Side ID Check: ' + tripId);
+
+  var tripPublicId = '';
+  if (tripFields) {
+    tripPublicId = tripFields.TripID || tripFields['TripID'] || '';
+    if (Array.isArray(tripPublicId)) tripPublicId = tripPublicId.length ? tripPublicId[0] : '';
+    tripPublicId = String(tripPublicId || '').trim();
+  }
   
-  var impRec = findRecordByLinkedId_Updater_(UPDATER_IMPROVEMENT_TABLE, 'Trip', tripId);
+  var impRec = findRecordByLinkedId_Updater_(UPDATER_IMPROVEMENT_TABLE, 'Trip', tripId, tripPublicId);
   
   if (!impRec) {
     Logger.log('Updater: WARNING - No General Improvement record found for Trip ' + tripId);
@@ -1789,7 +1833,7 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   data.general = impRec ? impRec.fields : {};
 
   // 1b. TripDetails (One-to-One) - Critical for TourType
-  var detailsRec = findRecordByLinkedId_Updater_(UPDATER_TRIP_DETAILS_TABLE, 'Trip', tripId);
+  var detailsRec = findRecordByLinkedId_Updater_(UPDATER_TRIP_DETAILS_TABLE, 'Trip', tripId, tripPublicId);
   data.tripDetails = detailsRec ? detailsRec.fields : {};
   if (detailsRec) {
     Logger.log('Updater: Found TripDetails record: ' + detailsRec.id);
@@ -1798,21 +1842,21 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   }
   
   // 2. Highlights (One-to-Many)
-  data.highlights = findRecordsByLinkedIdStrict_Updater_(UPDATER_HIGHLIGHTS_IMPROVEMENT_TABLE, 'Trip', tripId, 'Order');
+  data.highlights = findRecordsByLinkedIdStrict_Updater_(UPDATER_HIGHLIGHTS_IMPROVEMENT_TABLE, 'Trip', tripId, 'Order', tripPublicId);
   
   // 3. Itinerary (One-to-Many)
-  data.itinerary = findRecordsByLinkedIdStrict_Updater_(UPDATER_ITINERARY_IMPROVEMENT_TABLE, 'Trip', tripId, 'StepOrder');
+  data.itinerary = findRecordsByLinkedIdStrict_Updater_(UPDATER_ITINERARY_IMPROVEMENT_TABLE, 'Trip', tripId, 'StepOrder', tripPublicId);
   
   // 4. FAQs (One-to-Many)
-  data.faqs = findRecordsByLinkedIdStrict_Updater_(UPDATER_FAQS_IMPROVEMENT_TABLE, 'Trip', tripId);
+  data.faqs = findRecordsByLinkedIdStrict_Updater_(UPDATER_FAQS_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
   
   // 5. Includes/Excludes (One-to-Many)
-  data.includes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
-  data.excludes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_EXCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
+  data.includes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
+  data.excludes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_EXCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
   
   // 6. Facts (One-to-Many)
   try {
-    data.facts = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_FACTS_IMPROVEMENT_TABLE, 'Trip', tripId);
+    data.facts = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_FACTS_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
   } catch (e) {
     Logger.log('Updater: Warning - Failed to fetch Trip Facts: ' + e.message);
     data.facts = [];
@@ -1820,7 +1864,7 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   
   // 7. AddOns (One-to-Many)
   try {
-    data.addons = findRecordsByLinkedIdStrict_Updater_(UPDATER_ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId);
+    data.addons = findRecordsByLinkedIdStrict_Updater_(UPDATER_ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
   } catch (e) {
      Logger.log('Updater: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
@@ -2071,7 +2115,7 @@ function classifyTripTypes_Updater_(tripId, tripFields, aiImprovementFields) {
 
 
 // Helper: Find SINGLE record by Linked Record ID (Client-Side) with Pagination
-function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
+function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId, targetPublicId) {
   var state = {
     lookupMode: 'single',
     recordsCount: 0,
@@ -2081,7 +2125,12 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
     partial: false,
     usedFallback: false
   };
-  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var targets = buildLinkedLookupTargets_Updater_(targetId, targetPublicId);
+  var formula = buildLinkedLookupFormula_Updater_(linkFieldName, targets);
+  if (!formula) {
+    setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+    return null;
+  }
   var offset = null;
   do {
     var params = { pageSize: 100, filterByFormula: formula };
@@ -2108,18 +2157,10 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
     for (var i = 0; i < records.length; i++) {
       var rec = records[i];
       var links = rec.fields[linkFieldName];
-      if (Array.isArray(links)) {
-        if (links.indexOf(targetId) !== -1) {
-          state.recordsCount = 1;
-          setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
-          return rec;
-        }
-      } else if (typeof links === 'string') {
-        if (links === targetId) {
-          state.recordsCount = 1;
-          setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
-          return rec;
-        }
+      if (linkedValueMatchesTarget_Updater_(links, targets)) {
+        state.recordsCount = 1;
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+        return rec;
       }
     }
     offset = res ? res.offset : null;
@@ -2141,18 +2182,10 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
     var rec2 = cached[j];
     if (!rec2 || !rec2.fields) continue;
     var links2 = rec2.fields[linkFieldName];
-    if (Array.isArray(links2)) {
-      if (links2.indexOf(targetId) !== -1) {
-        state.recordsCount = 1;
-        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
-        return rec2;
-      }
-    } else if (typeof links2 === 'string') {
-      if (links2 === targetId) {
-        state.recordsCount = 1;
-        setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
-        return rec2;
-      }
+    if (linkedValueMatchesTarget_Updater_(links2, targets)) {
+      state.recordsCount = 1;
+      setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+      return rec2;
     }
   }
   setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
@@ -2161,7 +2194,7 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
 
 // Helper: Find MULTIPLE records by Linked Record ID (Client-Side)
 // Modified to support PAGINATION to ensure we scan all records, not just the first page.
-function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sortField) {
+function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sortField, targetPublicId) {
   var matches = [];
   var useFallback = shouldUseFullTableFallback_Updater_(tableName, linkFieldName);
   var state = {
@@ -2172,7 +2205,12 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
     partial: false,
     usedFallback: false
   };
-  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var targets = buildLinkedLookupTargets_Updater_(targetId, targetPublicId);
+  var formula = buildLinkedLookupFormula_Updater_(linkFieldName, targets);
+  if (!formula) {
+    setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
+    return matches;
+  }
   var offset = null;
   do {
     var params = { pageSize: 100, filterByFormula: formula };
@@ -2199,7 +2237,7 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
       for (var i = 0; i < res.records.length; i++) {
         var rec = res.records[i];
         var links = rec.fields[linkFieldName];
-        if (links && Array.isArray(links) && links.indexOf(targetId) !== -1) {
+        if (linkedValueMatchesTarget_Updater_(links, targets)) {
           matches.push(rec);
         }
       }
@@ -2219,7 +2257,7 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
       var rec2 = cached[j];
       if (!rec2 || !rec2.fields) continue;
       var links2 = rec2.fields[linkFieldName];
-      if (links2 && Array.isArray(links2) && links2.indexOf(targetId) !== -1) {
+      if (linkedValueMatchesTarget_Updater_(links2, targets)) {
         matches.push(rec2);
       }
     }
@@ -2247,7 +2285,7 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
   return matches;
 }
 
-function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId, sortField) {
+function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId, sortField, targetPublicId) {
   var matches = [];
   var state = {
     recordsCount: 0,
@@ -2257,7 +2295,12 @@ function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId
     partial: false,
     usedFallback: false
   };
-  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var targets = buildLinkedLookupTargets_Updater_(targetId, targetPublicId);
+  var formula = buildLinkedLookupFormula_Updater_(linkFieldName, targets);
+  if (!formula) {
+    setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
+    return matches;
+  }
   var offset = null;
   do {
     var params = { pageSize: 100, filterByFormula: formula };
@@ -2284,7 +2327,7 @@ function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId
       for (var i = 0; i < res.records.length; i++) {
         var rec = res.records[i];
         var links = rec.fields[linkFieldName];
-        if (links && Array.isArray(links) && links.indexOf(targetId) !== -1) matches.push(rec);
+        if (linkedValueMatchesTarget_Updater_(links, targets)) matches.push(rec);
       }
     }
     offset = res ? res.offset : null;
@@ -9099,16 +9142,22 @@ function createUpdaterTrigger() {
 // EXTENDED PUBLISHING: PACKAGES & IMAGES
 // ----------------------------------------------------------
 
-function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
+function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
    opts = opts || {};
    var targetLang = opts.lang ? String(opts.lang) : '';
    var skipAirtableSync = !!opts.skipAirtableSync;
    var tripTitleForPackage = opts.tripTitle ? String(opts.tripTitle) : '';
+   var tripPublicId = '';
+   if (tripFields) {
+     tripPublicId = tripFields.TripID || tripFields['TripID'] || '';
+     if (Array.isArray(tripPublicId)) tripPublicId = tripPublicId.length ? tripPublicId[0] : '';
+     tripPublicId = String(tripPublicId || '').trim();
+   }
    try {
      // 1. Fetch Packages & Prices from Airtable
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
-     var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId);
-     var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId);
+     var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId, null, tripPublicId);
+     var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId, null, tripPublicId);
 
      var pkgState = getLookupState_Updater_('Packages', 'Trip', tripId, 'multi');
      var priceState = getLookupState_Updater_('Prices', 'Trip', tripId, 'multi');
@@ -9656,6 +9705,7 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
 
   } catch (e) {
     Logger.log('Updater: Error in publishPackagesForTrip - ' + e.message);
+    throw e;
   }
 }
 
@@ -9706,9 +9756,15 @@ function sendPackageToWp_Updater_(payload, opts) {
 }
 
 function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
+   var tripPublicId = '';
+   if (tripFields) {
+     tripPublicId = tripFields.TripID || tripFields['TripID'] || '';
+     if (Array.isArray(tripPublicId)) tripPublicId = tripPublicId.length ? tripPublicId[0] : '';
+     tripPublicId = String(tripPublicId || '').trim();
+   }
    var imageTranslationMapForAttachments = parseImageTranslationMap_Updater_(tripFields && tripFields.Image_Translation_Map);
    // 1. Fetch Improvement Records (for Metadata & Gallery)
-   var impRecords = findRecordsByLinkedId_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId);
+   var impRecords = findRecordsByLinkedId_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId, null, tripPublicId);
    var impState = getLookupState_Updater_(UPDATER_IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId, 'multi');
    if (isLookupStateIncomplete_Updater_(impState)) {
      throw new Error(
