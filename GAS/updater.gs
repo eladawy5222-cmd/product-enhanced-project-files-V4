@@ -33,6 +33,31 @@ var UPDATER_DEBUG_VERBOSE = false;
 
 var UPDATER_WP_TRIP_INFO_CACHE = {};
 var UPDATER_AIRTABLE_TABLE_CACHE = {};
+var UPDATER_AIRTABLE_QUERY_CACHE = {};
+var UPDATER_AIRTABLE_PAGE_SIZE = 25;
+var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
+var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
+
+function sleep_Updater_(ms) {
+  var n = Number(ms) || 0;
+  if (n > 0) Utilities.sleep(n);
+}
+
+function buildUpdaterCacheKey_(tableName, params) {
+  return String(tableName || '') + '::' + JSON.stringify(params || {});
+}
+
+function airtableGetCached_Updater_(tableName, params, opts) {
+  opts = opts || {};
+  var key = buildUpdaterCacheKey_(tableName, params);
+  if (!opts.force && UPDATER_AIRTABLE_QUERY_CACHE.hasOwnProperty(key)) {
+    return UPDATER_AIRTABLE_QUERY_CACHE[key];
+  }
+  sleep_Updater_(UPDATER_AIRTABLE_QUERY_DELAY_MS);
+  var res = airtableGet_(tableName, params || {});
+  UPDATER_AIRTABLE_QUERY_CACHE[key] = res;
+  return res;
+}
 
 function logVerbose_Updater_(msg) {
   if (UPDATER_DEBUG_VERBOSE) Logger.log(msg);
@@ -59,15 +84,22 @@ function getRawImagesTableName_Updater_() {
 }
 
 function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
+  if (!filterByFormula) return [];
   var all = [];
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: filterByFormula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: filterByFormula };
     if (offset) params.offset = offset;
-    var res = airtableGet_(tableName, params);
+    var res = airtableGetCached_Updater_(tableName, params);
     if (res && res.records && res.records.length) all = all.concat(res.records);
     offset = res ? res.offset : null;
-    if (offset) Utilities.sleep(50);
+    pages++;
+    if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= 20) {
+      Logger.log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
+      break;
+    }
   } while (offset);
   return all;
 }
@@ -155,15 +187,21 @@ function getAllAirtableRecordsCached_Updater_(tableName) {
 
   var all = [];
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100 };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE };
     if (offset) params.offset = offset;
-    var res = airtableGet_(t, params);
+    var res = airtableGetCached_Updater_(t, params);
     if (res && res.records && res.records.length) {
       all = all.concat(res.records);
     }
     offset = res ? res.offset : null;
-    if (offset) Utilities.sleep(50);
+    pages++;
+    if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= 20) {
+      Logger.log('Updater: Full-table cache capped for ' + t + ' after ' + pages + ' pages');
+      break;
+    }
   } while (offset);
 
   UPDATER_AIRTABLE_TABLE_CACHE[t] = all;
