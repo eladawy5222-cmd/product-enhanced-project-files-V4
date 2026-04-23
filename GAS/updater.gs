@@ -563,7 +563,8 @@ function syncImagesToExistingTranslations_Updater_(tripId, primaryWpId, tripFiel
         attachmentIdMap: attachmentIdMap
       });
     } catch (eImg) {
-      Logger.log('Updater: Warning - Failed to sync translated images for ' + langCode + ': ' + eImg.message);
+      Logger.log('Updater: Failed to sync translated images for ' + langCode + ': ' + eImg.message);
+      throw eImg;
     }
   }
 }
@@ -726,7 +727,7 @@ function runUpdaterBatch() {
         }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
       }
       if (wantsImages) {
-        runNonCriticalStage_Updater_('publish images', function() {
+        runCriticalStage_Updater_('publish images', function() {
           publishImagesSafe_Updater_(tripId, primaryWpId, f);
         }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
       }
@@ -746,7 +747,8 @@ function runUpdaterBatch() {
         pushToWordPress_Updater_(primaryWpId, { meta: primaryMetaSchema });
         Logger.log('TRIP SCHEMA GENERATED (' + primaryLang + ')');
       } catch (eSchemaPrimary) {
-        Logger.log('Updater: Warning - Failed to generate schema for primary: ' + eSchemaPrimary.message);
+        Logger.log('Updater: Failed to generate schema for primary: ' + eSchemaPrimary.message);
+        throw eSchemaPrimary;
       }
 
       try {
@@ -758,7 +760,8 @@ function runUpdaterBatch() {
         seoValidationByLanguage[primaryLang] = formatSeoValidationForLanguageMap_Updater_(vRes);
         storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage);
       } catch (eVal) {
-        Logger.log('Updater: Warning - Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)));
+        Logger.log('Updater: Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)));
+        throw eVal;
       }
 
       try {
@@ -773,7 +776,8 @@ function runUpdaterBatch() {
         storeTranslationUrlMap_Updater_(tripId, translationUrlMap);
         pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap);
       } catch (eUrlStorePrimary) {
-        Logger.log('Updater: Warning - Failed to store translation_url_map for primary: ' + (eUrlStorePrimary && eUrlStorePrimary.message ? eUrlStorePrimary.message : String(eUrlStorePrimary)));
+        Logger.log('Updater: Failed to store translation_url_map for primary: ' + (eUrlStorePrimary && eUrlStorePrimary.message ? eUrlStorePrimary.message : String(eUrlStorePrimary)));
+        throw eUrlStorePrimary;
       }
       
       // ----------------------------------------------------------
@@ -1467,7 +1471,8 @@ function runUpdaterBatch() {
               pushToWordPress_Updater_(transWpId, { meta: transMetaSchema });
               Logger.log('TRIP SCHEMA GENERATED (' + targetLang + ')');
             } catch (eSchemaTrans) {
-              Logger.log('Updater: Warning - Failed to generate schema for ' + targetLang + ': ' + eSchemaTrans.message);
+              Logger.log('Updater: Failed to generate schema for ' + targetLang + ': ' + eSchemaTrans.message);
+              throw eSchemaTrans;
             }
 
             try {
@@ -1477,7 +1482,8 @@ function runUpdaterBatch() {
               pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap);
               pushTranslationUrlMapMetaToWordPress_Updater_(transWpId, translationUrlMap);
             } catch (eTurl) {
-              Logger.log('Updater: Warning - Failed to update translation_url_map (' + targetLang + '): ' + (eTurl && eTurl.message ? eTurl.message : String(eTurl)));
+              Logger.log('Updater: Failed to update translation_url_map (' + targetLang + '): ' + (eTurl && eTurl.message ? eTurl.message : String(eTurl)));
+              throw eTurl;
             }
 
             try {
@@ -1494,7 +1500,8 @@ function runUpdaterBatch() {
               seoValidationByLanguage[targetLang] = formatSeoValidationForLanguageMap_Updater_(vResLang);
               storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage);
             } catch (eValLang) {
-              Logger.log('Updater: Warning - Failed to compute/store per-language SEO validation (' + targetLang + '): ' + (eValLang && eValLang.message ? eValLang.message : String(eValLang)));
+              Logger.log('Updater: Failed to compute/store per-language SEO validation (' + targetLang + '): ' + (eValLang && eValLang.message ? eValLang.message : String(eValLang)));
+              throw eValLang;
             }
 
             try {
@@ -1511,7 +1518,8 @@ function runUpdaterBatch() {
                 });
               }
             } catch (eImgMeta) {
-              Logger.log('Updater: Warning - Failed to localize image metadata for ' + targetLang + ': ' + eImgMeta.message);
+              Logger.log('Updater: Failed to localize image metadata for ' + targetLang + ': ' + eImgMeta.message);
+              throw eImgMeta;
             }
             
           } catch (eLang) {

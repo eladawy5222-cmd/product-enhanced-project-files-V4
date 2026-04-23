@@ -652,7 +652,8 @@ async function syncImagesToExistingTranslations_Updater_(tripId, primaryWpId, tr
         attachmentIdMap: attachmentIdMap
       });
     } catch (eImg) {
-      log('Updater: Warning - Failed to sync translated images for ' + langCode + ': ' + eImg.message);
+      log('Updater: Failed to sync translated images for ' + langCode + ': ' + eImg.message);
+      throw eImg
     }
   }
 }
@@ -838,7 +839,8 @@ async function runUpdaterBatch() {
         await pushToWordPress_Updater_(primaryWpId, { meta: primaryMetaSchema });
         log('TRIP SCHEMA GENERATED (' + primaryLang + ')');
       } catch (eSchemaPrimary) {
-        log('Updater: Warning - Failed to generate schema for primary: ' + eSchemaPrimary.message);
+        log('Updater: Failed to generate schema for primary: ' + eSchemaPrimary.message);
+        throw eSchemaPrimary;
       }
 
       try {
@@ -849,7 +851,8 @@ async function runUpdaterBatch() {
         seoValidationByLanguage[primaryLang] = formatSeoValidationForLanguageMap_Updater_(vRes)
         await storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage)
       } catch (eVal) {
-        log('Updater: Warning - Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)))
+        log('Updater: Failed to compute/store SEO validation: ' + (eVal && eVal.message ? eVal.message : String(eVal)))
+        throw eVal
       }
 
       try {
@@ -863,7 +866,8 @@ async function runUpdaterBatch() {
         await storeTranslationUrlMap_Updater_(tripId, translationUrlMap)
         await pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap)
       } catch (eUrlStorePrimary) {
-        log('Updater: Warning - Failed to store translation_url_map for primary: ' + (eUrlStorePrimary && eUrlStorePrimary.message ? eUrlStorePrimary.message : String(eUrlStorePrimary)))
+        log('Updater: Failed to store translation_url_map for primary: ' + (eUrlStorePrimary && eUrlStorePrimary.message ? eUrlStorePrimary.message : String(eUrlStorePrimary)))
+        throw eUrlStorePrimary
       }
       
       // ----------------------------------------------------------
@@ -1470,7 +1474,8 @@ async function runUpdaterBatch() {
               await pushToWordPress_Updater_(transWpId, { meta: transMetaSchema });
               log('TRIP SCHEMA GENERATED (' + targetLang + ')');
             } catch (eSchemaTrans) {
-              log('Updater: Warning - Failed to generate schema for ' + targetLang + ': ' + eSchemaTrans.message);
+              log('Updater: Failed to generate schema for ' + targetLang + ': ' + eSchemaTrans.message);
+              throw eSchemaTrans
             }
 
             try {
@@ -1480,7 +1485,8 @@ async function runUpdaterBatch() {
               await pushTranslationUrlMapMetaToWordPress_Updater_(primaryWpId, translationUrlMap)
               await pushTranslationUrlMapMetaToWordPress_Updater_(transWpId, translationUrlMap)
             } catch (eTurl) {
-              log('Updater: Warning - Failed to update translation_url_map (' + targetLang + '): ' + (eTurl && eTurl.message ? eTurl.message : String(eTurl)))
+              log('Updater: Failed to update translation_url_map (' + targetLang + '): ' + (eTurl && eTurl.message ? eTurl.message : String(eTurl)))
+              throw eTurl
             }
 
             try {
@@ -1497,7 +1503,8 @@ async function runUpdaterBatch() {
               seoValidationByLanguage[targetLang] = formatSeoValidationForLanguageMap_Updater_(vResLang)
               await storeSeoValidationByLanguageMap_Updater_(tripId, seoValidationByLanguage)
             } catch (eValLang) {
-              log('Updater: Warning - Failed to compute/store per-language SEO validation (' + targetLang + '): ' + (eValLang && eValLang.message ? eValLang.message : String(eValLang)))
+              log('Updater: Failed to compute/store per-language SEO validation (' + targetLang + '): ' + (eValLang && eValLang.message ? eValLang.message : String(eValLang)))
+              throw eValLang
             }
 
             try {
@@ -1514,7 +1521,8 @@ async function runUpdaterBatch() {
                 });
               }
             } catch (eImgMeta) {
-              log('Updater: Warning - Failed to localize image metadata for ' + targetLang + ': ' + eImgMeta.message);
+              log('Updater: Failed to localize image metadata for ' + targetLang + ': ' + eImgMeta.message);
+              throw eImgMeta
             }
             
           } catch (eLang) {
