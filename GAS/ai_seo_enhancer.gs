@@ -291,25 +291,61 @@ function detectUspSuffixFromTextSeoEn_(text) {
   return '';
 }
 
+function fixTripTypeCasingSeoEn_(text) {
+  var s = normalizeWhitespaceSeoEn_(text);
+  if (!s) return '';
+  s = s.replace(/\bday tour\b/ig, 'Day Tour');
+  return s;
+}
+
 function buildH1FromSeoSignalsSeoEn_(focusKeyword, seoTitle, tripTitle, uspSuffix) {
   var primary = normalizeWhitespaceSeoEn_(focusKeyword);
   if (!primary) primary = extractPrimaryFromTitleSeoEn_(seoTitle);
   if (!primary) primary = extractPrimaryFromTitleSeoEn_(tripTitle);
   if (!primary) primary = normalizeWhitespaceSeoEn_(seoTitle) || normalizeWhitespaceSeoEn_(tripTitle) || '';
   if (!primary) return '';
+  primary = fixTripTypeCasingSeoEn_(primary);
 
   var atts = extractAttractionsFromTitleSeoEn_(seoTitle);
   if (!atts.length) atts = extractAttractionsFromTitleSeoEn_(tripTitle);
-  var h1 = primary;
-  if (atts.length) h1 = primary + ': ' + joinListWithAmpSeoEn_(atts);
-  h1 = truncateAtWordBoundarySeoEn_(h1, 90);
-  h1 = stripTrailingPunctuationNoiseSeoEn_(h1);
+  var maxLen = 90;
   var usp = normalizeWhitespaceSeoEn_(uspSuffix);
-  if (usp) {
-    var candidate = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim();
-    if (candidate.length <= 90) h1 = candidate;
+
+  var base = primary;
+  if (atts.length) base = primary + ': ' + joinListWithAmpSeoEn_(atts);
+  base = truncateAtWordBoundarySeoEn_(base, maxLen);
+  base = stripTrailingPunctuationNoiseSeoEn_(base);
+
+  if (!usp) return base;
+  if ((/\blunch\b/i.test(usp) && /\bwith\s+lunch\b/i.test(base)) || (/\bhotel pickup\b/i.test(usp) && /\bhotel\s+pick\s*-?\s*up\b/i.test(base))) return base;
+
+  var reserved = usp.length + 1;
+  var baseMax = maxLen - reserved;
+  if (baseMax < 12) return base;
+
+  var best = '';
+  var startCount = Math.min(3, atts.length);
+  for (var n = startCount; n >= 0; n--) {
+    var b = primary;
+    if (n > 0) b = primary + ': ' + joinListWithAmpSeoEn_(atts.slice(0, n));
+    b = truncateAtWordBoundarySeoEn_(b, baseMax);
+    b = stripTrailingPunctuationNoiseSeoEn_(b);
+    if (!b) continue;
+    var cand = (b + ' ' + usp).replace(/\s+/g, ' ').trim();
+    if (cand.length <= maxLen) {
+      best = cand;
+      break;
+    }
   }
-  return h1;
+
+  if (!best) {
+    var b2 = truncateAtWordBoundarySeoEn_(primary, baseMax);
+    b2 = stripTrailingPunctuationNoiseSeoEn_(b2);
+    if (b2) best = (b2 + ' ' + usp).replace(/\s+/g, ' ').trim();
+  }
+
+  if (best) return best;
+  return base;
 }
 
 function tryUpdateImprovementH1FieldSeoEn_(improvementId, h1Value) {

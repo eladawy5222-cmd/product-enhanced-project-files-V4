@@ -433,6 +433,87 @@ function convEnf_buildUspSuffixFromFlags_(flags) {
   return ''
 }
 
+function convEnf_fixTripTypeCasing_(text) {
+  let s = convEnf_sanitizeSeoText_(text)
+  if (!s) return ''
+  s = s.replace(/\bday tour\b/ig, 'Day Tour')
+  return s
+}
+
+function convEnf_dedupeEgyptianPrefix_(text) {
+  let s = convEnf_sanitizeSeoText_(text)
+  if (!s) return ''
+  s = s.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ')
+  return s
+}
+
+function convEnf_normalizeCivMuseumText_(text) {
+  let s = convEnf_sanitizeSeoText_(text)
+  if (!s) return ''
+  s = convEnf_dedupeEgyptianPrefix_(s)
+  s = s.replace(/\b(Egyptian\s+)?Civilization Museum\b/gi, 'Egyptian Civilization Museum')
+  s = s.replace(/\bEgyptian Museum\b/gi, 'Egyptian Civilization Museum')
+  s = convEnf_dedupeEgyptianPrefix_(s)
+  return s
+}
+
+function convEnf_stripTrailingUspFragmentFromH1_(text) {
+  let s = convEnf_sanitizeSeoText_(text)
+  if (!s) return { main: '', tailLunch: false, tailPickup: false }
+  s = s.replace(/\s*&\s*$/g, '').trim()
+
+  const tailFull = /\bwith\s+lunch\s*&\s*hotel\s*pick-?up\b\s*$/i.test(s)
+  const tailLunch = tailFull || /\bwith\s+lunch\b\s*$/i.test(s)
+  const tailPickup = tailFull || /\bwith\s+hotel\s*pick-?up\b\s*$/i.test(s)
+
+  s = s.replace(/\bwith\s+lunch\s*&\s*hotel\s*pick-?up\b\s*$/i, '').trim()
+  s = s.replace(/\bwith\s+hotel\s*pick-?up\b\s*$/i, '').trim()
+  s = s.replace(/\bwith\s+lunch\b\s*$/i, '').trim()
+
+  s = s.replace(/\bwith\s+(?:l|lu|lun|lunc|h|ho|hot|hote|hotel)\s*$/i, '').trim()
+  s = s.replace(/\bwith\s*$/i, '').trim()
+  s = s.replace(/[|—–\-:;,]\s*$/g, '').trim()
+  s = s.replace(/\s*&\s*$/g, '').trim()
+
+  return { main: s, tailLunch, tailPickup }
+}
+
+function convEnf_truncateH1AtWordBoundary_(text, maxLen) {
+  const t = convEnf_sanitizeSeoText_(text)
+  if (!t) return ''
+  if (!maxLen || t.length <= maxLen) return t
+  const cut = t.slice(0, maxLen)
+  const lastSpace = cut.lastIndexOf(' ')
+  if (lastSpace >= 12) return cut.slice(0, lastSpace).trim().replace(/[,\-–—:;]\s*$/g, '')
+  return cut.trim().replace(/[,\-–—:;]\s*$/g, '')
+}
+
+function convEnf_forceUspSuffixIntoH1_(h1, flags) {
+  const raw = convEnf_dedupeEgyptianPrefix_(h1)
+  const split = convEnf_stripTrailingUspFragmentFromH1_(raw)
+  const base = split.main
+  if (!base) return ''
+
+  const uspFull = convEnf_buildUspSuffixFromFlags_(flags)
+  if (!uspFull) return convEnf_truncateH1AtWordBoundary_(base, 90).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
+
+  const maxLen = 90
+  const reserved = uspFull.length + 1
+  const baseMax = maxLen - reserved
+  if (baseMax < 12) return convEnf_truncateH1AtWordBoundary_(base, maxLen).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
+
+  let shortBase = convEnf_truncateH1AtWordBoundary_(base, baseMax)
+  shortBase = shortBase.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
+  shortBase = shortBase.replace(/\s*&\s*$/g, '').trim()
+  shortBase = shortBase.replace(/\bwith\s*$/i, '').trim()
+  if (!shortBase) return convEnf_truncateH1AtWordBoundary_(base, maxLen).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
+
+  let cand = (shortBase + ' ' + uspFull).replace(/\s+/g, ' ').trim()
+  cand = cand.replace(/\bwith\s+with\b/ig, 'with')
+  cand = cand.replace(/\s*&\s*$/g, '').trim()
+  return cand
+}
+
 function convEnf_buildH1Fallback_(payload, flags, seoTitle) {
   const p = payload || {}
   const trip = p.trip || {}
@@ -447,11 +528,8 @@ function convEnf_buildH1Fallback_(payload, flags, seoTitle) {
   if (atts.length) h1 = primary + ': ' + convEnf_joinListWithAmp_(atts)
   h1 = convEnf_truncateText_(h1, 90)
   h1 = h1.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
-  const usp = convEnf_buildUspSuffixFromFlags_(flags)
-  if (usp) {
-    const cand = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim()
-    if (cand.length <= 90) h1 = cand
-  }
+  h1 = convEnf_fixTripTypeCasing_(h1)
+  h1 = convEnf_forceUspSuffixIntoH1_(h1, flags)
   return h1
 }
 
@@ -471,7 +549,12 @@ function convEnf_finalizeSeoFields_(ai, payload, flags) {
 
   let h1Candidate = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiH1 || fallbackH1), flags)
   if (!h1Candidate || h1Candidate.length < 15) h1Candidate = convEnf_buildH1Fallback_(payload, flags, aiTitle || fallbackTitle)
-  h1Candidate = convEnf_truncateText_(convEnf_sanitizeSeoText_(h1Candidate), 90)
+  h1Candidate = convEnf_fixTripTypeCasing_(h1Candidate)
+  if (flags && flags.civ_context_slug) {
+    h1Candidate = convEnf_normalizeCivMuseumText_(h1Candidate)
+  }
+  h1Candidate = convEnf_forceUspSuffixIntoH1_(h1Candidate, flags)
+  h1Candidate = convEnf_truncateH1AtWordBoundary_(convEnf_sanitizeSeoText_(h1Candidate), 90)
   h1Candidate = h1Candidate.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
   out.h1 = h1Candidate
 
@@ -527,12 +610,18 @@ function convEnf_buildSeoEvidenceText_(payload) {
 function convEnf_optimizeSeoTitleForSerp_(title, payload, flags) {
   let t = convEnf_sanitizeSeoText_(title)
   if (!t) return ''
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ')
   const f = (flags && typeof flags === 'object') ? flags : {}
-  if (f.has_civ_museum && !/egyptian civilization museum/i.test(t) && /egyptian museum/i.test(t)) {
+  const civ = !!(f.civ_context_slug || f.has_civ_museum)
+  if (civ && /\bcivilization museum\b/i.test(t) && !/egyptian civilization museum/i.test(t)) {
+    t = t.replace(/\bCivilization Museum\b/ig, 'Egyptian Civilization Museum')
+  }
+  if (civ && !/egyptian civilization museum/i.test(t) && /egyptian museum/i.test(t)) {
     t = t.replace(/egyptian museum/ig, 'Egyptian Civilization Museum')
-  } else if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+  } else if (!civ && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
     t = t.replace(/egyptian civilization museum/ig, 'Egyptian Museum')
   }
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ')
   t = t.replace(/\s+and\s+/ig, ' & ')
   t = t.replace(/\s+/g, ' ').trim()
   const target = 60
@@ -558,21 +647,28 @@ function convEnf_optimizeSeoTitleForSerp_(title, payload, flags) {
 }
 
 function convEnf_optimizeMetaDescriptionForKeyword_(meta, payload, maxLen, flags) {
-  const t0 = convEnf_sanitizeSeoText_(meta)
-  if (!t0) return ''
+  let t = convEnf_sanitizeSeoText_(meta)
+  if (!t) return ''
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ')
   const f = (flags && typeof flags === 'object') ? flags : {}
-  if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t0)) {
-    const rep0 = convEnf_finalizeMetaDescriptionQuality_(t0.replace(/egyptian civilization museum/ig, 'Egyptian Museum'), maxLen)
+  const civ = !!(f.civ_context_slug || f.has_civ_museum)
+  if (!civ && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+    const rep0 = convEnf_finalizeMetaDescriptionQuality_(t.replace(/egyptian civilization museum/ig, 'Egyptian Museum'), maxLen)
     if (rep0 && rep0.length <= maxLen) return rep0
   }
-  if (!f.has_civ_museum) return t0
-  if (/egyptian civilization museum/i.test(t0) || /national museum of egyptian civilization/i.test(t0) || /museum of egyptian civilization/i.test(t0)) return t0
+  if (!civ) return t
+  if (/egyptian civilization museum/i.test(t) || /national museum of egyptian civilization/i.test(t) || /museum of egyptian civilization/i.test(t)) return t
   const keyword = 'Egyptian Civilization Museum'
-  if (/egyptian museum/i.test(t0)) {
-    const rep = convEnf_finalizeMetaDescriptionQuality_(t0.replace(/egyptian museum/i, keyword), maxLen)
+  if (/\bcivilization museum\b/i.test(t) && !/egyptian civilization museum/i.test(t)) {
+    const rep2 = convEnf_finalizeMetaDescriptionQuality_(t.replace(/\bCivilization Museum\b/i, keyword), maxLen)
+    if (rep2 && rep2.length <= maxLen) return rep2
+  }
+  if (/egyptian museum/i.test(t)) {
+    const rep = convEnf_finalizeMetaDescriptionQuality_(t.replace(/egyptian museum/i, keyword), maxLen)
     if (rep && rep.length <= maxLen) return rep
   }
-  return t0
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ')
+  return t
 }
 
 function convEnf_finalizeMetaDescriptionQuality_(s, maxLen) {
@@ -1155,6 +1251,8 @@ function convEnf_buildStandardContext_(payload) {
   ].filter(Boolean).join(' | '))
 
   const lc = strictEvidenceText.toLowerCase()
+  const slugLc = String(trip.Slug || '').toLowerCase()
+  const civFromSlug = (slugLc.indexOf('civilization') !== -1 && slugLc.indexOf('museum') !== -1) || /\bnmec\b/.test(slugLc)
   const flags = {
     has_nile: /\bnile\b/.test(lc),
     has_felucca: /\b(felucca|faluka)\b/.test(lc),
@@ -1168,7 +1266,8 @@ function convEnf_buildStandardContext_(payload) {
     has_lunch: /\blunch\b/.test(lc),
     has_pickup: /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/.test(lc),
     has_egyptian_museum: /\begyptian museum\b/.test(lc),
-    has_civ_museum: /\b(egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization)\b/.test(lc),
+    has_civ_museum: civFromSlug || /\b(egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization|civilization museum|nmec)\b/.test(lc),
+    civ_context_slug: civFromSlug,
     has_languages: /\b(language|languages|english|french|german|spanish|italian|arabic)\b/.test(lc),
     has_group_size: /\b(group size|max|maximum|small group|up to \d+|\d+ travelers|\d+ people|\d+ persons)\b/.test(lc)
   }

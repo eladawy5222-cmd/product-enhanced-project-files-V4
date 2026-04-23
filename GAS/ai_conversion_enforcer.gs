@@ -354,6 +354,8 @@ function convEnf_buildStandardContext_(payload) {
   ].filter(function(x) { return !!x; }).join(' | '));
 
   var lc = strictEvidenceText.toLowerCase();
+  var slugLc = String(trip.Slug || '').toLowerCase();
+  var civFromSlug = (slugLc.indexOf('civilization') !== -1 && slugLc.indexOf('museum') !== -1) || /\bnmec\b/.test(slugLc);
   var flags = {
     has_nile: /\bnile\b/.test(lc),
     has_felucca: /\b(felucca|faluka)\b/.test(lc),
@@ -367,7 +369,8 @@ function convEnf_buildStandardContext_(payload) {
     has_lunch: /\blunch\b/.test(lc),
     has_pickup: /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup)\b/.test(lc),
     has_egyptian_museum: /\begyptian museum\b/.test(lc),
-    has_civ_museum: /\b(egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization)\b/.test(lc),
+    has_civ_museum: civFromSlug || /\b(egyptian civilization museum|museum of egyptian civilization|national museum of egyptian civilization|civilization museum|nmec)\b/.test(lc),
+    civ_context_slug: civFromSlug,
     has_languages: /\b(language|languages|english|french|german|spanish|italian|arabic)\b/.test(lc),
     has_group_size: /\b(group size|max|maximum|small group|up to \d+|\d+ travelers|\d+ people|\d+ persons)\b/.test(lc)
   };
@@ -539,6 +542,87 @@ function convEnf_buildUspSuffixFromFlags_(flags) {
   return '';
 }
 
+function convEnf_fixTripTypeCasing_(text) {
+  var s = convEnf_sanitizeSeoText_(text);
+  if (!s) return '';
+  s = s.replace(/\bday tour\b/ig, 'Day Tour');
+  return s;
+}
+
+function convEnf_dedupeEgyptianPrefix_(text) {
+  var s = convEnf_sanitizeSeoText_(text);
+  if (!s) return '';
+  s = s.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ');
+  return s;
+}
+
+function convEnf_normalizeCivMuseumText_(text) {
+  var s = convEnf_sanitizeSeoText_(text);
+  if (!s) return '';
+  s = convEnf_dedupeEgyptianPrefix_(s);
+  s = s.replace(/\b(Egyptian\s+)?Civilization Museum\b/gi, 'Egyptian Civilization Museum');
+  s = s.replace(/\bEgyptian Museum\b/gi, 'Egyptian Civilization Museum');
+  s = convEnf_dedupeEgyptianPrefix_(s);
+  return s;
+}
+
+function convEnf_stripTrailingUspFragmentFromH1_(text) {
+  var s = convEnf_sanitizeSeoText_(text);
+  if (!s) return { main: '', tailLunch: false, tailPickup: false };
+  s = s.replace(/\s*&\s*$/g, '').trim();
+
+  var tailFull = /\bwith\s+lunch\s*&\s*hotel\s*pick-?up\b\s*$/i.test(s);
+  var tailLunch = tailFull || /\bwith\s+lunch\b\s*$/i.test(s);
+  var tailPickup = tailFull || /\bwith\s+hotel\s*pick-?up\b\s*$/i.test(s);
+
+  s = s.replace(/\bwith\s+lunch\s*&\s*hotel\s*pick-?up\b\s*$/i, '').trim();
+  s = s.replace(/\bwith\s+hotel\s*pick-?up\b\s*$/i, '').trim();
+  s = s.replace(/\bwith\s+lunch\b\s*$/i, '').trim();
+
+  s = s.replace(/\bwith\s+(?:l|lu|lun|lunc|h|ho|hot|hote|hotel)\s*$/i, '').trim();
+  s = s.replace(/\bwith\s*$/i, '').trim();
+  s = s.replace(/[|—–\-:;,]\s*$/g, '').trim();
+  s = s.replace(/\s*&\s*$/g, '').trim();
+
+  return { main: s, tailLunch: tailLunch, tailPickup: tailPickup };
+}
+
+function convEnf_truncateH1AtWordBoundary_(text, maxLen) {
+  var t = convEnf_sanitizeSeoText_(text);
+  if (!t) return '';
+  if (!maxLen || t.length <= maxLen) return t;
+  var cut = t.substring(0, maxLen);
+  var lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace >= 12) return cut.substring(0, lastSpace).trim().replace(/[,\-–—:;]\s*$/g, '');
+  return cut.trim().replace(/[,\-–—:;]\s*$/g, '');
+}
+
+function convEnf_forceUspSuffixIntoH1_(h1, flags) {
+  var raw = convEnf_dedupeEgyptianPrefix_(h1);
+  var split = convEnf_stripTrailingUspFragmentFromH1_(raw);
+  var base = split.main;
+  if (!base) return '';
+
+  var uspFull = convEnf_buildUspSuffixFromFlags_(flags);
+  if (!uspFull) return convEnf_truncateH1AtWordBoundary_(base, 90).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+
+  var maxLen = 90;
+  var reserved = uspFull.length + 1;
+  var baseMax = maxLen - reserved;
+  if (baseMax < 12) return convEnf_truncateH1AtWordBoundary_(base, maxLen).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+
+  var shortBase = convEnf_truncateH1AtWordBoundary_(base, baseMax);
+  shortBase = shortBase.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+  shortBase = shortBase.replace(/\s*&\s*$/g, '').trim();
+  shortBase = shortBase.replace(/\bwith\s*$/i, '').trim();
+  if (!shortBase) return convEnf_truncateH1AtWordBoundary_(base, maxLen).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
+
+  var cand = (shortBase + ' ' + uspFull).replace(/\s+/g, ' ').trim();
+  cand = cand.replace(/\bwith\s+with\b/ig, 'with');
+  cand = cand.replace(/\s*&\s*$/g, '').trim();
+  return cand;
+}
+
 function convEnf_buildH1Fallback_(payload, flags, seoTitle) {
   var p = payload || {};
   var trip = p.trip || {};
@@ -553,11 +637,8 @@ function convEnf_buildH1Fallback_(payload, flags, seoTitle) {
   if (atts.length) h1 = primary + ': ' + convEnf_joinListWithAmp_(atts);
   h1 = convEnf_truncateText_(h1, 90);
   h1 = h1.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
-  var usp = convEnf_buildUspSuffixFromFlags_(flags);
-  if (usp) {
-    var cand = (h1 + ' ' + usp).replace(/\s+/g, ' ').trim();
-    if (cand.length <= 90) h1 = cand;
-  }
+  h1 = convEnf_fixTripTypeCasing_(h1);
+  h1 = convEnf_forceUspSuffixIntoH1_(h1, flags);
   return h1;
 }
 
@@ -577,7 +658,12 @@ function convEnf_finalizeSeoFields_(ai, payload, flags) {
 
   var h1Candidate = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiH1 || fallbackH1), flags);
   if (!h1Candidate || h1Candidate.length < 15) h1Candidate = convEnf_buildH1Fallback_(payload, flags, aiTitle || fallbackTitle);
-  h1Candidate = convEnf_truncateText_(convEnf_sanitizeSeoText_(h1Candidate), 90);
+  h1Candidate = convEnf_fixTripTypeCasing_(h1Candidate);
+  if (flags && flags.civ_context_slug) {
+    h1Candidate = convEnf_normalizeCivMuseumText_(h1Candidate);
+  }
+  h1Candidate = convEnf_forceUspSuffixIntoH1_(h1Candidate, flags);
+  h1Candidate = convEnf_truncateH1AtWordBoundary_(convEnf_sanitizeSeoText_(h1Candidate), 90);
   h1Candidate = h1Candidate.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim();
   out.h1 = h1Candidate;
 
@@ -633,12 +719,18 @@ function convEnf_buildSeoEvidenceText_(payload) {
 function convEnf_optimizeSeoTitleForSerp_(title, payload, flags) {
   var t = convEnf_sanitizeSeoText_(title);
   if (!t) return '';
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ');
   var f = (flags && typeof flags === 'object') ? flags : {};
-  if (f.has_civ_museum && !/egyptian civilization museum/i.test(t) && /egyptian museum/i.test(t)) {
+  var civ = !!(f.civ_context_slug || f.has_civ_museum);
+  if (civ && /\bcivilization museum\b/i.test(t) && !/egyptian civilization museum/i.test(t)) {
+    t = t.replace(/\bCivilization Museum\b/ig, 'Egyptian Civilization Museum');
+  }
+  if (civ && !/egyptian civilization museum/i.test(t) && /egyptian museum/i.test(t)) {
     t = t.replace(/egyptian museum/ig, 'Egyptian Civilization Museum');
-  } else if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+  } else if (!civ && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
     t = t.replace(/egyptian civilization museum/ig, 'Egyptian Museum');
   }
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ');
   t = t.replace(/\s+and\s+/ig, ' & ');
   t = t.replace(/\s+/g, ' ').trim();
   var target = 60;
@@ -666,20 +758,28 @@ function convEnf_optimizeSeoTitleForSerp_(title, payload, flags) {
 function convEnf_optimizeMetaDescriptionForKeyword_(meta, payload, maxLen, flags) {
   var t = convEnf_sanitizeSeoText_(meta);
   if (!t) return '';
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ');
   var f = (flags && typeof flags === 'object') ? flags : {};
-  if (!f.has_civ_museum && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
+  var civ = !!(f.civ_context_slug || f.has_civ_museum);
+  if (!civ && f.has_egyptian_museum && /egyptian civilization museum/i.test(t)) {
     var rep0 = t.replace(/egyptian civilization museum/ig, 'Egyptian Museum');
     rep0 = convEnf_finalizeMetaDescriptionQuality_(rep0, maxLen);
     if (rep0 && rep0.length <= maxLen) return rep0;
   }
-  if (!f.has_civ_museum) return t;
+  if (!civ) return t;
   if (/egyptian civilization museum/i.test(t) || /national museum of egyptian civilization/i.test(t) || /museum of egyptian civilization/i.test(t)) return t;
   var keyword = 'Egyptian Civilization Museum';
+  if (/\bcivilization museum\b/i.test(t) && !/egyptian civilization museum/i.test(t)) {
+    var rep2 = t.replace(/\bCivilization Museum\b/i, keyword);
+    rep2 = convEnf_finalizeMetaDescriptionQuality_(rep2, maxLen);
+    if (rep2 && rep2.length <= maxLen) return rep2;
+  }
   if (/egyptian museum/i.test(t)) {
     var rep = t.replace(/egyptian museum/i, keyword);
     rep = convEnf_finalizeMetaDescriptionQuality_(rep, maxLen);
     if (rep && rep.length <= maxLen) return rep;
   }
+  t = t.replace(/\b(Egyptian\s+){2,}/gi, 'Egyptian ');
   return t;
 }
 
