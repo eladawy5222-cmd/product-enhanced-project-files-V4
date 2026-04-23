@@ -149,6 +149,15 @@ function abortIfIncompleteLookup_Updater_(tripId, checks) {
   }
 }
 
+function shouldUseFullTableFallback_Updater_(tableName, linkFieldName) {
+  var key = String(tableName || '') + '::' + String(linkFieldName || '');
+  var strictMap = {
+    'Improvement With AI::Trip': true,
+    'TripDetails::Trip': true
+  };
+  return !strictMap[key];
+}
+
 function airtableGetCached_Updater_(tableName, params, opts) {
   opts = opts || {};
   var key = buildUpdaterCacheKey_(tableName, params);
@@ -1781,21 +1790,21 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   }
   
   // 2. Highlights (One-to-Many)
-  data.highlights = findRecordsByLinkedId_Updater_(UPDATER_HIGHLIGHTS_IMPROVEMENT_TABLE, 'Trip', tripId, 'Order');
+  data.highlights = findRecordsByLinkedIdStrict_Updater_(UPDATER_HIGHLIGHTS_IMPROVEMENT_TABLE, 'Trip', tripId, 'Order');
   
   // 3. Itinerary (One-to-Many)
-  data.itinerary = findRecordsByLinkedId_Updater_(UPDATER_ITINERARY_IMPROVEMENT_TABLE, 'Trip', tripId, 'StepOrder');
+  data.itinerary = findRecordsByLinkedIdStrict_Updater_(UPDATER_ITINERARY_IMPROVEMENT_TABLE, 'Trip', tripId, 'StepOrder');
   
   // 4. FAQs (One-to-Many)
-  data.faqs = findRecordsByLinkedId_Updater_(UPDATER_FAQS_IMPROVEMENT_TABLE, 'Trip', tripId);
+  data.faqs = findRecordsByLinkedIdStrict_Updater_(UPDATER_FAQS_IMPROVEMENT_TABLE, 'Trip', tripId);
   
   // 5. Includes/Excludes (One-to-Many)
-  data.includes = findRecordsByLinkedId_Updater_(UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
-  data.excludes = findRecordsByLinkedId_Updater_(UPDATER_TRIP_EXCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
+  data.includes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
+  data.excludes = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_EXCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
   
   // 6. Facts (One-to-Many)
   try {
-    data.facts = findRecordsByLinkedId_Updater_(UPDATER_TRIP_FACTS_IMPROVEMENT_TABLE, 'Trip', tripId);
+    data.facts = findRecordsByLinkedIdStrict_Updater_(UPDATER_TRIP_FACTS_IMPROVEMENT_TABLE, 'Trip', tripId);
   } catch (e) {
     Logger.log('Updater: Warning - Failed to fetch Trip Facts: ' + e.message);
     data.facts = [];
@@ -1803,7 +1812,7 @@ function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   
   // 7. AddOns (One-to-Many)
   try {
-    data.addons = findRecordsByLinkedId_Updater_(UPDATER_ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId);
+    data.addons = findRecordsByLinkedIdStrict_Updater_(UPDATER_ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId);
   } catch (e) {
      Logger.log('Updater: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
@@ -2056,6 +2065,7 @@ function classifyTripTypes_Updater_(tripId, tripFields, aiImprovementFields) {
 // Helper: Find SINGLE record by Linked Record ID (Client-Side) with Pagination
 function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
   var state = {
+    lookupMode: 'single',
     recordsCount: 0,
     formulaQuotaHit: false,
     cacheQuotaHit: false,
@@ -2108,6 +2118,11 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
     if (offset) Utilities.sleep(50);
   } while (offset);
 
+  if (!shouldUseFullTableFallback_Updater_(tableName, linkFieldName)) {
+    setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
+    return null;
+  }
+
   var cached = getAllAirtableRecordsCached_Updater_(tableName);
   var cacheMeta = UPDATER_AIRTABLE_TABLE_CACHE_META[String(tableName || '')] || {};
   state.usedFallback = true;
@@ -2140,6 +2155,7 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId) {
 // Modified to support PAGINATION to ensure we scan all records, not just the first page.
 function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sortField) {
   var matches = [];
+  var useFallback = shouldUseFullTableFallback_Updater_(tableName, linkFieldName);
   var state = {
     recordsCount: 0,
     formulaQuotaHit: false,
@@ -2184,7 +2200,7 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
     if (offset) Utilities.sleep(50);
   } while (offset);
 
-  if (matches.length === 0) {
+  if (matches.length === 0 && useFallback) {
     var cached = getAllAirtableRecordsCached_Updater_(tableName);
     var cacheMeta2 = UPDATER_AIRTABLE_TABLE_CACHE_META[String(tableName || '')] || {};
     state.usedFallback = true;
@@ -2200,6 +2216,10 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
       }
     }
   }
+
+  if (matches.length === 0 && !useFallback) {
+    state.usedFallback = false;
+  }
   
   // Sort if needed
   if (sortField && matches.length > 0) {
@@ -2214,6 +2234,61 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
     });
   }
   
+  state.recordsCount = matches.length;
+  setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
+  return matches;
+}
+
+function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId, sortField) {
+  var matches = [];
+  var state = {
+    recordsCount: 0,
+    formulaQuotaHit: false,
+    cacheQuotaHit: false,
+    pageCapHit: false,
+    partial: false,
+    usedFallback: false
+  };
+  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var offset = null;
+  do {
+    var params = { pageSize: 100, filterByFormula: formula };
+    if (offset) params.offset = offset;
+    var res = null;
+    try {
+      res = airtableGet_(tableName, params);
+    } catch (e) {
+      var msg = e && e.message ? String(e.message) : String(e);
+      if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
+        Logger.log('Updater: Airtable strict lookup skipped invalid filterByFormula for table ' + tableName + ' field ' + linkFieldName);
+        break;
+      }
+      if (isQuotaLikeError_Updater_(e)) {
+        state.formulaQuotaHit = true;
+        state.partial = true;
+        Logger.log('Updater: Strict linked lookup aborted for ' + tableName + ' due to quota/rate-limit: ' + msg);
+        setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
+        return matches;
+      }
+      throw e;
+    }
+    if (res && res.records) {
+      for (var i = 0; i < res.records.length; i++) {
+        var rec = res.records[i];
+        var links = rec.fields[linkFieldName];
+        if (links && Array.isArray(links) && links.indexOf(targetId) !== -1) matches.push(rec);
+      }
+    }
+    offset = res ? res.offset : null;
+    if (offset) Utilities.sleep(50);
+  } while (offset);
+  if (sortField && matches.length > 0) {
+    matches.sort(function(a, b) {
+      var valA = a.fields[sortField], valB = b.fields[sortField];
+      if (typeof valA === 'number' && typeof valB === 'number') return valA - valB;
+      return String(valA || '').localeCompare(String(valB || ''));
+    });
+  }
   state.recordsCount = matches.length;
   setLookupState_Updater_(tableName, linkFieldName, targetId, 'multi', state);
   return matches;
