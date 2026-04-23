@@ -461,6 +461,7 @@ function convEnf_stripTrailingUspFragmentFromH1_(text) {
   let s = convEnf_sanitizeSeoText_(text)
   if (!s) return { main: '', tailLunch: false, tailPickup: false }
   s = s.replace(/\s*&\s*$/g, '').trim()
+  s = s.replace(/\bwith\s+lunch\s*&\s*(?:h|ho|hot|hote|hotel)?\s*$/i, '').trim()
 
   const tailFull = /\bwith\s+lunch\s*&\s*hotel\s*pick-?up\b\s*$/i.test(s)
   const tailLunch = tailFull || /\bwith\s+lunch\b\s*$/i.test(s)
@@ -488,6 +489,44 @@ function convEnf_truncateH1AtWordBoundary_(text, maxLen) {
   return cut.trim().replace(/[,\-–—:;]\s*$/g, '')
 }
 
+function convEnf_finalizeH1Quality_(h1, maxLen, src) {
+  let t = convEnf_sanitizeSeoText_(h1)
+  if (!t) return ''
+  const n = (typeof maxLen === 'number' && Number.isFinite(maxLen) && maxLen > 0) ? Math.floor(maxLen) : 0
+  const source = String(src || '')
+  for (let i = 0; i < 4; i++) {
+    t = t.replace(/\s+[|—–\-:;,]\s*$/g, '').trim()
+    t = t.replace(/\s*[|—–\-:;,]+\s*$/g, '').trim()
+    t = t.replace(/\s*\+\s*$/g, '').trim()
+    t = t.replace(/\s*&\s*$/g, '').trim()
+    t = t.replace(/\bwith\s+(?:l|lu|lun|lunc|h|ho|hot|hote|hotel)\s*$/i, '').trim()
+    t = t.replace(/\bwith\s*$/i, '').trim()
+    t = t.replace(/\b(and|or|but)\s*$/i, '').trim()
+  }
+  if (/old cairo/i.test(source)) {
+    t = t.replace(/\bold\s+cair\b/ig, 'Old Cairo')
+    t = t.replace(/\bold\s+cai\b/ig, 'Old Cairo')
+  }
+  if (/\bold\s+cai(?:r)?$/i.test(t) && !/\bold\s+cairo$/i.test(t)) {
+    if (/old cairo/i.test(source)) {
+      const rep = t.replace(/\bold\s+cai(?:r)?$/i, 'Old Cairo')
+      if (!n || rep.length <= n) t = rep
+      else t = t.replace(/\bold\s+cai(?:r)?$/i, 'Old').trim()
+    }
+  }
+  if (/\bold$/i.test(t)) {
+    if (/old cairo/i.test(source)) {
+      if (!n || t.length + 6 <= n) t = (t + ' Cairo').trim()
+      else t = t.replace(/\bold$/i, '').replace(/[,&]\s*$/g, '').trim()
+    }
+  }
+  t = t.replace(/\bwith\s+with\b/ig, 'with')
+  if (n && t.length > n) t = convEnf_truncateH1AtWordBoundary_(t, n)
+  t = t.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
+  t = t.replace(/\s*&\s*$/g, '').trim()
+  return t
+}
+
 function convEnf_forceUspSuffixIntoH1_(h1, flags) {
   const raw = convEnf_dedupeEgyptianPrefix_(h1)
   const split = convEnf_stripTrailingUspFragmentFromH1_(raw)
@@ -505,6 +544,7 @@ function convEnf_forceUspSuffixIntoH1_(h1, flags) {
   let shortBase = convEnf_truncateH1AtWordBoundary_(base, baseMax)
   shortBase = shortBase.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
   shortBase = shortBase.replace(/\s*&\s*$/g, '').trim()
+  shortBase = shortBase.replace(/\bwith\s+(?:l|lu|lun|lunc|h|ho|hot|hote|hotel)\s*$/i, '').trim()
   shortBase = shortBase.replace(/\bwith\s*$/i, '').trim()
   if (!shortBase) return convEnf_truncateH1AtWordBoundary_(base, maxLen).replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
 
@@ -556,7 +596,8 @@ function convEnf_finalizeSeoFields_(ai, payload, flags) {
   h1Candidate = convEnf_forceUspSuffixIntoH1_(h1Candidate, flags)
   h1Candidate = convEnf_truncateH1AtWordBoundary_(convEnf_sanitizeSeoText_(h1Candidate), 90)
   h1Candidate = h1Candidate.replace(/[|—–\-:;,]\s*$/g, '').replace(/[.!?]+$/g, '').trim()
-  out.h1 = h1Candidate
+  const h1Src = String((payload && payload.trip ? payload.trip.Title : '') || '') + ' ' + String(aiH1 || '') + ' ' + String(aiTitle || '')
+  out.h1 = convEnf_finalizeH1Quality_(h1Candidate, 90, h1Src)
 
   out.title = convEnf_removeUnsupportedHighRiskParts_(convEnf_sanitizeSeoText_(aiTitle || fallbackTitle), flags)
   if (!out.title || out.title.length < 20) out.title = convEnf_sanitizeSeoText_(fallbackTitle)

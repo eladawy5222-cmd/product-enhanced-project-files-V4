@@ -189,7 +189,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         }
         ?>
         <?php if ( ! empty( $packages_list ) ) : ?>
-        <p class="fts-v2-section-subtitle"><?php echo esc_html__( 'All packages include flights, transfers, guide & lunch', 'fts' ); ?></p>
+        <p class="fts-v2-section-subtitle"><?php echo esc_html__( 'Compare inclusions like transfers, guide & lunch below.', 'fts' ); ?></p>
         <div class="fts-v2-packages-grid">
             <?php foreach ( $packages_list as $pkg ) :
                 $card_cls = 'fts-v2-package-card';

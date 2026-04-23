@@ -7128,6 +7128,7 @@ function normalizeSeoHeadTextForQuality_Updater_(s) {
   var x = String(s || '').replace(/\s+/g, ' ').trim();
   x = x.replace(/\s+[|—–\-:;,]\s*$/g, '');
   x = x.replace(/\s*[|—–\-:;,]+\s*$/g, '');
+  x = x.replace(/\s*\+\s*$/g, '');
   x = x.replace(/\s*&\s*$/g, '');
   x = x.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '');
   x = x.replace(/\s+/g, ' ').trim();
@@ -7997,6 +7998,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   else if (meta.rank_math_title && typeof meta.rank_math_title === 'object') seoTitleRaw = String(meta.rank_math_title);
   else if (meta.rank_math_title) seoTitleRaw = meta.rank_math_title;
   var title = String(aiSeoTitle || seoTitleRaw || core.title || '').trim();
+  title = normalizeSeoHeadTextForQuality_Updater_(title);
   var url = String(core.permalink || core.link || '').trim();
 
   var descRaw = '';
@@ -8008,7 +8010,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
   else if (core.content_html) descRaw = core.content_html;
 
   var description = String(descRaw || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  description = truncateAtWordBoundary_Updater_(description, 240);
+  description = upd_finalizeSeoMetaDescription_Updater_(description, 240);
   if (lang === 'en') {
     var titleSrc = aiSeoTitle ? 'AI_SEO_Title' : (seoTitleRaw ? 'rank_math_title' : (core.title ? 'core.title' : 'missing'));
     var descSrc = (aiSeoDesc ? 'AI_SEO_Meta_Description' : (meta.rank_math_description ? 'rank_math_description' : (core.excerpt ? 'core.excerpt' : (core.content_html ? 'core.content_html' : 'missing'))));
@@ -8052,13 +8054,11 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
     if (offersResolved.source === 'Prices') Logger.log('SCHEMA BYPASSED PACKAGES FALLBACK (en, TouristTrip): used Prices');
   }
 
-  var durationText = '';
+  var durationIso = '';
   if (general.duration && (general.duration.hours || general.duration.minutes)) {
     var h = Number(general.duration.hours || 0);
     var m = Number(general.duration.minutes || 0);
-    if (h && m) durationText = h + 'h ' + m + 'm';
-    else if (h) durationText = h + 'h';
-    else if (m) durationText = m + 'm';
+    if (h || m) durationIso = 'PT' + (h ? (h + 'H') : '') + (m ? (m + 'M') : '');
   }
 
   var destinationName = '';
@@ -8182,7 +8182,7 @@ function generateTripSchema_Updater_(tripData, targetLang, opts) {
     "inLanguage": String(targetLang || '').trim() || undefined,
     "offers": offers,
     "itinerary": itineraryObj,
-    "duration": durationText || undefined
+    "duration": durationIso || undefined
   };
 
   Object.keys(schema).forEach(function(k) { if (schema[k] === undefined) delete schema[k]; });
