@@ -1,0 +1,36 @@
+*** Begin Patch
+*** Update File: GAS/utils_http.gs
+@@
+ function fetch_(url, options) {
+-  var response = UrlFetchApp.fetch(url, options);
+-  return response;
++  // Add retry logic to handle Airtable bandwidth quota errors.
++  // When Airtable returns a "Bandwidth quota exceeded" error, wait and retry.
++  var maxRetries = 3;
++  var waitMs = 1000;
++  var response;
++  for (var i = 0; i < maxRetries; i++) {
++    try {
++      response = UrlFetchApp.fetch(url, options);
++      // If fetch succeeds, break out of retry loop.
++      break;
++    } catch (e) {
++      var errMsg = String(e);
++      // Detect bandwidth quota exceeded error and backoff before retrying.
++      if (errMsg.indexOf('Bandwidth quota exceeded') !== -1) {
++        Logger.log('Bandwidth quota exceeded, retrying after ' + waitMs + ' ms...');
++        Utilities.sleep(waitMs);
++        // Increase wait time for next retry (exponential backoff).
++        waitMs *= 2;
++        continue;
++      }
++      // Propagate other errors immediately.
++      throw e;
++    }
++  }
++  if (!response) {
++    // Last attempt if no response yet; may throw error.
++    response = UrlFetchApp.fetch(url, options);
++  }
++  return response;
+*** End Patch

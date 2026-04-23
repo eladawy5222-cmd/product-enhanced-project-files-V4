@@ -34,6 +34,7 @@ function createHttpClient(options) {
         err.status = status
         err.headers = resp.headers || {}
         err.body = resp.data
+        err.isBandwidthQuotaExceeded = bodyText && bodyText.includes('Bandwidth quota exceeded')
         const ra = err.headers && (err.headers['retry-after'] || err.headers['Retry-After'])
         if (ra != null) {
           const raw = String(ra).trim()
@@ -45,6 +46,12 @@ function createHttpClient(options) {
           }
         }
 
+        if ((status === 429 || status === 403) && err.isBandwidthQuotaExceeded && attempt < retries - 1) {
+          const baseWait = Math.max(backoff, 1000) * Math.pow(2, attempt)
+          const waitMs = Number.isFinite(err.retryAfterMs) ? Math.max(baseWait, err.retryAfterMs) : baseWait
+          await sleep(waitMs)
+          continue
+        }
         if (status >= 500 && attempt < retries - 1) {
           await sleep(backoff * Math.pow(2, attempt))
           continue
@@ -52,7 +59,7 @@ function createHttpClient(options) {
         throw err
       } catch (err) {
         if (debug && logger) logger.warn(`HTTP error for ${url} attempt ${attempt}: ${String(err && err.message ? err.message : err)}`)
-        if (err && err.status === 429) throw err
+        if (err && err.status === 429 && !err.isBandwidthQuotaExceeded) throw err
         if (attempt >= retries - 1) throw err
         await sleep(backoff * Math.pow(2, attempt))
       }
