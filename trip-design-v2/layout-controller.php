@@ -589,6 +589,7 @@ class FTS_Trip_Redesign_V2 {
         $cost_excludes = $cost_data['cost_excludes'] ?? '';
 
         $trip_facts = self::build_trip_facts( $duration_text, $at_a_glance, $group_text, $cost_includes, $cost_excludes );
+        $trip_facts = array_intersect_key( $trip_facts, array_flip( array( 'duration', 'meeting_point', 'group_size', 'includes', 'excludes' ) ) );
         $trip_fact_items = self::build_trip_fact_items( $trip_facts );
         $booking_modal_subtitle = self::build_booking_modal_subtitle( $trip_facts );
 

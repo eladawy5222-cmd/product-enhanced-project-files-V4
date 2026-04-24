@@ -171,73 +171,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
     <!-- ==================== PRICING / PACKAGES ==================== -->
     <section id="fts-v2-sec-pricing" class="fts-v2-section">
-        <h2 class="fts-v2-section-title"><?php echo esc_html__( 'Choose Your Package', 'fts' ); ?></h2>
-        <?php
-        $has_packages = false;
-        $packages     = null;
-        $primary_id   = 0;
-        if ( $trip_obj && method_exists( $trip_obj, 'has_package' ) ) {
-            try {
-                $has_packages = $trip_obj->has_package();
-                if ( $has_packages && method_exists( $trip_obj, 'packages' ) ) {
-                    $packages   = $trip_obj->packages();
-                    $primary_id = $trip_obj->get_meta( 'primary_package' );
-                }
-            } catch ( \Throwable $e ) {
-                $has_packages = false;
-            }
-        }
-        ?>
-        <?php if ( ! empty( $packages_list ) ) : ?>
-        <p class="fts-v2-section-subtitle"><?php echo esc_html__( 'Compare inclusions like transfers, guide & lunch below.', 'fts' ); ?></p>
-        <div class="fts-v2-packages-grid">
-            <?php foreach ( $packages_list as $pkg ) :
-                $card_cls = 'fts-v2-package-card';
-                if ( $pkg['badge'] === 'most_popular' ) $card_cls .= ' fts-v2-package-popular';
-                if ( $pkg['badge'] === 'best_value' )   $card_cls .= ' fts-v2-package-best-value';
-            ?>
-            <div class="<?php echo esc_attr( $card_cls ); ?>">
-                <?php if ( $pkg['badge'] === 'most_popular' ) : ?>
-                <div class="fts-v2-package-badge fts-v2-badge-popular"><span>&#9733;</span> <?php echo esc_html__( 'Most Popular', 'fts' ); ?></div>
-                <?php elseif ( $pkg['badge'] === 'best_value' ) : ?>
-                <div class="fts-v2-package-badge fts-v2-badge-value"><span>&#9889;</span> <?php echo esc_html__( 'Best Value', 'fts' ); ?></div>
-                <?php endif; ?>
-
-                <h3 class="fts-v2-package-name"><?php echo esc_html( $pkg['name'] ); ?></h3>
-                <?php if ( ! empty( $pkg['description'] ) ) : ?>
-                <p class="fts-v2-package-desc"><?php echo esc_html( $pkg['description'] ); ?></p>
-                <?php endif; ?>
-
-                <div class="fts-v2-package-price">
-                    <?php if ( $pkg['old_price'] > 0 ) : ?>
-                    <span class="fts-v2-pkg-old"><?php echo wte_get_formated_price( $pkg['old_price'] ); ?></span>
-                    <?php endif; ?>
-                    <span class="fts-v2-pkg-current"><?php echo wte_get_formated_price( $pkg['display_price'] ); ?></span>
-                    <span class="fts-v2-pkg-per"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
-                </div>
-
-                <?php if ( ! empty( $pkg['features'] ) ) : ?>
-                <ul class="fts-v2-package-features">
-                    <?php foreach ( $pkg['features'] as $feat ) : ?>
-                    <li>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                        <?php echo esc_html( $feat ); ?>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-                <?php endif; ?>
-
-                <a href="#" class="fts-v2-package-select-btn fts-bm-trigger" data-package-id="<?php echo esc_attr( $pkg['id'] ); ?>"><?php echo esc_html__( 'Select Package', 'fts' ); ?></a>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php else : ?>
+        <h2 class="fts-v2-section-title"><?php echo esc_html__( 'Pricing', 'fts' ); ?></h2>
         <div class="fts-v2-single-price-card">
             <div class="fts-v2-booking-form-wrap">
                 <?php do_action( 'wp_travel_engine_trip_price' ); ?>
             </div>
         </div>
-        <?php endif; ?>
     </section>
 
     <!-- ==================== PHOTO GALLERY ==================== -->
@@ -263,38 +202,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <?php if ( $has_reviews ) : ?>
     <section id="fts-v2-sec-reviews" class="fts-v2-section">
         <h2 class="fts-v2-section-title"><?php echo esc_html__( 'What Travelers Say', 'fts' ); ?></h2>
-
-        <?php if ( $review_count > 0 ) : ?>
-        <div class="fts-v2-reviews-header">
-            <div class="fts-v2-reviews-score">
-                <span class="fts-v2-score-num"><?php echo number_format( $avg_rating, 1 ); ?></span>
-                <div class="fts-v2-score-stars">
-                    <?php for ( $i = 1; $i <= 5; $i++ ) : ?>
-                        <i class="fa fa-star<?php echo $i <= round( $avg_rating ) ? '' : '-o'; ?>"></i>
-                    <?php endfor; ?>
-                </div>
-                <span class="fts-v2-score-count">(<?php echo intval( $review_count ); ?>)</span>
-            </div>
-        </div>
-        <div class="fts-v2-reviews-list">
-            <?php foreach ( array_slice( $reviews, 0, 6 ) as $rev ) : ?>
-            <div class="fts-v2-review-card">
-                <div class="fts-v2-review-header">
-                    <div class="fts-v2-review-avatar"><?php echo mb_strtoupper( mb_substr( $rev['title'] ?: 'R', 0, 1 ) ); ?></div>
-                    <div class="fts-v2-review-meta">
-                        <strong><?php echo esc_html( $rev['title'] ?: __( 'Traveler', 'fts' ) ); ?></strong>
-                        <div class="fts-v2-review-stars">
-                            <?php for ( $s = 1; $s <= 5; $s++ ) : ?>
-                                <i class="fa fa-star<?php echo $s <= ( $rev['stars'] ?? 5 ) ? '' : '-o'; ?>"></i>
-                            <?php endfor; ?>
-                        </div>
-                    </div>
-                </div>
-                <p class="fts-v2-review-text"><?php echo esc_html( wp_trim_words( $rev['content'] ?? '', 40 ) ); ?></p>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
 
         <?php if ( ! empty( $reviews_tab_content ) ) : ?>
         <div class="fts-v2-reviews-tab-content">

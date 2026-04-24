@@ -93,13 +93,6 @@
     .fts-v2-includes-col li { font-size: 12px !important; padding: 6px 0 !important; }
 
     /* Reviews */
-    .fts-v2-score-num { font-size: 28px !important; }
-    .fts-v2-score-count { font-size: 11px !important; }
-    .fts-v2-reviews-list { grid-template-columns: 1fr !important; }
-    .fts-v2-review-card { padding: 16px !important; }
-    .fts-v2-review-avatar { width: 32px !important; height: 32px !important; font-size: 12px !important; }
-    .fts-v2-review-meta strong { font-size: 12px !important; }
-    .fts-v2-review-text { font-size: 12px !important; }
 
     /* FAQ */
     .fts-v2-faq-question { padding: 14px 16px !important; }
@@ -107,11 +100,6 @@
     .fts-v2-faq-answer { font-size: 12px !important; padding: 0 16px 14px 16px !important; }
 
     /* Packages */
-    .fts-v2-packages-grid { grid-template-columns: 1fr !important; }
-    .fts-v2-package-card { padding: 18px !important; }
-    .fts-v2-package-name { font-size: 14px !important; }
-    .fts-v2-pkg-current { font-size: 20px !important; }
-    .fts-v2-package-select-btn { font-size: 12px !important; padding: 10px !important; }
 
     /* Photos */
     .fts-v2-photo-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
