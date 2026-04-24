@@ -1129,8 +1129,8 @@ class FTS_Trip_Redesign_V2 {
 
     public static function enqueue_assets() {
         try {
-            $base_dir = get_stylesheet_directory() . '/trip-design-v2/assets/';
-            $base_uri = get_stylesheet_directory_uri() . '/trip-design-v2/assets/';
+            $base_dir = get_stylesheet_directory() . '/trip-design-v2/assets/assets/';
+            $base_uri = get_stylesheet_directory_uri() . '/trip-design-v2/assets/assets/';
             $css_dir  = $base_dir . 'css/';
             $css_uri  = $base_uri . 'css/';
 
