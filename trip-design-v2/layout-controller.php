@@ -274,7 +274,7 @@ class FTS_Trip_Redesign_V2 {
     }
 
     public static function render_global_header() {
-        $file = get_stylesheet_directory() . '/trip-design-v2/parts/trip-header-bar-v2.php';
+        $file = get_stylesheet_directory() . '/trip-design-v2/parts/parts/trip-header-bar-v2.php';
         if ( file_exists( $file ) ) {
             include $file;
         }
@@ -982,7 +982,7 @@ class FTS_Trip_Redesign_V2 {
        Render
        ───────────────────────────────────────────────── */
     public static function render_nuclear_custom_layout() {
-        $base = get_stylesheet_directory() . '/trip-design-v2/parts/';
+        $base = get_stylesheet_directory() . '/trip-design-v2/parts/parts/';
         $data = self::get_trip_data();
 
         self::$debug = isset( $_GET['fts_debug'] ) && current_user_can( 'manage_options' );
