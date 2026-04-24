@@ -333,6 +333,16 @@ var UPDATER_AIRTABLE_TABLE_CACHE = {};
 var UPDATER_AIRTABLE_TABLE_CACHE_META = {};
 var UPDATER_AIRTABLE_QUERY_CACHE = {};
 var UPDATER_LINKED_LOOKUP_STATE = {};
+var UPDATER_AIRTABLE_PAGE_SIZE = 25;
+var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
+var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
+var UPDATER_WP_STAGE_DELAY_MS = 1200;
+var UPDATER_WP_HEAVY_STAGE_DELAY_MS = 2200;
+var UPDATER_SCHEMA_STAGE_DELAY_MS = 900;
+var UPDATER_ENABLE_STAGE_THROTTLING = true;
+var UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS = 900;
+var UPDATER_ENSURE_FILENAME_DELAY_MS = 1400;
+var UPDATER_SKIP_FILENAME_ON_QUOTA = true;
 
 function clearUpdaterCaches_Updater_() {
   UPDATER_WP_TRIP_INFO_CACHE = {};
@@ -354,6 +364,63 @@ function isQuotaLikeError_Updater_(err) {
          lc.indexOf('too many requests') !== -1 ||
          lc.indexOf('rate limit') !== -1 ||
          lc.indexOf('quota exceeded') !== -1;
+}
+
+async function sleep_Updater_(ms) {
+  var n = Number(ms) || 0;
+  if (n > 0) await sleep(n);
+}
+
+async function throttleStage_Updater_(label, ms) {
+  if (!UPDATER_ENABLE_STAGE_THROTTLING) return;
+  var waitMs = Math.max(0, Number(ms) || 0);
+  if (!waitMs) return;
+  log('Updater: Throttling before ' + label + ' for ' + waitMs + ' ms');
+  await sleep_Updater_(waitMs);
+}
+
+async function runNonCriticalStage_Updater_(label, fn, delayMs) {
+  await throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
+  try {
+    return await fn();
+  } catch (e) {
+    if (isQuotaLikeError_Updater_(e)) {
+      log('Updater: Non-critical stage throttled/soft-failed [' + label + ']: ' + (e && e.message ? e.message : String(e)));
+      return null;
+    }
+    throw e;
+  }
+}
+
+async function runCriticalStage_Updater_(label, fn, delayMs) {
+  await throttleStage_Updater_(label, delayMs || UPDATER_WP_STAGE_DELAY_MS);
+  return fn();
+}
+
+async function throttleMediaItem_Updater_(label) {
+  await throttleStage_Updater_(label, UPDATER_MEDIA_BETWEEN_ITEMS_DELAY_MS);
+}
+
+function shouldSkipEnsureFilenameForError_Updater_(err) {
+  if (!err) return false;
+  if (!UPDATER_SKIP_FILENAME_ON_QUOTA) return false;
+  return isQuotaLikeError_Updater_(err);
+}
+
+function buildUpdaterCacheKey_(tableName, params) {
+  return String(tableName || '') + '::' + JSON.stringify(params || {});
+}
+
+async function airtableGetCached_Updater_(tableName, params, opts) {
+  opts = opts || {};
+  var key = buildUpdaterCacheKey_(tableName, params);
+  if (!opts.force && Object.prototype.hasOwnProperty.call(UPDATER_AIRTABLE_QUERY_CACHE, key)) {
+    return UPDATER_AIRTABLE_QUERY_CACHE[key];
+  }
+  await sleep_Updater_(UPDATER_AIRTABLE_QUERY_DELAY_MS);
+  var res = await airtableGet_(tableName, params || {});
+  UPDATER_AIRTABLE_QUERY_CACHE[key] = res;
+  return res;
 }
 
 function buildLookupStateKey_Updater_(tableName, linkFieldName, targetId, mode) {
@@ -390,6 +457,19 @@ function describeLookupState_Updater_(state) {
     ', usedFallback=' + (!!state.usedFallback);
 }
 
+function abortIfIncompleteLookup_Updater_(tripId, checks) {
+  var bad = [];
+  for (var i = 0; i < checks.length; i++) {
+    var check = checks[i];
+    var state = getLookupState_Updater_(check.tableName, check.linkFieldName, tripId, check.mode);
+    if (!isLookupStateIncomplete_Updater_(state)) continue;
+    bad.push(check.label + ' [' + describeLookupState_Updater_(state) + ']');
+  }
+  if (bad.length) {
+    throw new Error('Updater: Incomplete Airtable dataset for Trip ' + tripId + ': ' + bad.join(' | '));
+  }
+}
+
 async function getTripInfoFromWpCached_Updater_(wpId) {
   var key = String(wpId || '');
   if (!key) return null;
@@ -422,11 +502,11 @@ async function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
     partial: false
   };
   do {
-    var params = { pageSize: 100, filterByFormula: filterByFormula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: filterByFormula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = await airtableGet_(tableName, params);
+      res = await airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       if (isQuotaLikeError_Updater_(e)) {
         meta.quotaHit = true;
@@ -439,7 +519,7 @@ async function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
     if (res && res.records && res.records.length) all = all.concat(res.records);
     offset = res ? res.offset : null;
     pages++;
-    if (offset) await sleep(50);
+    if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
     if (pages >= 20) {
       log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
@@ -568,11 +648,11 @@ async function getAllAirtableRecordsCached_Updater_(tableName) {
     partial: false
   };
   do {
-    var params = { pageSize: 100 };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = await airtableGet_(t, params);
+      res = await airtableGetCached_Updater_(t, params);
     } catch (e) {
       if (isQuotaLikeError_Updater_(e)) {
         meta.quotaHit = true;
@@ -587,7 +667,7 @@ async function getAllAirtableRecordsCached_Updater_(tableName) {
     }
     offset = res ? res.offset : null;
     pages++;
-    if (offset) await sleep(50);
+    if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
     if (pages >= 20) {
       log('Updater: Full-table cache capped for ' + t + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
@@ -950,8 +1030,16 @@ async function runUpdaterBatch() {
       }
       
       // 5. Publish Packages & Images (Primary)
-      if (wantsPackages) await publishPackagesSafe_Updater_(tripId, primaryWpId);
-      if (wantsImages) await publishImagesSafe_Updater_(tripId, primaryWpId, f);
+      if (wantsPackages) {
+        await runCriticalStage_Updater_('publish packages', async function() {
+          await publishPackagesSafe_Updater_(tripId, primaryWpId);
+        }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
+      }
+      if (wantsImages) {
+        await runCriticalStage_Updater_('publish images', async function() {
+          await publishImagesSafe_Updater_(tripId, primaryWpId, f);
+        }, UPDATER_WP_HEAVY_STAGE_DELAY_MS);
+      }
 
       try {
         var primaryTripInfoForSchema = await getTripInfoFromWpCached_Updater_(primaryWpId);
@@ -1956,6 +2044,18 @@ async function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
      log('Updater: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
   }
+
+  abortIfIncompleteLookup_Updater_(tripId, [
+    { label: 'General Improvement', tableName: UPDATER_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'single' },
+    { label: 'TripDetails', tableName: UPDATER_TRIP_DETAILS_TABLE, linkFieldName: 'Trip', mode: 'single' },
+    { label: 'Highlights', tableName: UPDATER_HIGHLIGHTS_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'Itinerary', tableName: UPDATER_ITINERARY_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'FAQs', tableName: UPDATER_FAQS_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'TripIncludes', tableName: UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'TripExcludes', tableName: UPDATER_TRIP_EXCLUDES_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'TripFacts', tableName: UPDATER_TRIP_FACTS_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' },
+    { label: 'AddOns', tableName: UPDATER_ADDONS_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'multi' }
+  ]);
 
   // 8. AI Activities Classification (New Feature)
   // We classify activities based on trip content using AI, matching the REFERENCE_ACTIVITIES_LIST
@@ -9936,8 +10036,20 @@ async function publishImagesSafe_Updater_(tripId, wpTripId, tripFields) {
                  if (pref._field_sources && pref._field_sources.description === 'airtable_ai' && pref.description) payloadAi.description = pref.description
 
                  if (payloadAi.title || payloadAi.caption || payloadAi.alt_text || payloadAi.description) {
+                   await throttleMediaItem_Updater_('update media ' + wpMediaId)
                    await updateMediaOnWordPress_Updater_(wpMediaId, payloadAi)
-                   if (payloadAi.title) await ensureFilenameForMedia_Updater_(wpMediaId, payloadAi.title)
+                   if (payloadAi.title) {
+                     await throttleStage_Updater_('ensure filename ' + wpMediaId, UPDATER_ENSURE_FILENAME_DELAY_MS)
+                     try {
+                       await ensureFilenameForMedia_Updater_(wpMediaId, payloadAi.title)
+                     } catch (eEnsure) {
+                       if (shouldSkipEnsureFilenameForError_Updater_(eEnsure)) {
+                         log('Updater: Skipping ensure filename for Media ' + wpMediaId + ' due to quota/rate-limit: ' + (eEnsure && eEnsure.message ? eEnsure.message : String(eEnsure)))
+                       } else {
+                         throw eEnsure
+                       }
+                     }
+                   }
                    await sleep(200)
                  }
                } else if (aiAllEmpty2 && wpMissingAny) {
@@ -10272,8 +10384,20 @@ async function ensureEnglishMediaMetadataForAttachment_Updater_(mediaId, tripFie
   if (needsDescription) payload.description = description || caption;
 
   if (payload.title || payload.caption || payload.alt_text || payload.description) {
+    await throttleMediaItem_Updater_('update media ' + id)
     await updateMediaOnWordPress_Updater_(id, payload);
-    if (payload.title) await ensureFilenameForMedia_Updater_(id, payload.title);
+    if (payload.title) {
+      await throttleStage_Updater_('ensure filename ' + id, UPDATER_ENSURE_FILENAME_DELAY_MS)
+      try {
+        await ensureFilenameForMedia_Updater_(id, payload.title);
+      } catch (eEnsure2) {
+        if (shouldSkipEnsureFilenameForError_Updater_(eEnsure2)) {
+          log('Updater: Skipping ensure filename for Media ' + id + ' due to quota/rate-limit: ' + (eEnsure2 && eEnsure2.message ? eEnsure2.message : String(eEnsure2)));
+        } else {
+          throw eEnsure2;
+        }
+      }
+    }
     await sleep(150);
   }
 }
@@ -11308,6 +11432,7 @@ async function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, target
     translated = enforceCanonicalMuseumFamilyFidelityInImageMetadata_Updater_(translated, lang, o.specConstraints || null)
     log('IMAGE METADATA TRANSLATED (' + lang + '): ' + targetId);
 
+    await throttleMediaItem_Updater_('update media ' + targetId)
     await updateMediaOnWordPress_Updater_(targetId, {
       alt_text: translated.alt,
       title: translated.title,
@@ -11317,7 +11442,16 @@ async function localizeTripImagesMetadataForLang_Updater_(sourceTripInfo, target
     var englishTitle = sourceEn && sourceEn.title ? String(sourceEn.title).trim() : (current && current.title ? String(current.title).trim() : '');
     var langPrefix = String(lang || '').toLowerCase().split('-')[0];
     if (englishTitle) {
-      await ensureFilenameForMedia_Updater_(targetId, (langPrefix ? (langPrefix + '-') : '') + englishTitle);
+      await throttleStage_Updater_('ensure filename ' + targetId, UPDATER_ENSURE_FILENAME_DELAY_MS)
+      try {
+        await ensureFilenameForMedia_Updater_(targetId, (langPrefix ? (langPrefix + '-') : '') + englishTitle);
+      } catch (eEnsureTranslated) {
+        if (shouldSkipEnsureFilenameForError_Updater_(eEnsureTranslated)) {
+          log('Updater: Skipping ensure filename for Media ' + targetId + ' due to quota/rate-limit: ' + (eEnsureTranslated && eEnsureTranslated.message ? eEnsureTranslated.message : String(eEnsureTranslated)))
+        } else {
+          throw eEnsureTranslated
+        }
+      }
     }
 
     log('IMAGE METADATA UPDATED FOR WORDPRESS ATTACHMENT: ' + targetId);
