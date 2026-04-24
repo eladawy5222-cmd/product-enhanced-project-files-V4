@@ -91,6 +91,107 @@ class FTS_Trip_Redesign_V2 {
         return '';
     }
 
+    private static function normalize_fact_text( $value ) {
+        if ( $value === null ) return '';
+        if ( is_array( $value ) || is_object( $value ) ) return '';
+        $s = wp_strip_all_tags( (string) $value );
+        $s = preg_replace( '/\s+/u', ' ', $s );
+        return trim( (string) $s );
+    }
+
+    private static function extract_items_from_html_or_text( $value ) {
+        $s = self::normalize_fact_text( $value );
+        if ( $s === '' ) return array();
+        $items = array();
+        if ( preg_match_all( '/<li[^>]*>(.*?)<\/li>/si', (string) $value, $m ) ) {
+            foreach ( $m[1] as $one ) {
+                $t = self::normalize_fact_text( $one );
+                if ( $t !== '' ) $items[] = $t;
+            }
+        } else {
+            foreach ( preg_split( '/\r\n|[\r\n]/', $s ) as $line ) {
+                $t = self::normalize_fact_text( $line );
+                if ( $t !== '' ) $items[] = $t;
+            }
+        }
+        return $items;
+    }
+
+    public static function build_trip_facts( $duration_text, $at_a_glance, $group_text, $cost_includes, $cost_excludes ) {
+        $facts = array(
+            'duration'      => self::normalize_fact_text( $duration_text ),
+            'meeting_point' => '',
+            'group_size'    => '',
+            'includes'      => '',
+            'excludes'      => '',
+        );
+
+        if ( is_array( $at_a_glance ) ) {
+            if ( isset( $at_a_glance['meeting_point'] ) ) {
+                $facts['meeting_point'] = self::normalize_fact_text( $at_a_glance['meeting_point'] );
+            }
+            if ( isset( $at_a_glance['group_size'] ) ) {
+                $facts['group_size'] = self::normalize_fact_text( $at_a_glance['group_size'] );
+            }
+            if ( isset( $at_a_glance['includes'] ) ) {
+                $facts['includes'] = self::normalize_fact_text( $at_a_glance['includes'] );
+            }
+            if ( isset( $at_a_glance['excludes'] ) ) {
+                $facts['excludes'] = self::normalize_fact_text( $at_a_glance['excludes'] );
+            }
+        }
+
+        if ( $facts['group_size'] === '' ) {
+            $facts['group_size'] = self::normalize_fact_text( $group_text );
+        }
+
+        if ( $facts['includes'] === '' ) {
+            $inc = self::extract_items_from_html_or_text( $cost_includes );
+            if ( ! empty( $inc ) ) $facts['includes'] = implode( ', ', array_slice( $inc, 0, 3 ) );
+        }
+
+        if ( $facts['excludes'] === '' ) {
+            $exc = self::extract_items_from_html_or_text( $cost_excludes );
+            if ( ! empty( $exc ) ) $facts['excludes'] = implode( ', ', array_slice( $exc, 0, 3 ) );
+        }
+
+        return $facts;
+    }
+
+    public static function build_trip_fact_items( $facts ) {
+        $facts = is_array( $facts ) ? $facts : array();
+        $map = array(
+            'duration'      => __( 'Duration', 'fts' ),
+            'meeting_point' => __( 'Meeting point', 'fts' ),
+            'group_size'    => __( 'Group size', 'fts' ),
+            'includes'      => __( 'Includes', 'fts' ),
+            'excludes'      => __( 'Excludes', 'fts' ),
+        );
+
+        $out = array();
+        foreach ( $map as $key => $label ) {
+            $val = isset( $facts[ $key ] ) ? self::normalize_fact_text( $facts[ $key ] ) : '';
+            if ( $val === '' ) continue;
+            $out[] = array(
+                'key'   => $key,
+                'label' => $label,
+                'value' => $val,
+            );
+        }
+        return $out;
+    }
+
+    private static function build_booking_modal_subtitle( $facts ) {
+        if ( ! is_array( $facts ) ) return '';
+        $parts = array();
+        foreach ( array( 'duration', 'group_size', 'meeting_point' ) as $k ) {
+            $v = isset( $facts[ $k ] ) ? self::normalize_fact_text( $facts[ $k ] ) : '';
+            if ( $v !== '' ) $parts[] = $v;
+        }
+        if ( empty( $parts ) ) return '';
+        return implode( ' • ', array_slice( $parts, 0, 3 ) );
+    }
+
     public static function init() {
         add_action( 'template_redirect', array( __CLASS__, 'cleanup_and_setup' ) );
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ), 99 );
@@ -487,6 +588,10 @@ class FTS_Trip_Redesign_V2 {
         $cost_includes = $cost_data['cost_includes'] ?? '';
         $cost_excludes = $cost_data['cost_excludes'] ?? '';
 
+        $trip_facts = self::build_trip_facts( $duration_text, $at_a_glance, $group_text, $cost_includes, $cost_excludes );
+        $trip_fact_items = self::build_trip_fact_items( $trip_facts );
+        $booking_modal_subtitle = self::build_booking_modal_subtitle( $trip_facts );
+
         // ── FAQ ──
         $faq_data    = $settings['faq'] ?? array();
         $faq_titles  = $faq_data['faq_title'] ?? array();
@@ -844,6 +949,7 @@ class FTS_Trip_Redesign_V2 {
             'extra_services', 'has_extra_services',
             'fsd_dates', 'excluded_dates_map', 'excluded_dates_yearly', 'booking_modal_data', 'enquiry_enabled', 'whatsapp_number',
             'packages_list', 'checkout_url', 'currency_symbol',
+            'trip_facts', 'trip_fact_items', 'booking_modal_subtitle',
             'trustindex_code'
         );
 
@@ -932,7 +1038,6 @@ class FTS_Trip_Redesign_V2 {
                 'per_person'        => __( '/ person', 'fts' ),
                 'per_person_cap'    => __( '/ Person', 'fts' ),
                 'per_person_compact'=> __( '/person', 'fts' ),
-                'free_cancellation' => __( 'Free Cancellation', 'fts' ),
                 'book_now'          => __( 'Book Now', 'fts' ),
                 'select_travelers'  => __( 'Select travelers', 'fts' ),
                 'adult_singular'    => __( 'Adult', 'fts' ),

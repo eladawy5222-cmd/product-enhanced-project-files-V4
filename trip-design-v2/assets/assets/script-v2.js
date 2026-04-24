@@ -55,7 +55,6 @@
         }
         var esData    = data.extraServices || [];
         var mobPerPerson = ftsT('per_person');
-        var mobFreeCancellation = ftsT('free_cancellation');
         var mobBookNow = ftsT('book_now');
         var selectTravelersText = ftsT('select_travelers');
         var adultSing = ftsT('adult_singular');
@@ -294,20 +293,6 @@
                 }
             }, { passive: true });
         })();
-
-        /* ══════════════════════════════════════════════
-           Social Proof Counters
-           ══════════════════════════════════════════════ */
-        var viewerCounts = [8, 11, 14, 9, 16, 12, 7, 13, 10, 15];
-        var viewerIdx    = 0;
-        setInterval(function() {
-            viewerIdx = (viewerIdx + 1) % viewerCounts.length;
-            $('.fts-v2-viewer-count').text(viewerCounts[viewerIdx]);
-        }, 8000);
-
-        setInterval(function() {
-            $('.fts-v2-last-booked').text(Math.floor(Math.random() * 40) + 5);
-        }, 15000);
 
         /* ══════════════════════════════════════════════
            Itinerary Accordion (single-open)
@@ -1382,48 +1367,7 @@
                 updateStickyFooter();
             }
 
-            /* ── Urgency Randomizer ── */
-            var bmSpots   = [2, 3, 4, 5, 3];
-            var bmViewers = [8, 11, 14, 9, 16, 12, 18];
-            setInterval(function() {
-                if ($bm.hasClass('active')) {
-                    $('.fts-bm-spots').text(bmSpots[Math.floor(Math.random() * bmSpots.length)]);
-                    $('.fts-bm-viewers').text(bmViewers[Math.floor(Math.random() * bmViewers.length)]);
-                }
-            }, 10000);
         }
-
-        /* ══════════════════════════════════════════════
-           Countdown Timer
-           ══════════════════════════════════════════════ */
-        if ($('.fts-v2-countdown-timer').length) {
-            var totalSecs = 2 * 60 * 60;
-            var stored    = sessionStorage.getItem('fts_v2_countdown_' + tripId);
-            if (stored) totalSecs = parseInt(stored, 10);
-
-            function updateCountdown() {
-                if (totalSecs <= 0) totalSecs = 2 * 60 * 60;
-                var h = Math.floor(totalSecs / 3600);
-                var m = Math.floor((totalSecs % 3600) / 60);
-                var s = totalSecs % 60;
-                $('.fts-v2-countdown-timer').text(
-                    String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
-                );
-                totalSecs--;
-                sessionStorage.setItem('fts_v2_countdown_' + tripId, totalSecs);
-            }
-
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
-        }
-
-        /* ══════════════════════════════════════════════
-           Random Urgency Spots
-           ══════════════════════════════════════════════ */
-        var spots = [2, 3, 4, 5, 3, 2, 4];
-        setInterval(function() {
-            $('.fts-v2-spots-left').text(spots[Math.floor(Math.random() * spots.length)]);
-        }, 30000);
 
         /* ══════════════════════════════════════════════
            Trustindex → Scroll to Reviews
@@ -1455,10 +1399,6 @@
                         (oldPrice ? '<span class="fts-v2-mob-old">' + oldPrice + '</span> ' : '') +
                         '<span class="fts-v2-mob-current">' + curPrice + '</span>' +
                         '<span class="fts-v2-mob-per"> ' + mobPerPerson + '</span>' +
-                    '</div>' +
-                    '<div class="fts-v2-mob-cancel">' +
-                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' +
-                        ' ' + mobFreeCancellation +
                     '</div>' +
                 '</div>' +
                 '<a href="#" class="fts-v2-mob-btn fts-bm-trigger">' + mobBookNow + '</a>' +

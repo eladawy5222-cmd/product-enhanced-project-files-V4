@@ -149,7 +149,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         <div class="fts-v2-cta-banner">
             <div class="fts-v2-cta-text">
                 <h3><?php echo esc_html__( 'Ready to Book This Trip?', 'fts' ); ?></h3>
-                <p><?php echo esc_html__( 'Secure your spot now. Free cancellation available.', 'fts' ); ?></p>
+                <p><?php echo esc_html__( 'Review the details and choose your preferred date and package when ready.', 'fts' ); ?></p>
             </div>
             <div class="fts-v2-cta-actions">
                 <a href="#" class="fts-v2-cta-btn-primary fts-bm-trigger"><?php echo esc_html__( 'Book Now', 'fts' ); ?></a>

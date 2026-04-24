@@ -9,21 +9,7 @@ $dest_names_list = ( ! empty( $destination_terms ) && ! is_wp_error( $destinatio
     ? wp_list_pluck( $destination_terms, 'name' )
     : array();
 $trending_location = ! empty( $dest_names_list ) ? implode( ', ', array_slice( $dest_names_list, 0, 2 ) ) : '';
-$last_booked_html = '<span class="fts-v2-last-booked">23</span>';
-$at_items = array();
-if ( is_array( $at_a_glance ) ) {
-    $map = array(
-        'duration' => __( 'Duration', 'fts' ),
-        'meeting_point' => __( 'Meeting point', 'fts' ),
-        'group_size' => __( 'Group size', 'fts' ),
-        'includes' => __( 'Includes', 'fts' ),
-        'excludes' => __( 'Excludes', 'fts' ),
-    );
-    foreach ( $map as $k => $label ) {
-        $v = isset( $at_a_glance[ $k ] ) ? trim( (string) $at_a_glance[ $k ] ) : '';
-        if ( $v !== '' ) $at_items[] = array( 'label' => $label, 'value' => $v );
-    }
-}
+$at_items = isset( $trip_fact_items ) && is_array( $trip_fact_items ) ? $trip_fact_items : array();
 ?>
 
 <!-- Quick Price + Hook -->
@@ -59,19 +45,6 @@ if ( is_array( $at_a_glance ) ) {
     </div>
 </div>
 
-<!-- Social Proof -->
-<div class="fts-v2-social-proof">
-    <div class="fts-v2-container">
-        <div class="fts-v2-proof-items">
-            <span class="fts-v2-proof-item fts-v2-proof-pulse"><svg class="fts-v2-icon-eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="fts-v2-viewer-count">12</span> <?php echo esc_html__( 'people viewing now', 'fts' ); ?></span>
-            <span class="fts-v2-proof-item"><svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo wp_kses_post( sprintf( __( 'Last booked %s minutes ago', 'fts' ), $last_booked_html ) ); ?></span>
-            <?php if ( $trending_location ) : ?>
-            <span class="fts-v2-proof-item"><svg class="fts-v2-icon-trend" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> <?php echo esc_html( sprintf( __( 'Trending in %s', 'fts' ), $trending_location ) ); ?></span>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
 <!-- Trust Badges (Dark Navy Bar) -->
 <div class="fts-v2-trust-bar">
     <div class="fts-v2-container">
@@ -82,18 +55,6 @@ if ( is_array( $at_a_glance ) ) {
                 <span><strong><?php echo number_format( $avg_rating, 1 ); ?>/5</strong> (<?php echo esc_html( sprintf( _n( '%s review', '%s reviews', $review_count, 'fts' ), number_format_i18n( $review_count ) ) ); ?>)</span>
             </div>
             <?php endif; ?>
-            <div class="fts-v2-trust-item">
-                <svg class="fts-v2-icon-users" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span><strong>20,000+</strong> <?php echo esc_html__( 'travelers', 'fts' ); ?></span>
-            </div>
-            <div class="fts-v2-trust-item">
-                <svg class="fts-v2-icon-shield" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-                <span><strong>ISO 9001</strong> <?php echo esc_html__( 'Certified', 'fts' ); ?></span>
-            </div>
-            <div class="fts-v2-trust-item">
-                <svg class="fts-v2-icon-cancel" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                <span><strong><?php echo esc_html__( 'Free Cancellation', 'fts' ); ?></strong></span>
-            </div>
         </div>
     </div>
 </div>

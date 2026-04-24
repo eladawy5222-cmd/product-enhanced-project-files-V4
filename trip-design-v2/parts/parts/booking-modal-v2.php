@@ -18,6 +18,15 @@ if ( ! empty( $whatsapp_number ) ) {
   );
   $whatsapp_link_html = '<a href="https://wa.me/' . esc_attr( $wa_number ) . '?text=' . rawurlencode( $wa_msg ) . '" target="_blank" rel="noopener">' . esc_html__( 'Chat with us on WhatsApp', 'fts' ) . '</a>';
 }
+
+$bm_trust = array();
+if ( isset( $trip_facts ) && is_array( $trip_facts ) ) {
+  foreach ( array( 'duration', 'meeting_point', 'group_size' ) as $k ) {
+    if ( ! isset( $trip_facts[ $k ] ) ) continue;
+    $v = trim( wp_strip_all_tags( (string) $trip_facts[ $k ] ) );
+    if ( $v !== '' ) $bm_trust[ $k ] = $v;
+  }
+}
 ?>
 
 <div class="fts-bm-overlay fts-bm-tabs-mode" id="fts-booking-modal">
@@ -31,32 +40,30 @@ if ( ! empty( $whatsapp_number ) ) {
         </svg>
         <div>
           <h2 class="fts-bm-title"><?php echo esc_html( $trip_title ); ?></h2>
-          <p class="fts-bm-subtitle"><?php echo esc_html__( 'Pyramids, Sphinx & Museum', 'fts' ); ?></p>
+          <?php if ( ! empty( $booking_modal_subtitle ) ) : ?>
+          <p class="fts-bm-subtitle"><?php echo esc_html( $booking_modal_subtitle ); ?></p>
+          <?php endif; ?>
         </div>
       </div>
       <button type="button" class="fts-bm-close" aria-label="<?php echo esc_attr__( 'Close', 'fts' ); ?>">&times;</button>
     </div>
 
-    <!-- ═══ Trust Bar (with inline urgency) ═══ -->
     <div class="fts-bm-trust-bar">
-      <span class="fts-bm-trust-item fts-bm-trust-cancel">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-        <?php echo esc_html__( 'Free Cancellation', 'fts' ); ?>
-      </span>
-      <span class="fts-bm-trust-sep">&middot;</span>
-      <span class="fts-bm-trust-item fts-bm-trust-secure">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
-        <?php echo esc_html__( 'Secure Payment', 'fts' ); ?>
-      </span>
-      <span class="fts-bm-trust-sep">&middot;</span>
-      <span class="fts-bm-trust-item fts-bm-trust-urgency" title="<?php echo esc_attr__( 'Spots left', 'fts' ); ?>">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.5-2.5 1.5-3.5"/></svg>
-        <strong class="fts-bm-spots">4</strong>
-      </span>
-      <span class="fts-bm-trust-item fts-bm-trust-urgency" title="<?php echo esc_attr__( 'Currently viewing', 'fts' ); ?>">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        <strong class="fts-bm-viewers">18</strong>
-      </span>
+      <?php
+      $bm_items = array();
+      if ( ! empty( $bm_trust['duration'] ) ) {
+        $bm_items[] = '<span class="fts-bm-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2"/></svg> ' . esc_html( $bm_trust['duration'] ) . '</span>';
+      }
+      if ( ! empty( $bm_trust['meeting_point'] ) ) {
+        $bm_items[] = '<span class="fts-bm-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.35 7-11a7 7 0 0 0-14 0c0 6.65 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg> ' . esc_html( $bm_trust['meeting_point'] ) . '</span>';
+      }
+      if ( ! empty( $bm_trust['group_size'] ) ) {
+        $bm_items[] = '<span class="fts-bm-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> ' . esc_html( $bm_trust['group_size'] ) . '</span>';
+      }
+      $bm_items[] = '<span class="fts-bm-trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> ' . esc_html__( 'Secure Payment', 'fts' ) . '</span>';
+
+      echo wp_kses_post( implode( '<span class="fts-bm-trust-sep">&middot;</span>', $bm_items ) );
+      ?>
     </div>
 
     <!-- ═══ Progress Bar ═══ -->
@@ -97,7 +104,7 @@ if ( ! empty( $whatsapp_number ) ) {
         <div class="fts-bm-step-body">
           <div class="fts-bm-step-intro">
             <h3 class="fts-bm-step-intro-title"><?php echo esc_html__( 'Choose your date', 'fts' ); ?></h3>
-            <p class="fts-bm-step-intro-desc"><?php echo esc_html__( 'Lock in your preferred departure date before continuing to the rest of the booking details.', 'fts' ); ?></p>
+            <p class="fts-bm-step-intro-desc"><?php echo esc_html__( 'Select your preferred departure date to continue with booking details.', 'fts' ); ?></p>
           </div>
           <div class="fts-bm-date-wrapper fts-bm-date-wrapper--inline-cal">
             <?php /* Hidden field holds ISO date + display for booking JS; calendar is the only visible control */ ?>
@@ -377,11 +384,6 @@ if ( ! empty( $whatsapp_number ) ) {
             <span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
               <?php echo esc_html__( 'Visa / MC / PayPal', 'fts' ); ?>
-            </span>
-            <span class="fts-bm-footer-sep">&middot;</span>
-            <span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <?php echo esc_html__( 'Free Cancellation', 'fts' ); ?>
             </span>
           </div>
 
