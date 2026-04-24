@@ -22,9 +22,9 @@
 .fts-v2-booking-card {
     background: var(--v2-bg) !important;
     border: 1px solid var(--v2-border) !important;
-    border-radius: var(--v2-radius-xl) !important;
+    border-radius: 16px !important;
     overflow: hidden !important;
-    box-shadow: var(--v2-shadow-md) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
 }
 
 /* ═══════════════════════════════════════
@@ -32,18 +32,19 @@
    ═══════════════════════════════════════ */
 .fts-v2-booking-price-top {
     background: var(--v2-dark) !important;
-    padding: 12px 16px 10px !important;
-    border-radius: var(--v2-radius-xl) var(--v2-radius-xl) 0 0 !important;
+    padding: 18px 20px 16px !important;
+    border-radius: 16px 16px 0 0 !important;
 }
 .fts-v2-booking-price-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    margin-bottom: 1px !important;
+    margin-bottom: 6px !important;
 }
 .fts-v2-booking-from {
-    font-size: 11px !important;
+    font-size: 12px !important;
     color: rgba(255,255,255,0.6) !important;
+    letter-spacing: 0.2px !important;
 }
 .fts-v2-booking-rating {
     font-size: 11px !important;
@@ -64,6 +65,7 @@
     align-items: baseline !important;
     gap: 6px !important;
     flex-wrap: wrap !important;
+    margin-bottom: 14px !important;
 }
 .fts-v2-booking-old-price {
     text-decoration: line-through !important;
@@ -72,7 +74,7 @@
 }
 .fts-v2-booking-current-price {
     font-family: var(--v2-font-heading) !important;
-    font-size: 22px !important;
+    font-size: 30px !important;
     font-weight: 800 !important;
     color: #fff !important;
 }
@@ -81,7 +83,7 @@
     font-size: 11px !important;
 }
 .fts-v2-booking-save-badge {
-    margin-top: 4px !important;
+    margin-top: 0 !important;
     display: inline-block !important;
     background: #dc3545 !important;
     color: #fff !important;
@@ -140,7 +142,11 @@
    ═══════════════════════════════════════ */
 .fts-v2-calendar-section {
     padding: 0 !important;
-    border-bottom: 1px solid var(--v2-border) !important;
+    margin: 14px 14px 12px !important;
+    border: 1px solid var(--v2-border) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    overflow: hidden !important;
 }
 
 /* ─── Toggle Button ─── */
@@ -149,7 +155,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 14px 16px !important;
+    padding: 16px 16px !important;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
     border: none !important;
     cursor: pointer !important;
@@ -224,7 +230,7 @@
 
 /* ─── Calendar Body (CSS transition) ─── */
 .fts-v2-cal-body {
-    padding: 10px 12px !important;
+    padding: 12px 12px !important;
     max-height: 400px !important;
     overflow: hidden !important;
     transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease !important;
@@ -467,8 +473,11 @@
    5. TRAVELERS ACCORDION
    ═══════════════════════════════════════ */
 .fts-v2-travelers-accordion {
-    border-bottom: 1px solid var(--v2-border) !important;
+    margin: 0 14px 14px !important;
+    border: 1px solid var(--v2-border) !important;
+    border-radius: 14px !important;
     overflow: hidden !important;
+    background: #fff !important;
 }
 
 /* ─── Toggle Button ─── */
@@ -477,7 +486,7 @@
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    padding: 12px 14px !important;
+    padding: 14px 16px !important;
     background: transparent !important;
     border: none !important;
     cursor: pointer !important;
@@ -531,7 +540,7 @@
 
 /* ─── Travelers Accordion Body (CSS transition) ─── */
 .fts-v2-trav-body {
-    padding: 0 14px 14px !important;
+    padding: 0 16px 16px !important;
     max-height: 200px !important;
     overflow: hidden !important;
     transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease !important;
@@ -606,13 +615,13 @@
    6. TRUST POINTS
    ═══════════════════════════════════════ */
 .fts-v2-booking-trust {
-    padding: 6px 12px !important;
+    padding: 10px 16px !important;
     border-bottom: 1px solid var(--v2-border) !important;
 }
 .fts-v2-booking-trust-item {
-    font-size: 10px !important;
+    font-size: 12px !important;
     color: var(--v2-text-light) !important;
-    padding: 1px 0 !important;
+    padding: 4px 0 !important;
     display: flex !important;
     align-items: center !important;
     gap: 7px !important;
@@ -627,7 +636,7 @@
    7. CHECK AVAILABILITY BUTTON
    ═══════════════════════════════════════ */
 .fts-v2-booking-cta {
-    padding: 10px 14px !important;
+    padding: 14px 16px 16px !important;
 }
 .fts-v2-check-btn {
     display: block !important;
@@ -635,9 +644,10 @@
     background: var(--v2-primary) !important;
     color: #fff !important;
     border: none !important;
-    border-radius: 50px !important;
-    padding: 12px 18px !important;
-    font-size: 13px !important;
+    border-radius: 12px !important;
+    min-height: 52px !important;
+    padding: 14px 18px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
     font-family: var(--v2-font-heading) !important;
     cursor: pointer !important;
@@ -659,7 +669,7 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-    padding: 8px 14px 10px !important;
+    padding: 10px 16px 14px !important;
     border-top: 1px solid var(--v2-border) !important;
 }
 .fts-v2-payment-icons > i {

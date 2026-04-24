@@ -5,30 +5,31 @@
 
 .fts-v2-gallery-section {
     background: var(--v2-bg) !important;
-    padding-bottom: 24px !important;
+    padding-bottom: 32px !important;
 }
 
 /* Grid Layout - 3 images: 1 large left, 2 stacked right */
 .fts-v2-gallery-grid {
     display: grid !important;
     gap: 8px !important;
-    border-radius: var(--v2-radius-lg) !important;
+    border-radius: 16px !important;
     overflow: hidden !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
 }
 
 .fts-v2-gallery-count-3 {
     grid-template-columns: 1.2fr 1fr !important;
     grid-template-rows: 1fr 1fr !important;
-    height: 460px !important;
+    height: 520px !important;
 }
 .fts-v2-gallery-count-2 {
     grid-template-columns: 1.2fr 1fr !important;
     grid-template-rows: 1fr !important;
-    height: 400px !important;
+    height: 460px !important;
 }
 .fts-v2-gallery-count-1 {
     grid-template-columns: 1fr !important;
-    height: 420px !important;
+    height: 520px !important;
 }
 
 /* Cells */

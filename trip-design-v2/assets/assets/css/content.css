@@ -5,7 +5,7 @@
 /* Hero Section — breadcrumbs, title, share, meta badges */
 .fts-v2-hero-section {
     background: var(--v2-bg-page) !important;
-    padding: 28px 0 20px !important;
+    padding: 56px 0 36px !important;
 }
 
 .fts-v2-breadcrumbs {
@@ -39,15 +39,15 @@
     display: flex !important;
     align-items: flex-start !important;
     justify-content: space-between !important;
-    gap: 16px !important;
-    margin-bottom: 14px !important;
+    gap: 20px !important;
+    margin-bottom: 18px !important;
 }
 .fts-v2-trip-title {
     font-family: var(--v2-font-heading) !important;
-    font-size: 28px !important;
+    font-size: 32px !important;
     font-weight: 800 !important;
     color: var(--v2-dark) !important;
-    line-height: 1.25 !important;
+    line-height: 1.12 !important;
     margin: 0 !important;
     letter-spacing: -0.3px !important;
 }
@@ -81,24 +81,26 @@
     display: flex !important;
     align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
-    font-size: 13px !important;
+    gap: 12px !important;
+    font-size: 14px !important;
 }
 .fts-v2-meta-item {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
     color: var(--v2-text-light) !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
 }
 .fts-v2-meta-item svg {
     flex-shrink: 0 !important;
     color: var(--v2-primary) !important;
+    display: block !important;
 }
 .fts-v2-meta-sep {
     color: var(--v2-text-muted) !important;
-    margin: 0 8px !important;
-    font-size: 13px !important;
+    margin: 0 12px !important;
+    font-size: 14px !important;
 }
 .fts-v2-meta-rating {
     display: inline-flex !important;
@@ -119,10 +121,22 @@
     gap: 1px !important;
 }
 
+@media (min-width: 992px) {
+    .fts-v2-hero-section {
+        min-height: 460px !important;
+    }
+    .fts-v2-trip-title {
+        font-size: 36px !important;
+    }
+}
+
 /* Generic Section — white card on warm page bg */
+.fts-v2-content-sections {
+    padding-top: 8px !important;
+}
 .fts-v2-section {
-    margin-bottom: 16px !important;
-    padding: 28px 32px !important;
+    margin-bottom: 48px !important;
+    padding: 32px 36px !important;
     border-bottom: none !important;
     background: var(--v2-bg) !important;
     border-radius: var(--v2-radius-xl) !important;
@@ -132,10 +146,10 @@
 
 .fts-v2-section-title {
     font-family: var(--v2-font-heading) !important;
-    font-size: 22px !important;
+    font-size: 24px !important;
     font-weight: 800 !important;
     color: var(--v2-dark) !important;
-    margin: 0 0 24px 0 !important;
+    margin: 0 0 16px 0 !important;
     letter-spacing: -0.3px !important;
 }
 .fts-v2-section-subtitle { color: var(--v2-text-light) !important; margin: -16px 0 24px 0 !important; font-size: 13px !important; }
