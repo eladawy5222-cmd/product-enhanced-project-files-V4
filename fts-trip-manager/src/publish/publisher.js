@@ -335,6 +335,68 @@ const PRESERVATION_LAST_RUN_AT_FIELD = 'Preservation_LastRunAt'
 const ALWAYS_CREATE_NEW_TRIP = true
 
 const PUBLISHER_WORKFLOW_ENABLED_PROPERTY = 'PUBLISHER_WORKFLOW_ENABLED'
+const PUBLISHER_LINKED_LOOKUP_STATE = {}
+const PUBLISHER_AIRTABLE_PAGE_CAP = 50
+const PUBLISHER_AIRTABLE_PAGE_DELAY_MS = 200
+
+function buildLookupStateKey_(tableName, linkFieldName, targetId, mode) {
+  return [
+    String(tableName || ''),
+    String(linkFieldName || ''),
+    String(targetId || ''),
+    String(mode || 'multi')
+  ].join('::')
+}
+
+function setLookupState_(tableName, linkFieldName, targetId, mode, state) {
+  const key = buildLookupStateKey_(tableName, linkFieldName, targetId, mode)
+  PUBLISHER_LINKED_LOOKUP_STATE[key] = state || {}
+  return PUBLISHER_LINKED_LOOKUP_STATE[key]
+}
+
+function getLookupState_(tableName, linkFieldName, targetId, mode) {
+  const key = buildLookupStateKey_(tableName, linkFieldName, targetId, mode)
+  return PUBLISHER_LINKED_LOOKUP_STATE[key] || null
+}
+
+function isLookupStateIncomplete_(state) {
+  if (!state) return false
+  return !!(state.partial || state.pageCapHit || state.quotaHit)
+}
+
+function describeLookupState_(state) {
+  if (!state) return 'no-state'
+  return 'records=' + Number(state.recordsCount || 0) +
+    ', quotaHit=' + (!!state.quotaHit) +
+    ', pageCapHit=' + (!!state.pageCapHit)
+}
+
+function abortIfIncompleteLookup_(tripId, checks) {
+  const bad = []
+  for (let i = 0; i < checks.length; i++) {
+    const check = checks[i]
+    const state = getLookupState_(check.tableName, check.linkFieldName, tripId, check.mode)
+    if (!isLookupStateIncomplete_(state)) continue
+    bad.push(check.label + ' [' + describeLookupState_(state) + ']')
+  }
+  if (bad.length) {
+    throw new Error('Publisher: Incomplete Airtable dataset for Trip ' + tripId + ': ' + bad.join(' | '))
+  }
+}
+
+function isQuotaLikeError_(err) {
+  if (!err) return false
+  const status = err && err.response && err.response.status ? Number(err.response.status) : null
+  if (status === 429) return true
+  const msg = err && err.message ? String(err.message) : String(err || '')
+  const lc = msg.toLowerCase()
+  if (lc.includes('bandwidth quota exceeded')) return true
+  if (lc.includes('too many requests')) return true
+  if (lc.includes('rate limit')) return true
+  if (lc.includes('quota exceeded')) return true
+  if (status === 403 && (lc.includes('quota') || lc.includes('rate'))) return true
+  return false
+}
 
 function isPublisherWorkflowEnabled_() {
   try {
@@ -398,6 +460,8 @@ async function runPublisherBatch() {
     const tripIDValue = f.TripID
 
     try {
+      for (const k of Object.keys(PUBLISHER_LINKED_LOOKUP_STATE)) delete PUBLISHER_LINKED_LOOKUP_STATE[k]
+
       // Determine if this is a migrated trip (TripID starts with 99) or WordPress trip
       const isMigratedTrip = tripIDValue && String(tripIDValue).indexOf('99') === 0
       let wpId = (ALWAYS_CREATE_NEW_TRIP || isMigratedTrip) ? null : tripIDValue
@@ -534,6 +598,11 @@ async function fetchCompleteTripData_(tripId) {
      log('Publisher: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
   }
+
+  abortIfIncompleteLookup_(tripId, [
+    { label: 'General Improvement', tableName: IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'single' },
+    { label: 'TripDetails', tableName: TRIP_DETAILS_TABLE, linkFieldName: 'Trip', mode: 'single' }
+  ])
   
   log('Publisher: Full Enhanced Data for ' + tripId + ': ' + JSON.stringify(data));
   
@@ -542,13 +611,31 @@ async function fetchCompleteTripData_(tripId) {
 
 // Helper: Find SINGLE record by Linked Record ID (Client-Side) with Pagination
 async function findRecordByLinkedId_(tableName, linkFieldName, targetId) {
+  const state = {
+    recordsCount: 0,
+    quotaHit: false,
+    pageCapHit: false,
+    partial: false
+  }
   let offset = null
+  let pages = 0
   
   do {
     const params = { pageSize: 100 }
     if (offset) params.offset = offset
-    
-    const res = await airtableGet_(tableName, params)
+
+    let res = null
+    try {
+      res = await airtableGet_(tableName, params)
+    } catch (e) {
+      if (isQuotaLikeError_(e)) {
+        state.quotaHit = true
+        state.partial = true
+        setLookupState_(tableName, linkFieldName, targetId, 'single', state)
+        return null
+      }
+      throw e
+    }
     const records = (res && res.records) ? res.records : []
     
     for (let i = 0; i < records.length; i++) {
@@ -557,19 +644,34 @@ async function findRecordByLinkedId_(tableName, linkFieldName, targetId) {
       
       // Check if links array contains the target ID
       if (Array.isArray(links)) {
-        if (links.indexOf(targetId) !== -1) return rec;
+        if (links.indexOf(targetId) !== -1) {
+          state.recordsCount = 1
+          setLookupState_(tableName, linkFieldName, targetId, 'single', state)
+          return rec
+        }
       }
       // Fallback: Check if it's a single string (robustness)
       else if (typeof links === 'string') {
-        if (links === targetId) return rec;
+        if (links === targetId) {
+          state.recordsCount = 1
+          setLookupState_(tableName, linkFieldName, targetId, 'single', state)
+          return rec
+        }
       }
     }
     
     offset = res ? res.offset : null
-    if (offset) await sleep(50)
+    pages += 1
+    if (offset) await sleep(PUBLISHER_AIRTABLE_PAGE_DELAY_MS)
+    if (pages >= PUBLISHER_AIRTABLE_PAGE_CAP) {
+      state.pageCapHit = true
+      state.partial = true
+      break
+    }
     
   } while (offset);
 
+  setLookupState_(tableName, linkFieldName, targetId, 'single', state)
   return null;
 }
 
@@ -577,7 +679,14 @@ async function findRecordByLinkedId_(tableName, linkFieldName, targetId) {
 // Modified to support PAGINATION to ensure we scan all records, not just the first page.
 async function findRecordsByLinkedId_(tableName, linkFieldName, targetId, sortField) {
   const matches = []
+  const state = {
+    recordsCount: 0,
+    quotaHit: false,
+    pageCapHit: false,
+    partial: false
+  }
   let offset = null
+  let pages = 0
   
   do {
     // Fetch a page of records (Airtable default is 100 per page)
@@ -588,7 +697,18 @@ async function findRecordsByLinkedId_(tableName, linkFieldName, targetId, sortFi
     // But we should be careful about large tables. 
     // Ideally, we would use a server-side formula, but linked record IDs are tricky in formulas.
     
-    const res = await airtableGet_(tableName, params)
+    let res = null
+    try {
+      res = await airtableGet_(tableName, params)
+    } catch (e) {
+      if (isQuotaLikeError_(e)) {
+        state.quotaHit = true
+        state.partial = true
+        setLookupState_(tableName, linkFieldName, targetId, 'multi', state)
+        return matches
+      }
+      throw e
+    }
     
     if (res && res.records) {
       for (let i = 0; i < res.records.length; i++) {
@@ -610,7 +730,13 @@ async function findRecordsByLinkedId_(tableName, linkFieldName, targetId, sortFi
     // Safety break to prevent infinite loops in massive tables (e.g. stop after 50 pages = 5000 records)
     // You can adjust this limit based on your table size
     // For now, let's trust we need to find them. But let's add a small sleep to be nice to API.
-    if (offset) await sleep(200)
+    pages += 1
+    if (offset) await sleep(PUBLISHER_AIRTABLE_PAGE_DELAY_MS)
+    if (pages >= PUBLISHER_AIRTABLE_PAGE_CAP) {
+      state.pageCapHit = true
+      state.partial = true
+      break
+    }
     
   } while (offset);
   
@@ -627,6 +753,8 @@ async function findRecordsByLinkedId_(tableName, linkFieldName, targetId, sortFi
     });
   }
   
+  state.recordsCount = matches.length
+  setLookupState_(tableName, linkFieldName, targetId, 'multi', state)
   return matches;
 }
 
@@ -1641,6 +1769,18 @@ async function publishPackagesSafe_(tripId, wpTripId) {
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
      const pkgRecords = await findRecordsByLinkedId_('Packages', 'Trip', tripId)
      const priceRecords = await findRecordsByLinkedId_('Prices', 'Trip', tripId)
+     const pkgState = getLookupState_('Packages', 'Trip', tripId, 'multi')
+     const priceState = getLookupState_('Prices', 'Trip', tripId, 'multi')
+
+     if (isLookupStateIncomplete_(pkgState) || isLookupStateIncomplete_(priceState)) {
+       log(
+         'Publisher: Skipping package publish for Trip ' + tripId +
+         ' because Airtable package/price dataset is incomplete. ' +
+         'Packages[' + describeLookupState_(pkgState) + '] ' +
+         'Prices[' + describeLookupState_(priceState) + ']'
+       )
+       return
+     }
      
      if (pkgRecords.length === 0 && priceRecords.length === 0) {
        log('Publisher: No packages or prices found for Trip ' + tripId);
@@ -1934,6 +2074,11 @@ async function sendPackageToWp(payload) {
 async function publishImagesSafe_(tripId, wpTripId, tripFields) {
    // 1. Fetch Improvement Records (for Metadata & Gallery)
    const impRecords = await findRecordsByLinkedId_(IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId)
+   const impState = getLookupState_(IMAGES_IMPROVEMENT_TABLE, 'Trip', tripId, 'multi')
+   if (isLookupStateIncomplete_(impState)) {
+      log('Publisher: Skipping image publish for Trip ' + tripId + ' because Images Improvement dataset is incomplete. ' + describeLookupState_(impState))
+      return
+   }
    
    // 2. Fetch Raw Images Records (for Featured Image Matching by Attachment)
    // We need this because Improvement table has IDs but NOT the attachment files for matching
@@ -1941,6 +2086,10 @@ async function publishImagesSafe_(tripId, wpTripId, tripFields) {
    if (!rawImagesRecords || rawImagesRecords.length === 0) {
       log('Publisher: No images found in Images table using SourceTrip, trying Trip column...');
       rawImagesRecords = await findRecordsByLinkedId_('Images', 'Trip', tripId)
+   }
+   const rawImagesState = getLookupState_('Images', 'SourceTrip', tripId, 'multi') || getLookupState_('Images', 'Trip', tripId, 'multi')
+   if (isLookupStateIncomplete_(rawImagesState)) {
+      log('Publisher: Raw image lookup is incomplete for Trip ' + tripId + '. Continuing only with already-resolved image links. ' + describeLookupState_(rawImagesState))
    }
    
    if (rawImagesRecords && rawImagesRecords.length > 0) {
