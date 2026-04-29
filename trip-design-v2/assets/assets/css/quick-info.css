@@ -85,7 +85,8 @@
 
     color: #fff !important; padding: 14px 28px !important; border-radius: 12px !important;
     min-height: 52px !important;
-    font-weight: 700 !important; font-size: 15px !important; text-decoration: none !important;
+    font-weight: 800 !important; font-size: 15px !important; text-decoration: none !important;
+    box-shadow: 0 10px 20px rgba(255,107,53,0.20) !important;
     transition: all 0.2s !important; white-space: nowrap !important;
 
 }

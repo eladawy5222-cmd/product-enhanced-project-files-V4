@@ -27,22 +27,12 @@
     .fts-v2-sidebar-col { display: none !important; }
 
 
-
+    .fts-v2-hero-section { padding: 28px 0 20px !important; }
     body.single-trip { padding-bottom: 80px !important; }
 
 
 
     /* Header */
-
-    .fts-v2-hero-section { padding: 32px 0 24px !important; }
-    .fts-v2-breadcrumbs { font-size: 11px !important; }
-
-    .fts-v2-trip-title { font-size: 24px !important; }
-    .fts-v2-title-row { flex-direction: column !important; gap: 8px !important; }
-
-    .fts-v2-title-actions { align-self: flex-start !important; }
-
-    .fts-v2-action-btn { font-size: 12px !important; }
 
 
 
@@ -88,13 +78,9 @@
 
 
     /* Quick Bar */
-
-    .fts-v2-quick-bar { padding: 20px 0 !important; }
+    .fts-v2-quick-bar { padding: 18px 0 !important; }
     .fts-v2-quick-bar-inner { flex-direction: column !important; text-align: center !important; gap: 12px !important; }
 
-    .fts-v2-quick-price-cta { flex-direction: column !important; align-items: center !important; }
-
-    .fts-v2-hook-text { font-size: 12px !important; }
 
     .fts-v2-price-current { font-size: 20px !important; }
 

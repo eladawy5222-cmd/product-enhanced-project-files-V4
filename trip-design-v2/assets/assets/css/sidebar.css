@@ -626,6 +626,11 @@
     align-items: center !important;
     gap: 7px !important;
 }
+.fts-v2-booking-trust-item .fts-v2-trust-svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+}
 .fts-v2-trust-svg {
     flex-shrink: 0 !important;
     width: 14px !important;

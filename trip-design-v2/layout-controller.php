@@ -1248,18 +1248,18 @@ class FTS_Trip_Redesign_V2 {
                 '@media(max-width:768px){#fts-booking-modal .fts-bm-step-header{font-size:20px!important}#fts-booking-modal .fts-bm-package-name{font-size:18px!important}#fts-booking-modal .fts-bm-price-current{font-size:18px!important}#fts-booking-modal .fts-bm-price-per{font-size:11px!important}}' .
                 '.fts-v2-root{background:#faf8f4!important}' .
                 '.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:18px!important}' .
-                '.fts-v2-quick-bar{margin-top:14px!important}' .
-                '.fts-v2-at-a-glance{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:10px 0 0!important;padding:0!important;list-style:none!important}' .
-                '.fts-v2-at-a-glance li{background:#fff!important;border:1px solid #eef0f4!important;border-radius:10px!important;padding:8px 10px!important;font-size:12px!important;line-height:1.35!important;color:#334155!important}' .
-                '.fts-v2-at-a-glance strong{display:block!important;margin-bottom:2px!important;color:#0f172a!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.02em!important}' .
+                '.fts-v2-quick-bar{margin-top:12px!important}' .
+                '.fts-v2-at-a-glance{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px 12px!important;margin:12px 0 0!important;padding:0!important;list-style:none!important}' .
+                '.fts-v2-at-a-glance li{background:var(--v2-bg-gray,#f8fafc)!important;border:1px solid rgba(15,23,42,.08)!important;border-radius:12px!important;padding:10px 12px!important;font-size:13px!important;line-height:1.25!important;color:#334155!important}' .
+                '.fts-v2-at-a-glance strong{display:inline!important;margin:0 6px 0 0!important;color:#0f172a!important;font-size:12px!important;font-weight:700!important;text-transform:none!important;letter-spacing:0!important}' .
                 '.fts-v2-sidebar-col{padding-top:0!important}' .
                 '.fts-v2-booking-card{border:1px solid rgba(15,23,42,.08)!important;box-shadow:0 18px 45px rgba(15,23,42,.12)!important;border-radius:18px!important;overflow:hidden!important;background:#fff!important}' .
                 '.fts-v2-booking-price-top{padding:18px 18px 16px!important}' .
                 '.fts-v2-booking-current-price{font-size:30px!important;line-height:1!important;font-weight:800!important}' .
-                '.fts-v2-check-btn{min-height:48px!important;border-radius:12px!important;font-weight:800!important;box-shadow:0 10px 20px rgba(255,107,53,.24)!important}' .
+                '.fts-v2-check-btn{min-height:52px!important;border-radius:12px!important;font-weight:800!important;box-shadow:0 10px 20px rgba(255,107,53,.24)!important}' .
                 '.fts-v2-payment-icons{background:#f8fafc!important;border-top:1px solid #eef2f7!important;padding:12px 14px!important;justify-content:center!important}' .
                 '@media(min-width:1025px){.fts-v2-main-layout{align-items:start!important;gap:34px!important}.fts-v2-content-col{max-width:760px!important}.fts-v2-sidebar-col{min-width:320px!important}.fts-v2-root .fts-v2-header-section,.fts-v2-root .fts-v2-trip-header,.fts-v2-root .fts-v2-title-wrap{margin-bottom:12px!important;padding-bottom:0!important}.fts-v2-root .fts-v2-gallery-section{margin-top:10px!important}}' .
-                '@media(max-width:768px){.fts-v2-at-a-glance{grid-template-columns:1fr!important;gap:7px!important}.fts-v2-at-a-glance li{padding:9px 10px!important;font-size:12px!important}.fts-v2-quick-bar{position:relative!important;z-index:5!important;margin-top:10px!important}.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:12px!important}.fts-v2-booking-current-price{font-size:26px!important}}'
+                '@media(max-width:768px){.fts-v2-at-a-glance{grid-template-columns:1fr!important;gap:8px!important}.fts-v2-at-a-glance li{padding:10px 12px!important;font-size:13px!important}.fts-v2-quick-bar{position:relative!important;z-index:5!important;margin-top:8px!important}.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:12px!important}.fts-v2-booking-current-price{font-size:26px!important}}'
             );
 
         } catch ( \Throwable $e ) {
