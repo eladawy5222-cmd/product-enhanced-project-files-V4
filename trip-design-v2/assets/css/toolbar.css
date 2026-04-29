@@ -1,0 +1,377 @@
+/* ====================================================================
+   FTS Destination V2 - Toolbar Bar (3 rows)
+   ==================================================================== */
+
+.fts-dest-v2-toolbar-bar {
+    background: var(--v2-bg) !important;
+    border-bottom: 1px solid var(--v2-border) !important;
+    position: relative;
+    z-index: 10;
+    padding: 0;
+    overflow: visible !important;
+    width: 100% !important;
+}
+
+/* ─── ROW 1: USP Trust Badges ─── */
+.fts-dest-v2-usp-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 14px 32px !important;
+    border-bottom: 1px solid var(--v2-border) !important;
+    gap: 16px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}
+
+.fts-dest-v2-usp {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.fts-dest-v2-usp-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.fts-dest-v2-usp-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px;
+    font-family: var(--v2-font-body);
+}
+
+.fts-dest-v2-usp-text strong {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--v2-text) !important;
+    line-height: 1.3 !important;
+}
+
+.fts-dest-v2-usp-text span {
+    font-size: 11px !important;
+    color: var(--v2-text-light) !important;
+    font-weight: 400 !important;
+    line-height: 1.3 !important;
+}
+
+/* ─── ROW 2: Tag Pills Row (sticky) ─── */
+.fts-dest-v2-tags-row {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 32px !important;
+    gap: 8px !important;
+    border-bottom: 1px solid var(--v2-border) !important;
+    overflow: visible;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    position: sticky !important;
+    top: 56px !important;
+    z-index: 10 !important;
+    background: var(--v2-bg) !important;
+}
+
+/* Generic pill */
+.fts-dest-v2-tag-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 16px !important;
+    border-radius: 24px !important;
+    border: 1px solid var(--v2-border) !important;
+    background: var(--v2-bg) !important;
+    color: var(--v2-text) !important;
+    font-family: var(--v2-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+    line-height: 1.3 !important;
+}
+
+.fts-dest-v2-tag-pill:hover {
+    background: var(--v2-bg-gray) !important;
+    border-color: var(--v2-text-muted) !important;
+    color: var(--v2-text) !important;
+    box-shadow: none !important;
+}
+
+.fts-dest-v2-tag-pill:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Active pill (dark fill like "Cairo" in reference) */
+.fts-dest-v2-tag-pill.is-active {
+    background: var(--v2-dark) !important;
+    color: #fff !important;
+    border-color: var(--v2-dark) !important;
+}
+
+.fts-dest-v2-tag-pill.is-active:hover {
+    background: #2d2d4e !important;
+    color: #fff !important;
+    border-color: #2d2d4e !important;
+}
+
+/* Filter button special */
+.fts-dest-v2-tag-filter-btn {
+    background: var(--v2-primary) !important;
+    color: #fff !important;
+    border-color: var(--v2-primary) !important;
+}
+
+.fts-dest-v2-tag-filter-btn:hover {
+    background: var(--v2-primary-dark) !important;
+    color: #fff !important;
+    border-color: var(--v2-primary-dark) !important;
+}
+
+.fts-dest-v2-tag-filter-btn.is-active {
+    background: var(--v2-primary-dark) !important;
+    color: #fff !important;
+    border-color: var(--v2-primary-dark) !important;
+    box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.25) !important;
+}
+
+/* Count badge inside filter button */
+.fts-dest-v2-tag-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: var(--v2-primary) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+/* Vertical divider between filter btn and tag pills */
+.fts-dest-v2-tags-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--v2-border) !important;
+    flex-shrink: 0;
+    margin: 0 4px;
+}
+
+/* Scroll arrows */
+.fts-dest-v2-scroll-arrow {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    border: 1px solid var(--v2-border) !important;
+    background: var(--v2-bg) !important;
+    color: var(--v2-text) !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.fts-dest-v2-scroll-arrow:hover {
+    background: var(--v2-bg-gray) !important;
+    border-color: var(--v2-text-muted) !important;
+    color: var(--v2-text) !important;
+    box-shadow: none !important;
+}
+
+.fts-dest-v2-scroll-arrow:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Scrollable tag container */
+.fts-dest-v2-tags-scroll {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    flex: 1;
+    min-width: 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding: 2px 0;
+    scroll-behavior: smooth;
+}
+
+.fts-dest-v2-tags-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Sort dropdown in tags row (styled as pill matching others) */
+.fts-dest-v2-tag-sort {
+    flex-shrink: 0 !important;
+    width: auto !important;
+    max-width: 160px !important;
+    height: auto !important;
+    border-radius: 24px !important;
+    padding: 7px 30px 7px 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    font-family: var(--v2-font-body) !important;
+    border: 1px solid var(--v2-border) !important;
+    background-color: var(--v2-bg) !important;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23636e72' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 10px !important;
+    color: var(--v2-text) !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    line-height: 1.3 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+.fts-dest-v2-tag-sort:hover {
+    background-color: var(--v2-bg-gray) !important;
+    border-color: var(--v2-text-muted) !important;
+    color: var(--v2-text) !important;
+}
+
+.fts-dest-v2-tag-sort:focus {
+    border-color: var(--v2-primary) !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ─── ROW 3: Results + Active Chips + Clear All ─── */
+.fts-dest-v2-results-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 32px !important;
+    gap: 12px;
+    min-height: 40px;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}
+
+.fts-dest-v2-results-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.fts-dest-v2-results-row .fts-dest-v2-count {
+    font-family: var(--v2-font-body) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--v2-text) !important;
+    white-space: nowrap;
+}
+
+.fts-dest-v2-results-info {
+    font-size: 13px !important;
+    color: var(--v2-text-light) !important;
+    font-family: var(--v2-font-body) !important;
+}
+
+/* Active filter chips */
+.fts-dest-v2-active-chips {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap;
+}
+
+.fts-dest-v2-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 4px 10px !important;
+    border-radius: 16px !important;
+    background: var(--v2-bg-gray) !important;
+    border: 1px solid var(--v2-border) !important;
+    font-family: var(--v2-font-body) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--v2-text) !important;
+    white-space: nowrap;
+    transition: all 0.15s ease !important;
+}
+
+.fts-dest-v2-chip:hover {
+    background: #fee !important;
+    border-color: var(--v2-accent) !important;
+}
+
+.fts-dest-v2-chip-x {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 14px;
+    height: 14px;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    color: var(--v2-text-muted) !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    transition: all 0.15s ease !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.fts-dest-v2-chip-x:hover {
+    color: var(--v2-accent) !important;
+    background: rgba(239, 71, 111, 0.1) !important;
+}
+
+/* Clear All link */
+.fts-dest-v2-clear-link {
+    background: none !important;
+    border: none !important;
+    font-family: var(--v2-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--v2-primary) !important;
+    cursor: pointer !important;
+    white-space: nowrap;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.fts-dest-v2-clear-link:hover {
+    color: var(--v2-primary-dark) !important;
+    background: var(--v2-primary-light) !important;
+    text-decoration: none !important;
+}
+
+.fts-dest-v2-clear-link:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}

@@ -45,19 +45,19 @@ $at_items = isset( $trip_fact_items ) && is_array( $trip_fact_items ) ? $trip_fa
     </div>
 </div>
 
+<?php if ( $avg_rating > 0 ) : ?>
 <!-- Trust Badges (Dark Navy Bar) -->
 <div class="fts-v2-trust-bar">
     <div class="fts-v2-container">
         <div class="fts-v2-trust-items">
-            <?php if ( $avg_rating > 0 ) : ?>
             <div class="fts-v2-trust-item">
                 <svg class="fts-v2-icon-star" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 <span><strong><?php echo number_format( $avg_rating, 1 ); ?>/5</strong> (<?php echo esc_html( sprintf( _n( '%s review', '%s reviews', $review_count, 'fts' ), number_format_i18n( $review_count ) ) ); ?>)</span>
             </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?php if ( ! empty( $trustindex_code ) ) : ?>
 <div class="fts-v2-trust-tidx-row">

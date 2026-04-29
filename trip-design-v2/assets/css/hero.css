@@ -1,0 +1,110 @@
+/* ====================================================================
+   FTS Destination V2 - Hero Section
+   ==================================================================== */
+.fts-dest-v2-hero {
+    position: relative;
+    min-height: 340px;
+    display: flex;
+    align-items: flex-end;
+    background-color: var(--v2-dark);
+    background-size: cover;
+    background-position: center;
+    padding: 0;
+    overflow: hidden;
+}
+
+.fts-dest-v2-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.35) 50%,
+        rgba(0, 0, 0, 0.15) 100%
+    );
+    z-index: 1;
+}
+
+.fts-dest-v2-hero-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 60px 40px 48px;
+    color: #fff;
+}
+
+/* Breadcrumbs */
+.fts-dest-v2-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-size: 13px;
+    font-family: var(--v2-font-body);
+    margin-bottom: 16px;
+    opacity: 0.85;
+}
+
+.fts-dest-v2-breadcrumbs a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.fts-dest-v2-breadcrumbs a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.fts-dest-v2-breadcrumbs .sep {
+    margin: 0 8px;
+    opacity: 0.5;
+}
+
+.fts-dest-v2-breadcrumbs span:last-child {
+    color: var(--v2-secondary);
+    font-weight: 600;
+}
+
+/* Title */
+.fts-dest-v2-hero-title {
+    font-family: var(--v2-font-heading);
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 12px;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+/* Description */
+.fts-dest-v2-hero-desc {
+    font-family: var(--v2-font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 20px;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 640px;
+}
+
+/* Trip count badge */
+.fts-dest-v2-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    padding: 8px 18px;
+    font-family: var(--v2-font-body);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.fts-dest-v2-hero-badge svg {
+    flex-shrink: 0;
+}

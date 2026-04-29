@@ -99,6 +99,48 @@ class FTS_Trip_Redesign_V2 {
         return trim( (string) $s );
     }
 
+    private static function normalize_glance_value( $value ) {
+        if ( is_array( $value ) ) {
+            foreach ( array( 'value', 'text', 'label', 'title', 'name' ) as $k ) {
+                if ( isset( $value[ $k ] ) ) {
+                    $normalized = self::normalize_fact_text( $value[ $k ] );
+                    if ( $normalized !== '' ) return $normalized;
+                }
+            }
+            foreach ( $value as $child ) {
+                $normalized = self::normalize_glance_value( $child );
+                if ( $normalized !== '' ) return $normalized;
+            }
+            return '';
+        }
+        if ( is_object( $value ) ) return self::normalize_glance_value( (array) $value );
+        return self::normalize_fact_text( $value );
+    }
+
+    private static function normalize_at_a_glance( $at_a_glance ) {
+        if ( ! is_array( $at_a_glance ) ) return array();
+        $aliases = array(
+            'meeting_point' => array( 'meeting_point', 'meeting', 'meet', 'pickup', 'pickup_point', 'start_point', 'departure_point' ),
+            'group_size'    => array( 'group_size', 'group', 'group_type', 'max_group_size', 'travelers', 'travellers' ),
+            'includes'      => array( 'includes', 'included', 'include' ),
+            'excludes'      => array( 'excludes', 'excluded', 'not_included', 'exclude' ),
+        );
+        $normalized = array();
+        foreach ( $at_a_glance as $key => $value ) {
+            $clean_key = strtolower( preg_replace( '/[^a-z0-9]+/i', '_', trim( (string) $key ) ) );
+            $clean_key = trim( $clean_key, '_' );
+            foreach ( $aliases as $canonical => $keys ) {
+                if ( in_array( $clean_key, $keys, true ) ) {
+                    $text = self::normalize_glance_value( $value );
+                    if ( $text !== '' && empty( $normalized[ $canonical ] ) ) {
+                        $normalized[ $canonical ] = $text;
+                    }
+                }
+            }
+        }
+        return $normalized;
+    }
+
     private static function extract_items_from_html_or_text( $value ) {
         $s = self::normalize_fact_text( $value );
         if ( $s === '' ) return array();
@@ -126,19 +168,9 @@ class FTS_Trip_Redesign_V2 {
             'excludes'      => '',
         );
 
-        if ( is_array( $at_a_glance ) ) {
-            if ( isset( $at_a_glance['meeting_point'] ) ) {
-                $facts['meeting_point'] = self::normalize_fact_text( $at_a_glance['meeting_point'] );
-            }
-            if ( isset( $at_a_glance['group_size'] ) ) {
-                $facts['group_size'] = self::normalize_fact_text( $at_a_glance['group_size'] );
-            }
-            if ( isset( $at_a_glance['includes'] ) ) {
-                $facts['includes'] = self::normalize_fact_text( $at_a_glance['includes'] );
-            }
-            if ( isset( $at_a_glance['excludes'] ) ) {
-                $facts['excludes'] = self::normalize_fact_text( $at_a_glance['excludes'] );
-            }
+        $glance = self::normalize_at_a_glance( $at_a_glance );
+        foreach ( array( 'meeting_point', 'group_size', 'includes', 'excludes' ) as $k ) {
+            if ( ! empty( $glance[ $k ] ) ) $facts[ $k ] = $glance[ $k ];
         }
 
         if ( $facts['group_size'] === '' ) {
@@ -1213,7 +1245,21 @@ class FTS_Trip_Redesign_V2 {
                 '#fts-booking-modal .fts-bm-counter-btn{width:44px!important;height:44px!important;border-radius:10px!important;border:none!important;background:var(--v2-primary,#ff6b35)!important;color:#fff!important;font-size:26px!important;line-height:1!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}' .
                 '#fts-booking-modal .fts-bm-counter-value{min-width:22px!important;text-align:center!important;font-size:22px!important;font-weight:700!important;color:#1a2332!important}' .
                 '#fts-booking-modal .ui-datepicker{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;background:transparent!important;border:0!important;box-shadow:none!important}' .
-                '@media(max-width:768px){#fts-booking-modal .fts-bm-step-header{font-size:20px!important}#fts-booking-modal .fts-bm-package-name{font-size:18px!important}#fts-booking-modal .fts-bm-price-current{font-size:18px!important}#fts-booking-modal .fts-bm-price-per{font-size:11px!important}}'
+                '@media(max-width:768px){#fts-booking-modal .fts-bm-step-header{font-size:20px!important}#fts-booking-modal .fts-bm-package-name{font-size:18px!important}#fts-booking-modal .fts-bm-price-current{font-size:18px!important}#fts-booking-modal .fts-bm-price-per{font-size:11px!important}}' .
+                '.fts-v2-root{background:#faf8f4!important}' .
+                '.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:18px!important}' .
+                '.fts-v2-quick-bar{margin-top:14px!important}' .
+                '.fts-v2-at-a-glance{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:10px 0 0!important;padding:0!important;list-style:none!important}' .
+                '.fts-v2-at-a-glance li{background:#fff!important;border:1px solid #eef0f4!important;border-radius:10px!important;padding:8px 10px!important;font-size:12px!important;line-height:1.35!important;color:#334155!important}' .
+                '.fts-v2-at-a-glance strong{display:block!important;margin-bottom:2px!important;color:#0f172a!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.02em!important}' .
+                '.fts-v2-sidebar-col{padding-top:0!important}' .
+                '.fts-v2-booking-card{border:1px solid rgba(15,23,42,.08)!important;box-shadow:0 18px 45px rgba(15,23,42,.12)!important;border-radius:18px!important;overflow:hidden!important;background:#fff!important}' .
+                '.fts-v2-booking-price-top{padding:18px 18px 16px!important}' .
+                '.fts-v2-booking-current-price{font-size:30px!important;line-height:1!important;font-weight:800!important}' .
+                '.fts-v2-check-btn{min-height:48px!important;border-radius:12px!important;font-weight:800!important;box-shadow:0 10px 20px rgba(255,107,53,.24)!important}' .
+                '.fts-v2-payment-icons{background:#f8fafc!important;border-top:1px solid #eef2f7!important;padding:12px 14px!important;justify-content:center!important}' .
+                '@media(min-width:1025px){.fts-v2-main-layout{align-items:start!important;gap:34px!important}.fts-v2-content-col{max-width:760px!important}.fts-v2-sidebar-col{min-width:320px!important}.fts-v2-root .fts-v2-header-section,.fts-v2-root .fts-v2-trip-header,.fts-v2-root .fts-v2-title-wrap{margin-bottom:12px!important;padding-bottom:0!important}.fts-v2-root .fts-v2-gallery-section{margin-top:10px!important}}' .
+                '@media(max-width:768px){.fts-v2-at-a-glance{grid-template-columns:1fr!important;gap:7px!important}.fts-v2-at-a-glance li{padding:9px 10px!important;font-size:12px!important}.fts-v2-quick-bar{position:relative!important;z-index:5!important;margin-top:10px!important}.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:12px!important}.fts-v2-booking-current-price{font-size:26px!important}}'
             );
 
         } catch ( \Throwable $e ) {
