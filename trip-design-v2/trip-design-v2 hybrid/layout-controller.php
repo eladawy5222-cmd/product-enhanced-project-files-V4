@@ -314,7 +314,7 @@ class FTS_Trip_Redesign_V2 {
     }
 
     public static function render_global_header() {
-        $file = get_stylesheet_directory() . '/trip-design-v2/trip-design-v2 hybrid/parts/trip-header-bar-v2.php';
+        $file = get_stylesheet_directory() . '/trip-design-v2/parts/trip-header-bar-v2.php';
         if ( file_exists( $file ) ) {
             include $file;
         }
@@ -1021,7 +1021,7 @@ class FTS_Trip_Redesign_V2 {
        Render
        ───────────────────────────────────────────────── */
     public static function render_nuclear_custom_layout() {
-        $base = get_stylesheet_directory() . '/trip-design-v2/trip-design-v2 hybrid/parts/';
+        $base = get_stylesheet_directory() . '/trip-design-v2/parts/';
         $data = self::get_trip_data();
 
         self::$debug = isset( $_GET['fts_debug'] ) && current_user_can( 'manage_options' );
@@ -1168,8 +1168,8 @@ class FTS_Trip_Redesign_V2 {
 
     public static function enqueue_assets() {
         try {
-            $base_dir = get_stylesheet_directory() . '/trip-design-v2/trip-design-v2 hybrid/assets/';
-            $base_uri = get_stylesheet_directory_uri() . '/trip-design-v2/trip-design-v2 hybrid/assets/';
+            $base_dir = get_stylesheet_directory() . '/trip-design-v2/assets/';
+            $base_uri = get_stylesheet_directory_uri() . '/trip-design-v2/assets/';
             $css_dir  = $base_dir . 'css/';
             $css_uri  = $base_uri . 'css/';
 
