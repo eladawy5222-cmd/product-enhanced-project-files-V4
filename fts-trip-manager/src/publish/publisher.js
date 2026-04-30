@@ -1350,6 +1350,14 @@ function pub_sanitizeSeoText_(s) {
   x = x.replace(/\s*\+\s*$/g, '')
   x = x.replace(/\s*&\s*$/g, '')
   x = x.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '')
+  var guard = 0
+  while (guard < 6) {
+    var t = x.replace(/[.!?]+$/g, '').trim()
+    if (!t) { x = ''; break }
+    if (!/\b(with|and|or|but|for|to|from|of|in|on|at|by|a|an|the)\b\s*$/i.test(t)) { x = t; break }
+    x = t.replace(/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|a|an|the)\b[\s.]*$/i, '').trim()
+    guard++
+  }
   x = x.replace(/\s+/g, ' ').trim()
   return x
 }

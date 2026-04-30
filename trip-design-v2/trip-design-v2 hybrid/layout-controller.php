@@ -908,11 +908,38 @@ class FTS_Trip_Redesign_V2 {
                             }
                         }
 
+                        $clean_features = array();
+                        $seen_feat = array();
+                        foreach ( (array) $features as $f ) {
+                            $f = wp_strip_all_tags( (string) $f );
+                            $f = preg_replace( '/:\s*(\S)/', ': $1', $f );
+                            $f = preg_replace( '/\s+/', ' ', trim( (string) $f ) );
+                            $f = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|bringing|including)\b[\s.]*$/i', '', trim( (string) $f ) );
+                            $f = rtrim( (string) $f, " \t\n\r\0\x0B-–—,:;" );
+                            if ( $f === '' ) continue;
+                            $f = wp_trim_words( $f, 14, '…' );
+                            $f = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|bringing|including)\b[\s.]*$/i', '', trim( (string) $f ) );
+                            $f = rtrim( (string) $f, " \t\n\r\0\x0B-–—,:;" );
+                            if ( $f === '' ) continue;
+                            $k = strtolower( preg_replace( '/[^a-z0-9]+/i', ' ', $f ) );
+                            $k = trim( preg_replace( '/\s+/', ' ', $k ) );
+                            if ( $k === '' || isset( $seen_feat[ $k ] ) ) continue;
+                            $seen_feat[ $k ] = true;
+                            $clean_features[] = $f;
+                        }
+
+                        $desc_text = wp_strip_all_tags( (string) $pkg_content );
+                        $desc_text = preg_replace( '/:\s*(\S)/', ': $1', $desc_text );
+                        $desc_text = preg_replace( '/\s+/', ' ', trim( (string) $desc_text ) );
+                        $desc_text = wp_trim_words( $desc_text, 22, '…' );
+                        $desc_text = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by)\b[\s.]*$/i', '', trim( (string) $desc_text ) );
+                        $desc_text = rtrim( (string) $desc_text, " \t\n\r\0\x0B-–—,:;" );
+
                         $packages_list[] = array(
                             'id'            => $pkg_id,
                             'name'          => get_the_title( $pkg_id ),
-                            'description'   => wp_trim_words( wp_strip_all_tags( $pkg_content ), 8, '' ),
-                            'features'      => array_map( function( $f ) { return wp_trim_words( $f, 4, '' ); }, array_slice( $features, 0, 4 ) ),
+                            'description'   => $desc_text,
+                            'features'      => array_slice( $clean_features, 0, 4 ),
                             'display_price' => $f_dp,
                             'old_price'     => $f_old,
                             'discount_pct'  => $f_pct,

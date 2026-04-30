@@ -393,48 +393,11 @@ function buildIncExcExtractionPrompt_(ctx, rawIncludes, rawExcludes, linkedTextB
     "   - PRIORITY 1: Take ALL items from 'Cost includes list (raw)'. These are MANDATORY.\n" +
     "   - PRIORITY 2: Only after processing Raw items, check 'Improved Itinerary Steps' and 'Highlights' for missing services.\n" +
     "   - Improve the wording to be clear and professional\n" +
-    "   - Keep 'Optional' or 'if selected' items in includes (they are still included, just conditional)\n" +
+    "   - Keep truly included conditional items only if they come from RAW includes (e.g. 'if selected')\n" +
+    "   - ⛔ DO NOT include any items from 'Improved AddOns' in the INCLUDES output. AddOns must stay ONLY in Extra Services.\n" +
     "   - ⛔ DUPLICATION CHECK: DO NOT add an inferred item if it is already covered (in meaning) by a Raw item.\n" +
     "     * Example: If Raw says 'All transfers', DO NOT add 'Airport pickup' (it is redundant).\n" +
     "     * Example: If Raw says 'Lunch', DO NOT add 'Daily meals' (it is redundant).\n" +
-    "   \n" +
-    "   ⚠️ CRITICAL - ADDONS MUST BE FORMATTED EXACTLY AS SPECIFIED:\n" +
-    "   ============================================================\n" +
-    "   For items from 'Improved AddOns (OPTIONAL SERVICES)':\n" +
-    "   \n" +
-    "   🔴 IMPORTANT: These are OPTIONAL services that are:\n" +
-    "      - Only included if the customer selects/purchases them\n" +
-    "      - Come with an extra charge/additional cost\n" +
-    "      - Must be clearly marked as 'Optional add-on' in the output\n" +
-    "   \n" +
-    "   MANDATORY FORMAT:\n" +
-    "   - With price: 'Original Name (Optional add-on - $XX)'\n" +
-    "   - Without price: 'Original Name (Optional add-on)'\n" +
-    "   \n" +
-    "   ⛔ DO NOT:\n" +
-    "   - DO NOT add descriptive phrases like 'for an authentic touch', 'to capture moments'\n" +
-    "   - DO NOT rewrite the service name completely\n" +
-    "   - DO NOT use '(if selected)' notation for AddOns\n" +
-    "   - DO NOT omit the price if it's provided\n" +
-    "   - DO NOT be creative with AddOns - use EXACT format\n" +
-    "   \n" +
-    "   ✅ CORRECT ADDONS EXAMPLES:\n" +
-    "   Input: 'FTS Scarve ($10) - Authentic Egyptian scarf... [OPTIONAL - Customer selects - Extra charge]'\n" +
-    "   Output: 'FTS Scarve (Optional add-on - $10)'\n" +
-    "   \n" +
-    "   Input: 'Shared Photographer per person ($30) - Professional photography... [OPTIONAL - Customer selects - Extra charge]'\n" +
-    "   Output: 'Shared Photographer per person (Optional add-on - $30)'\n" +
-    "   \n" +
-    "   Input: 'FTS Organic oils - 100% pure ($10) - Pure organic oils... [OPTIONAL - Customer selects - Extra charge]'\n" +
-    "   Output: 'FTS Organic oils - 100% pure (Optional add-on - $10)'\n" +
-    "   \n" +
-    "   ❌ WRONG ADDONS EXAMPLES (THESE ARE THE EXACT ERRORS WE SAW - DO NOT REPEAT):\n" +
-    "   ⛔ 'Cultural Egyptian scarves by FTS for an authentic touch' ← WRONG! TOO DESCRIPTIVE, NO PRICE, NO FORMAT\n" +
-    "   ⛔ 'Professional photographer to capture unforgettable moments' ← WRONG! TOO DESCRIPTIVE, NO PRICE, NO FORMAT\n" +
-    "   ⛔ 'FTS Scarve' ← WRONG! MISSING PRICE AND FORMAT\n" +
-    "   ⛔ 'FTS Scarve (if selected)' ← WRONG! WRONG NOTATION\n" +
-    "   ⛔ 'Authentic Egyptian scarf for a cultural experience' ← WRONG! COMPLETELY REWRITTEN\n" +
-    "   \n" +
     "   ✅ CORRECT NON-ADDON EXAMPLES (can be creative):\n" +
     "   'Professional driver for a smooth journey'\n" +
     "   'Comfortable air-conditioned transportation'\n" +
@@ -696,12 +659,7 @@ function generateSafeFallbackExcludes_(linkedTextBlocks, incSet, excSet, limit, 
   if (!rawExcludesCount) {
     candidates.push('Anything not mentioned in the itinerary');
   }
-  var hasAddOnCue = textBlob.indexOf('add-on') !== -1 || textBlob.indexOf('addon') !== -1 || textBlob.indexOf('optional') !== -1 || textBlob.indexOf('extra') !== -1;
-  if (hasAddOnCue) {
-    candidates.push('Optional add-ons unless selected');
-  } else {
-    candidates.push('Optional extras unless selected');
-  }
+  candidates.push('Optional extras unless selected');
   candidates.push('Personal expenses');
   candidates.push('Gratuities (tips)');
   candidates.push('Souvenirs');
@@ -938,180 +896,38 @@ function extractKeywords_(text) {
  * 🔥 محسّنة للتعرف على AddOns حتى لو تم إعادة كتابتها بطريقة وصفية
  */
 function reformatAddOnsInIncludes_(includes, addOnsData, tripId) {
-  if (!addOnsData || !addOnsData.length) {
-    return includes || [];
-  }
-  
-  var reformatted = [];
-  var reformattedCount = 0;
-  var matchedAddOnTitles = {}; // لتتبع الإضافات التي تم العثور عليها
-  
   var inputList = includes || [];
-  
-  inputList.forEach(function(item) {
-    var text = (item || '').toString().trim();
-    if (!text) return;
-    
-    var lower = text.toLowerCase();
-    var matched = false;
-    var bestMatch = null;
-    var bestScore = 0;
-    
-    // حاول مطابقة هذا العنصر مع أي AddOn
-    for (var i = 0; i < addOnsData.length; i++) {
-      var addOn = addOnsData[i];
-      var keywords = addOn.keywords || [];
-      var addOnTitleLower = addOn.title.toLowerCase();
-      
-      var score = 0;
-      
-      // 1) تحقق من المطابقة الكاملة لجزء من العنوان
-      if (lower.indexOf(addOnTitleLower) !== -1 || addOnTitleLower.indexOf(lower) !== -1) {
-        score += 10; // أعلى درجة للمطابقة الكاملة
-      }
-      
-      // 2) تحقق من وجود كلمات مفتاحية
-      for (var j = 0; j < keywords.length; j++) {
-        if (lower.indexOf(keywords[j]) !== -1) {
-          score += 2;
-          // 🔥 BOOST: كلمات طويلة ومميزة (مثل parasailing, submarine) تستحق وزن أكبر
-          if (keywords[j].length >= 6) score += 2;
-        }
-      }
-      
-      // 3) مطابقة خاصة للـ AddOns الشائعة
-      // FTS Scarve
-      if ((lower.indexOf('scarf') !== -1 || lower.indexOf('scarve') !== -1) && 
-          (lower.indexOf('fts') !== -1 || lower.indexOf('egyptian') !== -1 || lower.indexOf('cultural') !== -1)) {
-        score += 5;
-      }
-      
-      // Photographer
-      if ((lower.indexOf('photograph') !== -1) && 
-          (lower.indexOf('capture') !== -1 || lower.indexOf('moment') !== -1 || lower.indexOf('professional') !== -1 || lower.indexOf('shared') !== -1)) {
-        score += 5;
-      }
-      
-      // Organic Oils
-      if ((lower.indexOf('oil') !== -1 || lower.indexOf('organic') !== -1) && 
-          (lower.indexOf('fts') !== -1 || lower.indexOf('100%') !== -1 || lower.indexOf('pure') !== -1)) {
-        score += 5;
-      }
-      
-      // احتفظ بأفضل مطابقة
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = addOn;
-      }
-    }
-    
-    // إذا وجدنا مطابقة جيدة (درجة 3 أو أكثر)
-    if (bestScore >= 3 && bestMatch) {
-      matched = true;
-      var formattedAddOn = bestMatch.title;
-      
-      if (bestMatch.price) {
-        formattedAddOn += ' (Optional add-on - $' + bestMatch.price + ')';
-      } else {
-        formattedAddOn += ' (Optional add-on)';
-      }
-      
-      reformatted.push(formattedAddOn);
-      matchedAddOnTitles[bestMatch.title] = true;
-      reformattedCount++;
-      
-      Logger.log('✅ REFORMATTED ADDON [Trip ' + tripId + '] Score: ' + bestScore + ' | "' + text + '" → "' + formattedAddOn + '"');
-    }
-    
-    // إذا لم نجد مطابقة، نحتفظ بالنص الأصلي
-    if (!matched) {
-      reformatted.push(text);
-    }
-  });
-  
-  // 🆕 FORCE ADD: إضافة أي AddOn لم يتم العثور عليه في القائمة
-  // هذا يضمن ظهور جميع الخدمات الاختيارية حتى لو نسيها الـ AI
-  addOnsData.forEach(function(addOn) {
-    if (!matchedAddOnTitles[addOn.title]) {
-      var formattedAddOn = addOn.title;
-      if (addOn.price) {
-        formattedAddOn += ' (Optional add-on - $' + addOn.price + ')';
-      } else {
-        formattedAddOn += ' (Optional add-on)';
-      }
+  var addons = addOnsData || [];
+  if (!inputList.length) return [];
 
-      // 🔍 DUPLICATE CHECK: قبل الإضافة القسرية، تحقق مما إذا كان هناك عنصر "مشابه" موجود بالفعل
-      // هذا يمنع تكرار مثل: "Additional parasailing minutes" و "Parasailing (Optional add-on)"
-      var looseMatchIndex = -1;
-      var addOnKeywords = addOn.keywords || [];
-      
-      for (var k = 0; k < reformatted.length; k++) {
-         var existingItemLower = (reformatted[k] || '').toLowerCase();
-         
-         // تحقق مما إذا كانت الكلمات المفتاحية للـ AddOn موجودة في العنصر الحالي
-         var matchCount = 0;
-         for (var m = 0; m < addOnKeywords.length; m++) {
-           if (existingItemLower.indexOf(addOnKeywords[m]) !== -1) {
-             matchCount++;
-           }
-         }
-         
-         // إذا وجدنا كلمة مفتاحية قوية (طويلة) أو كلمتين عاديتين
-         var isLooseMatch = false;
-         if (addOnKeywords.length > 0) {
-           // لو كلمة واحدة فقط (مثل parasailing)، يكفي تطابقها
-           if (addOnKeywords.length === 1 && matchCount >= 1) isLooseMatch = true;
-           // لو أكثر، نطلب نصفهم على الأقل
-           else if (matchCount >= Math.max(1, addOnKeywords.length / 2)) isLooseMatch = true;
-         }
+  var addonNorms = addons.map(function(a) {
+    return a && a.title ? String(a.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  }).filter(function(x) { return !!x; });
 
-         // Special check for Parasailing
-         if (addOn.title.toLowerCase().indexOf('parasailing') !== -1 && existingItemLower.indexOf('parasailing') !== -1) {
-           isLooseMatch = true;
-         }
-
-         if (isLooseMatch) {
-           looseMatchIndex = k;
-           break;
-         }
+  var out = [];
+  for (var i = 0; i < inputList.length; i++) {
+    var text = String(inputList[i] || '').trim();
+    if (!text) continue;
+    var lc = text.toLowerCase();
+    if (lc.indexOf('(optional add-on') !== -1) continue;
+    if (lc.indexOf('[optional') !== -1) continue;
+    if (addonNorms.length) {
+      var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+      var isAddon = false;
+      for (var j = 0; j < addonNorms.length; j++) {
+        var a = addonNorms[j];
+        if (!a) continue;
+        if (k === a || k.indexOf(a) !== -1 || a.indexOf(k) !== -1) { isAddon = true; break; }
       }
-
-      if (looseMatchIndex !== -1) {
-         // 🔄 FOUND LOOSE MATCH: استبدل العنصر الموجود بالصيغة الرسمية
-         Logger.log('🔄 FORCE MATCH REPLACE [Trip ' + tripId + ']: Replacing loose match "' + reformatted[looseMatchIndex] + '" with Official "' + formattedAddOn + '"');
-         reformatted[looseMatchIndex] = formattedAddOn;
-         matchedAddOnTitles[addOn.title] = true;
-      } else {
-         // ➕ FORCE ADD: لم يتم العثور على أي أثر، أضفه
-         reformatted.push(formattedAddOn);
-         Logger.log('➕ FORCE ADDED ADDON [Trip ' + tripId + ']: "' + formattedAddOn + '" (Was missing from AI output)');
-      }
+      if (isAddon) continue;
     }
-  });
-  
-  if (reformattedCount > 0) {
-    Logger.log('✅ REFORMAT SUMMARY [Trip ' + tripId + ']: Reformatted ' + reformattedCount + ' AddOns to correct format');
+    out.push(text);
   }
-  
-  return reformatted;
+  return out;
 }
 
 function ensureMandatoryAddOnsOptional_(includes, addOnsData) {
-  var out = includes.slice();
-  var present = { scarve: false, photographer: false, oils: false };
-  for (var i = 0; i < out.length; i++) {
-    var mk = detectMandatoryAddOnVariant_(out[i]);
-    if (mk) present[mk] = true;
-  }
-  function pushCanonical(mk) {
-    var title = canonicalMandatoryAddOnTitle_(mk);
-    var formatted = formatCanonicalOptional_(title, addOnsData);
-    out.push(formatted);
-  }
-  if (!present.scarve) pushCanonical('scarve');
-  if (!present.photographer) pushCanonical('photographer');
-  if (!present.oils) pushCanonical('oils');
-  return out;
+  return (includes || []).slice();
 }
 
 function normalizeKey_(s) {
@@ -1150,24 +966,30 @@ function formatCanonicalOptional_(title, addOnsData) {
 function finalizeIncludesNoDup_(includes, addOnsData) {
   var out = [];
   var seen = {};
-  var mandSeen = {};
+  var addonNorms = (addOnsData || []).map(function(a) {
+    return a && a.title ? String(a.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  }).filter(function(x) { return !!x; });
   for (var i = 0; i < (includes || []).length; i++) {
     var rawItem = (includes[i] || '').toString().trim();
-    var mandKey = detectMandatoryAddOnVariant_(rawItem);
-    var item = rawItem;
-    if (mandKey) {
-      if (mandSeen[mandKey]) {
-        continue;
+    if (!rawItem) continue;
+    var lower = rawItem.toLowerCase();
+    if (lower.indexOf('(optional add-on') !== -1) continue;
+    if (lower.indexOf('[optional') !== -1) continue;
+    if (addonNorms.length) {
+      var k2 = lower.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+      var isAddon = false;
+      for (var j2 = 0; j2 < addonNorms.length; j2++) {
+        var a2 = addonNorms[j2];
+        if (!a2) continue;
+        if (k2 === a2 || k2.indexOf(a2) !== -1 || a2.indexOf(k2) !== -1) { isAddon = true; break; }
       }
-      mandSeen[mandKey] = true;
-      var canonical = canonicalMandatoryAddOnTitle_(mandKey);
-      item = formatCanonicalOptional_(canonical, addOnsData);
+      if (isAddon) continue;
     }
-    var key = normalizeKey_(item);
+    var key = normalizeKey_(rawItem);
     if (!key) continue;
     if (seen[key]) continue;
     seen[key] = true;
-    out.push(item);
+    out.push(rawItem);
   }
   out = ensureMandatoryAddOnsOptional_(out, addOnsData);
   var uniq = [];
@@ -1455,7 +1277,6 @@ function smartGroupItems_(items, maxCount, type) {
   
   // استراتيجية التجميع بناءً على الكلمات المفتاحية
   var groups = {};
-  var protectedItems = []; // العناصر التي لا يجب تجميعها
   
   // كلمات مفتاحية للتجميع
   var GROUPING_KEYWORDS = {
@@ -1471,11 +1292,7 @@ function smartGroupItems_(items, maxCount, type) {
   
   // تصنيف العناصر
   items.forEach(function(item) {
-    // ⚠️ استثناء: لا تقم بتجميع العناصر الاختيارية المحددة (Add-ons) للحفاظ عليها
-    if (item.indexOf('(Optional add-on') !== -1) {
-      protectedItems.push(item);
-      return;
-    }
+    if (item.indexOf('(Optional add-on') !== -1) return;
 
     var lower = item.toLowerCase();
     var assigned = false;
@@ -1501,7 +1318,7 @@ function smartGroupItems_(items, maxCount, type) {
   });
   
   // دمج المجموعات
-  var result = [].concat(protectedItems); // ابدأ بالعناصر المحمية
+  var result = [];
   
   for (var category in groups) {
     var groupItems = groups[category];
@@ -1531,8 +1348,6 @@ function smartGroupItems_(items, maxCount, type) {
         result.push('All transfers as per itinerary');
       } else if (category === 'personal') {
         result.push('Personal expenses and optional purchases');
-      } else if (category === 'optional') {
-        result.push('Optional add-ons unless selected');
       } else {
         // للمجموعات الأخرى، خذ أول عنصرين وأضف "and more"
         result.push(groupItems[0] + ', ' + groupItems[1] + ', and more');
@@ -1600,7 +1415,7 @@ function getDefaultIncludes_(count, existingIncludes) {
 function getDefaultExcludes_(count) {
   var defaults = [
     'Personal expenses and shopping',
-    'Optional add-ons unless selected',
+    'Optional extras unless selected',
     'Gratuities and tips',
     'Travel insurance',
     'Visa fees (if applicable)',
@@ -1634,25 +1449,11 @@ function deduplicateSimilarItems_(items, type, tripId) {
       
       // لو التشابه > 70%، اعتبره تكرار
       if (similarity > 0.7) {
-        // PREFERENCE RULE: دائماً فضل العنصر الذي يحتوي على "(Optional add-on" حتى لو كان أطول
-        var itemIsOptional = item.indexOf('(Optional add-on') !== -1;
-        var existingIsOptional = result[i].indexOf('(Optional add-on') !== -1;
-        
-        if (itemIsOptional && !existingIsOptional) {
-          // الجديد هو الاختياري (المفضل)، استبدل القديم به
-          Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Replacing "' + result[i] + '" with OPTIONAL "' + item + '"');
+        if (item.length < result[i].length) {
+          Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Replacing "' + result[i] + '" with shorter "' + item + '"');
           result[i] = item;
-        } else if (!itemIsOptional && existingIsOptional) {
-          // القديم هو الاختياري، احتفظ به
-          Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Keeping OPTIONAL "' + result[i] + '" over "' + item + '"');
         } else {
-          // كلاهما اختياري أو كلاهما عادي -> طبق قاعدة الأقصر
-          if (item.length < result[i].length) {
-            Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Replacing "' + result[i] + '" with shorter "' + item + '"');
-            result[i] = item;
-          } else {
-            Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Skipping duplicate "' + item + '"');
-          }
+          Logger.log('🔄 DEDUPLICATION [Trip ' + tripId + ']: Skipping duplicate "' + item + '"');
         }
         
         isDuplicate = true;

@@ -2790,7 +2790,31 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   if (data.includes.length > 0) {
     // WPTE expects a newline-separated string or array? 
     // JSON example shows: "Professional driver...\nHigh-quality..." (String with newlines)
-    wte.cost.cost_includes = data.includes.map(function(r){ return r.fields.IncludeItem; }).join('\n');
+    var addonNorms = (data.addons || []).map(function(r) {
+      return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    }).filter(function(x) { return !!x; });
+
+    var safeIncludes = data.includes
+      .map(function(r) { return r && r.fields ? String(r.fields.IncludeItem || '') : ''; })
+      .map(function(t) { return String(t || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); })
+      .filter(function(t) {
+        if (!t) return false;
+        var lc = t.toLowerCase();
+        if (/\boptional add-?on\b/.test(lc)) return false;
+        if (/\[\s*optional\b/.test(lc)) return false;
+        if (addonNorms.length) {
+          var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+          for (var i = 0; i < addonNorms.length; i++) {
+            var a = addonNorms[i];
+            if (!a) continue;
+            if (k === a) return false;
+            if (k.indexOf(a) !== -1 || a.indexOf(k) !== -1) return false;
+          }
+        }
+        return true;
+      });
+
+    wte.cost.cost_includes = safeIncludes.join('\n');
     wte.cost_includes = wte.cost.cost_includes;
   }
   if (data.excludes.length > 0) {
@@ -7581,6 +7605,14 @@ function normalizeSeoHeadTextForQuality_Updater_(s) {
   x = x.replace(/\s*\+\s*$/g, '');
   x = x.replace(/\s*&\s*$/g, '');
   x = x.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '');
+  var guard = 0;
+  while (guard < 6) {
+    var t = x.replace(/[.!?]+$/g, '').trim();
+    if (!t) { x = ''; break; }
+    if (!/\b(with|and|or|but|for|to|from|of|in|on|at|by|a|an|the)\b\s*$/i.test(t)) { x = t; break; }
+    x = t.replace(/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|a|an|the)\b[\s.]*$/i, '').trim();
+    guard++;
+  }
   x = x.replace(/\s+/g, ' ').trim();
   return x;
 }
