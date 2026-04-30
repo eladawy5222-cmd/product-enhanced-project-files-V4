@@ -900,7 +900,14 @@ function pub_hasUnsupportedHighRiskClaims_(text, flags) {
 }
 
 function pub_sanitizeSeoText_(s) {
-  return String(s || '').replace(/\s+/g, ' ').trim();
+  var x = String(s || '').replace(/\s+/g, ' ').trim();
+  x = x.replace(/\s+[|—–\-:;,]\s*$/g, '');
+  x = x.replace(/\s*[|—–\-:;,]+\s*$/g, '');
+  x = x.replace(/\s*\+\s*$/g, '');
+  x = x.replace(/\s*&\s*$/g, '');
+  x = x.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '');
+  x = x.replace(/\s+/g, ' ').trim();
+  return x;
 }
 
 function pub_isWeakMetaEnding_(s) {

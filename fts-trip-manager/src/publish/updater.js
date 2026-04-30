@@ -8607,6 +8607,7 @@ function normalizeSeoHeadTextForQuality_Updater_(s) {
   var x = String(s || '').replace(/\s+/g, ' ').trim()
   x = x.replace(/\s+[|—–\-:;,]\s*$/g, '')
   x = x.replace(/\s*[|—–\-:;,]+\s*$/g, '')
+  x = x.replace(/\s*\+\s*$/g, '')
   x = x.replace(/\s*&\s*$/g, '')
   x = x.replace(/\s*&\s*[A-Za-zÀ-ÿ]$/g, '')
   x = x.replace(/\s+/g, ' ').trim()
