@@ -1247,7 +1247,7 @@ class FTS_Trip_Redesign_V2 {
                 '#fts-booking-modal .ui-datepicker{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;background:transparent!important;border:0!important;box-shadow:none!important}' .
                 '@media(max-width:768px){#fts-booking-modal .fts-bm-step-header{font-size:20px!important}#fts-booking-modal .fts-bm-package-name{font-size:18px!important}#fts-booking-modal .fts-bm-price-current{font-size:18px!important}#fts-booking-modal .fts-bm-price-per{font-size:11px!important}}' .
                 '.fts-v2-root{background:#faf8f4!important}' .
-                '.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:18px!important}' .
+                '.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:0!important}' .
                 '.fts-v2-quick-bar{margin-top:12px!important}' .
                 '.fts-v2-at-a-glance{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px 12px!important;margin:12px 0 0!important;padding:0!important;list-style:none!important}' .
                 '.fts-v2-at-a-glance li{background:var(--v2-bg-gray,#f8fafc)!important;border:1px solid rgba(15,23,42,.08)!important;border-radius:12px!important;padding:10px 12px!important;font-size:13px!important;line-height:1.25!important;color:#334155!important}' .
@@ -1259,7 +1259,7 @@ class FTS_Trip_Redesign_V2 {
                 '.fts-v2-check-btn{min-height:52px!important;border-radius:12px!important;font-weight:800!important;box-shadow:0 10px 20px rgba(255,107,53,.24)!important}' .
                 '.fts-v2-payment-icons{background:#f8fafc!important;border-top:1px solid #eef2f7!important;padding:12px 14px!important;justify-content:center!important}' .
                 '@media(min-width:1025px){.fts-v2-main-layout{align-items:start!important;gap:34px!important}.fts-v2-content-col{max-width:760px!important}.fts-v2-sidebar-col{min-width:320px!important}.fts-v2-root .fts-v2-header-section,.fts-v2-root .fts-v2-trip-header,.fts-v2-root .fts-v2-title-wrap{margin-bottom:12px!important;padding-bottom:0!important}.fts-v2-root .fts-v2-gallery-section{margin-top:10px!important}}' .
-                '@media(max-width:768px){.fts-v2-at-a-glance{grid-template-columns:1fr!important;gap:8px!important}.fts-v2-at-a-glance li{padding:10px 12px!important;font-size:13px!important}.fts-v2-quick-bar{position:relative!important;z-index:5!important;margin-top:8px!important}.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:12px!important}.fts-v2-booking-current-price{font-size:26px!important}}'
+                '@media(max-width:768px){.fts-v2-at-a-glance{grid-template-columns:1fr!important;gap:8px!important}.fts-v2-at-a-glance li{padding:10px 12px!important;font-size:13px!important}.fts-v2-quick-bar{position:relative!important;z-index:5!important;margin-top:8px!important}.fts-v2-root .fts-v2-gallery-section,.fts-v2-root .fts-v2-gallery-wrapper,.fts-v2-root .fts-v2-gallery{margin-top:10px!important}.fts-v2-booking-current-price{font-size:26px!important}}'
             );
 
         } catch ( \Throwable $e ) {

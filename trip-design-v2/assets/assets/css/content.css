@@ -5,7 +5,7 @@
 /* Hero Section — breadcrumbs, title, share, meta badges */
 .fts-v2-hero-section {
     background: var(--v2-bg-page) !important;
-    padding: 56px 0 36px !important;
+    padding: 52px 0 22px !important;
 }
 
 .fts-v2-breadcrumbs {
@@ -15,7 +15,7 @@
     gap: 0 !important;
     font-size: 13px !important;
     line-height: 1.4 !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 10px !important;
 }
 .fts-v2-breadcrumbs a {
     color: var(--v2-text-light) !important;
@@ -40,7 +40,7 @@
     align-items: flex-start !important;
     justify-content: space-between !important;
     gap: 20px !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 14px !important;
 }
 .fts-v2-trip-title {
     font-family: var(--v2-font-heading) !important;
@@ -122,9 +122,6 @@
 }
 
 @media (min-width: 992px) {
-    .fts-v2-hero-section {
-        min-height: 460px !important;
-    }
     .fts-v2-trip-title {
         font-size: 36px !important;
     }
