@@ -1,0 +1,30 @@
+/* ============================================================================
+   FTS V2 - Base / Root Reset
+   ============================================================================ */
+.fts-v2-root {
+    font-family: var(--v2-font-body) !important;
+    color: var(--v2-text) !important;
+    line-height: 1.6 !important;
+    background: var(--v2-bg-page) !important;
+    -webkit-font-smoothing: antialiased !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+}
+
+.fts-v2-root *, .fts-v2-root *::before, .fts-v2-root *::after {
+    box-sizing: border-box !important;
+}
+
+.fts-v2-container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 20px !important;
+}
+
+.fts-v2-root img {
+    height: auto;
+    max-width: 100%;
+}

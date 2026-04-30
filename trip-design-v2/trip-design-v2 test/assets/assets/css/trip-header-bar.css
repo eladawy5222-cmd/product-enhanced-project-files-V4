@@ -1,0 +1,327 @@
+/* =====================================================
+   FINAL UNIFIED HEADER STYLE
+   Match trip page header to homepage header
+   ===================================================== */
+
+/* الحاوية الرئيسية */
+#fts-v2-trip-header .fts-v2-thb-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    padding: 0 14px !important;
+}
+
+/* الشعار */
+#fts-v2-trip-header .fts-v2-thb-logo,
+#fts-v2-trip-header .fts-v2-thb-logo a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 0 auto !important;
+    min-width: 70px !important;
+    line-height: 1 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-logo img,
+#fts-v2-trip-header .fts-v2-thb-logo-img,
+#fts-v2-trip-header .fts-v2-thb-logo-image {
+    display: block !important;
+    width: auto !important;
+    height: 30px !important;
+    max-height: 30px !important;
+    object-fit: contain !important;
+}
+
+/* مجموعة الأدوات */
+#fts-v2-trip-header .fts-v2-thb-utils {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+}
+
+/* كل عنصر داخل الأدوات */
+#fts-v2-trip-header .fts-v2-thb-item,
+#fts-v2-trip-header .fts-v2-thb-utils > * {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* =====================================================
+   Currency switcher = نفس روح language switcher
+   ===================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
+#fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency,
+#fts-v2-trip-header .fts-v2-thb-currency button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+}
+
+/* hover currency */
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current:hover,
+#fts-v2-trip-header .fts-v2-thb-currency .selected-currency:hover,
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover,
+#fts-v2-trip-header .fts-v2-thb-currency button:hover {
+    background: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* تقليل حجم رموز العملة */
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-flag,
+#fts-v2-trip-header .fts-v2-thb-currency .currency-symbol {
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-code {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.2px !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-arrow {
+    font-size: 9px !important;
+    opacity: 0.75 !important;
+    line-height: 1 !important;
+}
+
+/* =====================================================
+   Language switcher
+   ===================================================== */
+
+#fts-v2-trip-header .fts-v2-lang-current {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    background: #e79a45 !important;
+    border: 1px solid rgba(231,154,69,0.45) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-current:hover,
+#fts-v2-trip-header .fts-v2-lang-switcher.open .fts-v2-lang-current {
+    background: #e79a45 !important;
+    color: #ffffff !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-flag {
+    width: 15px !important;
+    height: 11px !important;
+    border-radius: 2px !important;
+    object-fit: cover !important;
+    flex: 0 0 auto !important;
+}
+
+/* =====================================================
+   Search + burger
+   ===================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger,
+#fts-v2-trip-header .fts-v2-thb-burger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* السهم/الهامبرغر */
+#fts-v2-trip-header .fts-v2-thb-burger {
+    margin-left: 2px !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-burger span {
+    width: 18px !important;
+    height: 2px !important;
+    margin: 2px 0 !important;
+    border-radius: 2px !important;
+    background: #ffffff !important;
+}
+
+/* عند الفتح يبقى X متناسق */
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg) !important;
+}
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(2) {
+    opacity: 0 !important;
+}
+#fts-v2-trip-header .fts-v2-thb-burger.active span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg) !important;
+}
+
+/* =====================================================
+   Mobile menu links
+   ===================================================== */
+
+#fts-v2-trip-header .fts-v2-thb-mobile-menu {
+    padding: 0 14px 14px !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav > li > a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+/* توحيد مكان سهم submenu */
+#fts-v2-trip-header .fts-v2-mob-submenu-toggle {
+    margin-left: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    color: rgba(255,255,255,0.72) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    flex: 0 0 18px !important;
+}
+
+#fts-v2-trip-header .fts-v2-mob-submenu-toggle svg {
+    width: 12px !important;
+    height: 12px !important;
+    display: block !important;
+    stroke: currentColor !important;
+    transition: transform 0.25s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav li.sub-open > a .fts-v2-mob-submenu-toggle svg {
+    transform: rotate(180deg) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-mobile-nav li.sub-open > a .fts-v2-mob-submenu-toggle {
+    color: #e79a45 !important;
+}
+
+/* =====================================================
+   Dropdowns
+   ===================================================== */
+
+#fts-v2-trip-header .fts-v2-lang-dropdown {
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    min-width: 236px !important;
+    max-width: 260px !important;
+    padding: 7px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.16) !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-dropdown a {
+    min-height: 34px !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+}
+
+/* عمل dropdown العملة بنفس الروح */
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-dropdown {
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    min-width: 140px !important;
+    border-radius: 12px !important;
+    padding: 6px 0 !important;
+    box-shadow: 0 16px 32px rgba(0,0,0,0.16) !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item {
+    min-height: 34px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* =====================================================
+   Small mobile
+   ===================================================== */
+
+@media (max-width: 480px) {
+    #fts-v2-trip-header .fts-v2-thb-inner {
+        min-height: 54px !important;
+        height: 54px !important;
+        padding: 0 10px !important;
+        gap: 10px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-logo img,
+    #fts-v2-trip-header .fts-v2-thb-logo-img,
+    #fts-v2-trip-header .fts-v2-thb-logo-image {
+        height: 28px !important;
+        max-height: 28px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-utils {
+        gap: 8px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
+    #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
+    #fts-v2-trip-header .fts-v2-thb-currency button {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 8px !important;
+        font-size: 11px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-search .fts-ss-trigger,
+    #fts-v2-trip-header .fts-v2-thb-burger {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-dropdown {
+        min-width: 228px !important;
+        max-width: 244px !important;
+    }
+}

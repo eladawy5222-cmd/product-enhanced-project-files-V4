@@ -1,0 +1,29 @@
+/* ============================================================================
+   FTS V2 - Design Tokens & CSS Variables
+   ============================================================================ */
+:root {
+    --v2-primary: #ff6b35;
+    --v2-primary-dark: #e55a28;
+    --v2-primary-light: #fff3ee;
+    --v2-secondary: #ffd166;
+    --v2-accent: #ef476f;
+    --v2-success: #06d6a0;
+    --v2-info: #118ab2;
+    --v2-dark: #1a1a2e;
+    --v2-text: #2d3436;
+    --v2-text-light: #636e72;
+    --v2-text-muted: #b2bec3;
+    --v2-bg: #ffffff;
+    --v2-bg-page: #F8F7F4;
+    --v2-bg-gray: #f8f9fa;
+    --v2-border: #e9ecef;
+    --v2-shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --v2-shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+    --v2-shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+    --v2-radius-sm: 8px;
+    --v2-radius-md: 12px;
+    --v2-radius-lg: 16px;
+    --v2-radius-xl: 20px;
+    --v2-font-heading: 'Outfit', sans-serif;
+    --v2-font-body: 'Inter', sans-serif;
+}

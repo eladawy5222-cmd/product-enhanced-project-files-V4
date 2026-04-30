@@ -1,0 +1,166 @@
+/* ============================================================================
+   FTS V2 - Packages & Inline Photo Gallery
+   ============================================================================ */
+
+/* Package Cards — 2-column grid */
+.fts-v2-packages-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 24px !important;
+}
+
+.fts-v2-package-card {
+    background: var(--v2-bg) !important;
+    border: 2px solid var(--v2-border) !important;
+    border-radius: 16px !important;
+    padding: 28px 24px 24px !important;
+    position: relative !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.fts-v2-package-card:hover {
+    border-color: var(--v2-primary) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
+    transform: translateY(-4px) !important;
+}
+.fts-v2-package-popular {
+    border-color: var(--v2-primary) !important;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.15) !important;
+}
+.fts-v2-package-best-value {
+    border-color: #38a169 !important;
+    box-shadow: 0 4px 16px rgba(56,161,105,0.12) !important;
+}
+
+/* ─── Badges ─── */
+.fts-v2-package-badge {
+    position: absolute !important;
+    top: -1px !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 5px 16px !important;
+    border-radius: 100px !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+.fts-v2-badge-popular {
+    background: var(--v2-primary) !important;
+}
+.fts-v2-badge-value {
+    background: #38a169 !important;
+}
+
+/* ─── Package Content ─── */
+.fts-v2-package-name {
+    font-family: var(--v2-font-heading) !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: var(--v2-dark) !important;
+    margin: 4px 0 2px 0 !important;
+    line-height: 1.3 !important;
+}
+.fts-v2-package-desc {
+    font-size: 13px !important;
+    color: var(--v2-text-muted) !important;
+    margin: 0 0 12px 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* ─── Price ─── */
+.fts-v2-package-price {
+    margin-bottom: 14px !important;
+}
+.fts-v2-pkg-old {
+    text-decoration: line-through !important;
+    color: var(--v2-text-muted) !important;
+    font-size: 14px !important;
+    display: block !important;
+    margin-bottom: 2px !important;
+}
+.fts-v2-pkg-current {
+    font-family: var(--v2-font-heading) !important;
+    font-size: 30px !important;
+    font-weight: 800 !important;
+    color: var(--v2-dark) !important;
+    line-height: 1 !important;
+}
+.fts-v2-pkg-per {
+    color: var(--v2-text-light) !important;
+    font-size: 14px !important;
+}
+
+/* ─── Features List ─── */
+.fts-v2-package-features {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 0 auto 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding-bottom: 16px !important;
+}
+.fts-v2-package-features li {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 14px !important;
+    color: #374151 !important;
+    line-height: 1.3 !important;
+}
+.fts-v2-package-features li svg {
+    flex-shrink: 0 !important;
+}
+
+/* ─── Select Button ─── */
+.fts-v2-package-select-btn {
+    display: block !important;
+    width: 100% !important;
+    padding: 14px !important;
+    background: var(--v2-primary) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+    margin-top: auto !important;
+}
+.fts-v2-package-select-btn:hover {
+    background: var(--v2-primary-dark) !important;
+    color: #fff !important;
+    transform: translateY(-1px) !important;
+}
+.fts-v2-package-popular .fts-v2-package-select-btn {
+    background: var(--v2-primary) !important;
+}
+.fts-v2-package-best-value .fts-v2-package-select-btn {
+    background: #1a2332 !important;
+}
+.fts-v2-package-best-value .fts-v2-package-select-btn:hover {
+    background: #2d3a4d !important;
+}
+
+.fts-v2-single-price-card {
+    background: var(--v2-bg-gray) !important;
+    border-radius: var(--v2-radius-lg) !important;
+    padding: 24px !important;
+}
+
+/* Inline Photo Gallery */
+.fts-v2-photo-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 12px !important; }
+.fts-v2-photo-item { border-radius: var(--v2-radius-md) !important; overflow: hidden !important; cursor: pointer !important; aspect-ratio: 4/3 !important; }
+.fts-v2-root .fts-v2-photo-item img,
+.fts-v2-photo-item img {
+    display: block !important; width: 100% !important; height: 100% !important;
+    max-width: none !important; object-fit: cover !important; transition: transform 0.3s !important;
+}
+.fts-v2-photo-item:hover img { transform: scale(1.05) !important; }
