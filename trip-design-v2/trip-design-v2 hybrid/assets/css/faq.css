@@ -1,0 +1,21 @@
+/* ============================================================================
+   FTS V2 - FAQ Accordion
+   ============================================================================ */
+.fts-v2-faq-list { border: 1px solid var(--v2-border) !important; border-radius: var(--v2-radius-lg) !important; overflow: hidden !important; }
+.fts-v2-faq-item { border-bottom: 1px solid var(--v2-border) !important; }
+.fts-v2-faq-item:last-child { border-bottom: none !important; }
+
+.fts-v2-faq-question {
+    padding: 18px 24px !important; display: flex !important;
+    justify-content: space-between !important; align-items: center !important;
+    cursor: pointer !important; transition: background 0.2s !important; gap: 16px !important;
+}
+.fts-v2-faq-question:hover { background: var(--v2-bg-gray) !important; }
+.fts-v2-faq-question span { font-weight: 600 !important; font-size: 13px !important; color: var(--v2-dark) !important; }
+.fts-v2-faq-question i { color: var(--v2-text-muted) !important; font-size: 12px !important; transition: transform 0.3s !important; flex-shrink: 0 !important; }
+.fts-v2-faq-item.active .fts-v2-faq-question i { transform: rotate(180deg) !important; }
+
+.fts-v2-faq-answer {
+    display: none; padding: 0 24px 18px 24px !important;
+    font-size: 13px !important; color: var(--v2-text-light) !important; line-height: 1.65 !important;
+}

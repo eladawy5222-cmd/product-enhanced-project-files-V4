@@ -1,0 +1,114 @@
+/* ============================================================================
+   FTS V2 - Theme Container Overrides
+   Break out of Travel Monster's .site-content > .container > .main-content-wrapper
+   ============================================================================ */
+
+body.single-trip {
+    background: var(--v2-bg-page, #F8F7F4) !important;
+    overflow: visible !important;
+}
+body.single-trip .site-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+}
+body.single-trip .site-content > .container,
+body.single-trip .site-content > .container-full {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+}
+body.single-trip .site-content .main-content-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    float: none !important;
+    overflow: visible !important;
+}
+body.single-trip #primary {
+    width: 100% !important;
+    padding: 0 !important;
+    float: none !important;
+    overflow: visible !important;
+}
+body.single-trip #primary > article,
+body.single-trip #page,
+body.single-trip .fts-v2-root {
+    overflow: visible !important;
+}
+body.single-trip #secondary {
+    display: none !important;
+}
+body.single-trip #masthead,
+body.single-trip .site-header,
+body.single-trip .header-layout-1,
+body.single-trip .header-layout-2,
+body.single-trip .header-layout-3,
+body.single-trip .sticky-header,
+body.single-trip .page-header-top,
+body.single-trip .site-content > .container > .travel-monster-breadcrumb-wrap,
+body.single-trip .banner-wrapper,
+body.single-trip .site-content .travel-monster-breadcrumb-wrap,
+body.single-trip .elementor-location-header,
+body.single-trip [data-elementor-type="header"],
+body.single-trip .elementor-sticky:not(.fts-v2-root .elementor-sticky),
+body.single-trip > .elementor > .e-con.e-parent:not(.fts-v2-root .e-con),
+body.single-trip > .e-con.e-parent.elementor-sticky,
+body.single-trip #page > .elementor-sticky,
+body.single-trip #page > .e-con.e-parent {
+    display: none !important;
+}
+
+/* Kill ALL Trustindex hover effects globally */
+.ti-widget *:hover,
+.ti-widget *:hover *,
+.ti-review-item:hover,
+.ti-review-item:hover .ti-inner,
+.ti-stars:hover,
+.ti-stars img:hover,
+.ti-mob-row:hover,
+.ti-mob-row:hover *,
+.ti-header:hover,
+.ti-header:hover *,
+.ti-fade-container:hover,
+.ti-fade-container:hover * {
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    background: inherit !important;
+    border-color: inherit !important;
+}
+.fts-v2-meta-tidx *:hover,
+.fts-v2-trust-tidx-row *:hover,
+.fts-bm-trust-tidx *:hover,
+.fts-v2-sidebar-tidx *:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-decoration: none !important;
+}
+
+/* Lightbox controls — force visibility on all devices */
+.fts-v2-lightbox.active .fts-v2-lb-close,
+.fts-v2-lightbox.active .fts-v2-lb-prev,
+.fts-v2-lightbox.active .fts-v2-lb-next {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+.fts-v2-lb-close svg,
+.fts-v2-lb-prev svg,
+.fts-v2-lb-next svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
