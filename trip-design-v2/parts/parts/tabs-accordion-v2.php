@@ -171,12 +171,65 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
     <!-- ==================== PRICING / PACKAGES ==================== -->
     <section id="fts-v2-sec-pricing" class="fts-v2-section">
-        <h2 class="fts-v2-section-title"><?php echo esc_html__( 'Pricing', 'fts' ); ?></h2>
-        <div class="fts-v2-single-price-card">
-            <div class="fts-v2-booking-form-wrap">
-                <?php do_action( 'wp_travel_engine_trip_price' ); ?>
+        <h2 class="fts-v2-section-title"><?php echo esc_html__( 'Choose Your Package', 'fts' ); ?></h2>
+        <?php if ( ! empty( $packages_list ) ) : ?>
+            <p class="fts-v2-section-subtitle"><?php echo esc_html__( 'Compare package options and pick the one that fits your trip best.', 'fts' ); ?></p>
+            <div class="fts-v2-packages-grid">
+                <?php foreach ( $packages_list as $package ) : ?>
+                    <div class="fts-v2-package-card<?php echo ! empty( $package['is_primary'] ) ? ' is-primary' : ''; ?>">
+                        <?php if ( ! empty( $package['badge'] ) ) : ?>
+                            <span class="fts-v2-package-badge fts-v2-package-badge--<?php echo esc_attr( sanitize_html_class( $package['badge'] ) ); ?>">
+                                <?php
+                                echo esc_html(
+                                    'best_value' === $package['badge']
+                                        ? __( 'Best Value', 'fts' )
+                                        : __( 'Most Popular', 'fts' )
+                                );
+                                ?>
+                            </span>
+                        <?php endif; ?>
+
+                        <h3 class="fts-v2-package-name"><?php echo esc_html( wp_strip_all_tags( $package['name'] ?? '' ) ); ?></h3>
+
+                        <?php if ( ! empty( $package['description'] ) ) : ?>
+                            <p class="fts-v2-package-desc"><?php echo esc_html( wp_strip_all_tags( $package['description'] ) ); ?></p>
+                        <?php endif; ?>
+
+                        <div class="fts-v2-package-price">
+                            <?php if ( ! empty( $package['old_price'] ) ) : ?>
+                                <span class="fts-v2-pkg-old"><?php echo wte_get_formated_price( $package['old_price'] ); ?></span>
+                            <?php endif; ?>
+                            <span class="fts-v2-pkg-current"><?php echo wte_get_formated_price( $package['display_price'] ?? 0 ); ?></span>
+                            <span class="fts-v2-pkg-per"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
+                        </div>
+
+                        <?php if ( ! empty( $package['features'] ) && is_array( $package['features'] ) ) : ?>
+                            <ul class="fts-v2-package-features">
+                                <?php foreach ( $package['features'] as $feature ) : ?>
+                                    <?php if ( empty( trim( (string) $feature ) ) ) continue; ?>
+                                    <li>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                        <span><?php echo esc_html( wp_strip_all_tags( $feature ) ); ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+
+                        <button
+                            type="button"
+                            class="fts-v2-package-select-btn fts-bm-trigger"
+                            data-package-id="<?php echo esc_attr( $package['id'] ?? '' ); ?>"
+                        ><?php echo esc_html__( 'Select Package', 'fts' ); ?></button>
+                    </div>
+                <?php endforeach; ?>
             </div>
-        </div>
+        <?php else : ?>
+            <div class="fts-v2-single-price-card">
+                <div class="fts-v2-booking-form-wrap">
+                    <?php do_action( 'wp_travel_engine_trip_price' ); ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </section>
 
     <!-- ==================== PHOTO GALLERY ==================== -->

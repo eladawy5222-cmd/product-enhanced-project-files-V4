@@ -340,6 +340,68 @@
 
 @media (max-width: 768px) {
 
+    .fts-v2-packages-grid {
+
+        grid-template-columns: 1fr !important;
+
+        gap: 14px !important;
+
+    }
+
+    .fts-v2-package-card {
+
+        padding: 16px !important;
+
+        gap: 12px !important;
+
+    }
+
+    .fts-v2-package-name {
+
+        font-size: 17px !important;
+
+    }
+
+    .fts-v2-package-desc {
+
+        font-size: 12px !important;
+
+        line-height: 1.5 !important;
+
+    }
+
+    .fts-v2-package-price {
+
+        gap: 6px !important;
+
+    }
+
+    .fts-v2-pkg-current {
+
+        font-size: 24px !important;
+
+    }
+
+    .fts-v2-pkg-old,
+
+    .fts-v2-pkg-per,
+
+    .fts-v2-package-features li {
+
+        font-size: 12px !important;
+
+    }
+
+    .fts-v2-package-select-btn {
+
+        min-height: 48px !important;
+
+        padding: 13px 16px !important;
+
+        font-size: 13px !important;
+
+    }
+
     .fts-v2-mobile-book-bar {
 
         position: fixed !important;
