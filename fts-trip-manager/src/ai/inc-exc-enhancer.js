@@ -378,6 +378,7 @@ async function runAiIncludesExcludesExtractionBatch() {
         // 🆕 إزالة التكرار الصارم وضمان وجود الـ AddOns الاختيارية بصيغة واحدة فقط
         includes = finalizeIncludesNoDup_(includes, improvedAddOnsData);
         includes = filterConditionalItemsNotInRaw_(includes, rawIncludes);
+        includes = filterHighRiskIncludesNotInRaw_(includes, rawIncludes, rawExcludes, tripId);
         excludes = finalizeNoDupStrict_(excludes);
         
         // 🆕 فلترة excludes الغريبة أو غير المناسبة
@@ -590,6 +591,7 @@ function buildIncExcExtractionPrompt_(ctx, rawIncludes, rawExcludes, linkedTextB
     "   - PRIORITY 2: Only after processing Raw items, check 'Improved Itinerary Steps' and 'Highlights' for missing services.\n" +
     "   - Improve the wording to be clear and professional\n" +
     "   - Keep truly included conditional items only if they come from RAW includes (e.g. 'if selected')\n" +
+    "   - 🚨 HIGH-RISK SAFETY: Do NOT add Entrance fees/tickets, Guide/Egyptologist, Lunch/Meals, or Pickup/Drop-off as INCLUDED unless they are explicitly present in the RAW Cost Includes list.\n" +
     "   - ⛔ DO NOT include any items from 'Improved AddOns' in the INCLUDES output. AddOns must stay ONLY in Extra Services.\n" +
     "   - ⛔ DUPLICATION CHECK: DO NOT add an inferred item if it is already covered (in meaning) by a Raw item.\n" +
     "     * Example: If Raw says 'All transfers', DO NOT add 'Airport pickup' (it is redundant).\n" +
@@ -994,6 +996,7 @@ function fetchImprovedAddOnsDataForTrip_(tripId, tripNumber, tripName) {
   if (!tripId && !tripNumber) return [];
   
   var ADDONS_IMPROVEMENT_TABLE = 'AddOns Improvement With AI';
+  var ADDONS_BASE_TABLE = 'AddOns';
   
   var conditions = [];
   if (tripId) conditions.push("ARRAYJOIN({Trip}) = '" + tripId + "'");
@@ -1013,27 +1016,40 @@ function fetchImprovedAddOnsDataForTrip_(tripId, tripNumber, tripName) {
   try {
     log('AI Inc/Exc: fetching Improved AddOns for Trip ' + tripId + ' (Formula: ' + formula + ')');
     var res = airtableGet_(ADDONS_IMPROVEMENT_TABLE, params);
-    if (!res || !res.records || !res.records.length) {
-      log('AI Inc/Exc: No Improved AddOns found.');
-      return [];
-    }
-    
-    log('AI Inc/Exc: Found ' + res.records.length + ' Improved AddOns.');
-    
     var addOns = [];
-    res.records.forEach(function(r) {
-      var f = r.fields || {};
-      var title = f.AI_AddOn_Title || "";
-      var price = f.AI_AddOn_Price || "";
-      
-      if (title) {
-        addOns.push({
-          title: title,
-          price: price,
-          keywords: extractKeywords_(title)
-        });
-      }
-    });
+    if (res && res.records && res.records.length) {
+      log('AI Inc/Exc: Found ' + res.records.length + ' Improved AddOns.');
+      res.records.forEach(function(r) {
+        var f = r.fields || {};
+        var title = f.AI_AddOn_Title || "";
+        var price = f.AI_AddOn_Price || "";
+        if (title) {
+          addOns.push({
+            title: title,
+            price: price,
+            keywords: extractKeywords_(title)
+          });
+        }
+      });
+    } else {
+      log('AI Inc/Exc: No Improved AddOns found.');
+    }
+
+    if (!addOns.length) {
+      try {
+        log('AI Inc/Exc: fetching Raw AddOns fallback for Trip ' + tripId + ' (Formula: ' + formula + ')');
+        var resRaw = airtableGet_(ADDONS_BASE_TABLE, params);
+        if (resRaw && resRaw.records && resRaw.records.length) {
+          resRaw.records.forEach(function(r) {
+            var f = r.fields || {};
+            var title = f.AddOnTitle || f.AddOn_Name || f.Name || f.Title || "";
+            if (!title) return;
+            addOns.push({ title: title, price: '', keywords: extractKeywords_(title) });
+          });
+          log('AI Inc/Exc: Raw AddOns fallback added ' + addOns.length + ' item(s).');
+        }
+      } catch (e2) {}
+    }
     
     return addOns;
   } catch (e) {
@@ -1242,6 +1258,43 @@ function filterConditionalItemsNotInRaw_(includes, rawIncludes) {
     }
     out.push(it)
   }
+  return out
+}
+
+function filterHighRiskIncludesNotInRaw_(includes, rawIncludes, rawExcludes, tripId) {
+  var xs = Array.isArray(includes) ? includes : []
+  var ri = Array.isArray(rawIncludes) ? rawIncludes : []
+  var re = Array.isArray(rawExcludes) ? rawExcludes : []
+  var rawIncLc = ri.join(' ').toLowerCase()
+  var rawExcLc = re.join(' ').toLowerCase()
+  if (!rawIncLc) return xs.slice()
+
+  function hasEntrance_(s) { return /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s) }
+  function hasGuide_(s) { return /\b(egyptologist|tour guide|guide)\b/.test(s) }
+  function hasLunch_(s) { return /\b(lunch|meal|meals)\b/.test(s) }
+  function hasPickup_(s) { return /\b(pick-?up|pickup|drop-?off)\b/.test(s) }
+
+  var out = []
+  var removed = 0
+  for (var i = 0; i < xs.length; i++) {
+    var it = String(xs[i] || '').replace(/\s+/g, ' ').trim()
+    if (!it) continue
+    var lc = it.toLowerCase()
+    if (hasEntrance_(lc)) {
+      if (!hasEntrance_(rawIncLc) || (hasEntrance_(rawExcLc) && !hasEntrance_(rawIncLc))) { removed++; continue }
+    }
+    if (hasGuide_(lc)) {
+      if (!hasGuide_(rawIncLc)) { removed++; continue }
+    }
+    if (hasLunch_(lc)) {
+      if (!hasLunch_(rawIncLc)) { removed++; continue }
+    }
+    if (hasPickup_(lc)) {
+      if (!hasPickup_(rawIncLc)) { removed++; continue }
+    }
+    out.push(it)
+  }
+  if (removed > 0) log('✅ High-risk includes filtered [Trip ' + tripId + ']: removed ' + removed + ' item(s) not present in raw includes')
   return out
 }
 

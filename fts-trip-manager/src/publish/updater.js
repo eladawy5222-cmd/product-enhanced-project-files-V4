@@ -2044,6 +2044,14 @@ async function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
      log('Updater: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
   }
+  data.addonsRaw = []
+  if (!data.addons || !data.addons.length) {
+    try {
+      data.addonsRaw = await findRecordsByLinkedId_Updater_('AddOns', 'Trip', tripId)
+    } catch (e) {
+      data.addonsRaw = []
+    }
+  }
 
   abortIfIncompleteLookup_Updater_(tripId, [
     { label: 'General Improvement', tableName: UPDATER_IMPROVEMENT_TABLE, linkFieldName: 'Trip', mode: 'single' },
@@ -2757,6 +2765,13 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
       var safeRmTitle = upd_removeUnsupportedHighRiskParts_Updater_(payload.meta.rank_math_title, seoFlags);
       safeRmTitle = String(safeRmTitle || '').trim();
       safeRmTitle = upd_normalizeMuseumEntityText_Updater_(safeRmTitle, civCtx);
+      var evTitleText = [
+        String(g.AI_Trip_Description || ''),
+        String(g.AI_Itinerary_Description || ''),
+        (data.itinerary || []).map(function (r) { return r && r.fields ? String(r.fields.AI_Step_Title || '') + ' ' + String(r.fields.AI_Step_Description || '') : '' }).join(' | '),
+        (data.highlights || []).map(function (r) { return r && r.fields ? String(r.fields.AI_Highlight || '') : '' }).join(' | ')
+      ].join(' | ')
+      safeRmTitle = upd_strengthenCairoCivilizationSeoTitle_Updater_(safeRmTitle, civCtx, seoFlags, evTitleText);
       if (safeRmTitle) payload.meta.rank_math_title = safeRmTitle; else delete payload.meta.rank_math_title;
     }
     if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'rank_math_description') && payload.meta.rank_math_description) {
@@ -2867,6 +2882,12 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     var addonNorms = (data.addons || []).map(function (r) {
       return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).filter(Boolean)
+    if (!addonNorms.length) {
+      addonNorms = (data.addonsRaw || []).map(function (r) {
+        var f = r && r.fields ? r.fields : {}
+        return String(f.AddOnTitle || f.AddOn_Name || f.Name || f.Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+      }).filter(Boolean)
+    }
     var excludesLc = (data.excludes || []).map(function (r) {
       return r && r.fields ? String(r.fields.ExcludeItem || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).join(' | ')
@@ -2914,6 +2935,22 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
     wte.cost_excludes = wte.cost.cost_excludes;
   }
   
+  if (wte && wte.tab_content && wte.tab_content['1_wpeditor']) {
+    wte.tab_content['1_wpeditor'] = upd_applyGuideTruthToText_Updater_(wte.tab_content['1_wpeditor'], wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+    payload.core.content = wte.tab_content['1_wpeditor'];
+    payload.content = wte.tab_content['1_wpeditor'];
+  }
+  if (wte && wte.tab_content && wte.tab_content['8_wpeditor']) {
+    wte.tab_content['8_wpeditor'] = upd_applyGuideTruthToText_Updater_(wte.tab_content['8_wpeditor'], wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+  }
+  if (wte && Array.isArray(wte.trip_highlights) && wte.trip_highlights.length) {
+    wte.trip_highlights = wte.trip_highlights.map(function (h) {
+      var t0 = h && h.highlight_text ? String(h.highlight_text) : '';
+      t0 = upd_applyGuideTruthToText_Updater_(t0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+      return { highlight_text: t0 };
+    });
+  }
+  
   // FAQs
   if (g.AI_FAQ_Section_Title) wte.faq_section_title = g.AI_FAQ_Section_Title;
   if (data.faqs.length > 0) {
@@ -2926,6 +2963,8 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
       var a0 = rec && rec.fields ? String(rec.fields.AI_Answer || '') : '';
       a0 = upd_fixBrokenFaqText_Updater_(a0);
       a0 = upd_finalizeEntranceFeesFaqAnswer_Updater_(q0, a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+      a0 = upd_removeUnsupportedHighRiskParts_Updater_(a0, seoFlags);
+      a0 = upd_fixBrokenFaqText_Updater_(a0);
       wte.faq.faq_title.push(q0);
       wte.faq.faq_content.push(a0);
       wte.faq_title.push(q0);
@@ -3345,6 +3384,41 @@ function upd_fixBrokenFaqText_Updater_(text) {
   return s;
 }
 
+function upd_applyGuideTruthToText_Updater_(text, includesText, excludesText) {
+  var s = String(text || '');
+  if (!s.trim()) return '';
+  var inc = String(includesText || '').toLowerCase();
+  var exc = String(excludesText || '').toLowerCase();
+  var hasGuideInc = /\b(egyptologist|tour guide|guide)\b/.test(inc) && !/\b(if selected|optional|depending on the option)\b/.test(inc);
+  var hasGuideExc = /\b(egyptologist|tour guide|guide)\b/.test(exc);
+  if (hasGuideInc && !hasGuideExc) return s;
+  s = s
+    .replace(/\byour\s+expert\s+egyptologist\s+guide\b/ig, 'If selected, an Egyptologist guide')
+    .replace(/\bexpert\s+egyptologist\s+guide\b/ig, 'Egyptologist guide (depending on the option selected)')
+    .replace(/\bcertified\s+egyptologists\b/ig, 'guides (depending on the option selected)')
+    .replace(/\bexpert\s+guidance\b/ig, 'guiding (depending on the option selected)')
+    .replace(/\bexpert\s+guide\b/ig, 'guide (depending on the option selected)');
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function upd_strengthenCairoCivilizationSeoTitle_Updater_(title, civCtx, flags, evidenceText) {
+  var t = String(title || '').replace(/\s+/g, ' ').trim()
+  if (!t) return t
+  if (!civCtx) return t
+  var lc = t.toLowerCase()
+  if (/\b(nmec|egyptian civilization museum|national museum of egyptian civilization|civilization museum)\b/.test(lc) &&
+      /\bcitadel\b/.test(lc) &&
+      (/\bold cairo\b/.test(lc) || /\bcoptic\b/.test(lc))) return t
+  if (lc.indexOf('cairo') === -1) return t
+  if (!/\bmuseum\b/.test(lc) || !/\bcitadel\b/.test(lc)) return t
+  var ev = String(evidenceText || '').toLowerCase()
+  var hasOldCairo = /\b(old cairo|coptic|hanging church)\b/.test(ev)
+  var hasLunch = !!(flags && flags.has_lunch)
+  var out = hasOldCairo ? 'Cairo Day Tour: NMEC, Citadel & Old Cairo' : 'Cairo Day Tour: NMEC & Citadel'
+  if (hasLunch) out += ' + Lunch'
+  return out
+}
+
 function upd_finalizeEntranceFeesFaqAnswer_Updater_(question, answer, includesText, excludesText) {
   var qRaw = String(question || '');
   var q = qRaw.toLowerCase();
@@ -3354,14 +3428,31 @@ function upd_finalizeEntranceFeesFaqAnswer_Updater_(question, answer, includesTe
   var exc = String(excludesText || '').toLowerCase();
   var incHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(inc) && !/\b(not included|excluded)\b/.test(inc);
   var excHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(exc);
+  var aLc = a.toLowerCase();
   var mentionsEntranceInQ = /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(q);
-  if (!mentionsEntranceInQ) return a;
-  var isDecision = /\b(included|not included|cover|covered|pay|pay for|need to pay|extra charge|additional cost)\b/.test(q);
-  if (/\b(cash|money|bring|what to bring|tips?|gratuities|extras)\b/.test(q)) isDecision = false;
-  if (isDecision) {
+  var mentionsEntranceInA = /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(aLc);
+  var isCashBring = /\b(cash|money|bring|what to bring|tips?|gratuities|extras)\b/.test(q);
+  var isIncExc = /\b(what['’]s included|what is included|what is not included|included in the tour price|included in the price|included and what is not|included.*not)\b/.test(q);
+  if (!mentionsEntranceInQ && !(isIncExc && mentionsEntranceInA)) return a;
+  var isDecision = /\b(included|not included|cover|covered|pay|pay for|need to pay|extra charge|additional cost)\b/.test(q) || isIncExc;
+  if (isCashBring) isDecision = false;
+  if (isDecision && mentionsEntranceInQ && !isIncExc) {
     if (excHas && !incHas) return "No. Attraction entrance fees are not included as listed in What's Excluded.";
     if (incHas && !excHas) return "Yes. Attraction entrance fees are included as listed in What's Included.";
     return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";
+  }
+  if (isCashBring) {
+    if (incHas && !excHas) {
+      var out = a;
+      out = out.replace(/\bentrance fees are included\b\s*,?\s*so\s*bring[^.]*\b(tickets?|entrance fees?)\b[^.]*\./ig, 'Entrance fees are included. ');
+      out = out.replace(/\bbring[^.]*\b(cover|pay)\b[^.]*\b(tickets?|entrance fees?)\b[^.]*\./ig, 'Bring cash for personal purchases, tips, and any optional extras. ');
+      out = out.replace(/\bto cover tickets\b[^.]*\./ig, '');
+      out = out.replace(/\bcover tickets\b[^.]*\./ig, '');
+      out = out.replace(/\s+/g, ' ').trim();
+      return out;
+    }
+    if (excHas && !incHas) return a;
+    return a;
   }
   if (excHas && !incHas) {
     return a
@@ -3370,9 +3461,12 @@ function upd_finalizeEntranceFeesFaqAnswer_Updater_(question, answer, includesTe
       .trim();
   }
   if (incHas && !excHas) {
-    return a
+    var out2 = a
       .replace(/\b(entrance\s+(tickets|fees)|admission|tickets?)\s+are\s+not\s+included\b/ig, "entrance fees are included")
+      .replace(/\byou['’]?ll need to pay[^.]*\b(tickets?|entrance fees?)\b[^.]*\./ig, '')
+      .replace(/\byou will need to pay[^.]*\b(tickets?|entrance fees?)\b[^.]*\./ig, '')
       .trim();
+    return out2;
   }
   return a;
 }

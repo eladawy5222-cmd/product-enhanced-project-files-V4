@@ -273,6 +273,7 @@ async function runAiFaqsEnhancementBatch() {
         // 4) Sanitize & Dedupe
         faqs = sanitizeFaqs_(faqs);
         faqs = dedupeFaqs_(faqs);
+        faqs = enforceFaqTruth_(faqs, ctx);
 
         // 6) Validate count (quality-first: do not pad with generic FAQs)
         if (faqs.length < MIN_FAQS_COUNT) {
@@ -374,6 +375,32 @@ async function buildFaqsContext_(tripFields, tripId) {
 
   ctx.includes = U.includesArr;
   ctx.excludes = U.excludesArr;
+
+  ctx.rawIncludes = [];
+  ctx.rawExcludes = [];
+  try {
+    var incRawRecs = await fetchRecordsByTripLocal_('TripIncludes', 'Trip', tripId, tripNumber, 200)
+    ctx.rawIncludes = (incRawRecs || [])
+      .map(function(r) {
+        var f = r && r.fields ? r.fields : {}
+        return String(f.IncludeItem || f.Item || f.Title || '').trim()
+      })
+      .filter(Boolean)
+  } catch (e) {}
+  try {
+    var excRawRecs = await fetchRecordsByTripLocal_('TripExcludes', 'Trip', tripId, tripNumber, 200)
+    ctx.rawExcludes = (excRawRecs || [])
+      .map(function(r) {
+        var f = r && r.fields ? r.fields : {}
+        return String(f.ExcludeItem || f.Item || f.Title || '').trim()
+      })
+      .filter(Boolean)
+  } catch (e) {}
+
+  var T = buildFaqTruth_(ctx)
+  ctx.includesForFaq = T.includes
+  ctx.excludesForFaq = T.excludes
+  ctx.faqTruth = T.truth
   
   // 5) Get trip facts
   ctx.facts = [];
@@ -583,6 +610,12 @@ function buildFaqsPrompt_(ctx) {
     "- Use ONLY information from context above (all improved data sources)\n" +
     "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
     "- Do NOT claim free cancellation, refunds, or a specific cancellation window unless explicitly present in the context\n" +
+    "- ENTRANCE FEES: Do NOT state 'included' or 'not included' unless the Included/Excluded lists above explicitly say so. If uncertain, tell the user to rely on those lists.\n" +
+    "- INCLUDED VS NOT INCLUDED: When answering this, do NOT list new items. Summarize by pointing to the Included/Not Included lists.\n" +
+    "- CASH / WHAT TO BRING: Mention cash for personal purchases, tips, and optional extras. Only mention cash for tickets if the Excluded list explicitly says entrance fees/tickets are not included.\n" +
+    "- GUIDE / EGYPTOLOGIST: Do NOT present an 'expert Egyptologist guide' as guaranteed unless it is explicitly listed in What's Included without conditions. If it appears as conditional (e.g. 'if selected'), say it depends on the option selected.\n" +
+    "- LANGUAGES: Do NOT list specific languages unless they are explicitly provided in the context. If not provided, say language availability is confirmed at booking.\n" +
+    "- OPTIONAL EXTRAS: Do NOT mention specific add-ons (e.g., photographer, scarves, Nile boat ride) unless they are explicitly present in the context above.\n" +
     "- If optional extras/add-ons exist in context, you may clarify they are optional and not included unless selected; do not list specific extras unless present in context\n" +
     "- Avoid support-template boilerplate (e.g., 'contact our customer service team', 'hotline', vague promises). Keep answers specific and practical.\n" +
     "- Output in ENGLISH ONLY\n" +
@@ -989,6 +1022,155 @@ function sanitizeFaqs_(faqs) {
   return faqs; 
 } 
 
+function buildFaqTruth_(ctx) {
+  var rawInc = (ctx && Array.isArray(ctx.rawIncludes)) ? ctx.rawIncludes : []
+  var rawExc = (ctx && Array.isArray(ctx.rawExcludes)) ? ctx.rawExcludes : []
+  var impInc = (ctx && Array.isArray(ctx.includes)) ? ctx.includes : []
+  var impExc = (ctx && Array.isArray(ctx.excludes)) ? ctx.excludes : []
+
+  var incBase = rawInc.length ? rawInc : impInc
+  var excBase = rawExc.length ? rawExc : impExc
+
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim() }
+  function lc_(s) { return norm_(s).toLowerCase() }
+  function hasEntrance_(s) { return /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s) }
+  function hasGuide_(s) { return /\b(egyptologist|tour guide|guide)\b/.test(s) }
+  function hasOptionalMarker_(s) { return /\b(optional|add-?on|extra|if selected|upon request)\b/.test(s) }
+  function hasNile_(s) { return /\b(nile|boat|cruise|felucca)\b/.test(s) }
+
+  var incOut = []
+  for (var i = 0; i < incBase.length; i++) {
+    var t = norm_(incBase[i])
+    if (!t) continue
+    var l = t.toLowerCase()
+    if ((/\b(scarf|scarves|scarve)\b/.test(l) && /\bfts\b/.test(l)) || /\b(photographer|organic oils)\b/.test(l)) continue
+    if (hasNile_(l) && !hasNile_(lc_(rawInc.join(' ')))) continue
+    incOut.push(t)
+  }
+
+  var excOut = []
+  var incLc = lc_(incOut.join(' '))
+  for (var j = 0; j < excBase.length; j++) {
+    var x = norm_(excBase[j])
+    if (!x) continue
+    var xl = x.toLowerCase()
+    if (hasEntrance_(xl) && hasEntrance_(incLc)) continue
+    if (hasGuide_(xl) && hasGuide_(incLc) && !hasOptionalMarker_(lc_(rawInc.join(' ')))) continue
+    excOut.push(x)
+  }
+
+  var rawIncLc = lc_(rawInc.join(' '))
+  var rawExcLc = lc_(rawExc.join(' '))
+  var truth = {
+    entrance_included: hasEntrance_(rawIncLc) || (!rawInc.length && hasEntrance_(incLc)),
+    entrance_excluded: hasEntrance_(rawExcLc) || (!rawExc.length && hasEntrance_(lc_(excOut.join(' ')))),
+    guide_included: hasGuide_(rawIncLc) || (!rawInc.length && hasGuide_(incLc)),
+    guide_conditional: hasGuide_(rawIncLc) && hasOptionalMarker_(rawIncLc),
+    nile_evidence: hasNile_(lc_((ctx && ctx.itinerary ? ctx.itinerary.join(' ') : '') + ' ' + (ctx && ctx.highlights ? ctx.highlights.join(' ') : '') + ' ' + rawIncLc + ' ' + incLc))
+  }
+
+  if (truth.entrance_included) truth.entrance_excluded = false
+  return { includes: incOut, excludes: excOut, truth: truth }
+}
+
+function enforceFaqTruth_(faqs, ctx) {
+  if (!Array.isArray(faqs)) return faqs
+  var T = (ctx && ctx.faqTruth) ? ctx.faqTruth : {}
+  var inc = (ctx && Array.isArray(ctx.includesForFaq)) ? ctx.includesForFaq : (ctx.includes || [])
+  var exc = (ctx && Array.isArray(ctx.excludesForFaq)) ? ctx.excludesForFaq : (ctx.excludes || [])
+  var incText = inc.join('\n')
+  var excText = exc.join('\n')
+
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim() }
+  function lc_(s) { return norm_(s).toLowerCase() }
+  function isIncludedNotIncludedQ_(q) { return /\b(what'?s included|what is included|included in the|not included|included vs|included and what is not)\b/.test(q) }
+  function isEntranceQ_(q) { return /\b(entrance|ticket|tickets|admission)\b/.test(q) }
+  function isCashQ_(q) { return /\b(cash|money)\b/.test(q) && (/\bbring\b/.test(q) || /\bhow much\b/.test(q) || /\bneed\b/.test(q)) }
+  function isBringQ_(q) { return /\bwhat should i bring|what to bring|what should i wear|dress|shoes\b/.test(q) }
+  function isLanguagesQ_(q) { return /\b(language|languages)\b/.test(q) }
+
+  function stripNileIfNoEvidence_(a) {
+    if (T && T.nile_evidence) return a
+    var s = String(a || '')
+    s = s.replace(/[^.?!]*\b(nile|boat|cruise|felucca)\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+    s = s.replace(/\s+/g, ' ').trim()
+    return s
+  }
+
+  function fixBroken_(a) {
+    var s = String(a || '')
+    s = s.replace(/,\s*a,\s*and\s+/ig, ', and ')
+    s = s.replace(/,\s*,\s*/g, ', ')
+    s = s.replace(/\s+,/g, ',')
+    s = s.replace(/\s+/g, ' ').trim()
+    return s
+  }
+
+  function removeEntranceContradiction_(a) {
+    var s = String(a || '')
+    if (T && T.entrance_included) {
+      s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*\bnot included\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+      s = s.replace(/[^.?!]*\bbring\b[^.?!]*\b(cash|money)\b[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+    }
+    if (T && T.entrance_excluded && !T.entrance_included) {
+      s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*\bincluded\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+    }
+    s = s.replace(/\s+/g, ' ').trim()
+    return s
+  }
+
+  function buildEntranceLine_() {
+    if (T && T.entrance_included) return "Entrance fees are included as listed in What's Included."
+    if (T && T.entrance_excluded) return "Entrance fees/tickets are not included (see What's Not Included)."
+    return "Please rely on the What's Included and What's Not Included lists for entrance-fee coverage."
+  }
+
+  function buildGuideLine_() {
+    if (T && T.guide_conditional) return "Guiding depends on the option selected."
+    if (T && T.guide_included) return "An Egyptologist guide is included as listed in What's Included."
+    return ""
+  }
+
+  for (var i = 0; i < faqs.length; i++) {
+    var q = norm_(faqs[i].question)
+    var a = norm_(faqs[i].answer)
+    if (!q || !a) continue
+    var ql = q.toLowerCase()
+
+    a = stripNileIfNoEvidence_(a)
+    a = fixBroken_(a)
+    a = removeEntranceContradiction_(a)
+
+    if (isLanguagesQ_(ql)) {
+      if (!(ctx && ctx.languages && String(ctx.languages).trim())) {
+        a = 'Language availability is confirmed at booking.'
+      }
+    } else if (isIncludedNotIncludedQ_(ql)) {
+      var lines = []
+      lines.push("What's included and not included is listed on this page under What's Included and What's Not Included.")
+      lines.push(buildEntranceLine_())
+      var gLine = buildGuideLine_()
+      if (gLine) lines.push(gLine)
+      a = lines.filter(Boolean).join(' ')
+    } else if (isEntranceQ_(ql)) {
+      a = buildEntranceLine_()
+    } else if (isCashQ_(ql)) {
+      var parts = ["Bring some cash for tips, personal purchases, and any optional extras."]
+      if (T && T.entrance_excluded && !T.entrance_included) parts.push("You'll also want cash/card for entrance tickets if they're not included.")
+      if (T && T.entrance_included) parts.push("You typically won't need cash for entrance tickets because they're included as listed in What's Included.")
+      a = parts.join(' ')
+    } else if (isBringQ_(ql)) {
+      a = a
+    }
+
+    if (!a) continue
+    faqs[i].question = q
+    faqs[i].answer = a
+  }
+
+  return faqs
+}
+
 /**
  * Delete old FAQ records for a trip
  */
@@ -1031,10 +1213,11 @@ function ensureMinimumFaqs_(faqs, ctx) {
   if (faqs.length >= MIN_FAQS_COUNT) return faqs;
   
   var added = 0;
-  if (ctx && ctx.includes && ctx.includes.length) {
+  var inc = (ctx && ctx.includesForFaq && ctx.includesForFaq.length) ? ctx.includesForFaq : (ctx && ctx.includes ? ctx.includes : [])
+  if (inc && inc.length) {
     faqs.push({
       question: "What is included in the tour price?",
-      answer: "The tour includes: " + ctx.includes.slice(0, 4).join(', ') + "."
+      answer: "What's included is listed on this page under What's Included."
     });
     added++;
   }
