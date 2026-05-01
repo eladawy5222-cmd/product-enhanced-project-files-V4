@@ -166,6 +166,7 @@ function runAiIncludesExcludesExtractionBatch() {
         
         // 🆕 إزالة التكرار الصارم وضمان وجود الـ AddOns الاختيارية بصيغة واحدة فقط
         includes = finalizeIncludesNoDup_(includes, improvedAddOnsData);
+        includes = filterConditionalItemsNotInRaw_(includes, rawIncludes);
         excludes = finalizeNoDupStrict_(excludes);
         
         // 🆕 فلترة excludes الغريبة أو غير المناسبة
@@ -186,17 +187,6 @@ function runAiIncludesExcludesExtractionBatch() {
             }
           });
         }
-
-        // 🆕 ضمان الحد الأدنى للـ Includes (7 عناصر)
-        var MIN_INCLUDES_RECOMMENDED = 7;
-        if (includes.length < MIN_INCLUDES_RECOMMENDED) {
-          var includesNeeded = MIN_INCLUDES_RECOMMENDED - includes.length;
-          Logger.log('⚠️ Only ' + includes.length + ' includes. Adding ' + includesNeeded + ' default includes');
-          var defaultIncludes = getDefaultIncludes_(includesNeeded, includes);
-          includes = includes.concat(defaultIncludes);
-        }
-
-
 
         // 5) إنشاء Records في جداول الـ Improvement
         var createdIncludesCount = 0;
@@ -1024,6 +1014,40 @@ function formatCanonicalOptional_(title, addOnsData) {
   }
   if (price) return title + ' (Optional add-on - $' + price + ')';
   return title + ' (Optional add-on)';
+}
+
+function filterConditionalItemsNotInRaw_(includes, rawIncludes) {
+  if (!Array.isArray(includes)) return [];
+  var raw = Array.isArray(rawIncludes) ? rawIncludes : [];
+  var rawNorms = raw
+    .map(function(x) { return String(x || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim(); })
+    .filter(function(x) { return !!x; });
+  if (!rawNorms.length) return includes.slice();
+
+  function matchesRaw_(itemNorm) {
+    if (!itemNorm) return false;
+    for (var i = 0; i < rawNorms.length; i++) {
+      var r = rawNorms[i];
+      if (!r) continue;
+      if (itemNorm === r) return true;
+      if (itemNorm.indexOf(r) !== -1 || r.indexOf(itemNorm) !== -1) return true;
+    }
+    return false;
+  }
+
+  var out = [];
+  for (var i2 = 0; i2 < includes.length; i2++) {
+    var it = String(includes[i2] || '').replace(/\s+/g, ' ').trim();
+    if (!it) continue;
+    var lc = it.toLowerCase();
+    var isConditional = /\bif selected\b/.test(lc) || /\boptional\b/.test(lc) || /^optional[:\s-]/i.test(it);
+    if (isConditional) {
+      var norm = lc.replace(/<[^>]*>/g, ' ').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!matchesRaw_(norm)) continue;
+    }
+    out.push(it);
+  }
+  return out;
 }
 
 function finalizeIncludesNoDup_(includes, addOnsData) {

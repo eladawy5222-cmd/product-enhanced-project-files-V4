@@ -1043,6 +1043,16 @@ function mapAirtableToWordPress_(data, tripFields) {
     var addonNorms = (data.addons || []).map(function (r) {
       return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).filter(Boolean)
+    var excludesLc = (data.excludes || []).map(function (r) {
+      return r && r.fields ? String(r.fields.ExcludeItem || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    }).join(' | ')
+    var entranceExcluded = /\b(entrance fee|entrance fees|tickets?|admission)\b/.test(excludesLc)
+    var evidenceLc = [
+      String(g.AI_Trip_Description || ''),
+      String(g.AI_Itinerary_Description || ''),
+      (data.highlights || []).map(function (r) { return r && r.fields ? String(r.fields.AI_Highlight || '') : '' }).join(' | '),
+      (data.itinerary || []).map(function (r) { return r && r.fields ? String(r.fields.AI_Step_Title || '') + ' ' + String(r.fields.AI_Step_Description || '') : '' }).join(' | ')
+    ].join(' | ').toLowerCase()
 
     var safeIncludes = data.includes
       .map(function (r) { return r && r.fields ? String(r.fields.IncludeItem || '') : '' })
@@ -1050,8 +1060,16 @@ function mapAirtableToWordPress_(data, tripFields) {
       .filter(function (t) {
         if (!t) return false
         var lc = t.toLowerCase()
+        if (/^optional[:\s-]/i.test(t)) return false
+        if (/\bif selected\b/.test(lc)) return false
         if (/\boptional add-?on\b/.test(lc)) return false
         if (/\[\s*optional\b/.test(lc)) return false
+        if (entranceExcluded && /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return false
+        if (/\bnile\b/.test(lc) && evidenceLc.indexOf('nile') === -1) return false
+        if (/\b(felucca|faluka)\b/.test(lc) && !/\b(felucca|faluka)\b/.test(evidenceLc)) return false
+        if (/\bboat\b/.test(lc) && evidenceLc.indexOf('boat') === -1) return false
+        if (/\bcruise\b/.test(lc) && evidenceLc.indexOf('cruise') === -1) return false
+        if (pub_hasUnsupportedHighRiskClaims_(t, seoFlags)) return false
         if (addonNorms.length) {
           var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
           for (var i = 0; i < addonNorms.length; i++) {
@@ -1077,8 +1095,12 @@ function mapAirtableToWordPress_(data, tripFields) {
     wte.faq.faq_title = [];
     wte.faq.faq_content = [];
     data.faqs.forEach(function(rec) {
-      wte.faq.faq_title.push(rec.fields.AI_Question);
-      wte.faq.faq_content.push(rec.fields.AI_Answer);
+      var q0 = rec && rec.fields ? String(rec.fields.AI_Question || '').trim() : '';
+      var a0 = rec && rec.fields ? String(rec.fields.AI_Answer || '') : '';
+      a0 = pub_fixBrokenFaqText_(a0);
+      a0 = pub_finalizeEntranceFeesFaqAnswer_(q0, a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+      wte.faq.faq_title.push(q0);
+      wte.faq.faq_content.push(a0);
     });
   }
   
@@ -1366,6 +1388,36 @@ function pub_hasUnsupportedHighRiskClaims_(text, flags) {
   if (!f.has_lunch && /\blunch\b/.test(t)) return true;
   if (!f.has_pickup && /\b(pick-?up|hotel pick-?up|pickup)\b/.test(t)) return true;
   return false;
+}
+
+function pub_fixBrokenFaqText_(text) {
+  var s = String(text || '');
+  if (!s.trim()) return '';
+  s = s.replace(/\s+/g, ' ').trim();
+  s = s.replace(/,\s*a,\s*(and\s+)?/gi, ', ');
+  s = s.replace(/,\s*,+/g, ', ');
+  s = s.replace(/\s+,/g, ',');
+  s = s.replace(/,\s+and\s+,/gi, ' and ');
+  s = s.replace(/,\s*and\s*([.?!;:])/g, '$1');
+  s = s.replace(/\(\s*\)/g, '');
+  s = s.replace(/\s+([.?!;:])/g, '$1');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function pub_finalizeEntranceFeesFaqAnswer_(question, answer, includesText, excludesText) {
+  var q = String(question || '').toLowerCase();
+  var a = String(answer || '').trim();
+  if (!a) return '';
+  var inc = String(includesText || '').toLowerCase();
+  var exc = String(excludesText || '').toLowerCase();
+  var incHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(inc) && !/\b(not included|excluded)\b/.test(inc);
+  var excHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(exc);
+  var isEntranceQa = /\b(entrance|admission|ticket|tickets)\b/.test(q) || /\b(entrance|admission|ticket|tickets)\b/.test(a.toLowerCase());
+  if (!isEntranceQa) return a;
+  if (excHas && !incHas) return "No. Attraction entrance fees are not included as listed in What's Excluded.";
+  if (incHas && !excHas) return "Yes. Attraction entrance fees are included as listed in What's Included.";
+  return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";
 }
 
 function pub_sanitizeSeoText_(s) {
