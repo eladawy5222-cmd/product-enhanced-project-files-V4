@@ -1786,10 +1786,225 @@ function pub_applySeoSnippetPolicy_(baseTitle, baseMeta, tripFields, seoFlags) {
 }
 
 // ----------------------------------------------------------
+// CONSISTENCY SAFETY LAYER (PUBLISH)
+// ----------------------------------------------------------
+
+function pub_detectEntranceTruthFromText_(includesText, excludesText) {
+  var inc = String(includesText || '').toLowerCase()
+  var exc = String(excludesText || '').toLowerCase()
+  var incHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(inc) && !/\b(not included|excluded)\b/.test(inc)
+  var excHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(exc)
+  if (incHas && !excHas) return { included: true, excluded: false, ambiguous: false }
+  if (excHas && !incHas) return { included: false, excluded: true, ambiguous: false }
+  return { included: false, excluded: false, ambiguous: true }
+}
+
+function pub_applyEntranceTruthToText_(text, truth) {
+  var s = String(text || '').trim()
+  if (!s) return ''
+  var t = truth || {}
+  if (t.excluded || t.ambiguous) {
+    s = s
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
+      .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
+      .replace(/\b(includes?|including)\s+(all\s+)?entrance\s+(tickets|fees)\b/ig, 'includes site visits as per itinerary')
+  }
+  if (t.included) {
+    s = s.replace(/\b(entrance\s+(tickets|fees)|tickets?|admission)\s+are\s+not\s+included\b/ig, "attraction entrance fees are included as listed in What's Included")
+  }
+  return s.replace(/\s+/g, ' ').trim()
+}
+
+function pub_stripAddOnMentions_(text) {
+  var s = String(text || '')
+  if (!s.trim()) return ''
+  s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, ' ').replace(/\s+/g, ' ').trim()
+  return s
+}
+
+function pub_filterOptionalItemsFromIncludesText_(includesText, excludesText) {
+  var incLines = String(includesText || '').split('\n').map(function (x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }).filter(Boolean)
+  var excLines = String(excludesText || '').split('\n').map(function (x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }).filter(Boolean)
+  var excSet = {}
+  excLines.forEach(function (x) { excSet[String(x).toLowerCase()] = true })
+  var out = []
+  for (var i = 0; i < incLines.length; i++) {
+    var t = incLines[i]
+    var lc = t.toLowerCase()
+    if (/^optional[:\s-]/i.test(t)) continue
+    if (/\bif selected\b/.test(lc)) continue
+    if (/\boptional add-?on\b/.test(lc)) continue
+    if (/\[\s*optional\b/.test(lc)) continue
+    if (/\b(optional|add-?on|addon|extra|upgrade|supplement)\b/.test(lc)) continue
+    if (/\b(scarf|scarves|photographer|oils?)\b/.test(lc)) continue
+    if (excSet[lc]) continue
+    out.push(t)
+  }
+  return out.join('\n')
+}
+
+function pub_sanitizeFaqArraysAgainstTruth_(wte, entranceTruth, includesText, excludesText) {
+  if (!wte || !wte.faq) return
+  var titles = (wte.faq.faq_title && Array.isArray(wte.faq.faq_title)) ? wte.faq.faq_title : (wte.faq_title || [])
+  var answers = (wte.faq.faq_content && Array.isArray(wte.faq.faq_content)) ? wte.faq.faq_content : (wte.faq_content || [])
+  if (!Array.isArray(titles) || !Array.isArray(answers)) return
+
+  function isIncExcQ_(qLc) {
+    return /\b(what['’]s included|what is included|what is not included|included in the tour price|included in the price|included vs|included and what is not|not included)\b/.test(qLc)
+  }
+  function isEntranceQ_(qLc) { return /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(qLc) }
+  function entranceLine_() {
+    if (entranceTruth && entranceTruth.included) return "Entrance fees are included as listed in What's Included."
+    if (entranceTruth && entranceTruth.excluded) return "Entrance fees/tickets are not included as listed in What's Excluded."
+    return "Please refer to the What's Included/Excluded section for entrance-fee coverage."
+  }
+
+  var outTitles = []
+  var outAnswers = []
+  for (var i = 0; i < Math.min(titles.length, answers.length); i++) {
+    var q = String(titles[i] || '').replace(/\s+/g, ' ').trim()
+    var a = String(answers[i] || '')
+    if (!q || !a) continue
+    var qLc = q.toLowerCase()
+    a = pub_fixBrokenFaqText_(a)
+    a = pub_finalizeEntranceFeesFaqAnswer_(q, a, includesText, excludesText)
+    a = pub_applyGuideTruthToText_(a, includesText, excludesText)
+    if (isIncExcQ_(qLc)) {
+      a = ["What's included and not included is listed on this page under What's Included and What's Excluded.", entranceLine_()].join(' ')
+    } else if (isEntranceQ_(qLc)) {
+      a = entranceLine_()
+    }
+    a = pub_stripAddOnMentions_(a)
+    a = pub_fixBrokenFaqText_(a)
+    if (!a) continue
+    outTitles.push(q)
+    outAnswers.push(a)
+  }
+  wte.faq.faq_title = outTitles
+  wte.faq.faq_content = outAnswers
+  wte.faq_title = outTitles
+  wte.faq_content = outAnswers
+}
+
+function pub_sanitizeHighlightsAgainstTruth_(wte, entranceTruth, includesText, excludesText) {
+  if (!wte || !Array.isArray(wte.trip_highlights)) return
+  wte.trip_highlights = wte.trip_highlights.map(function (h) {
+    var t0 = h && h.highlight_text ? String(h.highlight_text) : ''
+    t0 = pub_applyEntranceTruthToText_(t0, entranceTruth)
+    t0 = pub_applyGuideTruthToText_(t0, includesText, excludesText)
+    t0 = pub_stripAddOnMentions_(t0)
+    t0 = String(t0 || '').replace(/\s+/g, ' ').trim()
+    return { highlight_text: t0 }
+  }).filter(function (h) { return h && h.highlight_text })
+}
+
+function pub_sanitizeSeoAgainstTruth_(payload, entranceTruth, includesText, excludesText) {
+  if (!payload || !payload.meta) return
+  if (payload.meta.rank_math_title) {
+    var t = pub_applyEntranceTruthToText_(payload.meta.rank_math_title, entranceTruth)
+    t = pub_applyGuideTruthToText_(t, includesText, excludesText)
+    t = pub_stripAddOnMentions_(t)
+    payload.meta.rank_math_title = t
+  }
+  if (payload.meta.rank_math_description) {
+    var d = pub_applyEntranceTruthToText_(payload.meta.rank_math_description, entranceTruth)
+    d = pub_applyGuideTruthToText_(d, includesText, excludesText)
+    d = pub_stripAddOnMentions_(d)
+    payload.meta.rank_math_description = d
+  }
+}
+
+function pub_sanitizeSchemaAgainstTruth_(payload, entranceTruth, includesText, excludesText) {
+  if (!payload || !payload.meta) return
+  function clean_(s) {
+    var x = pub_applyEntranceTruthToText_(s, entranceTruth)
+    x = pub_applyGuideTruthToText_(x, includesText, excludesText)
+    x = pub_stripAddOnMentions_(x)
+    return x
+  }
+  if (payload.meta.trip_schema_data && typeof payload.meta.trip_schema_data === 'string') {
+    try {
+      var ts = JSON.parse(payload.meta.trip_schema_data)
+      if (ts && typeof ts === 'object') {
+        if (ts.description) ts.description = clean_(ts.description)
+        if (ts.name) ts.name = clean_(ts.name)
+        payload.meta.trip_schema_data = JSON.stringify(ts)
+        payload.meta.schema_trip_data = payload.meta.trip_schema_data
+      }
+    } catch (eTs2) {}
+  }
+  if (payload.meta.faq_schema_data && typeof payload.meta.faq_schema_data === 'string') {
+    try {
+      var fs = JSON.parse(payload.meta.faq_schema_data)
+      if (fs && fs.mainEntity && Array.isArray(fs.mainEntity)) {
+        for (var i = 0; i < fs.mainEntity.length; i++) {
+          var q = fs.mainEntity[i] && fs.mainEntity[i].name ? String(fs.mainEntity[i].name) : ''
+          var a = (fs.mainEntity[i] && fs.mainEntity[i].acceptedAnswer && fs.mainEntity[i].acceptedAnswer.text) ? String(fs.mainEntity[i].acceptedAnswer.text) : ''
+          if (!q || !a) continue
+          a = pub_finalizeEntranceFeesFaqAnswer_(q, a, includesText, excludesText)
+          a = clean_(a)
+          fs.mainEntity[i].acceptedAnswer.text = a
+        }
+        payload.meta.faq_schema_data = JSON.stringify(fs)
+      }
+    } catch (eFs2) {}
+  }
+}
+
+function pub_applyPublishConsistencyGuard_(payload) {
+  if (!payload || typeof payload !== 'object') return payload
+  if (!payload.meta || !payload.meta.wp_travel_engine_setting) return payload
+  var wte = payload.meta.wp_travel_engine_setting
+  wte.cost = wte.cost || {}
+  wte.faq = wte.faq || {}
+
+  var includesText = String((wte.cost && wte.cost.cost_includes) ? wte.cost.cost_includes : (wte.cost_includes || '') || '')
+  var excludesText = String((wte.cost && wte.cost.cost_excludes) ? wte.cost.cost_excludes : (wte.cost_excludes || '') || '')
+  includesText = pub_filterOptionalItemsFromIncludesText_(includesText, excludesText)
+  wte.cost.cost_includes = includesText
+  wte.cost_includes = includesText
+
+  var entranceTruth = pub_detectEntranceTruthFromText_(includesText, excludesText)
+
+  if (payload.core && payload.core.content) {
+    var c = String(payload.core.content || '')
+    c = pub_applyEntranceTruthToText_(c, entranceTruth)
+    c = pub_applyGuideTruthToText_(c, includesText, excludesText)
+    c = pub_stripAddOnMentions_(c)
+    payload.core.content = c
+    payload.content = c
+  }
+  if (wte && wte.tab_content && wte.tab_content['1_wpeditor']) {
+    var o = String(wte.tab_content['1_wpeditor'] || '')
+    o = pub_applyEntranceTruthToText_(o, entranceTruth)
+    o = pub_applyGuideTruthToText_(o, includesText, excludesText)
+    o = pub_stripAddOnMentions_(o)
+    wte.tab_content['1_wpeditor'] = o
+  }
+  if (wte && wte.tab_content && wte.tab_content['8_wpeditor']) {
+    var w = String(wte.tab_content['8_wpeditor'] || '')
+    w = pub_applyEntranceTruthToText_(w, entranceTruth)
+    w = pub_applyGuideTruthToText_(w, includesText, excludesText)
+    w = pub_stripAddOnMentions_(w)
+    wte.tab_content['8_wpeditor'] = w
+  }
+
+  pub_sanitizeHighlightsAgainstTruth_(wte, entranceTruth, includesText, excludesText)
+  pub_sanitizeFaqArraysAgainstTruth_(wte, entranceTruth, includesText, excludesText)
+  pub_sanitizeSeoAgainstTruth_(payload, entranceTruth, includesText, excludesText)
+  pub_sanitizeSchemaAgainstTruth_(payload, entranceTruth, includesText, excludesText)
+
+  return payload
+}
+
+// ----------------------------------------------------------
 // API TRANSMISSION
 // ----------------------------------------------------------
 
 async function pushToWordPress_(wpId, payload) {
+  // PUBLISH SAFETY GUARD: final consistency cleanup before sending payload to WordPress.
+  payload = pub_applyPublishConsistencyGuard_(payload)
+
   // Handle base URL that might end in /trips (as seen in config.gs)
   let baseUrl = CONFIG.WP_API_BASE
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)

@@ -199,16 +199,8 @@ async function runConversionEnforcer(data) {
       await convEnf_airtableUpdateSafe_('Improvement With AI', imp.id, updateMain)
     }
 
-    let newHighlights = convEnf_getArray_(ai, ['highlights', 'items'])
-    newHighlights = convEnf_sanitizeStringList_(newHighlights, { max: 12 })
-    newHighlights = convEnf_filterUnsupportedItems_(newHighlights, flags)
-    newHighlights = convEnf_applyEntranceFeesTruthToHighlights_(newHighlights, entranceTruth)
-    newHighlights = convEnf_applyGuideTruthToHighlights_(newHighlights, guideTruth)
-    if (newHighlights && newHighlights.length >= 3) {
-      console.log('✅ Improved Highlights:')
-      console.log(JSON.stringify(newHighlights, null, 2))
-      await convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso)
-    }
+    let pendingHighlights = convEnf_getArray_(ai, ['highlights', 'items'])
+    pendingHighlights = convEnf_sanitizeStringList_(pendingHighlights, { max: 12 })
 
     let newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps'])
     newItinerary = convEnf_sanitizeItinerarySteps_(newItinerary, { max: 20 })
@@ -224,7 +216,8 @@ async function runConversionEnforcer(data) {
     newIncluded = convEnf_sanitizeStringList_(newIncluded, { max: 40 })
     newIncluded = convEnf_sortIncExcItems_(newIncluded)
     newIncluded = convEnf_filterUnsupportedItems_(newIncluded, flags)
-    newIncluded = convEnf_filterOptionalLikeItemsFromIncluded_(newIncluded)
+    // AI TRUTH ENFORCEMENT (owner): optional/add-on text must never become INCLUDED.
+    newIncluded = filterOptionalItemsFromIncludes_(newIncluded)
 
     let newExcluded = convEnf_mergeOptionalItems_(ai, ['excluded', 'items'], ['excluded', 'optional_items'])
     newExcluded = convEnf_sanitizeStringList_(newExcluded, { max: 40 })
@@ -245,8 +238,28 @@ async function runConversionEnforcer(data) {
     if (newExcluded && newExcluded.length >= 2) {
       await convEnf_replaceIncExc_(tripId, existingExcludes.records, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso)
     }
+
+    const truth = buildTripTruthMap_({
+      trip: payload.trip,
+      included: newIncluded,
+      excluded: newExcluded,
+      flags,
+      evidence
+    })
+    const contradictions = detectContradictoryClaims_(payload, truth)
+    if (contradictions && contradictions.length) {
+      console.log('⚠️ Consistency warnings: ' + JSON.stringify(contradictions.slice(0, 10)))
+    }
+
+    // AI TRUTH ENFORCEMENT (owner): sanitize Highlights/FAQs against the finalized truth map.
+    const newHighlights = sanitizeHighlightsAgainstTruth_(pendingHighlights, truth)
+    if (newHighlights && newHighlights.length >= 3) {
+      console.log('✅ Improved Highlights:')
+      console.log(JSON.stringify(newHighlights, null, 2))
+      await convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso)
+    }
     let newFaqs = convEnf_getArray_(ai, ['faqs', 'items'])
-    newFaqs = convEnf_sanitizeFaqItems_(newFaqs, { max: 15 }, { included: newIncluded, excluded: newExcluded, flags })
+    newFaqs = sanitizeFaqAgainstTruth_(newFaqs, truth, { max: 15 })
     newFaqs = convEnf_sortFaqItems_(newFaqs)
     if (newFaqs && newFaqs.length >= 3) {
       console.log('✅ Improved FAQs:')
@@ -301,6 +314,155 @@ function convEnf_filterOptionalLikeItemsFromIncluded_(items) {
     if (convEnf_isOptionalLikeItem_(t)) continue
     out.push(t)
   }
+  return out
+}
+
+// --- CONSISTENCY SAFETY LAYER (AI) ---
+// Owner: conversion-enforcer. This layer unifies "truth" across AI outputs before publish.
+
+function normalizeInclusionTruth_(includedItems, excludedItems, flags, evidenceText) {
+  const incText = (Array.isArray(includedItems) ? includedItems.join(' | ') : String(includedItems || '')).toLowerCase()
+  const excText = (Array.isArray(excludedItems) ? excludedItems.join(' | ') : String(excludedItems || '')).toLowerCase()
+  const ev = String(evidenceText || '').toLowerCase()
+  const f = (flags && typeof flags === 'object') ? flags : {}
+
+  function hasOptional_(s) { return /\b(if selected|optional|add-?on|addon|extra|depending on the option)\b/.test(s) }
+  function status_(re) {
+    const incHas = re.test(incText)
+    const excHas = re.test(excText)
+    const incNot = incHas && /\b(not included|excluded)\b/.test(incText)
+    let included = incHas && !incNot && !hasOptional_(incText) && !excHas
+    let optional = incHas && (hasOptional_(incText) || /\bif selected\b/.test(incText))
+    let excluded = excHas || incNot
+    if (included) excluded = false
+    if (included) optional = false
+    return { included: Boolean(included), excluded: Boolean(excluded) && !included, optional: Boolean(optional) && !included, ambiguous: !included && !excluded && !optional }
+  }
+
+  const entrance = convEnf_detectEntranceFeesTruth_(includedItems, excludedItems)
+  const guide = convEnf_detectGuideTruth_(includedItems, excludedItems, ev)
+  const lunch = status_(/\b(lunch|meal|meals)\b/)
+  const pickup = status_(/\b(pick\s*-?\s*up|pickup|drop-?off|hotel pickup)\b/)
+  const nile = status_(/\b(nile|felucca|boat|cruise)\b/)
+  if (!f.has_nile) nile.included = false
+  if (!f.has_lunch) lunch.included = false
+  if (!f.has_pickup) pickup.included = false
+
+  let museum = null
+  if (f.has_civ_museum || f.civ_context_slug) museum = 'NMEC'
+  else if (f.has_egyptian_museum) museum = 'Egyptian Museum'
+
+  return { entrance, guide, lunch, pickup, nile, primary_museum: museum }
+}
+
+function buildTripTruthMap_(ctx) {
+  const c = (ctx && typeof ctx === 'object') ? ctx : {}
+  const included = Array.isArray(c.included) ? c.included : []
+  const excluded = Array.isArray(c.excluded) ? c.excluded : []
+  const flags = (c.flags && typeof c.flags === 'object') ? c.flags : {}
+  const evidence = (c.evidence && typeof c.evidence === 'object') ? c.evidence : {}
+  const evText = String(evidence.strict_combined || evidence.combined || '')
+  const inclusion = normalizeInclusionTruth_(included, excluded, flags, evText)
+  const allowAddOnsMentions = /\b(scarf|scarves|photographer|oils?)\b/i.test(String(evidence.combined || ''))
+  return { trip: c.trip || {}, included, excluded, flags, evidence, inclusion, allow_addons_mentions: Boolean(allowAddOnsMentions) }
+}
+
+function filterOptionalItemsFromIncludes_(items) {
+  return convEnf_filterOptionalLikeItemsFromIncluded_(items)
+}
+
+function sanitizeHighlightsAgainstTruth_(highlights, truth) {
+  if (!Array.isArray(highlights)) return highlights
+  const t = truth || {}
+  const flags = t.flags || {}
+  const evidence = t.evidence || {}
+  let out = convEnf_filterUnsupportedItems_(highlights, flags)
+  out = convEnf_applyEntranceFeesTruthToHighlights_(out, t.inclusion ? t.inclusion.entrance : null)
+  out = convEnf_applyGuideTruthToHighlights_(out, t.inclusion ? t.inclusion.guide : null)
+  const clean = []
+  for (let i = 0; i < out.length; i++) {
+    let s = String(out[i] || '').replace(/\s+/g, ' ').trim()
+    if (!s) continue
+    if (!t.allow_addons_mentions && /\b(scarf|scarves|photographer|oils?)\b/i.test(s)) continue
+    s = convEnf_rewriteUnsupportedContentText_(s, flags, evidence)
+    if (!s) continue
+    clean.push(s)
+  }
+  return clean
+}
+
+function sanitizeFaqAgainstTruth_(faqs, truth, opts) {
+  const t = truth || {}
+  const flags = t.flags || {}
+  const max = (opts && typeof opts.max === 'number') ? opts.max : 15
+  const base = convEnf_sanitizeFaqItems_(faqs, { max }, { included: t.included || [], excluded: t.excluded || [], flags })
+  if (!Array.isArray(base)) return base
+
+  function isIncExcQ_(qLc) {
+    return /\b(what['’]s included|what is included|what is not included|included in the tour price|included in the price|included vs|included and what is not|not included)\b/.test(qLc)
+  }
+  function isEntranceQ_(qLc) { return /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(qLc) }
+
+  const entrance = t.inclusion ? t.inclusion.entrance : null
+  const guide = t.inclusion ? t.inclusion.guide : null
+  function entranceLine_() {
+    if (entrance && entrance.included) return "Entrance fees are included as listed in What's Included."
+    if (entrance && entrance.excluded) return "Entrance fees/tickets are not included as listed in What's Excluded."
+    return "Please refer to the What's Included/Excluded section for entrance-fee coverage."
+  }
+  function guideLine_() {
+    if (guide && guide.included) return "An Egyptologist guide is included as listed in What's Included."
+    if (guide && guide.optional) return "Guiding depends on the option selected."
+    return ''
+  }
+
+  const out = []
+  for (let i = 0; i < base.length; i++) {
+    const q = String(base[i].question || '').replace(/\s+/g, ' ').trim()
+    let a = String(base[i].answer || '').replace(/\s+/g, ' ').trim()
+    if (!q || !a) continue
+    const qLc = q.toLowerCase()
+
+    if (isIncExcQ_(qLc)) {
+      const parts = ["What's included and not included is listed on this page under What's Included and What's Excluded.", entranceLine_()]
+      const g = guideLine_()
+      if (g) parts.push(g)
+      a = parts.join(' ')
+    } else if (isEntranceQ_(qLc)) {
+      a = entranceLine_()
+    }
+
+    if (guide && !guide.included) a = convEnf_applyGuideTruthToText_(a, guide)
+    if (entrance) a = convEnf_applyEntranceFeesTruthToText_(a, entrance)
+    if (!t.allow_addons_mentions) {
+      a = a.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, '').replace(/\s+/g, ' ').trim()
+      if (!a) continue
+    }
+    out.push({ question: q, answer: convEnf_fixBrokenFaqText_(a) })
+  }
+  return out
+}
+
+function sanitizeSeoAgainstTruth_(seoText, truth) {
+  const t = truth || {}
+  const inc = t.inclusion || {}
+  let s = String(seoText || '').trim()
+  if (!s) return ''
+  if (inc.entrance) s = convEnf_applyEntranceFeesTruthToText_(s, inc.entrance)
+  if (inc.guide) s = convEnf_applyGuideTruthToText_(s, inc.guide)
+  if (!t.allow_addons_mentions) s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, '').replace(/\s+/g, ' ').trim()
+  return s
+}
+
+function detectContradictoryClaims_(payload, truth) {
+  const t = truth || {}
+  const inc = t.inclusion || {}
+  const out = []
+  let text = ''
+  try { text = JSON.stringify(payload || {}).toLowerCase() } catch (e) { text = '' }
+  if (inc.entrance && inc.entrance.included && /\b(entrance fees?|tickets?)\b[^.?!]*\bnot included\b/.test(text)) out.push('entrance: included vs "not included" claim')
+  if (inc.entrance && inc.entrance.excluded && /\b(entrance fees?|tickets?)\b[^.?!]*\bincluded\b/.test(text)) out.push('entrance: excluded vs "included" claim')
+  if (inc.guide && inc.guide.optional && /\bexpert\s+egyptologist\s+guide\b[^.?!]*\bincluded\b/.test(text)) out.push('guide: optional vs "included" claim')
   return out
 }
 
