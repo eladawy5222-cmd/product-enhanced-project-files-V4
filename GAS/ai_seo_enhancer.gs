@@ -1300,6 +1300,7 @@ function buildSeoPromptFromImprovedContent_(fields, linkedTextBlocks) {
     "2. The Grand Egyptian Museum (GEM): New museum in Giza (Tutankhamun & Mummies as per user rule).\n" +
     "3. The National Museum of Egyptian Civilization (NMEC): In Fustat (Civilization Museum).\n\n" +
     "RULES:\n" +
+    "- IF the input context mentions 'National Museum of Egyptian Civilization', 'Egyptian Civilization Museum', 'Museum of Egyptian Civilization', 'Civilization Museum', or 'NMEC': you MUST use the NMEC/Civilization Museum entity wording. Do NOT use 'Egyptian Museum' (Tahrir) wording for that visit.\n" +
     "- IF trip originates from outside Cairo (e.g. Hurghada, Sharm) AND input mentions 'Egyptian Museum': REPLACE with 'Grand Egyptian Museum' (GEM).\n" +
     "- DO NOT replace 'National Museum of Egyptian Civilization' (NMEC) with GEM. Treat it as a distinct visit.\n" +
     "- IF trip is Cairo City Tour: Keep 'Egyptian Museum' unless context implies GEM.\n\n" +

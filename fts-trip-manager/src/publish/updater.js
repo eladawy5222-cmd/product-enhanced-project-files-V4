@@ -3148,6 +3148,12 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
         var q = String(rec && rec.fields && rec.fields.AI_Question ? rec.fields.AI_Question : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         var a = String(rec && rec.fields && rec.fields.AI_Answer ? rec.fields.AI_Answer : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         if (!q || !a) return;
+        var qaLc = (q + ' ' + a).toLowerCase()
+        if (/\b(cancel|cancellation|refund|refundable)\b/.test(qaLc)) return;
+        q = upd_normalizeMuseumEntityText_Updater_(q, civCtx)
+        a = upd_normalizeMuseumEntityText_Updater_(a, civCtx)
+        a = upd_removeUnsupportedHighRiskParts_Updater_(a, strict)
+        if (!q || !a) return;
         mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
       });
       if (mainEntity.length) {

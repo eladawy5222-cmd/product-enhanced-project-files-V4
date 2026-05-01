@@ -442,10 +442,18 @@ async function buildFaqsContext_(tripFields, tripId) {
 function buildFaqsPrompt_(ctx) {
   // Pre-scan for GEM to enforce strict rules
   var itineraryText = (ctx.itinerary || []).join(' ').toLowerCase();
+  var hasNMEC = itineraryText.indexOf('national museum of egyptian civilization') > -1 || itineraryText.indexOf('egyptian civilization museum') > -1 || itineraryText.indexOf('museum of egyptian civilization') > -1 || itineraryText.indexOf('nmec') > -1 || itineraryText.indexOf('civilization museum') > -1;
   var hasGEM = itineraryText.indexOf('grand egyptian museum') > -1 || itineraryText.indexOf('gem') > -1 || itineraryText.indexOf('new museum') > -1;
 
   var museumConstraint = "";
-  if (hasGEM) {
+  if (hasNMEC) {
+    museumConstraint =
+      "!!! CRITICAL MUSEUM INSTRUCTION !!!\n" +
+      "The itinerary explicitly visits the National Museum of Egyptian Civilization (NMEC).\n" +
+      "1. YOU MUST REFER TO THE 'National Museum of Egyptian Civilization (NMEC)' when answering museum questions.\n" +
+      "2. YOU MUST NOT refer to this visit as the 'Egyptian Museum' (Tahrir).\n" +
+      "3. YOU MUST NOT switch it to the Grand Egyptian Museum (GEM) unless the itinerary explicitly mentions GEM.\n\n";
+  } else if (hasGEM) {
     museumConstraint = 
       "!!! CRITICAL MUSEUM INSTRUCTION !!!\n" +
       "The itinerary EXPLICITLY visits the 'Grand Egyptian Museum' (GEM) in Giza.\n" +
@@ -511,7 +519,7 @@ function buildFaqsPrompt_(ctx) {
     "=== FAQ CATEGORIES TO COVER ===\n" +
     "Generate EXACTLY " + MIN_FAQS_COUNT + "-" + MAX_FAQS_COUNT + " FAQs covering these categories where relevant:\n" +
     "*CATEGORY 1: BOOKING & PAYMENT* 💳 (How to book, payment methods, instant confirmation)\n" +
-    "*CATEGORY 2: CANCELLATION & CHANGES* 🔄 (Policy, weather issues, sickness)\n" +
+    "*CATEGORY 2: CANCELLATION & CHANGES* 🔄 (ONLY if a cancellation/refund policy is explicitly present in the context. Otherwise omit.)\n" +
     "*CATEGORY 3: PICKUP & LOGISTICS* 🚐 (Pickup time/location, contact info)\n" +
     "*CATEGORY 4: PHYSICAL & HEALTH* 💪 (Fitness level, elderly/children, accessibility)\n" +
     "*CATEGORY 5: WHAT TO BRING* 🎒 (Clothing, items, camera, storage)\n" +
@@ -554,9 +562,7 @@ function buildFaqsPrompt_(ctx) {
 
     "=== ANSWER STRUCTURE ===\n" +
     "Formula: [Direct Answer] + [Supporting Detail] + [Reassurance/Action]\n" +
-    "Example:\n" +
-    "Q: What is your cancellation policy?\n" +
-    "A: *You can cancel free of charge up to 24 hours before the tour* for a full refund. If you need to cancel within 24 hours, please contact us and we'll do our best to accommodate you. We understand plans change — your flexibility matters to us.\n\n" +
+    "Do NOT include cancellation/refund promises unless they are explicitly present in the context.\n\n" +
 
     "=== MANDATORY WRITING RULES (HUMAN TOUCH) ===\n" +
     "1. Tone & Voice: Natural, conversational, like an experienced guide.\n" +
@@ -569,6 +575,7 @@ function buildFaqsPrompt_(ctx) {
     "CRITICAL CONSTRAINTS:\n" +
     "- Use ONLY information from context above (all improved data sources)\n" +
     "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
+    "- Do NOT claim free cancellation, refunds, or a specific cancellation window unless explicitly present in the context\n" +
     "- Avoid support-template boilerplate (e.g., 'contact our customer service team', 'hotline', vague promises). Keep answers specific and practical.\n" +
     "- Output in ENGLISH ONLY\n" +
     "- Aim for " + MIN_FAQS_COUNT + " to " + MAX_FAQS_COUNT + " trip-specific FAQs, but quality is more important than count.\n" +
@@ -595,6 +602,7 @@ function buildFaqsPrompt_(ctx) {
 
 function upsertCancellationFaq_(faqs, ctx) {
   if (!Array.isArray(faqs)) return faqs;
+  return faqs;
 
   // Determine which policy to use
   var policyAnswer = CANCELLATION_FIXED_ANSWER; // Default (24h)
