@@ -1,0 +1,1237 @@
+{
+  "core": {
+    "id": 23024,
+    "title": "Cairo Day Tour: NMEC, Citadel &#038; Old Cairo with Lunch &#038; Hotel Pickup",
+    "slug": "cairo-egyptian-civilization-museum-citadel",
+    "status": "publish",
+    "type": "trip",
+    "link": "https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/",
+    "permalink": "https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/",
+    "permalink_slug": "cairo-egyptian-civilization-museum-citadel",
+    "permalink_path": "/tours/cairo-egyptian-civilization-museum-citadel/",
+    "date": "2026-01-17T12:02:40+00:00",
+    "date_gmt": "2026-01-17T12:02:40+00:00",
+    "modified": "2026-05-01T17:01:16+00:00",
+    "modified_gmt": "2026-05-01T17:01:16+00:00",
+    "excerpt": "Cairo day tour exploring the National Museum of Egyptian Civilization,...",
+    "content_html": "\u003Cp\u003EUnlock the soul of Cairo in a single, perfectly paced day. This curated journey connects 5,000 years of history, from ancient pharaohs and medieval sultans to early Christian communities. Stand face-to-face with legendary rulers, command panoramic views from a hilltop fortress, and walk through living history in one of the world&#8217;s oldest Christian quarters—all with seamless logistics and expert storytelling.\u003C/p\u003E\n\u003Cp\u003EWe handle every detail so you can immerse yourself completely. Your expert Egyptologist guide transforms complex history into captivating narratives, revealing secrets in the stones and answering your deepest questions. The itinerary flows naturally, maximizing your experience without ever feeling rushed.\u003C/p\u003E\n\u003Cp\u003EBy day&#8217;s end, you&#8217;ll gain more than photos—you&#8217;ll possess a profound understanding of Cairo&#8217;s layered identity and the confidence to explore further. This tour provides the perfect historical foundation, whether you&#8217;re a first-time visitor with limited days or a history enthusiast seeking depth.\u003C/p\u003E\n\u003Cp\u003EThis tour is ideal for first-time visitors seeking a comprehensive Cairo overview, history enthusiasts wanting deeper context, and travelers who value seamless logistics. It may not suit those seeking only modern Cairo experiences or travelers with severe mobility limitations.\u003C/p\u003E\n\u003Cp\u003EExpect a moderate pace with walking at historic sites, some steps, and uneven surfaces. Wear comfortable shoes, sun protection, and modest clothing for religious sites. Bring a camera and cash for optional shopping.\u003C/p\u003E\n",
+    "author_id": "1",
+    "template": "",
+    "comment_status": "open"
+  },
+  "language": {
+    "code": "en",
+    "locale": "en_US",
+    "translations": {
+      "de": "33476",
+      "en": "23024",
+      "es": "33464",
+      "fr": "33452",
+      "zh-hans": "33488"
+    }
+  },
+  "meta": {
+    "trip_version": "2.0.0",
+    "_s_has_sale": "yes",
+    "wp_travel_engine_setting": {
+      "cost": {
+        "cost_includes": "Guide\ntransport\nlunch\ntickets",
+        "includes_title": "",
+        "excludes_title": "",
+        "cost_excludes": ""
+      },
+      "faq": {
+        "faq_title": [
+          "Is this tour safe, and what about emergencies?",
+          "What languages are available for this tour?",
+          "What are the main stops on this tour, and which museum do we visit?",
+          "What is included and what is not included in the tour price?",
+          "How much cash do I need for this tour?",
+          "Where and when is the hotel pickup for this tour?",
+          "Will I have free time at Khan El-Khalili Bazaar?",
+          "Is lunch included, and can dietary restrictions be accommodated?",
+          "Are there any optional extras or add-ons available?",
+          "What should I bring on this tour?",
+          "Is this tour suitable for people with limited mobility or elderly travelers?"
+        ],
+        "faq_content": [
+          "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+          "Language availability is confirmed at booking.",
+          "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+          "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+          "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+          "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+          "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+          "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+          "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+          "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+          "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+        ]
+      },
+      "itinerary": {
+        "itinerary_title": {
+          "1": "Morning – Egyptian Civilization Museum",
+          "2": "Late Morning – Saladin's Citadel",
+          "3": "Afternoon – Traditional Egyptian Lunch",
+          "4": "Early Afternoon – Old Cairo Exploration",
+          "5": "Late Afternoon – Khan El-Khalili Bazaar",
+          "6": "Evening – Return Transfer"
+        },
+        "itinerary_days_label": {
+          "1": "Morning",
+          "2": "Late Morning",
+          "3": "Afternoon",
+          "4": "Early Afternoon",
+          "5": "Late Afternoon",
+          "6": "Evening"
+        },
+        "itinerary_content": {
+          "1": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)",
+          "2": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)",
+          "3": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)",
+          "4": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)",
+          "5": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)",
+          "6": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+        }
+      },
+      "trip_duration_unit": "hours",
+      "trip_duration": 8,
+      "trip_duration_hour": 8,
+      "trip_duration_hours": 8,
+      "trip_duration_minute": 0,
+      "trip_duration_minutes": 0,
+      "trip_fixed_dates": "no",
+      "trip_cut_off_time": "0",
+      "trip_min_pax": "1",
+      "trip_max_pax": "100",
+      "trip_price_display": "from",
+      "overview_section_title": "Overview",
+      "tab_content": {
+        "1_wpeditor": "\u003Cp\u003EUnlock the soul of Cairo in a single, perfectly paced day. This curated journey connects 5,000 years of history, from ancient pharaohs and medieval sultans to early Christian communities. Stand face-to-face with legendary rulers, command panoramic views from a hilltop fortress, and walk through living history in one of the world's oldest Christian quarters—all with seamless logistics and expert storytelling.\u003C/p\u003E\u003Cp\u003EWe handle every detail so you can immerse yourself completely. If selected, an Egyptologist guide transforms complex history into captivating narratives, revealing secrets in the stones and answering your deepest questions. The itinerary flows naturally, maximizing your experience without ever feeling rushed.\u003C/p\u003E\u003Cp\u003EBy day's end, you'll gain more than photos—you'll possess a profound understanding of Cairo's layered identity and the confidence to explore further. This tour provides the perfect historical foundation, whether you're a first-time visitor with limited days or a history enthusiast seeking depth.\u003C/p\u003E\u003Cp\u003EThis tour is ideal for first-time visitors seeking a comprehensive Cairo overview, history enthusiasts wanting deeper context, and travelers who value seamless logistics. It may not suit those seeking only modern Cairo experiences or travelers with severe mobility limitations.\u003C/p\u003E\u003Cp\u003EExpect a moderate pace with walking at historic sites, some steps, and uneven surfaces. Wear comfortable shoes, sun protection, and modest clothing for religious sites. Bring a camera and cash for optional shopping.\u003C/p\u003E",
+        "8_wpeditor": "\u003Cp\u003E\u003Cstrong\u003EStand Face-to-Face with Ancient Pharaohs\u003C/strong\u003E — Feel the awe of standing mere feet from Egypt's legendary rulers in the climate-controlled Royal Mummies Hall, creating a powerful memory that defines your Cairo visit.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ESeamless Experience from Start to Finish\u003C/strong\u003E — Enjoy hotel pickup, comfortable transportation, and perfect timing handled for you, eliminating stress so you can focus entirely on cultural immersion.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EHistory Comes Alive with Expert Guides\u003C/strong\u003E — Our guides (depending on the option selected) transform ancient stones into captivating stories, revealing hidden details and answering questions that deepen your understanding.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMaximum Cairo Highlights in One Perfect Day\u003C/strong\u003E — Experience three major historical areas in a single, well-paced itinerary that eliminates the need for multiple separate excursions.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ECommand Panoramic Views of Cairo\u003C/strong\u003E — The Citadel offers breathtaking views of Cairo's sprawling cityscape, providing perfect photo opportunities and spatial understanding of the city.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EConnect 5,000 Years of Egyptian History\u003C/strong\u003E — Experience Egypt's complete historical narrative from pharaonic times through Christian heritage to Islamic architecture in one coherent, fascinating story.\u003C/p\u003E",
+        "10_wpeditor": "",
+        "9_wpeditor": ""
+      },
+      "tab_8_title": "Why People Love This Trip",
+      "trip_highlights_title": "Highlights",
+      "trip_highlights": [
+        {
+          "highlight_text": "Stand face-to-face with Egypt's legendary pharaohs in the Royal Mummies Hall."
+        },
+        {
+          "highlight_text": "Capture breathtaking panoramic photos of Cairo from Saladin's 850-year-old hilltop fortress."
+        },
+        {
+          "highlight_text": "Discover centuries of Christian history at the serene Hanging Church in Old Cairo's historic heart."
+        },
+        {
+          "highlight_text": "Savor authentic Egyptian cuisine during a traditional lunch with genuine local hospitality."
+        },
+        {
+          "highlight_text": "Find unique artisan treasures in Khan El-Khalili's vibrant market alleys at your own pace."
+        },
+        {
+          "highlight_text": "See 50,000 artifacts that tell Egypt's complete 5,000-year civilization story in one museum."
+        },
+        {
+          "highlight_text": "Relax with stress-free hotel pickup, guiding (depending on the option selected), and site visits as per itinerary."
+        }
+      ],
+      "faq_section_title": "FAQ",
+      "trip_itinerary_title": "Itinerary",
+      "trip_itinerary_description": "\u003Cp\u003E\u003Cstrong\u003EMorning: Hotel Pickup & Egyptian Civilization Museum\u003C/strong\u003E — Your Cairo day tour begins with convenient hotel pickup. Travel to the National Museum of Egyptian Civilization for a fascinating 2.5-hour exploration. Marvel at the Royal Mummies Hall and 50,000+ ancient artifacts that tell Egypt's complete story.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMidday: Saladin's Citadel & Lunch\u003C/strong\u003E — Continue to the 850-year-old Saladin's Citadel for breathtaking panoramic views of Cairo. Enjoy a delicious traditional Egyptian lunch at a local restaurant, savoring authentic flavors and regional specialties.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EAfternoon: Old Cairo Exploration\u003C/strong\u003E — Discover the historic Christian quarter of Old Cairo, visiting the Hanging Church and other significant Coptic sites. Your guide shares fascinating stories about Egypt's religious heritage and architectural marvels.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ELate Afternoon: Khan El-Khalili Bazaar (if time permits)\u003C/strong\u003E — Experience the vibrant atmosphere of Cairo's most famous marketplace. Browse colorful stalls filled with antiques, handicrafts, and unique local treasures before returning to your hotel.\u003C/p\u003E",
+      "trip_facts_title": "Good to Know",
+      "trip_facts": {
+        "12647846": {
+          "12647846": "English, French, German, Spanish, Italian"
+        },
+        "69801669": {
+          "69801669": "As per itinerary"
+        },
+        "97932390": {
+          "97932390": "8 hours"
+        },
+        "97941245": {
+          "97941245": "Cairo, Giza"
+        },
+        "97950890": {
+          "97950890": "Available"
+        },
+        "97952084": {
+          "97952084": "Cultural Tour"
+        },
+        "field_id": {
+          "12647846": "Language",
+          "69801669": "Meals",
+          "97932390": "Duration",
+          "97941245": "Tour Location",
+          "97950890": "Pickup & Drop Off",
+          "97952084": "Tour Type"
+        },
+        "field_type": {
+          "12647846": "text",
+          "69801669": "text",
+          "97932390": "text",
+          "97941245": "text",
+          "97950890": "text",
+          "97952084": "text"
+        }
+      },
+      "trip_extra_services": [
+        {
+          "label": "FTS Scarve",
+          "type": "Default",
+          "prices": [10],
+          "descriptions": [
+            "Wrap yourself in an authentic Egyptian scarf, handcrafted for both desert protection and timeless style—a practical souvenir that shields you from the sun while adding a touch of local elegance to your Cairo explorations."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 6273
+        },
+        {
+          "label": "Shared Photographer per person",
+          "type": "Default",
+          "prices": [30],
+          "descriptions": [
+            "Let a professional photographer capture your most memorable moments against Cairo's historic backdrop, ensuring you return home with stunning, high-quality images that tell the story of your Egyptian adventure."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 6274
+        },
+        {
+          "label": "FTS Organic oils \" Organic 100%",
+          "type": "Default",
+          "prices": [10],
+          "descriptions": [
+            "Experience the pure essence of Egypt with our locally sourced, 100% organic oils—a natural treasure to nourish your skin or simply savor as a fragrant reminder of your journey through the land of ancient remedies."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 20339
+        }
+      ],
+      "wte_services_ids": "6273,6274,20339",
+      "packages_ids": [
+        "33442"
+      ],
+      "trip_code": "FTS-23024",
+      "cost_tab_sec_title": "",
+      "trip_duration_nights": 0,
+      "min_max_age_enable": false,
+      "trip_cutoff_enable": false,
+      "trip_cut_off_unit": "days",
+      "trip_minimum_pax": 1,
+      "map": {
+        "image_url": [],
+        "iframe": ""
+      },
+      "map_section_title": "",
+      "enable_video_gallery": false,
+      "tab_9_title": "",
+      "partial_payment_enable": true,
+      "partial_payment_amount": 0,
+      "partial_payment_percent": 0,
+      "trip_full_payment_enabled": "no",
+      "partial_payment_type": "percent",
+      "tab_10_title": "",
+      "partial_payment_use": "global",
+      "cost_includes": "Guide\ntransport\nlunch\ntickets",
+      "cost_excludes": "Travel insurance\nPersonal expenses and shopping\nOptional extras (available at an additional cost)\nGratuities and tips",
+      "faq_title": [
+        "Is this tour safe, and what about emergencies?",
+        "What languages are available for this tour?",
+        "What are the main stops on this tour, and which museum do we visit?",
+        "What is included and what is not included in the tour price?",
+        "How much cash do I need for this tour?",
+        "Where and when is the hotel pickup for this tour?",
+        "Will I have free time at Khan El-Khalili Bazaar?",
+        "Is lunch included, and can dietary restrictions be accommodated?",
+        "Are there any optional extras or add-ons available?",
+        "What should I bring on this tour?",
+        "Is this tour suitable for people with limited mobility or elderly travelers?"
+      ],
+      "faq_content": [
+        "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+        "Language availability is confirmed at booking.",
+        "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+        "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+        "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+        "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+        "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+        "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+        "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+        "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+        "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+      ],
+      "trip_itinerary": [
+        {
+          "title": "Morning – Egyptian Civilization Museum",
+          "content": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)"
+        },
+        {
+          "title": "Late Morning – Saladin's Citadel",
+          "content": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)"
+        },
+        {
+          "title": "Afternoon – Traditional Egyptian Lunch",
+          "content": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)"
+        },
+        {
+          "title": "Early Afternoon – Old Cairo Exploration",
+          "content": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)"
+        },
+        {
+          "title": "Late Afternoon – Khan El-Khalili Bazaar",
+          "content": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)"
+        },
+        {
+          "title": "Evening – Return Transfer",
+          "content": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+        }
+      ],
+      "bold_promise": "Enjoy 5,000 years of Cairo's history without the stress of planning, even if you have limited time.",
+      "at_a_glance": {
+        "duration": "8 hours",
+        "meeting_point": "Hotel pickup",
+        "group_size": "",
+        "includes": "Guide, transport, lunch, tickets",
+        "excludes": "Tips, insurance, shopping"
+      }
+    },
+    "trip_type": "single",
+    "rank_math_title": "Cairo Day Tour: NMEC, Citadel & Old Cairo + Lunch",
+    "rank_math_description": "Explore Cairo on a day tour covering the Egyptian Civilization Museum, Citadel, and Old Cairo. Book your Cairo day tour for history and culture.",
+    "rank_math_focus_keyword": "Cairo day tour, day tours cairo, Egyptian Civilization Museum Cairo, things to do in cairo, cairo museum, cairo sightseeing, el cairo tour, cairo tour, old cairo tour, cairo citadel, egyptian civilization museum, pyramids cairo tour, el khalili cairo",
+    "trip_code": "FTS-23024",
+    "trip_duration_minutes": "0",
+    "trip_duration_minute": "0",
+    "wte_advanced_itinerary": {
+      "advanced_itinerary": {
+        "itinerary_duration": {
+          "1": "2.5",
+          "2": "1.5",
+          "3": "1",
+          "4": "1.5",
+          "5": "1",
+          "6": "0.5"
+        },
+        "itinerary_duration_type": {
+          "1": "hour",
+          "2": "hour",
+          "3": "hour",
+          "4": "hour",
+          "5": "hour",
+          "6": "hour"
+        },
+        "meals_included": {
+          "1": [
+            "none"
+          ],
+          "2": [
+            "none"
+          ],
+          "3": [
+            "lunch"
+          ],
+          "4": [
+            "none"
+          ],
+          "5": [
+            "none"
+          ],
+          "6": [
+            "none"
+          ]
+        },
+        "itinerary_image": []
+      }
+    },
+    "_wpml_word_count": "298",
+    "_wpml_location_migration_done": "1",
+    "packages_ids": [
+      "33442"
+    ],
+    "total_travellers_per_day": "",
+    "_thumbnail_id": "30663",
+    "wpte_gallery_id": {
+      "0": 30660,
+      "1": 30656,
+      "2": 30661,
+      "3": 30659,
+      "4": 30658,
+      "5": 30662,
+      "6": 30664,
+      "7": 30657,
+      "enable": "1"
+    },
+    "_s_price": "96",
+    "_s_min_pax": "1",
+    "_s_max_pax": "",
+    "_s_duration": "8",
+    "wp_travel_engine_setting_trip_duration": "8",
+    "wp_travel_engine_setting_trip_price": "96",
+    "wp_travel_engine_setting_trip_actual_price": "135",
+    "copied_media_ids": [],
+    "referenced_media_ids": [30663],
+    "_edit_lock": "1777655281:1",
+    "rank_math_seo_score": "56",
+    "_edit_last": "1",
+    "_trip_code": "field_6891fcb1c2fed",
+    "trustindex_code": "",
+    "_trustindex_code": "field_6866471f55c5b",
+    "_fts_featured_video_url": "",
+    "rank_math_analytic_object_id": "956",
+    "_wp_page_template": "default",
+    "rank_math_internal_links_processed": "1",
+    "rank_math_robots": [
+      "index"
+    ],
+    "ai_classified_activities": [
+      {
+        "id": 400,
+        "name": "City Tours",
+        "slug": "city-tours"
+      }
+    ],
+    "ai_classified_trip_types": [
+      {
+        "id": 407,
+        "name": "Day Trips",
+        "slug": "day-trips"
+      },
+      {
+        "id": 408,
+        "name": "Guided Tours",
+        "slug": "guided-tours"
+      }
+    ],
+    "schema_trip_data": "{\"@context\":\"https://schema.org\",\"@type\":\"TouristTrip\",\"name\":\"Cairo Day Tour: NMEC, Citadel & Old Cairo\",\"description\":\"Explore Cairo on a day tour covering the Egyptian Civilization Museum, Citadel, and Old Cairo. Book your Cairo day tour for history and culture.\",\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\",\"mainEntityOfPage\":{\"@type\":\"WebPage\",\"@id\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\"},\"image\":[\"https://ftstravels.com/wp-content/uploads/2026/03/statue-at-national-museum-of-egyptian-civilization-30663.webp\"],\"touristType\":[\"Cultural Travelers\",\"History Lovers\"],\"provider\":{\"@type\":\"TravelAgency\",\"name\":\"FTS Travels\",\"url\":\"https://ftstravels.com\"},\"inLanguage\":\"en\",\"offers\":{\"@type\":\"AggregateOffer\",\"priceCurrency\":\"EUR\",\"lowPrice\":45,\"highPrice\":96,\"offerCount\":5,\"availability\":\"https://schema.org/InStock\",\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\"},\"itinerary\":{\"@type\":\"ItemList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"item\":{\"@type\":\"Place\",\"name\":\"Old Cairo\"}},{\"@type\":\"ListItem\",\"position\":2,\"item\":{\"@type\":\"Place\",\"name\":\"National Museum of Egyptian Civilization\"}}]},\"duration\":\"PT8H\"}",
+    "wptravelengine_pickup_points_required": "yes",
+    "trip_schema_data": "{\"@context\":\"https://schema.org\",\"@type\":\"TouristTrip\",\"name\":\"Cairo Day Tour: NMEC, Citadel & Old Cairo\",\"description\":\"Explore Cairo on a day tour covering the Egyptian Civilization Museum, Citadel, and Old Cairo. Book your Cairo day tour for history and culture.\",\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\",\"mainEntityOfPage\":{\"@type\":\"WebPage\",\"@id\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\"},\"image\":[\"https://ftstravels.com/wp-content/uploads/2026/03/statue-at-national-museum-of-egyptian-civilization-30663.webp\"],\"touristType\":[\"Cultural Travelers\",\"History Lovers\"],\"provider\":{\"@type\":\"TravelAgency\",\"name\":\"FTS Travels\",\"url\":\"https://ftstravels.com\"},\"inLanguage\":\"en\",\"offers\":{\"@type\":\"AggregateOffer\",\"priceCurrency\":\"EUR\",\"lowPrice\":45,\"highPrice\":96,\"offerCount\":5,\"availability\":\"https://schema.org/InStock\",\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\"},\"itinerary\":{\"@type\":\"ItemList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"item\":{\"@type\":\"Place\",\"name\":\"Old Cairo\"}},{\"@type\":\"ListItem\",\"position\":2,\"item\":{\"@type\":\"Place\",\"name\":\"National Museum of Egyptian Civilization\"}}]},\"duration\":\"PT8H\"}",
+    "faq_schema_data": "{\"@context\":\"https://schema.org\",\"@type\":\"FAQPage\",\"inLanguage\":\"en\",\"mainEntity\":[{\"@type\":\"Question\",\"name\":\"Is this tour safe, and what about emergencies?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.\"}},{\"@type\":\"Question\",\"name\":\"What languages are available for this tour?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Language availability is confirmed at booking.\"}},{\"@type\":\"Question\",\"name\":\"What are the main stops on this tour, and which museum do we visit?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.\"}},{\"@type\":\"Question\",\"name\":\"What is included and what is not included in the tour price?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"What's included and not included is listed on this page under What's Included and What's Not Included. Entrance fees are included as listed in What's Included. Guiding depends on the option selected.\"}},{\"@type\":\"Question\",\"name\":\"How much cash do I need for this tour?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.\"}},{\"@type\":\"Question\",\"name\":\"Where and when is the hotel pickup for this tour?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.\"}},{\"@type\":\"Question\",\"name\":\"Will I have free time at Khan El-Khalili Bazaar?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.\"}},{\"@type\":\"Question\",\"name\":\"Is lunch included, and can dietary restrictions be accommodated?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.\"}},{\"@type\":\"Question\",\"name\":\"Are there any optional extras or add-ons available?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.\"}},{\"@type\":\"Question\",\"name\":\"What should I bring on this tour?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.\"}},{\"@type\":\"Question\",\"name\":\"Is this tour suitable for people with limited mobility or elderly travelers?\",\"acceptedAnswer\":{\"@type\":\"Answer\",\"text\":\"The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience.\"}}],\"description\":\"Explore Cairo on a day tour covering the Egyptian Civilization Museum, Citadel, and Old Cairo. Book your Cairo day tour for history and culture.\",\"name\":\"Cairo Day Tour: NMEC, Citadel & Old Cairo + Lunch\",\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\"}",
+    "translation_url_map": "{\"en\":{\"post_id\":23024,\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\",\"last_synced_at\":\"2026-05-01T17:01:15.095Z\"},\"fr\":{\"post_id\":33452,\"url\":\"https://ftstravels.com/fr/tours/excursion-le-caire-musee-de-la-civilisation-egyptienne-citadelle-et-vieux/\",\"last_synced_at\":\"2026-04-20T22:16:46.050Z\"},\"es\":{\"post_id\":33464,\"url\":\"https://ftstravels.com/es/tours/excursion-el-cairo-museo-civilizacion-egipcia/\",\"last_synced_at\":\"2026-04-20T22:21:32.673Z\"},\"de\":{\"post_id\":33476,\"url\":\"https://ftstravels.com/de/tours/kairo-ausflug-aegyptisches-zivilisationsmuseum-zitadelle-alt/\",\"last_synced_at\":\"2026-04-20T22:26:33.299Z\"},\"zh-hans\":{\"post_id\":33488,\"url\":\"https://ftstravels.com/zh-hans/tours/cairo-egyptian-citadel-old-exploration/\",\"last_synced_at\":\"2026-04-20T22:31:13.078Z\"}}",
+    "primary_package": "33442",
+    "trip_available_months": "",
+    "ai_bold_promise": "Enjoy 5,000 years of Cairo's history without the stress of planning, even if you have limited time.",
+    "ai_at_a_glance": "{\"duration\":\"8 hours\",\"meeting_point\":\"Hotel pickup\",\"group_size\":\"\",\"includes\":\"Guide, transport, lunch, tickets\",\"excludes\":\"Tips, insurance, shopping\"}",
+    "_elementor_page_assets": []
+  },
+  "seo": {
+    "permalink": {
+      "slug": "cairo-egyptian-civilization-museum-citadel",
+      "full": "https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/",
+      "path": "/tours/cairo-egyptian-civilization-museum-citadel/"
+    },
+    "yoast": {
+      "primary_destination": "",
+      "primary_activities": "",
+      "primary_trip_types": "",
+      "primary_difficulty": "",
+      "reading_time_minutes": "",
+      "title": "",
+      "description": "",
+      "focus_keyword": ""
+    },
+    "rank_math": {
+      "title": "Cairo Day Tour: NMEC, Citadel & Old Cairo + Lunch",
+      "description": "Explore Cairo on a day tour covering the Egyptian Civilization Museum, Citadel, and Old Cairo. Book your Cairo day tour for history and culture.",
+      "focus_keyword": "Cairo day tour, day tours cairo, Egyptian Civilization Museum Cairo, things to do in cairo, cairo museum, cairo sightseeing, el cairo tour, cairo tour, old cairo tour, cairo citadel, egyptian civilization museum, pyramids cairo tour, el khalili cairo",
+      "primary_destination": "",
+      "primary_activities": "",
+      "primary_trip_types": "",
+      "primary_difficulty": "",
+      "news_sitemap_robots": "",
+      "robots": [
+        "index"
+      ],
+      "seo_score": "56",
+      "internal_links_processed": "1",
+      "analytic_object_id": "956"
+    }
+  },
+  "taxonomies": {
+    "destination": [
+      {
+        "id": 58,
+        "name": "Cairo",
+        "slug": "cairo"
+      },
+      {
+        "id": 56,
+        "name": "Egypt",
+        "slug": "egypt"
+      }
+    ],
+    "activities": [
+      {
+        "id": 400,
+        "name": "City Tours",
+        "slug": "city-tours"
+      }
+    ],
+    "trip_types": [
+      {
+        "id": 407,
+        "name": "Day Trips",
+        "slug": "day-trips"
+      },
+      {
+        "id": 408,
+        "name": "Guided Tours",
+        "slug": "guided-tours"
+      }
+    ],
+    "difficulty": [],
+    "trip_tag": [],
+    "packages": []
+  },
+  "featured_image": {
+    "id": 30663,
+    "url": "https://ftstravels.com/wp-content/uploads/2026/03/statue-at-national-museum-of-egyptian-civilization-30663.webp",
+    "width": 1024,
+    "height": 683,
+    "title": "Statue at National Museum of Egyptian Civilization",
+    "caption": "A detailed statue of a pharaoh stands in the museum.",
+    "alt": "Statue of a pharaoh with detailed carvings on display in a museum",
+    "mime_type": "image/webp"
+  },
+  "gallery": [],
+  "general": {
+    "trip_code": "FTS-23024",
+    "duration_type": "hours",
+    "duration": {
+      "hours": 8,
+      "minutes": 0
+    },
+    "cutoff": {
+      "enabled": false,
+      "value": 0,
+      "unit": "days"
+    },
+    "age": {
+      "min": 0,
+      "max": 0
+    },
+    "raw": {
+      "cost": {
+        "cost_includes": "Guide\ntransport\nlunch\ntickets",
+        "includes_title": "",
+        "excludes_title": "",
+        "cost_excludes": ""
+      },
+      "faq": {
+        "faq_title": [
+          "Is this tour safe, and what about emergencies?",
+          "What languages are available for this tour?",
+          "What are the main stops on this tour, and which museum do we visit?",
+          "What is included and what is not included in the tour price?",
+          "How much cash do I need for this tour?",
+          "Where and when is the hotel pickup for this tour?",
+          "Will I have free time at Khan El-Khalili Bazaar?",
+          "Is lunch included, and can dietary restrictions be accommodated?",
+          "Are there any optional extras or add-ons available?",
+          "What should I bring on this tour?",
+          "Is this tour suitable for people with limited mobility or elderly travelers?"
+        ],
+        "faq_content": [
+          "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+          "Language availability is confirmed at booking.",
+          "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+          "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+          "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+          "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+          "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+          "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+          "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+          "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+          "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+        ]
+      },
+      "itinerary": {
+        "itinerary_title": {
+          "1": "Morning – Egyptian Civilization Museum",
+          "2": "Late Morning – Saladin's Citadel",
+          "3": "Afternoon – Traditional Egyptian Lunch",
+          "4": "Early Afternoon – Old Cairo Exploration",
+          "5": "Late Afternoon – Khan El-Khalili Bazaar",
+          "6": "Evening – Return Transfer"
+        },
+        "itinerary_days_label": {
+          "1": "Morning",
+          "2": "Late Morning",
+          "3": "Afternoon",
+          "4": "Early Afternoon",
+          "5": "Late Afternoon",
+          "6": "Evening"
+        },
+        "itinerary_content": {
+          "1": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)",
+          "2": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)",
+          "3": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)",
+          "4": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)",
+          "5": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)",
+          "6": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+        }
+      },
+      "trip_duration_unit": "hours",
+      "trip_duration": 8,
+      "trip_duration_hour": 8,
+      "trip_duration_hours": 8,
+      "trip_duration_minute": 0,
+      "trip_duration_minutes": 0,
+      "trip_fixed_dates": "no",
+      "trip_cut_off_time": "0",
+      "trip_min_pax": "1",
+      "trip_max_pax": "100",
+      "trip_price_display": "from",
+      "overview_section_title": "Overview",
+      "tab_content": {
+        "1_wpeditor": "\u003Cp\u003EUnlock the soul of Cairo in a single, perfectly paced day. This curated journey connects 5,000 years of history, from ancient pharaohs and medieval sultans to early Christian communities. Stand face-to-face with legendary rulers, command panoramic views from a hilltop fortress, and walk through living history in one of the world's oldest Christian quarters—all with seamless logistics and expert storytelling.\u003C/p\u003E\u003Cp\u003EWe handle every detail so you can immerse yourself completely. If selected, an Egyptologist guide transforms complex history into captivating narratives, revealing secrets in the stones and answering your deepest questions. The itinerary flows naturally, maximizing your experience without ever feeling rushed.\u003C/p\u003E\u003Cp\u003EBy day's end, you'll gain more than photos—you'll possess a profound understanding of Cairo's layered identity and the confidence to explore further. This tour provides the perfect historical foundation, whether you're a first-time visitor with limited days or a history enthusiast seeking depth.\u003C/p\u003E\u003Cp\u003EThis tour is ideal for first-time visitors seeking a comprehensive Cairo overview, history enthusiasts wanting deeper context, and travelers who value seamless logistics. It may not suit those seeking only modern Cairo experiences or travelers with severe mobility limitations.\u003C/p\u003E\u003Cp\u003EExpect a moderate pace with walking at historic sites, some steps, and uneven surfaces. Wear comfortable shoes, sun protection, and modest clothing for religious sites. Bring a camera and cash for optional shopping.\u003C/p\u003E",
+        "8_wpeditor": "\u003Cp\u003E\u003Cstrong\u003EStand Face-to-Face with Ancient Pharaohs\u003C/strong\u003E — Feel the awe of standing mere feet from Egypt's legendary rulers in the climate-controlled Royal Mummies Hall, creating a powerful memory that defines your Cairo visit.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ESeamless Experience from Start to Finish\u003C/strong\u003E — Enjoy hotel pickup, comfortable transportation, and perfect timing handled for you, eliminating stress so you can focus entirely on cultural immersion.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EHistory Comes Alive with Expert Guides\u003C/strong\u003E — Our guides (depending on the option selected) transform ancient stones into captivating stories, revealing hidden details and answering questions that deepen your understanding.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMaximum Cairo Highlights in One Perfect Day\u003C/strong\u003E — Experience three major historical areas in a single, well-paced itinerary that eliminates the need for multiple separate excursions.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ECommand Panoramic Views of Cairo\u003C/strong\u003E — The Citadel offers breathtaking views of Cairo's sprawling cityscape, providing perfect photo opportunities and spatial understanding of the city.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EConnect 5,000 Years of Egyptian History\u003C/strong\u003E — Experience Egypt's complete historical narrative from pharaonic times through Christian heritage to Islamic architecture in one coherent, fascinating story.\u003C/p\u003E",
+        "10_wpeditor": "",
+        "9_wpeditor": ""
+      },
+      "tab_8_title": "Why People Love This Trip",
+      "trip_highlights_title": "Highlights",
+      "trip_highlights": [
+        {
+          "highlight_text": "Stand face-to-face with Egypt's legendary pharaohs in the Royal Mummies Hall."
+        },
+        {
+          "highlight_text": "Capture breathtaking panoramic photos of Cairo from Saladin's 850-year-old hilltop fortress."
+        },
+        {
+          "highlight_text": "Discover centuries of Christian history at the serene Hanging Church in Old Cairo's historic heart."
+        },
+        {
+          "highlight_text": "Savor authentic Egyptian cuisine during a traditional lunch with genuine local hospitality."
+        },
+        {
+          "highlight_text": "Find unique artisan treasures in Khan El-Khalili's vibrant market alleys at your own pace."
+        },
+        {
+          "highlight_text": "See 50,000 artifacts that tell Egypt's complete 5,000-year civilization story in one museum."
+        },
+        {
+          "highlight_text": "Relax with stress-free hotel pickup, guiding (depending on the option selected), and site visits as per itinerary."
+        }
+      ],
+      "faq_section_title": "FAQ",
+      "trip_itinerary_title": "Itinerary",
+      "trip_itinerary_description": "\u003Cp\u003E\u003Cstrong\u003EMorning: Hotel Pickup & Egyptian Civilization Museum\u003C/strong\u003E — Your Cairo day tour begins with convenient hotel pickup. Travel to the National Museum of Egyptian Civilization for a fascinating 2.5-hour exploration. Marvel at the Royal Mummies Hall and 50,000+ ancient artifacts that tell Egypt's complete story.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMidday: Saladin's Citadel & Lunch\u003C/strong\u003E — Continue to the 850-year-old Saladin's Citadel for breathtaking panoramic views of Cairo. Enjoy a delicious traditional Egyptian lunch at a local restaurant, savoring authentic flavors and regional specialties.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EAfternoon: Old Cairo Exploration\u003C/strong\u003E — Discover the historic Christian quarter of Old Cairo, visiting the Hanging Church and other significant Coptic sites. Your guide shares fascinating stories about Egypt's religious heritage and architectural marvels.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ELate Afternoon: Khan El-Khalili Bazaar (if time permits)\u003C/strong\u003E — Experience the vibrant atmosphere of Cairo's most famous marketplace. Browse colorful stalls filled with antiques, handicrafts, and unique local treasures before returning to your hotel.\u003C/p\u003E",
+      "trip_facts_title": "Good to Know",
+      "trip_facts": {
+        "12647846": {
+          "12647846": "English, French, German, Spanish, Italian"
+        },
+        "69801669": {
+          "69801669": "As per itinerary"
+        },
+        "97932390": {
+          "97932390": "8 hours"
+        },
+        "97941245": {
+          "97941245": "Cairo, Giza"
+        },
+        "97950890": {
+          "97950890": "Available"
+        },
+        "97952084": {
+          "97952084": "Cultural Tour"
+        },
+        "field_id": {
+          "12647846": "Language",
+          "69801669": "Meals",
+          "97932390": "Duration",
+          "97941245": "Tour Location",
+          "97950890": "Pickup & Drop Off",
+          "97952084": "Tour Type"
+        },
+        "field_type": {
+          "12647846": "text",
+          "69801669": "text",
+          "97932390": "text",
+          "97941245": "text",
+          "97950890": "text",
+          "97952084": "text"
+        }
+      },
+      "trip_extra_services": [
+        {
+          "label": "FTS Scarve",
+          "type": "Default",
+          "prices": [10],
+          "descriptions": [
+            "Wrap yourself in an authentic Egyptian scarf, handcrafted for both desert protection and timeless style—a practical souvenir that shields you from the sun while adding a touch of local elegance to your Cairo explorations."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 6273
+        },
+        {
+          "label": "Shared Photographer per person",
+          "type": "Default",
+          "prices": [30],
+          "descriptions": [
+            "Let a professional photographer capture your most memorable moments against Cairo's historic backdrop, ensuring you return home with stunning, high-quality images that tell the story of your Egyptian adventure."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 6274
+        },
+        {
+          "label": "FTS Organic oils \" Organic 100%",
+          "type": "Default",
+          "prices": [10],
+          "descriptions": [
+            "Experience the pure essence of Egypt with our locally sourced, 100% organic oils—a natural treasure to nourish your skin or simply savor as a fragrant reminder of your journey through the land of ancient remedies."
+          ],
+          "options": [
+            ""
+          ],
+          "id": 20339
+        }
+      ],
+      "wte_services_ids": "6273,6274,20339",
+      "packages_ids": [
+        "33442"
+      ],
+      "trip_code": "FTS-23024",
+      "cost_tab_sec_title": "",
+      "trip_duration_nights": 0,
+      "min_max_age_enable": false,
+      "trip_cutoff_enable": false,
+      "trip_cut_off_unit": "days",
+      "trip_minimum_pax": 1,
+      "map": {
+        "image_url": [],
+        "iframe": ""
+      },
+      "map_section_title": "",
+      "enable_video_gallery": false,
+      "tab_9_title": "",
+      "partial_payment_enable": true,
+      "partial_payment_amount": 0,
+      "partial_payment_percent": 0,
+      "trip_full_payment_enabled": "no",
+      "partial_payment_type": "percent",
+      "tab_10_title": "",
+      "partial_payment_use": "global",
+      "cost_includes": "Guide\ntransport\nlunch\ntickets",
+      "cost_excludes": "Travel insurance\nPersonal expenses and shopping\nOptional extras (available at an additional cost)\nGratuities and tips",
+      "faq_title": [
+        "Is this tour safe, and what about emergencies?",
+        "What languages are available for this tour?",
+        "What are the main stops on this tour, and which museum do we visit?",
+        "What is included and what is not included in the tour price?",
+        "How much cash do I need for this tour?",
+        "Where and when is the hotel pickup for this tour?",
+        "Will I have free time at Khan El-Khalili Bazaar?",
+        "Is lunch included, and can dietary restrictions be accommodated?",
+        "Are there any optional extras or add-ons available?",
+        "What should I bring on this tour?",
+        "Is this tour suitable for people with limited mobility or elderly travelers?"
+      ],
+      "faq_content": [
+        "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+        "Language availability is confirmed at booking.",
+        "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+        "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+        "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+        "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+        "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+        "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+        "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+        "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+        "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+      ],
+      "trip_itinerary": [
+        {
+          "title": "Morning – Egyptian Civilization Museum",
+          "content": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)"
+        },
+        {
+          "title": "Late Morning – Saladin's Citadel",
+          "content": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)"
+        },
+        {
+          "title": "Afternoon – Traditional Egyptian Lunch",
+          "content": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)"
+        },
+        {
+          "title": "Early Afternoon – Old Cairo Exploration",
+          "content": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)"
+        },
+        {
+          "title": "Late Afternoon – Khan El-Khalili Bazaar",
+          "content": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)"
+        },
+        {
+          "title": "Evening – Return Transfer",
+          "content": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+        }
+      ],
+      "bold_promise": "Enjoy 5,000 years of Cairo's history without the stress of planning, even if you have limited time.",
+      "at_a_glance": {
+        "duration": "8 hours",
+        "meeting_point": "Hotel pickup",
+        "group_size": "",
+        "includes": "Guide, transport, lunch, tickets",
+        "excludes": "Tips, insurance, shopping"
+      }
+    }
+  },
+  "pricing": {
+    "currency": "EUR",
+    "base_price": "96",
+    "actual_price": "135",
+    "package_ids": [33442],
+    "packages": [
+      {
+        "core": {
+          "id": 33442,
+          "title": "Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour",
+          "slug": "egyptian-civilization-museum-citadel-old-cairo-tour-73",
+          "status": "publish",
+          "type": "trip-packages",
+          "link": "https://ftstravels.com/trip-packages/egyptian-civilization-museum-citadel-old-cairo-tour-73/",
+          "date": "2026-04-20T22:12:19+00:00",
+          "modified": "2026-05-01T16:59:37+00:00",
+          "excerpt": "Experience 5,000 years of Cairo's history in one perfect day. Includes expert guide, all entrance fees, lunch, and hotel transfers.",
+          "content_html": "\u003Cp\u003E\u003Cstrong\u003EYour all-inclusive Cairo day tour includes:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EExpert Egyptologist guide bringing history to life with captivating storytelling\u003C/li\u003E\n\u003Cli\u003EAll attraction entrance fees for seamless access to every site\u003C/li\u003E\n\u003Cli\u003EComfortable air-conditioned transportation with hotel pickup and drop-off\u003C/li\u003E\n\u003Cli\u003ETraditional Egyptian lunch at a local restaurant with authentic cuisine\u003C/li\u003E\n\u003Cli\u003EBottled water throughout to keep you refreshed\u003C/li\u003E\n\u003C/ul\u003E\n"
+        },
+        "meta": {
+          "copied_media_ids": [],
+          "referenced_media_ids": [],
+          "package-categories": {
+            "c_ids": {
+              "11": 11,
+              "12": 12,
+              "264": 264
+            },
+            "labels": {
+              "11": "Adult",
+              "12": "Child",
+              "264": "Student (with ID)"
+            },
+            "prices": {
+              "11": "135",
+              "12": "60",
+              "264": "75"
+            },
+            "sale_prices": {
+              "11": "96",
+              "12": "45",
+              "264": "55"
+            },
+            "min_paxes": {
+              "11": 0,
+              "12": 0,
+              "264": 0
+            },
+            "max_paxes": {
+              "11": 1000,
+              "12": 1000,
+              "264": 1000
+            },
+            "pricing_types": {
+              "11": "per-person",
+              "12": "per-person",
+              "264": "per-person"
+            },
+            "enabled_sale": {
+              "11": "1",
+              "12": "1",
+              "264": "1"
+            },
+            "enabled_group_discount": {
+              "11": "1"
+            }
+          },
+          "group-pricing": {
+            "11": [
+              {
+                "from": 1,
+                "to": 1,
+                "price": 96
+              },
+              {
+                "from": 2,
+                "to": 2,
+                "price": 63
+              },
+              {
+                "from": 3,
+                "to": 8,
+                "price": 58
+              }
+            ]
+          },
+          "_wpml_word_count": "97",
+          "_wpml_location_migration_done": "1",
+          "trip_id": "23024",
+          "enable_weekly_time_slots": "no",
+          "weekly_time_slots": [],
+          "enable_week_days": {
+            "MO": false,
+            "TU": false,
+            "WE": false,
+            "TH": false,
+            "FR": false,
+            "SA": false,
+            "SU": false
+          },
+          "package-dates": [],
+          "_primary_category_id": "11"
+        },
+        "taxonomies": {
+          "trip-packages-categories": []
+        },
+        "pricing": {
+          "categories": [
+            {
+              "id": 11,
+              "label": "Adult",
+              "regular_price": 135,
+              "sale_enabled": true,
+              "sale_price": 96,
+              "pricing_type": "per-person",
+              "min_pax": 0,
+              "max_pax": 1000,
+              "group_pricing": [
+                {
+                  "from": 1,
+                  "to": 1,
+                  "price": 96
+                },
+                {
+                  "from": 2,
+                  "to": 2,
+                  "price": 63
+                },
+                {
+                  "from": 3,
+                  "to": 8,
+                  "price": 58
+                }
+              ],
+              "currency": "EUR"
+            },
+            {
+              "id": 12,
+              "label": "Child",
+              "regular_price": 60,
+              "sale_enabled": true,
+              "sale_price": 45,
+              "pricing_type": "per-person",
+              "min_pax": 0,
+              "max_pax": 1000,
+              "group_pricing": [],
+              "currency": "EUR"
+            },
+            {
+              "id": 264,
+              "label": "Student (with ID)",
+              "regular_price": 75,
+              "sale_enabled": true,
+              "sale_price": 55,
+              "pricing_type": "per-person",
+              "min_pax": 0,
+              "max_pax": 1000,
+              "group_pricing": [],
+              "currency": "EUR"
+            }
+          ],
+          "dates": []
+        }
+      }
+    ],
+    "dates": [],
+    "raw": {
+      "settings": {
+        "cost": {
+          "cost_includes": "Guide\ntransport\nlunch\ntickets",
+          "includes_title": "",
+          "excludes_title": "",
+          "cost_excludes": ""
+        },
+        "faq": {
+          "faq_title": [
+            "Is this tour safe, and what about emergencies?",
+            "What languages are available for this tour?",
+            "What are the main stops on this tour, and which museum do we visit?",
+            "What is included and what is not included in the tour price?",
+            "How much cash do I need for this tour?",
+            "Where and when is the hotel pickup for this tour?",
+            "Will I have free time at Khan El-Khalili Bazaar?",
+            "Is lunch included, and can dietary restrictions be accommodated?",
+            "Are there any optional extras or add-ons available?",
+            "What should I bring on this tour?",
+            "Is this tour suitable for people with limited mobility or elderly travelers?"
+          ],
+          "faq_content": [
+            "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+            "Language availability is confirmed at booking.",
+            "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+            "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+            "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+            "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+            "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+            "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+            "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+            "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+            "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+          ]
+        },
+        "itinerary": {
+          "itinerary_title": {
+            "1": "Morning – Egyptian Civilization Museum",
+            "2": "Late Morning – Saladin's Citadel",
+            "3": "Afternoon – Traditional Egyptian Lunch",
+            "4": "Early Afternoon – Old Cairo Exploration",
+            "5": "Late Afternoon – Khan El-Khalili Bazaar",
+            "6": "Evening – Return Transfer"
+          },
+          "itinerary_days_label": {
+            "1": "Morning",
+            "2": "Late Morning",
+            "3": "Afternoon",
+            "4": "Early Afternoon",
+            "5": "Late Afternoon",
+            "6": "Evening"
+          },
+          "itinerary_content": {
+            "1": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)",
+            "2": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)",
+            "3": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)",
+            "4": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)",
+            "5": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)",
+            "6": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+          }
+        },
+        "trip_duration_unit": "hours",
+        "trip_duration": 8,
+        "trip_duration_hour": 8,
+        "trip_duration_hours": 8,
+        "trip_duration_minute": 0,
+        "trip_duration_minutes": 0,
+        "trip_fixed_dates": "no",
+        "trip_cut_off_time": "0",
+        "trip_min_pax": "1",
+        "trip_max_pax": "100",
+        "trip_price_display": "from",
+        "overview_section_title": "Overview",
+        "tab_content": {
+          "1_wpeditor": "\u003Cp\u003EUnlock the soul of Cairo in a single, perfectly paced day. This curated journey connects 5,000 years of history, from ancient pharaohs and medieval sultans to early Christian communities. Stand face-to-face with legendary rulers, command panoramic views from a hilltop fortress, and walk through living history in one of the world's oldest Christian quarters—all with seamless logistics and expert storytelling.\u003C/p\u003E\u003Cp\u003EWe handle every detail so you can immerse yourself completely. If selected, an Egyptologist guide transforms complex history into captivating narratives, revealing secrets in the stones and answering your deepest questions. The itinerary flows naturally, maximizing your experience without ever feeling rushed.\u003C/p\u003E\u003Cp\u003EBy day's end, you'll gain more than photos—you'll possess a profound understanding of Cairo's layered identity and the confidence to explore further. This tour provides the perfect historical foundation, whether you're a first-time visitor with limited days or a history enthusiast seeking depth.\u003C/p\u003E\u003Cp\u003EThis tour is ideal for first-time visitors seeking a comprehensive Cairo overview, history enthusiasts wanting deeper context, and travelers who value seamless logistics. It may not suit those seeking only modern Cairo experiences or travelers with severe mobility limitations.\u003C/p\u003E\u003Cp\u003EExpect a moderate pace with walking at historic sites, some steps, and uneven surfaces. Wear comfortable shoes, sun protection, and modest clothing for religious sites. Bring a camera and cash for optional shopping.\u003C/p\u003E",
+          "8_wpeditor": "\u003Cp\u003E\u003Cstrong\u003EStand Face-to-Face with Ancient Pharaohs\u003C/strong\u003E — Feel the awe of standing mere feet from Egypt's legendary rulers in the climate-controlled Royal Mummies Hall, creating a powerful memory that defines your Cairo visit.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ESeamless Experience from Start to Finish\u003C/strong\u003E — Enjoy hotel pickup, comfortable transportation, and perfect timing handled for you, eliminating stress so you can focus entirely on cultural immersion.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EHistory Comes Alive with Expert Guides\u003C/strong\u003E — Our guides (depending on the option selected) transform ancient stones into captivating stories, revealing hidden details and answering questions that deepen your understanding.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMaximum Cairo Highlights in One Perfect Day\u003C/strong\u003E — Experience three major historical areas in a single, well-paced itinerary that eliminates the need for multiple separate excursions.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ECommand Panoramic Views of Cairo\u003C/strong\u003E — The Citadel offers breathtaking views of Cairo's sprawling cityscape, providing perfect photo opportunities and spatial understanding of the city.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EConnect 5,000 Years of Egyptian History\u003C/strong\u003E — Experience Egypt's complete historical narrative from pharaonic times through Christian heritage to Islamic architecture in one coherent, fascinating story.\u003C/p\u003E",
+          "10_wpeditor": "",
+          "9_wpeditor": ""
+        },
+        "tab_8_title": "Why People Love This Trip",
+        "trip_highlights_title": "Highlights",
+        "trip_highlights": [
+          {
+            "highlight_text": "Stand face-to-face with Egypt's legendary pharaohs in the Royal Mummies Hall."
+          },
+          {
+            "highlight_text": "Capture breathtaking panoramic photos of Cairo from Saladin's 850-year-old hilltop fortress."
+          },
+          {
+            "highlight_text": "Discover centuries of Christian history at the serene Hanging Church in Old Cairo's historic heart."
+          },
+          {
+            "highlight_text": "Savor authentic Egyptian cuisine during a traditional lunch with genuine local hospitality."
+          },
+          {
+            "highlight_text": "Find unique artisan treasures in Khan El-Khalili's vibrant market alleys at your own pace."
+          },
+          {
+            "highlight_text": "See 50,000 artifacts that tell Egypt's complete 5,000-year civilization story in one museum."
+          },
+          {
+            "highlight_text": "Relax with stress-free hotel pickup, guiding (depending on the option selected), and site visits as per itinerary."
+          }
+        ],
+        "faq_section_title": "FAQ",
+        "trip_itinerary_title": "Itinerary",
+        "trip_itinerary_description": "\u003Cp\u003E\u003Cstrong\u003EMorning: Hotel Pickup & Egyptian Civilization Museum\u003C/strong\u003E — Your Cairo day tour begins with convenient hotel pickup. Travel to the National Museum of Egyptian Civilization for a fascinating 2.5-hour exploration. Marvel at the Royal Mummies Hall and 50,000+ ancient artifacts that tell Egypt's complete story.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EMidday: Saladin's Citadel & Lunch\u003C/strong\u003E — Continue to the 850-year-old Saladin's Citadel for breathtaking panoramic views of Cairo. Enjoy a delicious traditional Egyptian lunch at a local restaurant, savoring authentic flavors and regional specialties.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003EAfternoon: Old Cairo Exploration\u003C/strong\u003E — Discover the historic Christian quarter of Old Cairo, visiting the Hanging Church and other significant Coptic sites. Your guide shares fascinating stories about Egypt's religious heritage and architectural marvels.\u003C/p\u003E\u003Cp\u003E\u003Cstrong\u003ELate Afternoon: Khan El-Khalili Bazaar (if time permits)\u003C/strong\u003E — Experience the vibrant atmosphere of Cairo's most famous marketplace. Browse colorful stalls filled with antiques, handicrafts, and unique local treasures before returning to your hotel.\u003C/p\u003E",
+        "trip_facts_title": "Good to Know",
+        "trip_facts": {
+          "12647846": {
+            "12647846": "English, French, German, Spanish, Italian"
+          },
+          "69801669": {
+            "69801669": "As per itinerary"
+          },
+          "97932390": {
+            "97932390": "8 hours"
+          },
+          "97941245": {
+            "97941245": "Cairo, Giza"
+          },
+          "97950890": {
+            "97950890": "Available"
+          },
+          "97952084": {
+            "97952084": "Cultural Tour"
+          },
+          "field_id": {
+            "12647846": "Language",
+            "69801669": "Meals",
+            "97932390": "Duration",
+            "97941245": "Tour Location",
+            "97950890": "Pickup & Drop Off",
+            "97952084": "Tour Type"
+          },
+          "field_type": {
+            "12647846": "text",
+            "69801669": "text",
+            "97932390": "text",
+            "97941245": "text",
+            "97950890": "text",
+            "97952084": "text"
+          }
+        },
+        "trip_extra_services": [
+          {
+            "label": "FTS Scarve",
+            "type": "Default",
+            "prices": [10],
+            "descriptions": [
+              "Wrap yourself in an authentic Egyptian scarf, handcrafted for both desert protection and timeless style—a practical souvenir that shields you from the sun while adding a touch of local elegance to your Cairo explorations."
+            ],
+            "options": [
+              ""
+            ],
+            "id": 6273
+          },
+          {
+            "label": "Shared Photographer per person",
+            "type": "Default",
+            "prices": [30],
+            "descriptions": [
+              "Let a professional photographer capture your most memorable moments against Cairo's historic backdrop, ensuring you return home with stunning, high-quality images that tell the story of your Egyptian adventure."
+            ],
+            "options": [
+              ""
+            ],
+            "id": 6274
+          },
+          {
+            "label": "FTS Organic oils \" Organic 100%",
+            "type": "Default",
+            "prices": [10],
+            "descriptions": [
+              "Experience the pure essence of Egypt with our locally sourced, 100% organic oils—a natural treasure to nourish your skin or simply savor as a fragrant reminder of your journey through the land of ancient remedies."
+            ],
+            "options": [
+              ""
+            ],
+            "id": 20339
+          }
+        ],
+        "wte_services_ids": "6273,6274,20339",
+        "packages_ids": [
+          "33442"
+        ],
+        "trip_code": "FTS-23024",
+        "cost_tab_sec_title": "",
+        "trip_duration_nights": 0,
+        "min_max_age_enable": false,
+        "trip_cutoff_enable": false,
+        "trip_cut_off_unit": "days",
+        "trip_minimum_pax": 1,
+        "map": {
+          "image_url": [],
+          "iframe": ""
+        },
+        "map_section_title": "",
+        "enable_video_gallery": false,
+        "tab_9_title": "",
+        "partial_payment_enable": true,
+        "partial_payment_amount": 0,
+        "partial_payment_percent": 0,
+        "trip_full_payment_enabled": "no",
+        "partial_payment_type": "percent",
+        "tab_10_title": "",
+        "partial_payment_use": "global",
+        "cost_includes": "Guide\ntransport\nlunch\ntickets",
+        "cost_excludes": "Travel insurance\nPersonal expenses and shopping\nOptional extras (available at an additional cost)\nGratuities and tips",
+        "faq_title": [
+          "Is this tour safe, and what about emergencies?",
+          "What languages are available for this tour?",
+          "What are the main stops on this tour, and which museum do we visit?",
+          "What is included and what is not included in the tour price?",
+          "How much cash do I need for this tour?",
+          "Where and when is the hotel pickup for this tour?",
+          "Will I have free time at Khan El-Khalili Bazaar?",
+          "Is lunch included, and can dietary restrictions be accommodated?",
+          "Are there any optional extras or add-ons available?",
+          "What should I bring on this tour?",
+          "Is this tour suitable for people with limited mobility or elderly travelers?"
+        ],
+        "faq_content": [
+          "Yes, the tour operates with comfortable, air-conditioned vehicles and experienced drivers. For emergencies, your guide will assist you, and we recommend having travel insurance for peace of mind.",
+          "Language availability is confirmed at booking.",
+          "This tour takes you to Old Cairo’s Coptic landmarks like the Hanging Church, Saladin’s Citadel, and the Khan El-Khalili Bazaar. The museum included is the National Museum of Egyptian Civilization (NMEC), where you’ll see over 50,000 artifacts spanning 5,000 years of Egyptian history.",
+          "What's included and not included is listed on this page under What's Included and What's Excluded. Entrance fees are included as listed in What's Included. An Egyptologist guide is included as listed in What's Included.",
+          "Bring some cash for tips, personal purchases, and any optional extras. You typically won't need cash for entrance tickets because they're included as listed in What's Included.",
+          "We provide convenient hotel pickup directly from your hotel lobby in the morning. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.",
+          "Yes, you’ll have time to explore Khan El-Khalili at your own pace, browsing for antiques, handicrafts, and souvenirs. The itinerary includes about 1.5 hours there, so you can shop and soak up the atmosphere.",
+          "Lunch at a local restaurant is included in the tour price. If you have dietary restrictions (e.g., vegetarian, gluten-free), notify us at booking, and we’ll do our best to adjust the meal for you.",
+          "These are optional and come at an extra cost, so select them if you’d like a deeper experience or keepsakes.",
+          "Bring comfortable walking shoes, a hat and sunscreen for outdoor stops, and your camera for photos at the Citadel and NMEC.",
+          "The tour involves walking at several sites, including the Citadel’s hilltop and Old Cairo’s historic streets, which may have uneven surfaces. If you or a companion have mobility concerns, let us know when booking so we can suggest the best options for a comfortable experience."
+        ],
+        "trip_itinerary": [
+          {
+            "title": "Morning – Egyptian Civilization Museum",
+            "content": "Begin your journey at the National Museum of Egyptian Civilization, where you'll discover 50,000 ancient artifacts and stand before Egypt's pharaohs in the Royal Mummies Hall. Connect directly with ancient rulers in a powerful, unforgettable experience that brings history to life. (Approx. 2.5 hours)"
+          },
+          {
+            "title": "Late Morning – Saladin's Citadel",
+            "content": "Explore Saladin's 850-year-old fortress, uncovering breathtaking panoramic views of Cairo from the ancient ramparts. Capture perfect photos and gain spatial understanding of the city's layout while learning about medieval Islamic architecture. (Approx. 1.5 hours)"
+          },
+          {
+            "title": "Afternoon – Traditional Egyptian Lunch",
+            "content": "Savor authentic Egyptian cuisine during a traditional lunch at a local restaurant, experiencing warm Egyptian hospitality through classic dishes. Recharge with delicious local flavors that fuel your afternoon exploration. (Approx. 1 hours)"
+          },
+          {
+            "title": "Early Afternoon – Old Cairo Exploration",
+            "content": "Journey to Old Cairo's historic heart to explore Coptic landmarks, including the serene Hanging Church and quiet courtyards. Discover the diverse spiritual traditions that shaped Cairo's identity through centuries of Christian heritage. (Approx. 1.5 hours)"
+          },
+          {
+            "title": "Late Afternoon – Khan El-Khalili Bazaar",
+            "content": "Navigate Khan El-Khalili's labyrinthine alleys to discover hidden artisan workshops and shop for unique local treasures. Experience the vibrant energy of Cairo's most famous market while finding perfect souvenirs at your own pace. (Approx. 1 hours)"
+          },
+          {
+            "title": "Evening – Return Transfer",
+            "content": "Relax during your comfortable return transfer as you reflect on a day filled with ancient wonders and cultural discoveries. End your journey refreshed with memories of Cairo's layered history and newfound understanding. (Approx. 0.5 hours)"
+          }
+        ],
+        "bold_promise": "Enjoy 5,000 years of Cairo's history without the stress of planning, even if you have limited time.",
+        "at_a_glance": {
+          "duration": "8 hours",
+          "meeting_point": "Hotel pickup",
+          "group_size": "",
+          "includes": "Guide, transport, lunch, tickets",
+          "excludes": "Tips, insurance, shopping"
+        }
+      },
+      "packages_ids": [
+        "33442"
+      ],
+      "_s_price": "96",
+      "wp_travel_engine_setting_trip_price": "96",
+      "wp_travel_engine_setting_trip_actual_price": "135",
+      "primary_package": "33442"
+    }
+  }
+}

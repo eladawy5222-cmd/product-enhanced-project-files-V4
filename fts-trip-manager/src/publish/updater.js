@@ -1052,61 +1052,6 @@ async function runUpdaterBatch() {
         }
         var primaryMetaSchema = { schema_trip_data: JSON.stringify(primarySchema), trip_schema_data: JSON.stringify(primarySchema) };
         if (primaryFaqSchema) primaryMetaSchema.faq_schema_data = JSON.stringify(primaryFaqSchema);
-        try {
-          var existingWte = primaryTripInfoForSchema && primaryTripInfoForSchema.meta && primaryTripInfoForSchema.meta.wp_travel_engine_setting ? primaryTripInfoForSchema.meta.wp_travel_engine_setting : null
-          if (existingWte) {
-            var wtePatch = null
-            try { wtePatch = JSON.parse(JSON.stringify(existingWte)) } catch (eClone) { wtePatch = existingWte }
-            if (wtePatch && typeof wtePatch === 'object') {
-              wtePatch.cost = wtePatch.cost || {}
-              wtePatch.faq = wtePatch.faq || {}
-
-              var incText0 = String((wtePatch.cost && wtePatch.cost.cost_includes) ? wtePatch.cost.cost_includes : (wtePatch.cost_includes || '') || '')
-              if (!incText0 && wtePatch.at_a_glance && Array.isArray(wtePatch.at_a_glance.includes) && wtePatch.at_a_glance.includes.length) {
-                var incFromAt = wtePatch.at_a_glance.includes
-                  .map(function (x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })
-                  .filter(function (x) { return !!x })
-                if (incFromAt.length) {
-                  wtePatch.cost.cost_includes = incFromAt.join('\n')
-                  wtePatch.cost_includes = wtePatch.cost.cost_includes
-                }
-              }
-
-              if (primaryFaqSchema && primaryFaqSchema.mainEntity && Array.isArray(primaryFaqSchema.mainEntity) && primaryFaqSchema.mainEntity.length) {
-                var titles0 = (wtePatch.faq && Array.isArray(wtePatch.faq.faq_title)) ? wtePatch.faq.faq_title : (wtePatch.faq_title || [])
-                var answers0 = (wtePatch.faq && Array.isArray(wtePatch.faq.faq_content)) ? wtePatch.faq.faq_content : (wtePatch.faq_content || [])
-                if (!titles0.length || !answers0.length) {
-                  var incTextS = String((wtePatch.cost && wtePatch.cost.cost_includes) ? wtePatch.cost.cost_includes : (wtePatch.cost_includes || '') || '')
-                  var excTextS = String((wtePatch.cost && wtePatch.cost.cost_excludes) ? wtePatch.cost.cost_excludes : (wtePatch.cost_excludes || '') || '')
-                  var outT = []
-                  var outA = []
-                  for (var ii = 0; ii < primaryFaqSchema.mainEntity.length; ii++) {
-                    var me = primaryFaqSchema.mainEntity[ii] || {}
-                    var q = String(me.name || '').replace(/\s+/g, ' ').trim()
-                    var a = String(me.acceptedAnswer && me.acceptedAnswer.text ? me.acceptedAnswer.text : '').replace(/\s+/g, ' ').trim()
-                    if (!q || !a) continue
-                    a = upd_fixBrokenFaqText_Updater_(a)
-                    a = upd_finalizeEntranceFeesFaqAnswer_Updater_(q, a, incTextS, excTextS)
-                    a = upd_applyGuideTruthToText_Updater_(a, incTextS, excTextS)
-                    a = upd_stripAddOnMentions_Updater_(a)
-                    a = upd_fixBrokenFaqText_Updater_(a)
-                    if (!a) continue
-                    outT.push(q)
-                    outA.push(a)
-                  }
-                  if (outT.length) {
-                    wtePatch.faq.faq_title = outT
-                    wtePatch.faq.faq_content = outA
-                    wtePatch.faq_title = outT
-                    wtePatch.faq_content = outA
-                  }
-                }
-              }
-
-              primaryMetaSchema.wp_travel_engine_setting = wtePatch
-            }
-          }
-        } catch (eWtePatch) {}
         await pushToWordPress_Updater_(primaryWpId, { meta: primaryMetaSchema });
         log('TRIP SCHEMA GENERATED (' + primaryLang + ')');
       } catch (eSchemaPrimary) {
@@ -2984,39 +2929,6 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
 
     wte.cost.cost_includes = safeIncludes.join('\n');
     wte.cost_includes = wte.cost.cost_includes;
-
-    if (wte && wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
-      if (!safeIncludes.length && wte.at_a_glance.includes.length) {
-        var fromAt = wte.at_a_glance.includes
-          .map(function (x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })
-          .filter(function (t) {
-            if (!t) return false
-            var lc = t.toLowerCase()
-            if (/^optional[:\s-]/i.test(t)) return false
-            if (/\bif selected\b/.test(lc)) return false
-            if (/\boptional add-?on\b/.test(lc)) return false
-            if (/\[\s*optional\b/.test(lc)) return false
-            if (entranceExcluded && /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return false
-            if (upd_hasUnsupportedHighRiskClaims_Updater_(t, seoFlags)) return false
-            if (addonNorms.length) {
-              var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
-              for (var i2 = 0; i2 < addonNorms.length; i2++) {
-                var a2 = addonNorms[i2]
-                if (!a2) continue
-                if (k === a2) return false
-                if (k.indexOf(a2) !== -1 || a2.indexOf(k) !== -1) return false
-              }
-            }
-            return true
-          })
-        if (fromAt.length) {
-          safeIncludes = fromAt
-          wte.cost.cost_includes = safeIncludes.join('\n')
-          wte.cost_includes = wte.cost.cost_includes
-        }
-      }
-      wte.at_a_glance.includes = safeIncludes.slice(0, 12)
-    }
   }
   if (data.excludes.length > 0) {
     wte.cost.cost_excludes = data.excludes.map(function(r){ return r.fields.ExcludeItem; }).join('\n');
@@ -4163,10 +4075,6 @@ function upd_applyPublishConsistencyGuard_Updater_(payload) {
   includesText = upd_filterOptionalItemsFromIncludesText_Updater_(includesText, excludesText);
   wte.cost.cost_includes = includesText;
   wte.cost_includes = includesText;
-  if (wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
-    var incArr = String(includesText || '').split('\n').map(function (x) { return String(x || '').trim() }).filter(Boolean)
-    wte.at_a_glance.includes = incArr.slice(0, 12)
-  }
 
   var entranceTruth = upd_detectEntranceTruthFromText_Updater_(includesText, excludesText);
   var guideTruth = upd_detectGuideTruthFromText_Updater_(includesText, excludesText);

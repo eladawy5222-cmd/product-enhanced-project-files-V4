@@ -214,15 +214,9 @@ function fetchCompleteTripData_(tripId) {
   // 7. AddOns (One-to-Many)
   try {
     data.addons = findRecordsByLinkedId_(ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId);
-    if (!data.addons || !data.addons.length) {
-      data.addonsRaw = findRecordsByLinkedId_('AddOns', 'Trip', tripId);
-    } else {
-      data.addonsRaw = [];
-    }
   } catch (e) {
      Logger.log('Publisher: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
-     try { data.addonsRaw = findRecordsByLinkedId_('AddOns', 'Trip', tripId); } catch (e2) { data.addonsRaw = []; }
   }
   
   Logger.log('Publisher: Full Enhanced Data for ' + tripId + ': ' + JSON.stringify(data));
@@ -605,12 +599,6 @@ function mapAirtableToWordPress_(data, tripFields) {
     var addonNorms = (data.addons || []).map(function (r) {
       return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).filter(function (x) { return !!x; });
-    if (!addonNorms.length && data.addonsRaw && data.addonsRaw.length) {
-      addonNorms = (data.addonsRaw || []).map(function (r) {
-        var f = r && r.fields ? r.fields : {};
-        return String(f.AddOnTitle || f.AddOn_Name || f.AddOnTitle || f.AddOn_Title || f.Name || f.Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
-      }).filter(function (x) { return !!x; });
-    }
     var excludesLc = (data.excludes || []).map(function (r) {
       return r && r.fields ? String(r.fields.ExcludeItem || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).join(' | ');
@@ -679,23 +667,13 @@ function mapAirtableToWordPress_(data, tripFields) {
     data.faqs.forEach(function(rec) {
       var q0 = rec && rec.fields ? String(rec.fields.AI_Question || '').trim() : '';
       var a0 = rec && rec.fields ? String(rec.fields.AI_Answer || '') : '';
-      if (!q0 || !a0) return;
       a0 = pub_fixBrokenFaqText_(a0);
       a0 = pub_finalizeEntranceFeesFaqAnswer_(q0, a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
-      a0 = pub_applyGuideTruthToText_(a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
       a0 = pub_removeUnsupportedHighRiskParts_(a0, seoFlags);
-      a0 = pub_stripAddOnMentions_(a0);
       a0 = pub_fixBrokenFaqText_(a0);
-      if (!a0) return;
       wte.faq.faq_title.push(q0);
       wte.faq.faq_content.push(a0);
     });
-    wte.faq_title = wte.faq.faq_title;
-    wte.faq_content = wte.faq.faq_content;
-    try {
-      var entT = pub_detectEntranceTruthFromText_(wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
-      pub_sanitizeFaqArraysAgainstTruth_(wte, entT, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
-    } catch (eFaqSan) {}
   }
   
   // Itinerary
@@ -886,14 +864,14 @@ function mapAirtableToWordPress_(data, tripFields) {
       if (!payload.meta.schema_trip_data) payload.meta.schema_trip_data = payload.meta.trip_schema_data;
     }
 
-    if (!payload.meta.faq_schema_data && wte && wte.faq && Array.isArray(wte.faq.faq_title) && Array.isArray(wte.faq.faq_content) && wte.faq.faq_title.length) {
+    if (!payload.meta.faq_schema_data && data.faqs && data.faqs.length) {
       var mainEntity = [];
-      for (var iFaq = 0; iFaq < Math.min(wte.faq.faq_title.length, wte.faq.faq_content.length); iFaq++) {
-        var q = String(wte.faq.faq_title[iFaq] || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        var a = String(wte.faq.faq_content[iFaq] || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (!q || !a) continue;
+      data.faqs.forEach(function(rec) {
+        var q = String(rec && rec.fields && rec.fields.AI_Question ? rec.fields.AI_Question : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        var a = String(rec && rec.fields && rec.fields.AI_Answer ? rec.fields.AI_Answer : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!q || !a) return;
         mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
-      }
+      });
       if (mainEntity.length) {
         var faqSchema = {
           "@context": "https://schema.org",
@@ -1597,10 +1575,6 @@ function pub_applyPublishConsistencyGuard_(payload) {
   includesText = pub_filterOptionalItemsFromIncludesText_(includesText, excludesText);
   wte.cost.cost_includes = includesText;
   wte.cost_includes = includesText;
-  if (wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
-    var incArr = String(includesText || '').split('\n').map(function(x){ return String(x || '').trim(); }).filter(function(x){ return !!x; });
-    wte.at_a_glance.includes = incArr.slice(0, 12);
-  }
 
   var entranceTruth = pub_detectEntranceTruthFromText_(includesText, excludesText);
 
