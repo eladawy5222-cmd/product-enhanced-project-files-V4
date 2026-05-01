@@ -917,7 +917,7 @@ class FTS_Trip_Redesign_V2 {
                             $f = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|bringing|including)\b[\s.]*$/i', '', trim( (string) $f ) );
                             $f = rtrim( (string) $f, " \t\n\r\0\x0B-–—,:;" );
                             if ( $f === '' ) continue;
-                            $f = wp_trim_words( $f, 14, '…' );
+                            $f = wp_trim_words( $f, 18, '…' );
                             $f = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by|bringing|including)\b[\s.]*$/i', '', trim( (string) $f ) );
                             $f = rtrim( (string) $f, " \t\n\r\0\x0B-–—,:;" );
                             if ( $f === '' ) continue;
@@ -931,7 +931,7 @@ class FTS_Trip_Redesign_V2 {
                         $desc_text = wp_strip_all_tags( (string) $pkg_content );
                         $desc_text = preg_replace( '/:\s*(\S)/', ': $1', $desc_text );
                         $desc_text = preg_replace( '/\s+/', ' ', trim( (string) $desc_text ) );
-                        $desc_text = wp_trim_words( $desc_text, 22, '…' );
+                        $desc_text = wp_trim_words( $desc_text, 32, '…' );
                         $desc_text = preg_replace( '/\b(?:with|and|or|but|for|to|from|of|in|on|at|by)\b[\s.]*$/i', '', trim( (string) $desc_text ) );
                         $desc_text = rtrim( (string) $desc_text, " \t\n\r\0\x0B-–—,:;" );
 
@@ -939,7 +939,7 @@ class FTS_Trip_Redesign_V2 {
                             'id'            => $pkg_id,
                             'name'          => get_the_title( $pkg_id ),
                             'description'   => $desc_text,
-                            'features'      => array_slice( $clean_features, 0, 4 ),
+                            'features'      => array_slice( $clean_features, 0, 6 ),
                             'display_price' => $f_dp,
                             'old_price'     => $f_old,
                             'discount_pct'  => $f_pct,

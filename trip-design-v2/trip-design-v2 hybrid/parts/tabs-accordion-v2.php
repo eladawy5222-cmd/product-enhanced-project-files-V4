@@ -145,6 +145,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <?php endif; ?>
         </div>
 
+        <?php if ( ! empty( $has_extra_services ) ) : ?>
+        <p class="fts-v2-extra-services-note"><?php echo esc_html__( 'Optional extras may be available during booking (only if you choose to add them).', 'fts' ); ?></p>
+        <?php endif; ?>
+
         <!-- CTA Banner -->
         <div class="fts-v2-cta-banner">
             <div class="fts-v2-cta-text">

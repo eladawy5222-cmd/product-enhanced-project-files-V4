@@ -1040,7 +1040,32 @@ function mapAirtableToWordPress_(data, tripFields) {
   if (data.includes.length > 0) {
     // WPTE expects a newline-separated string or array? 
     // JSON example shows: "Professional driver...\nHigh-quality..." (String with newlines)
-    wte.cost.cost_includes = data.includes.map(function(r){ return r.fields.IncludeItem; }).join('\n');
+    var addonNorms = (data.addons || []).map(function (r) {
+      return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    }).filter(Boolean)
+
+    var safeIncludes = data.includes
+      .map(function (r) { return r && r.fields ? String(r.fields.IncludeItem || '') : '' })
+      .map(function (t) { return String(t || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })
+      .filter(function (t) {
+        if (!t) return false
+        var lc = t.toLowerCase()
+        if (/\boptional add-?on\b/.test(lc)) return false
+        if (/\[\s*optional\b/.test(lc)) return false
+        if (addonNorms.length) {
+          var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+          for (var i = 0; i < addonNorms.length; i++) {
+            var a = addonNorms[i]
+            if (!a) continue
+            if (k === a) return false
+            if (k.indexOf(a) !== -1 || a.indexOf(k) !== -1) return false
+          }
+        }
+        return true
+      })
+
+    wte.cost.cost_includes = safeIncludes.join('\n');
+    wte.cost_includes = wte.cost.cost_includes;
   }
   if (data.excludes.length > 0) {
     wte.cost.cost_excludes = data.excludes.map(function(r){ return r.fields.ExcludeItem; }).join('\n');

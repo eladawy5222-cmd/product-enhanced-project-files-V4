@@ -516,11 +516,18 @@ function buildFaqsPrompt_(ctx) {
     "3. *COMPARING OPTIONS* (Research mode) -> Show why you're the better choice\n" +
     "4. *WORRIED ABOUT SOMETHING* (Anxiety reduction) -> Address fears and concerns directly\n\n" +
 
+    "=== PRIORITY (ORDER) ===\n" +
+    "Start with the highest-intent decision questions in this order:\n" +
+    "1) What are the main stops / highlights on this tour (based on ITINERARY), and which museum is included?\n" +
+    "2) What is included vs not included (based strictly on the lists above)?\n" +
+    "3) Are there optional extras/add-ons (ONLY if extras exist in context), and how do they work (optional, extra charge)?\n" +
+    "4) Where does it start (pickup/meeting point) and what to bring (ONLY if present in context)?\n\n" +
+
     "=== FAQ CATEGORIES TO COVER ===\n" +
     "Generate EXACTLY " + MIN_FAQS_COUNT + "-" + MAX_FAQS_COUNT + " FAQs covering these categories where relevant:\n" +
     "*CATEGORY 1: BOOKING & PAYMENT* 💳 (How to book, payment methods, instant confirmation)\n" +
     "*CATEGORY 2: CANCELLATION & CHANGES* 🔄 (ONLY if a cancellation/refund policy is explicitly present in the context. Otherwise omit.)\n" +
-    "*CATEGORY 3: PICKUP & LOGISTICS* 🚐 (Pickup time/location, contact info)\n" +
+    "*CATEGORY 3: PICKUP & LOGISTICS* 🚐 (Pickup time/location or meeting point ONLY if present; do not invent contact info)\n" +
     "*CATEGORY 4: PHYSICAL & HEALTH* 💪 (Fitness level, elderly/children, accessibility)\n" +
     "*CATEGORY 5: WHAT TO BRING* 🎒 (Clothing, items, camera, storage)\n" +
     "*CATEGORY 6: TOUR EXPERIENCE* ⭐ (Group size, language, free time, customization)\n" +
@@ -576,6 +583,7 @@ function buildFaqsPrompt_(ctx) {
     "- Use ONLY information from context above (all improved data sources)\n" +
     "- Do NOT invent details (prices, specific times, contact info) if not in context\n" +
     "- Do NOT claim free cancellation, refunds, or a specific cancellation window unless explicitly present in the context\n" +
+    "- If optional extras/add-ons exist in context, you may clarify they are optional and not included unless selected; do not list specific extras unless present in context\n" +
     "- Avoid support-template boilerplate (e.g., 'contact our customer service team', 'hotline', vague promises). Keep answers specific and practical.\n" +
     "- Output in ENGLISH ONLY\n" +
     "- Aim for " + MIN_FAQS_COUNT + " to " + MAX_FAQS_COUNT + " trip-specific FAQs, but quality is more important than count.\n" +
@@ -589,7 +597,10 @@ function buildFaqsPrompt_(ctx) {
     "      \"question\": \"How do I book this tour?\",\n" +
     "      \"answer\": \"You can book directly on this page. After you book, you’ll receive confirmation details and any pickup or meeting-point information (if applicable).\"\n" +
     "    },\n" +
-    "    // ... more FAQs\n" +
+    "    {\n" +
+    "      \"question\": \"What is included in the tour price?\",\n" +
+    "      \"answer\": \"Use the Included and Not Included lists on this page as the most accurate reference. If something is listed as an optional extra, it is only added if you select it during booking.\"\n" +
+    "    }\n" +
     "  ]\n" +
     "}\n";
   

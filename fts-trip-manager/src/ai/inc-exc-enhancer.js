@@ -552,7 +552,8 @@ function buildIncExcExtractionPrompt_(ctx, rawIncludes, rawExcludes, linkedTextB
     "- Items in 'Cost includes list' MUST go to 'includes' output ONLY.\n" +
     "- Items in 'Cost excludes list' MUST go to 'excludes' output ONLY.\n" +
     "- NEVER move an item from includes to excludes or vice versa.\n" +
-    "- If an item says 'Optional' or 'if selected', it is STILL INCLUDED (just conditional).\n\n" +
+    "- If a conditional item (e.g. 'if selected') appears in the RAW Cost Includes list, keep it conditional.\n" +
+    "- Do NOT create new conditional/optional items unless they are present in the RAW Cost Includes list.\n\n" +
 
     "=== MUSEUM DISTINCTION & LOGIC (CRITICAL) ===\n" +
     "1. The Egyptian Museum (Tahrir): Old museum in Tahrir Square.\n" +
@@ -569,16 +570,10 @@ function buildIncExcExtractionPrompt_(ctx, rawIncludes, rawExcludes, linkedTextB
     "  -> Add '(if time permits)' when mentioning Khan el-Khalili.\n" +
     "  -> Example: 'Khan el-Khalili Market (if time permits)'\n\n" +
 
-    "⛔⛔⛔ ABSOLUTE PROHIBITION - ADDONS REWRITING ⛔⛔⛔\n" +
-    "DO NOT BE CREATIVE OR DESCRIPTIVE WITH ADDONS!\n" +
-    "- NEVER rewrite AddOns in a descriptive way like:\n" +
-    "  ❌ 'Cultural Egyptian scarves by FTS for an authentic touch'\n" +
-    "  ❌ 'Professional photographer to capture unforgettable moments'\n" +
-    "- ALWAYS keep the original AddOn name + format:\n" +
-    "  ✅ 'FTS Scarve (Optional add-on - $XX)'\n" +
-    "  ✅ 'Shared Photographer per person (Optional add-on - $XX)'\n" +
-    "- You can be creative with OTHER items (tours, transportation, etc.)\n" +
-    "- But AddOns MUST use the EXACT format specified below.\n\n" +
+    "🚨 ADDONS / OPTIONAL EXTRAS RULE:\n" +
+    "- 'Improved AddOns' are OPTIONAL EXTRAS (extra charge).\n" +
+    "- NEVER include AddOns / optional extras in the INCLUDES output.\n" +
+    "- Do NOT move AddOns into EXCLUDES either.\n\n" +
     "PRIMARY SOURCES (AUTHORITATIVE - USE THESE FIRST):\n" +
     "=== COST INCLUDES LIST (RAW) ===\n" + riText + "\n\n" +
     "=== COST EXCLUDES LIST (RAW) ===\n" + reText + "\n\n" +
@@ -652,14 +647,14 @@ function buildIncExcExtractionPrompt_(ctx, rawIncludes, rawExcludes, linkedTextB
     "  ]\n" +
     "}\n\n" +
     "EXAMPLE:\n" +
-    "Input includes: 'Professional driver', 'Water', 'Photographer (optional)'\n" +
+    "Input includes: 'Professional driver', 'Water', 'Tour guide (if selected)'\n" +
     "Input excludes: 'Drinks'\n" +
     "Output:\n" +
     "{\n" +
     "  \"includes\": [\n" +
     "    \"Professional driver for a smooth journey\",\n" +
     "    \"Complimentary drinking water\",\n" +
-    "    \"Professional photographer (if selected)\"\n" +
+    "    \"Expert tour guide (if selected)\"\n" +
     "  ],\n" +
     "  \"excludes\": [\n" +
     "    \"Drinks\",\n" +
@@ -1098,6 +1093,72 @@ function extractKeywords_(text) {
   return keywords;
 }
 
+function buildAddOnMatchers_(addOnsData) {
+  var generic = {
+    professional: 1,
+    shared: 1,
+    egyptian: 1,
+    cultural: 1,
+    capture: 1,
+    moment: 1,
+    moments: 1,
+    pure: 1
+  };
+  var out = [];
+  for (var i = 0; i < (addOnsData || []).length; i++) {
+    var a = addOnsData[i] || {};
+    var title = String(a.title || '').trim();
+    if (!title) continue;
+    var titleNorm = title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+    var kws = Array.isArray(a.keywords) ? a.keywords : [];
+    var strong = [];
+    for (var j = 0; j < kws.length; j++) {
+      var kw = String(kws[j] || '').toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
+      if (!kw) continue;
+      if (kw.length < 5) continue;
+      if (generic[kw]) continue;
+      if (strong.indexOf(kw) === -1) strong.push(kw);
+    }
+    out.push({ titleNorm: titleNorm, strongKeywords: strong });
+  }
+  return out;
+}
+
+function isLikelyAddOnText_(text, matchers) {
+  var t = String(text || '').trim();
+  if (!t) return false;
+  var lc = t.toLowerCase();
+  if (/\boptional add-?on\b/.test(lc)) return true;
+  if (/\[\s*optional\b/.test(lc)) return true;
+
+  var marker = false;
+  if (/\b(optional|add-?on|addon|extra|upgrade|supplement)\b/.test(lc)) marker = true;
+  if (/\b(additional cost|extra charge|at extra cost)\b/.test(lc)) marker = true;
+  if (/\$\s*\d/.test(lc) || /\busd\b/.test(lc) || /\beur\b/.test(lc) || /\bgbp\b/.test(lc)) marker = true;
+  if (/\bper person\b/.test(lc)) marker = true;
+
+  var norm = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+  for (var i = 0; i < (matchers || []).length; i++) {
+    var m = matchers[i] || {};
+    var tn = m.titleNorm || '';
+    if (tn) {
+      if (norm === tn) return true;
+      if (norm.indexOf(tn) !== -1 || tn.indexOf(norm) !== -1) return true;
+    }
+    var kws = m.strongKeywords || [];
+    if (kws.length) {
+      var hits = 0;
+      for (var j = 0; j < kws.length; j++) {
+        var kw = kws[j];
+        if (kw && norm.indexOf(kw) !== -1) hits++;
+      }
+      if (hits >= 2) return true;
+      if (marker && hits >= 1) return true;
+    }
+  }
+  return false;
+}
+
 /**
  * إصلاح تنسيق AddOns في قائمة Includes تلقائياً
  * يبحث عن العناصر التي تطابق AddOns ويُعيد تنسيقها بالشكل الصحيح
@@ -1108,6 +1169,7 @@ function reformatAddOnsInIncludes_(includes, addOnsData, tripId) {
   var addons = addOnsData || [];
   if (!inputList.length) return [];
 
+  var matchers = buildAddOnMatchers_(addons);
   var addonNorms = addons.map(function(a) {
     return a && a.title ? String(a.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
   }).filter(Boolean);
@@ -1119,6 +1181,7 @@ function reformatAddOnsInIncludes_(includes, addOnsData, tripId) {
     var lc = text.toLowerCase();
     if (lc.indexOf('(optional add-on') !== -1) continue;
     if (lc.indexOf('[optional') !== -1) continue;
+    if (isLikelyAddOnText_(text, matchers)) continue;
     if (addonNorms.length) {
       var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
       var isAddon = false;
@@ -1174,6 +1237,7 @@ function formatCanonicalOptional_(title, addOnsData) {
 function finalizeIncludesNoDup_(includes, addOnsData) {
   var out = [];
   var seen = {};
+  var matchers = buildAddOnMatchers_(addOnsData || []);
   var addonNorms = (addOnsData || []).map(function(a) {
     return a && a.title ? String(a.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
   }).filter(Boolean);
@@ -1183,6 +1247,7 @@ function finalizeIncludesNoDup_(includes, addOnsData) {
     var lower = rawItem.toLowerCase();
     if (lower.indexOf('(optional add-on') !== -1) continue;
     if (lower.indexOf('[optional') !== -1) continue;
+    if (isLikelyAddOnText_(rawItem, matchers)) continue;
     if (addonNorms.length) {
       var k2 = lower.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
       var isAddon = false;
@@ -1623,7 +1688,7 @@ function getDefaultIncludes_(count, existingIncludes) {
 function getDefaultExcludes_(count) {
   var defaults = [
     'Personal expenses and shopping',
-    'Optional extras unless selected',
+    'Optional extras (available at an additional cost)',
     'Gratuities and tips',
     'Travel insurance',
     'Visa fees (if applicable)',

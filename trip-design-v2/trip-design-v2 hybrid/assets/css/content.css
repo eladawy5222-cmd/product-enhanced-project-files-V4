@@ -349,6 +349,7 @@
 .fts-v2-includes-col li:last-child { border-bottom: none !important; }
 .fts-v2-col-included li i { color: var(--v2-success) !important; margin-top: 3px !important; }
 .fts-v2-col-excluded li i { color: var(--v2-accent) !important; margin-top: 3px !important; }
+.fts-v2-extra-services-note { margin: 14px 0 0 0 !important; font-size: 12px !important; color: var(--v2-text-light) !important; }
 
 /* CTA Banner */
 .fts-v2-cta-banner {
