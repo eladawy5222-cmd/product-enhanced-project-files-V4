@@ -145,8 +145,18 @@ function runConversionEnforcer(record) {
       convEnf_logAirtableFields_('UPDATE', 'Improvement With AI', imp.id, updateMain);
       convEnf_airtableUpdateSafe_('Improvement With AI', imp.id, updateMain);
     }
-    var pendingHighlights = convEnf_getArray_(ai, ['highlights', 'items']);
-    pendingHighlights = convEnf_sanitizeStringList_(pendingHighlights, { max: 12 });
+    var newHighlights = convEnf_getArray_(ai, ['highlights', 'items']);
+    newHighlights = convEnf_sanitizeStringList_(newHighlights, { max: 12 });
+    newHighlights = convEnf_filterUnsupportedItems_(newHighlights, flags);
+    newHighlights = convEnf_applyEntranceFeesTruthToHighlights_(newHighlights, entranceTruth);
+    newHighlights = convEnf_applyGuideTruthToHighlights_(newHighlights, guideTruth);
+    if (newHighlights && newHighlights.length >= 3) {
+      try {
+        Logger.log('✅ Improved Highlights:');
+        Logger.log(JSON.stringify(newHighlights, null, 2));
+      } catch (eLog4) {}
+      convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso);
+    }
     var newItinerary = convEnf_getArray_(ai, ['itinerary', 'steps']);
     newItinerary = convEnf_sanitizeItinerarySteps_(newItinerary, { max: 20 });
     newItinerary = convEnf_applyItineraryDurationSuffix_(newItinerary);
@@ -162,8 +172,7 @@ function runConversionEnforcer(record) {
     newIncluded = convEnf_sanitizeStringList_(newIncluded, { max: 40 });
     newIncluded = convEnf_sortIncExcItems_(newIncluded);
     newIncluded = convEnf_filterUnsupportedItems_(newIncluded, flags);
-    // AI TRUTH ENFORCEMENT (owner): optional/add-on text must never become INCLUDED.
-    newIncluded = filterOptionalItemsFromIncludes_(newIncluded);
+    newIncluded = convEnf_filterOptionalLikeItemsFromIncluded_(newIncluded);
     var newExcluded = convEnf_mergeOptionalItems_(ai, ['excluded', 'items'], ['excluded', 'optional_items']);
     newExcluded = convEnf_sanitizeStringList_(newExcluded, { max: 40 });
     newExcluded = convEnf_sortIncExcItems_(newExcluded);
@@ -185,29 +194,8 @@ function runConversionEnforcer(record) {
     if (newExcluded && newExcluded.length >= 2) {
       convEnf_replaceIncExc_(tripId, existingExcludes.records, 'TripExcludes Improvement With AI', 'ExcludeItem', newExcluded, nowIso);
     }
-    var truth = buildTripTruthMap_({
-      trip: payload.trip,
-      included: newIncluded,
-      excluded: newExcluded,
-      flags: flags,
-      evidence: evidence
-    });
-    var contradictions = detectContradictoryClaims_(payload, truth);
-    if (contradictions && contradictions.length) {
-      try { Logger.log('⚠️ Consistency warnings: ' + JSON.stringify(contradictions.slice(0, 10))); } catch (eCW) {}
-    }
-
-    // AI TRUTH ENFORCEMENT (owner): sanitize Highlights/FAQs against the finalized truth map.
-    var newHighlights = sanitizeHighlightsAgainstTruth_(pendingHighlights, truth);
-    if (newHighlights && newHighlights.length >= 3) {
-      try {
-        Logger.log('✅ Improved Highlights:');
-        Logger.log(JSON.stringify(newHighlights, null, 2));
-      } catch (eLog4) {}
-      convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso);
-    }
     var newFaqs = convEnf_getArray_(ai, ['faqs', 'items']);
-    newFaqs = sanitizeFaqAgainstTruth_(newFaqs, truth, { max: 15 });
+    newFaqs = convEnf_sanitizeFaqItems_(newFaqs, { max: 15 }, { included: newIncluded, excluded: newExcluded, flags: flags });
     newFaqs = convEnf_sortFaqItems_(newFaqs);
     if (newFaqs && newFaqs.length >= 3) {
       try {
@@ -271,173 +259,6 @@ function convEnf_filterOptionalLikeItemsFromIncluded_(items) {
   return out;
 }
 
-// --- CONSISTENCY SAFETY LAYER (AI) ---
-// Owner: ai_conversion_enforcer. This layer unifies "truth" across AI outputs before publish.
-
-function normalizeInclusionTruth_(includedItems, excludedItems, flags, evidenceText) {
-  var incText = (Array.isArray(includedItems) ? includedItems.join(' | ') : String(includedItems || '')).toLowerCase();
-  var excText = (Array.isArray(excludedItems) ? excludedItems.join(' | ') : String(excludedItems || '')).toLowerCase();
-  var ev = String(evidenceText || '').toLowerCase();
-  var f = (flags && typeof flags === 'object') ? flags : {};
-
-  function hasOptional_(s) { return /\b(if selected|optional|add-?on|addon|extra|depending on the option)\b/.test(s); }
-
-  function status_(re) {
-    var incHas = re.test(incText);
-    var excHas = re.test(excText);
-    var incNot = incHas && /\b(not included|excluded)\b/.test(incText);
-    var included = incHas && !incNot && !hasOptional_(incText) && !excHas;
-    var optional = incHas && (hasOptional_(incText) || /\bif selected\b/.test(incText));
-    var excluded = excHas || incNot;
-    if (included) excluded = false;
-    if (included) optional = false;
-    return { included: !!included, excluded: !!excluded && !included, optional: !!optional && !included, ambiguous: !included && !excluded && !optional };
-  }
-
-  var entrance = convEnf_detectEntranceFeesTruth_(includedItems, excludedItems);
-  var guide = convEnf_detectGuideTruth_(includedItems, excludedItems, ev);
-  var lunch = status_(/\b(lunch|meal|meals)\b/);
-  var pickup = status_(/\b(pick\s*-?\s*up|pickup|drop-?off|hotel pickup)\b/);
-  var nile = status_(/\b(nile|felucca|boat|cruise)\b/);
-  if (!f.has_nile) nile.included = false;
-  if (!f.has_lunch) lunch.included = false;
-  if (!f.has_pickup) pickup.included = false;
-
-  var museum = null;
-  if (f.has_civ_museum || f.civ_context_slug) museum = 'NMEC';
-  else if (f.has_egyptian_museum) museum = 'Egyptian Museum';
-
-  return {
-    entrance: entrance,
-    guide: guide,
-    lunch: lunch,
-    pickup: pickup,
-    nile: nile,
-    primary_museum: museum
-  };
-}
-
-function buildTripTruthMap_(ctx) {
-  var c = (ctx && typeof ctx === 'object') ? ctx : {};
-  var included = Array.isArray(c.included) ? c.included : [];
-  var excluded = Array.isArray(c.excluded) ? c.excluded : [];
-  var flags = (c.flags && typeof c.flags === 'object') ? c.flags : {};
-  var evidence = (c.evidence && typeof c.evidence === 'object') ? c.evidence : {};
-  var evText = String(evidence.strict_combined || evidence.combined || '');
-  var truth = normalizeInclusionTruth_(included, excluded, flags, evText);
-
-  var allowAddOnsMentions = /\b(scarf|scarves|photographer|oils?)\b/i.test(String(evidence.combined || ''));
-  return {
-    trip: c.trip || {},
-    included: included,
-    excluded: excluded,
-    flags: flags,
-    evidence: evidence,
-    inclusion: truth,
-    allow_addons_mentions: !!allowAddOnsMentions
-  };
-}
-
-function filterOptionalItemsFromIncludes_(items) {
-  return convEnf_filterOptionalLikeItemsFromIncluded_(items);
-}
-
-function sanitizeHighlightsAgainstTruth_(highlights, truth) {
-  if (!Array.isArray(highlights)) return highlights;
-  var t = truth || {};
-  var flags = t.flags || {};
-  var evidence = t.evidence || {};
-  var out = convEnf_filterUnsupportedItems_(highlights, flags);
-  out = convEnf_applyEntranceFeesTruthToHighlights_(out, t.inclusion ? t.inclusion.entrance : null);
-  out = convEnf_applyGuideTruthToHighlights_(out, t.inclusion ? t.inclusion.guide : null);
-  var clean = [];
-  for (var i = 0; i < out.length; i++) {
-    var s = String(out[i] || '').replace(/\s+/g, ' ').trim();
-    if (!s) continue;
-    if (!t.allow_addons_mentions && /\b(scarf|scarves|photographer|oils?)\b/i.test(s)) continue;
-    s = convEnf_rewriteUnsupportedContentText_(s, flags, evidence);
-    if (!s) continue;
-    clean.push(s);
-  }
-  return clean;
-}
-
-function sanitizeFaqAgainstTruth_(faqs, truth, opts) {
-  var t = truth || {};
-  var flags = t.flags || {};
-  var max = (opts && typeof opts.max === 'number') ? opts.max : 15;
-  var base = convEnf_sanitizeFaqItems_(faqs, { max: max }, { included: t.included || [], excluded: t.excluded || [], flags: flags });
-  if (!Array.isArray(base)) return base;
-  var out = [];
-
-  function isIncExcQ_(qLc) {
-    return /\b(what['’]s included|what is included|what is not included|included in the tour price|included in the price|included vs|included and what is not|not included)\b/.test(qLc);
-  }
-  function isEntranceQ_(qLc) { return /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(qLc); }
-
-  var entrance = t.inclusion ? t.inclusion.entrance : null;
-  var guide = t.inclusion ? t.inclusion.guide : null;
-  function entranceLine_() {
-    if (entrance && entrance.included) return "Entrance fees are included as listed in What's Included.";
-    if (entrance && entrance.excluded) return "Entrance fees/tickets are not included as listed in What's Excluded.";
-    return "Please refer to the What's Included/Excluded section for entrance-fee coverage.";
-  }
-  function guideLine_() {
-    if (guide && guide.included) return "An Egyptologist guide is included as listed in What's Included.";
-    if (guide && guide.optional) return "Guiding depends on the option selected.";
-    return "";
-  }
-
-  for (var i = 0; i < base.length; i++) {
-    var q = String(base[i].question || '').replace(/\s+/g, ' ').trim();
-    var a = String(base[i].answer || '').replace(/\s+/g, ' ').trim();
-    if (!q || !a) continue;
-    var qLc = q.toLowerCase();
-
-    if (isIncExcQ_(qLc)) {
-      var parts = ["What's included and not included is listed on this page under What's Included and What's Excluded."];
-      parts.push(entranceLine_());
-      var g = guideLine_();
-      if (g) parts.push(g);
-      a = parts.join(' ');
-    } else if (isEntranceQ_(qLc)) {
-      a = entranceLine_();
-    }
-
-    if (guide && !guide.included) a = convEnf_applyGuideTruthToText_(a, guide);
-    if (entrance) a = convEnf_applyEntranceFeesTruthToText_(a, entrance);
-    if (!t.allow_addons_mentions) {
-      a = a.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, '').replace(/\s+/g, ' ').trim();
-      if (!a) continue;
-    }
-    out.push({ question: q, answer: convEnf_fixBrokenFaqText_(a) });
-  }
-  return out;
-}
-
-function sanitizeSeoAgainstTruth_(seoText, truth) {
-  var t = truth || {};
-  var inc = t.inclusion || {};
-  var s = String(seoText || '').trim();
-  if (!s) return '';
-  if (inc.entrance) s = convEnf_applyEntranceFeesTruthToText_(s, inc.entrance);
-  if (inc.guide) s = convEnf_applyGuideTruthToText_(s, inc.guide);
-  if (!t.allow_addons_mentions) s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, '').replace(/\s+/g, ' ').trim();
-  return s;
-}
-
-function detectContradictoryClaims_(payload, truth) {
-  var t = truth || {};
-  var inc = t.inclusion || {};
-  var out = [];
-  var text = '';
-  try { text = JSON.stringify(payload || {}).toLowerCase(); } catch (e) { text = ''; }
-  if (inc.entrance && inc.entrance.included && /\b(entrance fees?|tickets?)\b[^.?!]*\bnot included\b/.test(text)) out.push('entrance: included vs "not included" claim');
-  if (inc.entrance && inc.entrance.excluded && /\b(entrance fees?|tickets?)\b[^.?!]*\bincluded\b/.test(text)) out.push('entrance: excluded vs "included" claim');
-  if (inc.guide && inc.guide.optional && /\bexpert\s+egyptologist\s+guide\b[^.?!]*\bincluded\b/.test(text)) out.push('guide: optional vs "included" claim');
-  return out;
-}
-
 function convEnf_detectEntranceFeesTruth_(included, excluded) {
   var incText = (Array.isArray(included) ? included.join(' | ') : String(included || '')).toLowerCase();
   var excText = (Array.isArray(excluded) ? excluded.join(' | ') : String(excluded || '')).toLowerCase();
@@ -491,7 +312,7 @@ function convEnf_applyGuideTruthToHighlights_(highlights, truth) {
 
 function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
   if (!Array.isArray(highlights)) return highlights;
-  if (!truth || (!truth.included && !truth.excluded && !truth.ambiguous)) return highlights;
+  if (!truth || (!truth.included && !truth.excluded)) return highlights;
   var out = [];
   for (var i = 0; i < highlights.length; i++) {
     var s = String(highlights[i] || '').replace(/\s+/g, ' ').trim();
@@ -499,7 +320,7 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
     var lc = s.toLowerCase();
     var mentionsEntrance = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc);
     if (!mentionsEntrance) { out.push(s); continue; }
-    if (truth.excluded) {
+    if (truth.excluded || truth.ambiguous) {
       s = s
         .replace(/,?\s*(and\s+)?all\s+entrance\s+(tickets|fees)\s+included\.?/ig, '')
         .replace(/,?\s*(and\s+)?entrance\s+(tickets|fees)\s+included\.?/ig, '')
@@ -511,13 +332,6 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
       out.push(s);
       continue;
     }
-    if (truth.ambiguous && !truth.included) {
-      s = s
-        .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
-        .replace(/\b(entrance|admission)\s+(tickets?|fees?)\s+included\b/ig, 'site visits as per itinerary')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
     out.push(s);
   }
   return out;
@@ -526,14 +340,8 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
 function convEnf_applyEntranceFeesTruthToText_(text, truth) {
   var s = String(text || '');
   if (!s.trim()) return '';
-  if (!truth || (!truth.included && !truth.excluded && !truth.ambiguous)) return s;
-  if (truth.excluded) {
-    s = s
-      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
-      .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
-      .replace(/\b(includes?|including)\s+(all\s+)?entrance\s+(tickets|fees)\b/ig, 'includes site visits as per itinerary');
-  }
-  if (truth.ambiguous && !truth.included) {
+  if (!truth || (!truth.included && !truth.excluded)) return s;
+  if (truth.excluded || truth.ambiguous) {
     s = s
       .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
       .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
