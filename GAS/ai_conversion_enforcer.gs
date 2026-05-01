@@ -491,7 +491,7 @@ function convEnf_applyGuideTruthToHighlights_(highlights, truth) {
 
 function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
   if (!Array.isArray(highlights)) return highlights;
-  if (!truth || (!truth.included && !truth.excluded)) return highlights;
+  if (!truth || (!truth.included && !truth.excluded && !truth.ambiguous)) return highlights;
   var out = [];
   for (var i = 0; i < highlights.length; i++) {
     var s = String(highlights[i] || '').replace(/\s+/g, ' ').trim();
@@ -499,7 +499,7 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
     var lc = s.toLowerCase();
     var mentionsEntrance = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc);
     if (!mentionsEntrance) { out.push(s); continue; }
-    if (truth.excluded || truth.ambiguous) {
+    if (truth.excluded) {
       s = s
         .replace(/,?\s*(and\s+)?all\s+entrance\s+(tickets|fees)\s+included\.?/ig, '')
         .replace(/,?\s*(and\s+)?entrance\s+(tickets|fees)\s+included\.?/ig, '')
@@ -511,6 +511,13 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
       out.push(s);
       continue;
     }
+    if (truth.ambiguous && !truth.included) {
+      s = s
+        .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
+        .replace(/\b(entrance|admission)\s+(tickets?|fees?)\s+included\b/ig, 'site visits as per itinerary')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
     out.push(s);
   }
   return out;
@@ -519,8 +526,14 @@ function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
 function convEnf_applyEntranceFeesTruthToText_(text, truth) {
   var s = String(text || '');
   if (!s.trim()) return '';
-  if (!truth || (!truth.included && !truth.excluded)) return s;
-  if (truth.excluded || truth.ambiguous) {
+  if (!truth || (!truth.included && !truth.excluded && !truth.ambiguous)) return s;
+  if (truth.excluded) {
+    s = s
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
+      .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
+      .replace(/\b(includes?|including)\s+(all\s+)?entrance\s+(tickets|fees)\b/ig, 'includes site visits as per itinerary');
+  }
+  if (truth.ambiguous && !truth.included) {
     s = s
       .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
       .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')

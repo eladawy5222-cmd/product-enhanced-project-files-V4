@@ -594,9 +594,15 @@ async function fetchCompleteTripData_(tripId) {
   // 7. AddOns (One-to-Many)
   try {
     data.addons = await findRecordsByLinkedId_(ADDONS_IMPROVEMENT_TABLE, 'Trip', tripId)
+    if (!data.addons || !data.addons.length) {
+      data.addonsRaw = await findRecordsByLinkedId_('AddOns', 'Trip', tripId)
+    } else {
+      data.addonsRaw = []
+    }
   } catch (e) {
      log('Publisher: Warning - Failed to fetch AddOns: ' + e.message);
      data.addons = [];
+     try { data.addonsRaw = await findRecordsByLinkedId_('AddOns', 'Trip', tripId) } catch (e2) { data.addonsRaw = [] }
   }
 
   abortIfIncompleteLookup_(tripId, [
@@ -1043,6 +1049,12 @@ function mapAirtableToWordPress_(data, tripFields) {
     var addonNorms = (data.addons || []).map(function (r) {
       return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).filter(Boolean)
+    if (!addonNorms.length && data.addonsRaw && data.addonsRaw.length) {
+      addonNorms = (data.addonsRaw || []).map(function (r) {
+        var f = r && r.fields ? r.fields : {}
+        return String(f.AddOnTitle || f.AddOn_Name || f.AddOnTitle || f.AddOn_Title || f.Name || f.Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+      }).filter(Boolean)
+    }
     var excludesLc = (data.excludes || []).map(function (r) {
       return r && r.fields ? String(r.fields.ExcludeItem || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).join(' | ')
@@ -1111,13 +1123,23 @@ function mapAirtableToWordPress_(data, tripFields) {
     data.faqs.forEach(function(rec) {
       var q0 = rec && rec.fields ? String(rec.fields.AI_Question || '').trim() : '';
       var a0 = rec && rec.fields ? String(rec.fields.AI_Answer || '') : '';
+      if (!q0 || !a0) return
       a0 = pub_fixBrokenFaqText_(a0);
       a0 = pub_finalizeEntranceFeesFaqAnswer_(q0, a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '');
+      a0 = pub_applyGuideTruthToText_(a0, wte.cost.cost_includes || '', wte.cost.cost_excludes || '')
       a0 = pub_removeUnsupportedHighRiskParts_(a0, seoFlags);
+      a0 = pub_stripAddOnMentions_(a0)
       a0 = pub_fixBrokenFaqText_(a0);
+      if (!a0) return
       wte.faq.faq_title.push(q0);
       wte.faq.faq_content.push(a0);
     });
+    wte.faq_title = wte.faq.faq_title
+    wte.faq_content = wte.faq.faq_content
+    try {
+      var entT = pub_detectEntranceTruthFromText_(wte.cost.cost_includes || '', wte.cost.cost_excludes || '')
+      pub_sanitizeFaqArraysAgainstTruth_(wte, entT, wte.cost.cost_includes || '', wte.cost.cost_excludes || '')
+    } catch (eFaqSan) {}
   }
   
   // Itinerary
@@ -1308,14 +1330,14 @@ function mapAirtableToWordPress_(data, tripFields) {
       if (!payload.meta.schema_trip_data) payload.meta.schema_trip_data = payload.meta.trip_schema_data;
     }
 
-    if (!payload.meta.faq_schema_data && data.faqs && data.faqs.length) {
+    if (!payload.meta.faq_schema_data && wte && wte.faq && Array.isArray(wte.faq.faq_title) && Array.isArray(wte.faq.faq_content) && wte.faq.faq_title.length) {
       var mainEntity = [];
-      data.faqs.forEach(function(rec) {
-        var q = String(rec && rec.fields && rec.fields.AI_Question ? rec.fields.AI_Question : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        var a = String(rec && rec.fields && rec.fields.AI_Answer ? rec.fields.AI_Answer : '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (!q || !a) return;
+      for (var iFaq = 0; iFaq < Math.min(wte.faq.faq_title.length, wte.faq.faq_content.length); iFaq++) {
+        var q = String(wte.faq.faq_title[iFaq] || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        var a = String(wte.faq.faq_content[iFaq] || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!q || !a) continue;
         mainEntity.push({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } });
-      });
+      }
       if (mainEntity.length) {
         var faqSchema = {
           "@context": "https://schema.org",
@@ -1803,7 +1825,13 @@ function pub_applyEntranceTruthToText_(text, truth) {
   var s = String(text || '').trim()
   if (!s) return ''
   var t = truth || {}
-  if (t.excluded || t.ambiguous) {
+  if (t.excluded) {
+    s = s
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
+      .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
+      .replace(/\b(includes?|including)\s+(all\s+)?entrance\s+(tickets|fees)\b/ig, 'includes site visits as per itinerary')
+  }
+  if (t.ambiguous && !t.included) {
     s = s
       .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
       .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
@@ -1820,6 +1848,14 @@ function pub_stripAddOnMentions_(text) {
   if (!s.trim()) return ''
   s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, ' ').replace(/\s+/g, ' ').trim()
   return s
+}
+
+function pub_softRemoveAddOnMentionsInBody_(text) {
+  var s = String(text || '')
+  if (!s.trim()) return ''
+  if (!/\b(scarf|scarves|photographer|oils?)\b/i.test(s)) return s
+  s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, 'Optional extras may be available during booking. ')
+  return s.replace(/\s+/g, ' ').trim()
 }
 
 function pub_filterOptionalItemsFromIncludesText_(includesText, excludesText) {
@@ -1951,6 +1987,51 @@ function pub_sanitizeSchemaAgainstTruth_(payload, entranceTruth, includesText, e
   }
 }
 
+function pub_sanitizePackageCopyAgainstTruth_(text, entranceTruth, includesText, excludesText) {
+  var s = String(text || '').trim()
+  if (!s) return ''
+  var isHtml = s.indexOf('<') !== -1
+  if (!isHtml) s = s.replace(/([a-z])([A-Z])/g, '$1 $2')
+  s = pub_applyEntranceTruthToText_(s, entranceTruth)
+  s = pub_applyGuideTruthToText_(s, includesText, excludesText)
+
+  var inc = String(includesText || '').toLowerCase()
+  var hasPickup = /\b(pick\s*-?\s*up|pickup|drop-?off|hotel pickup)\b/.test(inc)
+  var hasLunch = /\b(lunch|meal|meals)\b/.test(inc)
+  if (isHtml) {
+    if (entranceTruth && (entranceTruth.excluded || entranceTruth.ambiguous) && !entranceTruth.included) {
+      s = s
+        .replace(/\byour\s+all-?inclusive\b/ig, 'this')
+        .replace(/\ball-?inclusive\b/ig, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    }
+    return s.replace(/\s+/g, ' ').trim()
+  }
+  if (!hasPickup) {
+    s = s
+      .replace(/\b(hotel\s+pickup|pickup|drop-?off)\b[^.?!]*(?:[.?!]|$)/ig, 'Transportation depends on the option selected. ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+  if (!hasLunch) {
+    s = s
+      .replace(/[^.?!]*\b(lunch|meal|meals)\b[^.?!]*(?:[.?!]|$)/ig, 'Meal details depend on the option selected. ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+  if (entranceTruth && (entranceTruth.excluded || entranceTruth.ambiguous) && !entranceTruth.included) {
+    s = s
+      .replace(/\byour\s+all-?inclusive\b/ig, 'this')
+      .replace(/\ball-?inclusive\b/ig, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+  s = pub_stripAddOnMentions_(s)
+  s = s.replace(/\s+/g, ' ').trim()
+  return s
+}
+
 function pub_applyPublishConsistencyGuard_(payload) {
   if (!payload || typeof payload !== 'object') return payload
   if (!payload.meta || !payload.meta.wp_travel_engine_setting) return payload
@@ -1963,6 +2044,10 @@ function pub_applyPublishConsistencyGuard_(payload) {
   includesText = pub_filterOptionalItemsFromIncludesText_(includesText, excludesText)
   wte.cost.cost_includes = includesText
   wte.cost_includes = includesText
+  if (wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
+    var incArr = String(includesText || '').split('\n').map(function (x) { return String(x || '').trim() }).filter(Boolean)
+    wte.at_a_glance.includes = incArr.slice(0, 12)
+  }
 
   var entranceTruth = pub_detectEntranceTruthFromText_(includesText, excludesText)
 
@@ -1970,7 +2055,7 @@ function pub_applyPublishConsistencyGuard_(payload) {
     var c = String(payload.core.content || '')
     c = pub_applyEntranceTruthToText_(c, entranceTruth)
     c = pub_applyGuideTruthToText_(c, includesText, excludesText)
-    c = pub_stripAddOnMentions_(c)
+    c = pub_softRemoveAddOnMentionsInBody_(c)
     payload.core.content = c
     payload.content = c
   }
@@ -1978,14 +2063,14 @@ function pub_applyPublishConsistencyGuard_(payload) {
     var o = String(wte.tab_content['1_wpeditor'] || '')
     o = pub_applyEntranceTruthToText_(o, entranceTruth)
     o = pub_applyGuideTruthToText_(o, includesText, excludesText)
-    o = pub_stripAddOnMentions_(o)
+    o = pub_softRemoveAddOnMentionsInBody_(o)
     wte.tab_content['1_wpeditor'] = o
   }
   if (wte && wte.tab_content && wte.tab_content['8_wpeditor']) {
     var w = String(wte.tab_content['8_wpeditor'] || '')
     w = pub_applyEntranceTruthToText_(w, entranceTruth)
     w = pub_applyGuideTruthToText_(w, includesText, excludesText)
-    w = pub_stripAddOnMentions_(w)
+    w = pub_softRemoveAddOnMentionsInBody_(w)
     wte.tab_content['8_wpeditor'] = w
   }
 
@@ -2166,6 +2251,18 @@ async function publishPackagesSafe_(tripId, wpTripId) {
 
      log('Publisher: Found ' + pkgRecords.length + ' packages and ' + priceRecords.length + ' prices for Trip ' + tripId);
 
+    var incTextPkg = ''
+    var excTextPkg = ''
+    var entranceTruthPkg = null
+    try {
+      var incRecsPkg = await findRecordsByLinkedId_('TripIncludes Improvement With AI', 'Trip', tripId)
+      var excRecsPkg = await findRecordsByLinkedId_('TripExcludes Improvement With AI', 'Trip', tripId)
+      incTextPkg = (incRecsPkg || []).map(function (r) { return r && r.fields ? String(r.fields.IncludeItem || '') : '' }).join('\n')
+      excTextPkg = (excRecsPkg || []).map(function (r) { return r && r.fields ? String(r.fields.ExcludeItem || '') : '' }).join('\n')
+      incTextPkg = pub_filterOptionalItemsFromIncludesText_(incTextPkg, excTextPkg)
+      entranceTruthPkg = pub_detectEntranceTruthFromText_(incTextPkg, excTextPkg)
+    } catch (ePkgTruth) {}
+
      // Map Price records by PackageID
      var pricesByPkgId = {}; 
      var defaultPrices = []; 
@@ -2205,8 +2302,8 @@ async function publishPackagesSafe_(tripId, wpTripId) {
          pricing_categories: [] 
        };
 
-       if (pkgFields.excerpt) payload.excerpt = String(pkgFields.excerpt);
-       if (pkgFields.content_html) payload.content_html = String(pkgFields.content_html);
+       if (pkgFields.excerpt) payload.excerpt = pub_sanitizePackageCopyAgainstTruth_(String(pkgFields.excerpt), entranceTruthPkg, incTextPkg, excTextPkg)
+       if (pkgFields.content_html) payload.content_html = pub_sanitizePackageCopyAgainstTruth_(String(pkgFields.content_html), entranceTruthPkg, incTextPkg, excTextPkg)
        
        if (linkedPrices && linkedPrices.length > 0) {
           linkedPrices.forEach(function(prRecord) {

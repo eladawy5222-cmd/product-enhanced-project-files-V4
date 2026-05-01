@@ -786,6 +786,59 @@ function runUpdaterBatch() {
         }
         var primaryMetaSchema = { schema_trip_data: JSON.stringify(primarySchema), trip_schema_data: JSON.stringify(primarySchema) };
         if (primaryFaqSchema) primaryMetaSchema.faq_schema_data = JSON.stringify(primaryFaqSchema);
+        try {
+          var existingWte = primaryTripInfoForSchema && primaryTripInfoForSchema.meta && primaryTripInfoForSchema.meta.wp_travel_engine_setting ? primaryTripInfoForSchema.meta.wp_travel_engine_setting : null;
+          if (existingWte) {
+            var wtePatch = null;
+            try { wtePatch = JSON.parse(JSON.stringify(existingWte)); } catch (eClone) { wtePatch = existingWte; }
+            if (wtePatch && typeof wtePatch === 'object') {
+              wtePatch.cost = wtePatch.cost || {};
+              wtePatch.faq = wtePatch.faq || {};
+
+              var incText0 = String((wtePatch.cost && wtePatch.cost.cost_includes) ? wtePatch.cost.cost_includes : (wtePatch.cost_includes || '') || '');
+              if (!incText0 && wtePatch.at_a_glance && Array.isArray(wtePatch.at_a_glance.includes) && wtePatch.at_a_glance.includes.length) {
+                var incFromAt = wtePatch.at_a_glance.includes.map(function(x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }).filter(function(x) { return !!x; });
+                if (incFromAt.length) {
+                  wtePatch.cost.cost_includes = incFromAt.join('\n');
+                  wtePatch.cost_includes = wtePatch.cost.cost_includes;
+                }
+              }
+
+              if (primaryFaqSchema && primaryFaqSchema.mainEntity && Array.isArray(primaryFaqSchema.mainEntity) && primaryFaqSchema.mainEntity.length) {
+                var titles0 = (wtePatch.faq && Array.isArray(wtePatch.faq.faq_title)) ? wtePatch.faq.faq_title : (wtePatch.faq_title || []);
+                var answers0 = (wtePatch.faq && Array.isArray(wtePatch.faq.faq_content)) ? wtePatch.faq.faq_content : (wtePatch.faq_content || []);
+                if (!titles0.length || !answers0.length) {
+                  var incTextS = String((wtePatch.cost && wtePatch.cost.cost_includes) ? wtePatch.cost.cost_includes : (wtePatch.cost_includes || '') || '');
+                  var excTextS = String((wtePatch.cost && wtePatch.cost.cost_excludes) ? wtePatch.cost.cost_excludes : (wtePatch.cost_excludes || '') || '');
+                  var outT = [];
+                  var outA = [];
+                  for (var ii = 0; ii < primaryFaqSchema.mainEntity.length; ii++) {
+                    var me = primaryFaqSchema.mainEntity[ii] || {};
+                    var q = String(me.name || '').replace(/\s+/g, ' ').trim();
+                    var a = String(me.acceptedAnswer && me.acceptedAnswer.text ? me.acceptedAnswer.text : '').replace(/\s+/g, ' ').trim();
+                    if (!q || !a) continue;
+                    a = upd_fixBrokenFaqText_Updater_(a);
+                    a = upd_finalizeEntranceFeesFaqAnswer_Updater_(q, a, incTextS, excTextS);
+                    a = upd_applyGuideTruthToText_Updater_(a, incTextS, excTextS);
+                    a = upd_stripAddOnMentions_Updater_(a);
+                    a = upd_fixBrokenFaqText_Updater_(a);
+                    if (!a) continue;
+                    outT.push(q);
+                    outA.push(a);
+                  }
+                  if (outT.length) {
+                    wtePatch.faq.faq_title = outT;
+                    wtePatch.faq.faq_content = outA;
+                    wtePatch.faq_title = outT;
+                    wtePatch.faq_content = outA;
+                  }
+                }
+              }
+
+              primaryMetaSchema.wp_travel_engine_setting = wtePatch;
+            }
+          }
+        } catch (eWtePatch) {}
         pushToWordPress_Updater_(primaryWpId, { meta: primaryMetaSchema });
         Logger.log('TRIP SCHEMA GENERATED (' + primaryLang + ')');
       } catch (eSchemaPrimary) {
@@ -2859,6 +2912,39 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
 
     wte.cost.cost_includes = safeIncludes.join('\n');
     wte.cost_includes = wte.cost.cost_includes;
+
+    if (wte && wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
+      if (!safeIncludes.length && wte.at_a_glance.includes.length) {
+        var fromAt = wte.at_a_glance.includes
+          .map(function(x) { return String(x || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); })
+          .filter(function(t) {
+            if (!t) return false;
+            var lc = t.toLowerCase();
+            if (/^optional[:\s-]/i.test(t)) return false;
+            if (/\bif selected\b/.test(lc)) return false;
+            if (/\boptional add-?on\b/.test(lc)) return false;
+            if (/\[\s*optional\b/.test(lc)) return false;
+            if (entranceExcluded && /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return false;
+            if (upd_hasUnsupportedHighRiskClaims_Updater_(t, seoFlags)) return false;
+            if (addonNorms.length) {
+              var k = lc.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+              for (var i2 = 0; i2 < addonNorms.length; i2++) {
+                var a2 = addonNorms[i2];
+                if (!a2) continue;
+                if (k === a2) return false;
+                if (k.indexOf(a2) !== -1 || a2.indexOf(k) !== -1) return false;
+              }
+            }
+            return true;
+          });
+        if (fromAt.length) {
+          safeIncludes = fromAt;
+          wte.cost.cost_includes = safeIncludes.join('\n');
+          wte.cost_includes = wte.cost.cost_includes;
+        }
+      }
+      wte.at_a_glance.includes = safeIncludes.slice(0, 12);
+    }
   }
   if (data.excludes.length > 0) {
     wte.cost.cost_excludes = data.excludes.map(function(r){ return r.fields.ExcludeItem; }).join('\n');
@@ -3784,7 +3870,13 @@ function upd_applyEntranceTruthToText_Updater_(text, truth) {
   var s = String(text || '').trim();
   if (!s) return '';
   var t = truth || {};
-  if (t.excluded || t.ambiguous) {
+  if (t.excluded) {
+    s = s
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
+      .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
+      .replace(/\b(includes?|including)\s+(all\s+)?entrance\s+(tickets|fees)\b/ig, 'includes site visits as per itinerary');
+  }
+  if (t.ambiguous && !t.included) {
     s = s
       .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+included\b/ig, 'site visits as per itinerary')
       .replace(/\bentrance\s+(tickets|fees)\s+are\s+included\b/ig, 'site visits are as per itinerary')
@@ -3801,6 +3893,14 @@ function upd_stripAddOnMentions_Updater_(text) {
   if (!s.trim()) return '';
   s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, ' ').replace(/\s+/g, ' ').trim();
   return s;
+}
+
+function upd_softRemoveAddOnMentionsInBody_Updater_(text) {
+  var s = String(text || '');
+  if (!s.trim()) return '';
+  if (!/\b(scarf|scarves|photographer|oils?)\b/i.test(s)) return s;
+  s = s.replace(/[^.?!]*\b(scarf|scarves|photographer|oils?)\b[^.?!]*(?:[.?!]|$)/ig, 'Optional extras may be available during booking. ');
+  return s.replace(/\s+/g, ' ').trim();
 }
 
 function upd_filterOptionalItemsFromIncludesText_Updater_(includesText, excludesText) {
@@ -3943,6 +4043,51 @@ function upd_sanitizeSchemaAgainstTruth_Updater_(payload, entranceTruth, include
   }
 }
 
+function upd_sanitizePackageCopyAgainstTruth_Updater_(text, entranceTruth, includesText, excludesText) {
+  var s = String(text || '').trim();
+  if (!s) return '';
+  var isHtml = s.indexOf('<') !== -1;
+  if (!isHtml) s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+  s = upd_applyEntranceTruthToText_Updater_(s, entranceTruth);
+  s = upd_applyGuideTruthToText_Updater_(s, includesText, excludesText);
+
+  var inc = String(includesText || '').toLowerCase();
+  var hasPickup = /\b(pick\s*-?\s*up|pickup|drop-?off|hotel pickup)\b/.test(inc);
+  var hasLunch = /\b(lunch|meal|meals)\b/.test(inc);
+  if (isHtml) {
+    if (entranceTruth && (entranceTruth.excluded || entranceTruth.ambiguous) && !entranceTruth.included) {
+      s = s
+        .replace(/\byour\s+all-?inclusive\b/ig, 'this')
+        .replace(/\ball-?inclusive\b/ig, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    return s.replace(/\s+/g, ' ').trim();
+  }
+  if (!hasPickup) {
+    s = s
+      .replace(/\b(hotel\s+pickup|pickup|drop-?off)\b[^.?!]*(?:[.?!]|$)/ig, 'Transportation depends on the option selected. ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  if (!hasLunch) {
+    s = s
+      .replace(/[^.?!]*\b(lunch|meal|meals)\b[^.?!]*(?:[.?!]|$)/ig, 'Meal details depend on the option selected. ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  if (entranceTruth && (entranceTruth.excluded || entranceTruth.ambiguous) && !entranceTruth.included) {
+    s = s
+      .replace(/\byour\s+all-?inclusive\b/ig, 'this')
+      .replace(/\ball-?inclusive\b/ig, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  s = upd_stripAddOnMentions_Updater_(s);
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
 function upd_applyPublishConsistencyGuard_Updater_(payload) {
   if (!payload || typeof payload !== 'object') return payload;
   if (!payload.meta || !payload.meta.wp_travel_engine_setting) return payload;
@@ -3955,6 +4100,10 @@ function upd_applyPublishConsistencyGuard_Updater_(payload) {
   includesText = upd_filterOptionalItemsFromIncludesText_Updater_(includesText, excludesText);
   wte.cost.cost_includes = includesText;
   wte.cost_includes = includesText;
+  if (wte.at_a_glance && Array.isArray(wte.at_a_glance.includes)) {
+    var incArr = String(includesText || '').split('\n').map(function(x){ return String(x || '').trim(); }).filter(function(x){ return !!x; });
+    wte.at_a_glance.includes = incArr.slice(0, 12);
+  }
 
   var entranceTruth = upd_detectEntranceTruthFromText_Updater_(includesText, excludesText);
   var guideTruth = upd_detectGuideTruthFromText_Updater_(includesText, excludesText);
@@ -3963,7 +4112,7 @@ function upd_applyPublishConsistencyGuard_Updater_(payload) {
     var c = String(payload.core.content || '');
     c = upd_applyEntranceTruthToText_Updater_(c, entranceTruth);
     c = upd_applyGuideTruthToText_Updater_(c, includesText, excludesText);
-    c = upd_stripAddOnMentions_Updater_(c);
+    c = upd_softRemoveAddOnMentionsInBody_Updater_(c);
     payload.core.content = c;
     payload.content = c;
   }
@@ -3971,14 +4120,14 @@ function upd_applyPublishConsistencyGuard_Updater_(payload) {
     var o = String(wte.tab_content['1_wpeditor'] || '');
     o = upd_applyEntranceTruthToText_Updater_(o, entranceTruth);
     o = upd_applyGuideTruthToText_Updater_(o, includesText, excludesText);
-    o = upd_stripAddOnMentions_Updater_(o);
+    o = upd_softRemoveAddOnMentionsInBody_Updater_(o);
     wte.tab_content['1_wpeditor'] = o;
   }
   if (wte && wte.tab_content && wte.tab_content['8_wpeditor']) {
     var w = String(wte.tab_content['8_wpeditor'] || '');
     w = upd_applyEntranceTruthToText_Updater_(w, entranceTruth);
     w = upd_applyGuideTruthToText_Updater_(w, includesText, excludesText);
-    w = upd_stripAddOnMentions_Updater_(w);
+    w = upd_softRemoveAddOnMentionsInBody_Updater_(w);
     wte.tab_content['8_wpeditor'] = w;
   }
 
@@ -9639,6 +9788,25 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
 
      Logger.log('Updater: Found ' + pkgRecords.length + ' packages and ' + priceRecords.length + ' prices for Trip ' + tripId);
 
+    var pkgSanitizeEnabled = (!targetLang || String(targetLang).toLowerCase() === 'en');
+    var incTextPkg = '';
+    var excTextPkg = '';
+    var entranceTruthPkg = null;
+    var guideTruthPkg = null;
+    if (pkgSanitizeEnabled) {
+      try {
+        var incRecsPkg = findRecordsByLinkedId_Updater_('TripIncludes Improvement With AI', 'Trip', tripId, null, tripPublicId);
+        var excRecsPkg = findRecordsByLinkedId_Updater_('TripExcludes Improvement With AI', 'Trip', tripId, null, tripPublicId);
+        incTextPkg = (incRecsPkg || []).map(function(r){ return r && r.fields ? String(r.fields.IncludeItem || '') : ''; }).join('\n');
+        excTextPkg = (excRecsPkg || []).map(function(r){ return r && r.fields ? String(r.fields.ExcludeItem || '') : ''; }).join('\n');
+        incTextPkg = upd_filterOptionalItemsFromIncludesText_Updater_(incTextPkg, excTextPkg);
+        entranceTruthPkg = upd_detectEntranceTruthFromText_Updater_(incTextPkg, excTextPkg);
+        guideTruthPkg = upd_detectGuideTruthFromText_Updater_(incTextPkg, excTextPkg);
+      } catch (ePkgTruth) {
+        pkgSanitizeEnabled = false;
+      }
+    }
+
      // Map Price records by PackageID
      var pricesByPkgId = {}; 
      var defaultPrices = []; 
@@ -9919,11 +10087,11 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
        var contentHtml = (pkgFields && (pkgFields.content_html || pkgFields.Content_HTML || pkgFields.CONTENT_HTML || pkgFields.Content_html));
        if (excerpt !== undefined && excerpt !== null) {
          var ex = String(excerpt).replace(/\s+/g, ' ').trim();
-         if (ex) payload.excerpt = ex;
+         if (ex) payload.excerpt = pkgSanitizeEnabled ? upd_sanitizePackageCopyAgainstTruth_Updater_(ex, entranceTruthPkg, incTextPkg, excTextPkg) : ex;
        }
        if (contentHtml !== undefined && contentHtml !== null) {
          var ch = String(contentHtml).trim();
-         if (ch) payload.content_html = ch;
+         if (ch) payload.content_html = pkgSanitizeEnabled ? upd_sanitizePackageCopyAgainstTruth_Updater_(ch, entranceTruthPkg, incTextPkg, excTextPkg) : ch;
        }
        
        if (linkedPrices && linkedPrices.length > 0) {
