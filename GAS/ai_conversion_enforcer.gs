@@ -94,12 +94,13 @@ function runConversionEnforcer(record) {
     var flags = (standardContext && standardContext.flags) ? standardContext.flags : {};
     var evidence = (standardContext && standardContext.evidence) ? standardContext.evidence : {};
     var entranceTruth = convEnf_detectEntranceFeesTruth_(payload.included, payload.excluded);
+    var guideTruth = convEnf_detectGuideTruth_(payload.included, payload.excluded, String(evidence.strict_combined || evidence.combined || ''));
     var fixedSeo = convEnf_finalizeSeoFields_(ai, payload, flags);
-    var fixedSeoH1 = convEnf_applyEntranceFeesTruthToText_(fixedSeo.h1, entranceTruth);
-    var fixedSeoTitle = convEnf_applyEntranceFeesTruthToText_(fixedSeo.title, entranceTruth);
-    var fixedSeoMeta = convEnf_applyEntranceFeesTruthToText_(fixedSeo.meta_description, entranceTruth);
-    var fixedSeoExcerpt = convEnf_applyEntranceFeesTruthToText_(fixedSeo.excerpt, entranceTruth);
-    var fixedSeoShort = convEnf_applyEntranceFeesTruthToText_(fixedSeo.short_summary, entranceTruth);
+    var fixedSeoH1 = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.h1, entranceTruth), guideTruth);
+    var fixedSeoTitle = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.title, entranceTruth), guideTruth);
+    var fixedSeoMeta = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.meta_description, entranceTruth), guideTruth);
+    var fixedSeoExcerpt = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.excerpt, entranceTruth), guideTruth);
+    var fixedSeoShort = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.short_summary, entranceTruth), guideTruth);
     if (fixedSeoH1 && fixedSeoH1.length >= 15) updateMain.AI_Titel_H1 = fixedSeoH1;
     if (fixedSeoTitle && fixedSeoTitle.length >= 20) updateMain.AI_SEO_Title = fixedSeoTitle;
     if (fixedSeoMeta && fixedSeoMeta.length >= 60) updateMain.AI_SEO_Meta_Description = fixedSeoMeta;
@@ -109,11 +110,13 @@ function runConversionEnforcer(record) {
     if (descHtml) descHtml = convEnf_sanitizeHtml_(descHtml);
     if (descHtml) descHtml = convEnf_rewriteUnsupportedContentText_(descHtml, flags, evidence);
     if (descHtml) descHtml = convEnf_applyEntranceFeesTruthToText_(descHtml, entranceTruth);
+    if (descHtml) descHtml = convEnf_applyGuideTruthToText_(descHtml, guideTruth);
     if (descHtml && descHtml.length >= 80) updateMain.AI_Trip_Description = descHtml;
     var whyHtml = convEnf_getString_(ai, ['why_people_love', 'html']);
     if (whyHtml) whyHtml = convEnf_sanitizeWhyPeopleLoveHtml_(whyHtml);
     if (whyHtml) whyHtml = convEnf_rewriteUnsupportedContentText_(whyHtml, flags, evidence);
     if (whyHtml) whyHtml = convEnf_applyEntranceFeesTruthToText_(whyHtml, entranceTruth);
+    if (whyHtml) whyHtml = convEnf_applyGuideTruthToText_(whyHtml, guideTruth);
     if (whyHtml && whyHtml.length >= 100) updateMain.AI_Tab_Content = whyHtml;
     var boldPromise = convEnf_getString_(ai, ['bold_promise', 'value']);
     if (!boldPromise) boldPromise = convEnf_getString_(ai, ['bold_promise', 'text']);
@@ -146,6 +149,7 @@ function runConversionEnforcer(record) {
     newHighlights = convEnf_sanitizeStringList_(newHighlights, { max: 12 });
     newHighlights = convEnf_filterUnsupportedItems_(newHighlights, flags);
     newHighlights = convEnf_applyEntranceFeesTruthToHighlights_(newHighlights, entranceTruth);
+    newHighlights = convEnf_applyGuideTruthToHighlights_(newHighlights, guideTruth);
     if (newHighlights && newHighlights.length >= 3) {
       try {
         Logger.log('✅ Improved Highlights:');
@@ -265,6 +269,45 @@ function convEnf_detectEntranceFeesTruth_(included, excluded) {
   var includedTruth = incHas && !incSaysNotIncluded;
   var excludedTruth = excHas || incSaysNotIncluded || excSaysNotIncluded;
   return { included: includedTruth && !excludedTruth, excluded: excludedTruth && !includedTruth, ambiguous: !includedTruth && !excludedTruth };
+}
+
+function convEnf_detectGuideTruth_(included, excluded, evidenceText) {
+  var incText = (Array.isArray(included) ? included.join(' | ') : String(included || '')).toLowerCase();
+  var excText = (Array.isArray(excluded) ? excluded.join(' | ') : String(excluded || '')).toLowerCase();
+  var ev = String(evidenceText || '').toLowerCase();
+  var hasGuideInInc = /\b(egyptologist|tour guide|guide)\b/.test(incText);
+  var hasGuideInExc = /\b(egyptologist|tour guide|guide)\b/.test(excText);
+  var incConditional = hasGuideInInc && /\b(if selected|optional|depending on the option)\b/.test(incText);
+  var evOptional = /\bguide\b/.test(ev) && /\b(if selected|optional|depending on the option)\b/.test(ev);
+  var includedTruth = hasGuideInInc && !incConditional && !hasGuideInExc;
+  var optionalTruth = incConditional || evOptional;
+  return { included: includedTruth, optional: optionalTruth && !includedTruth, ambiguous: !includedTruth && !optionalTruth };
+}
+
+function convEnf_applyGuideTruthToText_(text, truth) {
+  var s = String(text || '');
+  if (!s.trim()) return '';
+  if (truth && truth.included) return s;
+  s = s
+    .replace(/\byour\s+expert\s+egyptologist\s+guide\b/ig, 'If selected, an Egyptologist guide')
+    .replace(/\bexpert\s+egyptologist\s+guide\b/ig, 'Egyptologist guide (depending on the option selected)')
+    .replace(/\bexpert\s+guidance\b/ig, 'guiding (depending on the option selected)')
+    .replace(/\bexpert\s+guide\b/ig, 'guide (depending on the option selected)');
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+function convEnf_applyGuideTruthToHighlights_(highlights, truth) {
+  if (!Array.isArray(highlights)) return highlights;
+  if (truth && truth.included) return highlights;
+  var out = [];
+  for (var i = 0; i < highlights.length; i++) {
+    var s = String(highlights[i] || '').replace(/\s+/g, ' ').trim();
+    if (!s) continue;
+    s = convEnf_applyGuideTruthToText_(s, truth);
+    if (!s) continue;
+    out.push(s);
+  }
+  return out;
 }
 
 function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
@@ -1240,7 +1283,7 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
     var qLc = q.toLowerCase();
     var aLc = a.toLowerCase();
     if (convEnf_hasUnsupportedHighRiskClaims_(a, flags)) a = convEnf_rewriteUnsupportedFaqAnswer_(q, a, flags, { hasEntranceIncluded: hasEntranceIncluded, hasEntranceExcluded: hasEntranceExcluded });
-    if (/entrance fee|entrance fees|tickets|ticket|admission/.test(qLc)) {
+    if (convEnf_isEntranceFeesDecisionQuestion_(qLc)) {
       if (hasEntranceIncluded && !hasEntranceExcluded) {
         a = "Yes. Attraction entrance fees are included as listed in What's Included."
       } else if (hasEntranceExcluded && !hasEntranceIncluded) {
@@ -1248,6 +1291,8 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
       } else {
         a = "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option."
       }
+    } else {
+      a = convEnf_softNormalizeEntranceFeesInAnswer_(a, { hasEntranceIncluded: hasEntranceIncluded, hasEntranceExcluded: hasEntranceExcluded });
     }
     if (/how large|group size|how many people|tour groups/.test(qLc)) {
       var looksLikeGroupSize = (/\b(private|small|group|people|persons|pax|max|maximum|limited|up to|size)\b/.test(aLc) || /\d+/.test(aLc));
@@ -1293,12 +1338,41 @@ function convEnf_fixBrokenFaqText_(text) {
   return s;
 }
 
+function convEnf_isEntranceFeesDecisionQuestion_(question) {
+  var q = String(question || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!q) return false;
+  var hasEntrance = /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(q);
+  if (!hasEntrance) return false;
+  var hasDecision = /\b(included|not included|cover|covered|pay|pay for|need to pay|extra charge|additional cost)\b/.test(q);
+  if (!hasDecision) return false;
+  if (/\b(cash|money|bring|what to bring|tips?|gratuities|extras)\b/.test(q)) return false;
+  return true;
+}
+
+function convEnf_softNormalizeEntranceFeesInAnswer_(answer, ctx) {
+  var c = ctx || {};
+  var a0 = String(answer || '').trim();
+  if (!a0) return '';
+  if (!c.hasEntranceIncluded && !c.hasEntranceExcluded) return a0;
+  var a = a0;
+  if (c.hasEntranceExcluded && !c.hasEntranceIncluded) {
+    a = a
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+are\s+included\b/ig, "entrance fees are not included")
+      .replace(/\b(admission|tickets?)\s+are\s+included\b/ig, "$1 are not included");
+  } else if (c.hasEntranceIncluded && !c.hasEntranceExcluded) {
+    a = a
+      .replace(/\b(entrance\s+(tickets|fees)|admission|tickets?)\s+are\s+not\s+included\b/ig, "entrance fees are included")
+      .replace(/\b(not included)\b/ig, "included");
+  }
+  return convEnf_fixBrokenFaqText_(a);
+}
+
 function convEnf_rewriteUnsupportedFaqAnswer_(question, answer, flags, ctx) {
   var q = String(question || '').replace(/\s+/g, ' ').trim();
   var qLc = q.toLowerCase();
   var f = (flags && typeof flags === 'object') ? flags : {};
   var c = ctx || {};
-  if (/entrance fee|entrance fees|tickets|ticket|admission/.test(qLc)) {
+  if (convEnf_isEntranceFeesDecisionQuestion_(qLc)) {
     if (c.hasEntranceIncluded && !c.hasEntranceExcluded) return "Yes. Attraction entrance fees are included as listed in What's Included.";
     if (c.hasEntranceExcluded && !c.hasEntranceIncluded) return "No. Attraction entrance fees are not included as listed in What's Excluded.";
     return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";

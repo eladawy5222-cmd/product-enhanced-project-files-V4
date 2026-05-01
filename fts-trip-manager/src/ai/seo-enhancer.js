@@ -1479,6 +1479,12 @@ function buildSeoPromptFromImprovedContent_(fields, linkedTextBlocks) {
     "- DO NOT replace 'National Museum of Egyptian Civilization' (NMEC) with GEM. Treat it as a distinct visit.\n" +
     "- IF trip is Cairo City Tour: Keep 'Egyptian Museum' unless context implies GEM.\n\n" +
 
+    "=== TITLE ENTITY ANCHORS (HIGH PRIORITY) ===\n" +
+    "- If NMEC/Civilization Museum is mentioned: do NOT use a generic 'Museum' label in the title. Name the museum entity (NMEC or Egyptian Civilization Museum).\n" +
+    "- If the itinerary/highlights clearly include NMEC + Citadel + Old Cairo/Coptic Cairo: the title MUST name these anchors.\n" +
+    "  * Example: 'Cairo Day Tour: NMEC, Citadel & Old Cairo'\n" +
+    "- Add '+ Lunch' ONLY if lunch is explicitly present in the context.\n\n" +
+
     "=== CONDITIONAL VISIT RULES ===\n" +
     "- IF the itinerary involves visiting BOTH 'Pyramids' AND 'Grand Egyptian Museum' (GEM):\n" +
     "  -> The visit to 'Khan el-Khalili' (if present) MUST be marked as conditional.\n" +

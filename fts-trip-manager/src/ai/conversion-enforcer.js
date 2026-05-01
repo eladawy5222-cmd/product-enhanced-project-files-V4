@@ -150,12 +150,13 @@ async function runConversionEnforcer(data) {
     const flags = (standardContext && standardContext.flags) ? standardContext.flags : {}
     const evidence = (standardContext && standardContext.evidence) ? standardContext.evidence : {}
     const entranceTruth = convEnf_detectEntranceFeesTruth_(payload.included, payload.excluded)
+    const guideTruth = convEnf_detectGuideTruth_(payload.included, payload.excluded, String(evidence.strict_combined || evidence.combined || ''))
     const fixedSeo = convEnf_finalizeSeoFields_(ai, payload, flags)
-    const fixedSeoH1 = convEnf_applyEntranceFeesTruthToText_(fixedSeo.h1, entranceTruth)
-    const fixedSeoTitle = convEnf_applyEntranceFeesTruthToText_(fixedSeo.title, entranceTruth)
-    const fixedSeoMeta = convEnf_applyEntranceFeesTruthToText_(fixedSeo.meta_description, entranceTruth)
-    const fixedSeoExcerpt = convEnf_applyEntranceFeesTruthToText_(fixedSeo.excerpt, entranceTruth)
-    const fixedSeoShort = convEnf_applyEntranceFeesTruthToText_(fixedSeo.short_summary, entranceTruth)
+    const fixedSeoH1 = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.h1, entranceTruth), guideTruth)
+    const fixedSeoTitle = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.title, entranceTruth), guideTruth)
+    const fixedSeoMeta = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.meta_description, entranceTruth), guideTruth)
+    const fixedSeoExcerpt = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.excerpt, entranceTruth), guideTruth)
+    const fixedSeoShort = convEnf_applyGuideTruthToText_(convEnf_applyEntranceFeesTruthToText_(fixedSeo.short_summary, entranceTruth), guideTruth)
     if (fixedSeoH1 && fixedSeoH1.length >= 15) updateMain.AI_Titel_H1 = fixedSeoH1
     if (fixedSeoTitle && fixedSeoTitle.length >= 20) updateMain.AI_SEO_Title = fixedSeoTitle
     if (fixedSeoMeta && fixedSeoMeta.length >= 60) updateMain.AI_SEO_Meta_Description = fixedSeoMeta
@@ -165,11 +166,13 @@ async function runConversionEnforcer(data) {
     let descHtmlClean = descHtml ? convEnf_sanitizeHtml_(descHtml) : ''
     if (descHtmlClean) descHtmlClean = convEnf_rewriteUnsupportedContentText_(descHtmlClean, flags, evidence)
     if (descHtmlClean) descHtmlClean = convEnf_applyEntranceFeesTruthToText_(descHtmlClean, entranceTruth)
+    if (descHtmlClean) descHtmlClean = convEnf_applyGuideTruthToText_(descHtmlClean, guideTruth)
     if (descHtmlClean && descHtmlClean.length >= 80) updateMain.AI_Trip_Description = descHtmlClean
     const whyHtml = convEnf_getString_(ai, ['why_people_love', 'html'])
     let whyHtmlClean = whyHtml ? convEnf_sanitizeWhyPeopleLoveHtml_(whyHtml) : ''
     if (whyHtmlClean) whyHtmlClean = convEnf_rewriteUnsupportedContentText_(whyHtmlClean, flags, evidence)
     if (whyHtmlClean) whyHtmlClean = convEnf_applyEntranceFeesTruthToText_(whyHtmlClean, entranceTruth)
+    if (whyHtmlClean) whyHtmlClean = convEnf_applyGuideTruthToText_(whyHtmlClean, guideTruth)
     if (whyHtmlClean && whyHtmlClean.length >= 100) updateMain.AI_Tab_Content = whyHtmlClean
     let boldPromise = convEnf_getString_(ai, ['bold_promise', 'value'])
     if (!boldPromise) boldPromise = convEnf_getString_(ai, ['bold_promise', 'text'])
@@ -200,6 +203,7 @@ async function runConversionEnforcer(data) {
     newHighlights = convEnf_sanitizeStringList_(newHighlights, { max: 12 })
     newHighlights = convEnf_filterUnsupportedItems_(newHighlights, flags)
     newHighlights = convEnf_applyEntranceFeesTruthToHighlights_(newHighlights, entranceTruth)
+    newHighlights = convEnf_applyGuideTruthToHighlights_(newHighlights, guideTruth)
     if (newHighlights && newHighlights.length >= 3) {
       console.log('✅ Improved Highlights:')
       console.log(JSON.stringify(newHighlights, null, 2))
@@ -310,6 +314,45 @@ function convEnf_detectEntranceFeesTruth_(included, excluded) {
   const includedTruth = incHas && !incSaysNotIncluded
   const excludedTruth = excHas || incSaysNotIncluded || excSaysNotIncluded
   return { included: includedTruth && !excludedTruth, excluded: excludedTruth && !includedTruth, ambiguous: !includedTruth && !excludedTruth }
+}
+
+function convEnf_detectGuideTruth_(included, excluded, evidenceText) {
+  const incText = (Array.isArray(included) ? included.join(' | ') : String(included || '')).toLowerCase()
+  const excText = (Array.isArray(excluded) ? excluded.join(' | ') : String(excluded || '')).toLowerCase()
+  const ev = String(evidenceText || '').toLowerCase()
+  const hasGuideInInc = /\b(egyptologist|tour guide|guide)\b/.test(incText)
+  const hasGuideInExc = /\b(egyptologist|tour guide|guide)\b/.test(excText)
+  const incConditional = hasGuideInInc && /\b(if selected|optional|depending on the option)\b/.test(incText)
+  const evOptional = /\b(guide)\b/.test(ev) && /\b(if selected|optional|depending on the option)\b/.test(ev)
+  const includedTruth = hasGuideInInc && !incConditional && !hasGuideInExc
+  const optionalTruth = incConditional || evOptional
+  return { included: includedTruth, optional: optionalTruth && !includedTruth, ambiguous: !includedTruth && !optionalTruth }
+}
+
+function convEnf_applyGuideTruthToText_(text, truth) {
+  let s = String(text || '')
+  if (!s.trim()) return ''
+  if (truth && truth.included) return s
+  s = s
+    .replace(/\byour\s+expert\s+egyptologist\s+guide\b/ig, 'If selected, an Egyptologist guide')
+    .replace(/\bexpert\s+egyptologist\s+guide\b/ig, 'Egyptologist guide (depending on the option selected)')
+    .replace(/\bexpert\s+guidance\b/ig, 'guiding (depending on the option selected)')
+    .replace(/\bexpert\s+guide\b/ig, 'guide (depending on the option selected)')
+  return s.replace(/\s+/g, ' ').trim()
+}
+
+function convEnf_applyGuideTruthToHighlights_(highlights, truth) {
+  if (!Array.isArray(highlights)) return highlights
+  if (truth && truth.included) return highlights
+  const out = []
+  for (let i = 0; i < highlights.length; i++) {
+    let s = String(highlights[i] || '').replace(/\s+/g, ' ').trim()
+    if (!s) continue
+    s = convEnf_applyGuideTruthToText_(s, truth)
+    if (!s) continue
+    out.push(s)
+  }
+  return out
 }
 
 function convEnf_applyEntranceFeesTruthToHighlights_(highlights, truth) {
@@ -1121,7 +1164,7 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
     const qLc = q.toLowerCase()
     const aLc = a.toLowerCase()
     if (convEnf_hasUnsupportedHighRiskClaims_(a, flags)) a = convEnf_rewriteUnsupportedFaqAnswer_(q, a, flags, { hasEntranceIncluded, hasEntranceExcluded })
-    if (/entrance fee|entrance fees|tickets|ticket|admission/.test(qLc)) {
+    if (convEnf_isEntranceFeesDecisionQuestion_(qLc)) {
       if (hasEntranceIncluded && !hasEntranceExcluded) {
         a = "Yes. Attraction entrance fees are included as listed in What's Included."
       } else if (hasEntranceExcluded && !hasEntranceIncluded) {
@@ -1129,6 +1172,8 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
       } else {
         a = "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option."
       }
+    } else {
+      a = convEnf_softNormalizeEntranceFeesInAnswer_(a, { hasEntranceIncluded, hasEntranceExcluded })
     }
     if (/how large|group size|how many people|tour groups/.test(qLc)) {
       const looksLikeGroupSize = (/\b(private|small|group|people|persons|pax|max|maximum|limited|up to|size)\b/.test(aLc) || /\d+/.test(aLc))
@@ -1174,12 +1219,41 @@ function convEnf_fixBrokenFaqText_(text) {
   return s
 }
 
+function convEnf_isEntranceFeesDecisionQuestion_(question) {
+  const q = String(question || '').replace(/\s+/g, ' ').trim().toLowerCase()
+  if (!q) return false
+  const hasEntrance = /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(q)
+  if (!hasEntrance) return false
+  const hasDecision = /\b(included|not included|cover|covered|pay|pay for|need to pay|extra charge|additional cost)\b/.test(q)
+  if (!hasDecision) return false
+  if (/\b(cash|money|bring|what to bring|tips?|gratuities|extras)\b/.test(q)) return false
+  return true
+}
+
+function convEnf_softNormalizeEntranceFeesInAnswer_(answer, ctx) {
+  const c = ctx || {}
+  const a0 = String(answer || '').trim()
+  if (!a0) return ''
+  if (!c.hasEntranceIncluded && !c.hasEntranceExcluded) return a0
+  let a = a0
+  if (c.hasEntranceExcluded && !c.hasEntranceIncluded) {
+    a = a
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+are\s+included\b/ig, "entrance fees are not included")
+      .replace(/\b(admission|tickets?)\s+are\s+included\b/ig, "$1 are not included")
+  } else if (c.hasEntranceIncluded && !c.hasEntranceExcluded) {
+    a = a
+      .replace(/\b(entrance\s+(tickets|fees)|admission|tickets?)\s+are\s+not\s+included\b/ig, "entrance fees are included")
+      .replace(/\b(not included)\b/ig, "included")
+  }
+  return convEnf_fixBrokenFaqText_(a)
+}
+
 function convEnf_rewriteUnsupportedFaqAnswer_(question, answer, flags, ctx) {
   const q = String(question || '').replace(/\s+/g, ' ').trim()
   const qLc = q.toLowerCase()
   const f = (flags && typeof flags === 'object') ? flags : {}
   const c = ctx || {}
-  if (/entrance fee|entrance fees|tickets|ticket|admission/.test(qLc)) {
+  if (convEnf_isEntranceFeesDecisionQuestion_(qLc)) {
     if (c.hasEntranceIncluded && !c.hasEntranceExcluded) return "Yes. Attraction entrance fees are included as listed in What's Included."
     if (c.hasEntranceExcluded && !c.hasEntranceIncluded) return "No. Attraction entrance fees are not included as listed in What's Excluded."
     return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option."

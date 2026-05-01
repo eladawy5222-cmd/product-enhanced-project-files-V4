@@ -3346,18 +3346,35 @@ function upd_fixBrokenFaqText_Updater_(text) {
 }
 
 function upd_finalizeEntranceFeesFaqAnswer_Updater_(question, answer, includesText, excludesText) {
-  var q = String(question || '').toLowerCase();
+  var qRaw = String(question || '');
+  var q = qRaw.toLowerCase();
   var a = String(answer || '').trim();
   if (!a) return '';
   var inc = String(includesText || '').toLowerCase();
   var exc = String(excludesText || '').toLowerCase();
   var incHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(inc) && !/\b(not included|excluded)\b/.test(inc);
   var excHas = /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(exc);
-  var isEntranceQa = /\b(entrance|admission|ticket|tickets)\b/.test(q) || /\b(entrance|admission|ticket|tickets)\b/.test(a.toLowerCase());
-  if (!isEntranceQa) return a;
-  if (excHas && !incHas) return "No. Attraction entrance fees are not included as listed in What's Excluded.";
-  if (incHas && !excHas) return "Yes. Attraction entrance fees are included as listed in What's Included.";
-  return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";
+  var mentionsEntranceInQ = /\b(entrance fee|entrance fees|admission|ticket|tickets)\b/.test(q);
+  if (!mentionsEntranceInQ) return a;
+  var isDecision = /\b(included|not included|cover|covered|pay|pay for|need to pay|extra charge|additional cost)\b/.test(q);
+  if (/\b(cash|money|bring|what to bring|tips?|gratuities|extras)\b/.test(q)) isDecision = false;
+  if (isDecision) {
+    if (excHas && !incHas) return "No. Attraction entrance fees are not included as listed in What's Excluded.";
+    if (incHas && !excHas) return "Yes. Attraction entrance fees are included as listed in What's Included.";
+    return "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option.";
+  }
+  if (excHas && !incHas) {
+    return a
+      .replace(/\b(all\s+)?entrance\s+(tickets|fees)\s+are\s+included\b/ig, "entrance fees are not included")
+      .replace(/\b(admission|tickets?)\s+are\s+included\b/ig, "$1 are not included")
+      .trim();
+  }
+  if (incHas && !excHas) {
+    return a
+      .replace(/\b(entrance\s+(tickets|fees)|admission|tickets?)\s+are\s+not\s+included\b/ig, "entrance fees are included")
+      .trim();
+  }
+  return a;
 }
 
 function upd_isWeakMetaEnding_Updater_(s) {
