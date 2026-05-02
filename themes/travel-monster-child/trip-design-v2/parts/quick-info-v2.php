@@ -26,6 +26,11 @@ if ( is_array( $at_a_glance ) ) {
     if ( $meeting_val !== '' ) $at_items[]  = array( 'label' => __( 'Meeting point', 'fts' ), 'value' => $meeting_val );
     if ( $group_val !== '' ) $at_items[]    = array( 'label' => __( 'Group size', 'fts' ), 'value' => $group_val );
 }
+
+$trustindex_render_code = '';
+if ( isset( $trustindex_quickbar_code ) && is_string( $trustindex_quickbar_code ) && trim( $trustindex_quickbar_code ) !== '' ) {
+    $trustindex_render_code = $trustindex_quickbar_code;
+}
 ?>
 
 <!-- Quick Price + Hook -->
@@ -111,6 +116,18 @@ if ( is_array( $at_a_glance ) ) {
         </div>
     </div>
 </div>
+
+<?php if ( $trustindex_render_code !== '' ) : ?>
+<div class="fts-v2-trust-tidx-row">
+    <div class="fts-v2-container">
+        <?php if ( strpos( $trustindex_render_code, 'cdn.trustindex.io/loader.js' ) !== false ) : ?>
+            <?php echo $trustindex_render_code; ?>
+        <?php else : ?>
+            <?php echo wp_kses_post( $trustindex_render_code ); ?>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Sticky Tabs Navigation -->
 <div class="fts-v2-tabs-nav" id="fts-v2-tabs-nav">

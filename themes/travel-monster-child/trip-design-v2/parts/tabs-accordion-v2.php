@@ -276,31 +276,30 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <span class="fts-v2-score-count">(<?php echo intval( $review_count ); ?>)</span>
             </div>
         </div>
+        <div class="fts-v2-reviews-list">
+            <?php foreach ( array_slice( $reviews, 0, 6 ) as $rev ) : ?>
+            <div class="fts-v2-review-card">
+                <div class="fts-v2-review-header">
+                    <div class="fts-v2-review-avatar"><?php echo mb_strtoupper( mb_substr( $rev['title'] ?: 'R', 0, 1 ) ); ?></div>
+                    <div class="fts-v2-review-meta">
+                        <strong><?php echo esc_html( $rev['title'] ?: __( 'Traveler', 'fts' ) ); ?></strong>
+                        <div class="fts-v2-review-stars">
+                            <?php for ( $s = 1; $s <= 5; $s++ ) : ?>
+                                <i class="fa fa-star<?php echo $s <= ( $rev['stars'] ?? 5 ) ? '' : '-o'; ?>"></i>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                </div>
+                <p class="fts-v2-review-text"><?php echo esc_html( wp_trim_words( $rev['content'] ?? '', 40 ) ); ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
         <?php endif; ?>
 
         <?php if ( ! empty( $reviews_tab_content ) ) : ?>
-            <div class="fts-v2-reviews-tab-content">
-                <?php echo do_shortcode( $reviews_tab_content ); ?>
-            </div>
-        <?php elseif ( $review_count > 0 ) : ?>
-            <div class="fts-v2-reviews-list">
-                <?php foreach ( array_slice( $reviews, 0, 6 ) as $rev ) : ?>
-                <div class="fts-v2-review-card">
-                    <div class="fts-v2-review-header">
-                        <div class="fts-v2-review-avatar"><?php echo mb_strtoupper( mb_substr( $rev['title'] ?: 'R', 0, 1 ) ); ?></div>
-                        <div class="fts-v2-review-meta">
-                            <strong><?php echo esc_html( $rev['title'] ?: __( 'Traveler', 'fts' ) ); ?></strong>
-                            <div class="fts-v2-review-stars">
-                                <?php for ( $s = 1; $s <= 5; $s++ ) : ?>
-                                    <i class="fa fa-star<?php echo $s <= ( $rev['stars'] ?? 5 ) ? '' : '-o'; ?>"></i>
-                                <?php endfor; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="fts-v2-review-text"><?php echo esc_html( wp_trim_words( $rev['content'] ?? '', 40 ) ); ?></p>
-                </div>
-                <?php endforeach; ?>
-            </div>
+        <div class="fts-v2-reviews-tab-content">
+            <?php echo do_shortcode( $reviews_tab_content ); ?>
+        </div>
         <?php endif; ?>
 
     </section>
