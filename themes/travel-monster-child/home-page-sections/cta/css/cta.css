@@ -1,0 +1,242 @@
+/**
+ * FTS CTA Section
+ */
+
+/* ── Section Wrapper ─────────────────────────────────────── */
+
+.fts-cta {
+    position: relative !important;
+    width: 100% !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    padding: 100px 24px !important;
+    overflow: hidden !important;
+}
+
+/* ── Dark Purple Overlay ─────────────────────────────────── */
+
+.fts-cta-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(
+        180deg,
+        rgba(30, 15, 60, 0.82) 0%,
+        rgba(20, 10, 50, 0.88) 100%
+    ) !important;
+    z-index: 1 !important;
+}
+
+/* ── Inner Content ───────────────────────────────────────── */
+
+.fts-cta-inner {
+    position: relative !important;
+    z-index: 2 !important;
+    max-width: 720px !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 20px !important;
+}
+
+/* ── Badge Pill ──────────────────────────────────────────── */
+
+.fts-cta-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: #f59e0b !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 50px !important;
+    padding: 8px 18px !important;
+}
+
+.fts-cta-badge svg {
+    flex-shrink: 0 !important;
+    color: #f59e0b !important;
+}
+
+/* ── Heading ─────────────────────────────────────────────── */
+
+.fts-cta-heading {
+    font-family: var(--fts-font-heading) !important;
+    font-size: clamp(1.75rem, 4vw, 2.75rem) !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+.fts-cta-heading span {
+    background: linear-gradient(90deg, #f59e0b, #ef4444) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-style: italic !important;
+}
+
+/* ── Subtitle ────────────────────────────────────────────── */
+
+.fts-cta-subtitle {
+    font-family: var(--fts-font-body) !important;
+    font-size: clamp(0.9rem, 1.4vw, 1.05rem) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    line-height: 1.7 !important;
+    margin: 0 !important;
+    max-width: 560px !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+
+.fts-cta-buttons {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 14px !important;
+    flex-wrap: wrap !important;
+    margin-top: 8px !important;
+}
+
+.fts-cta-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    border-radius: 50px !important;
+    padding: 14px 28px !important;
+    text-decoration: none !important;
+    transition: all var(--fts-transition-normal) !important;
+    cursor: pointer !important;
+    border: none !important;
+    line-height: 1 !important;
+}
+
+.fts-cta-btn--primary {
+    background: linear-gradient(135deg, #ea580c, #dc2626) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(234, 88, 12, 0.35) !important;
+}
+
+.fts-cta-btn--primary:hover {
+    background: linear-gradient(135deg, #c2410c, #b91c1c) !important;
+    box-shadow: 0 6px 28px rgba(234, 88, 12, 0.45) !important;
+    transform: translateY(-1px) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.fts-cta-btn--primary svg {
+    flex-shrink: 0 !important;
+}
+
+.fts-cta-btn--whatsapp {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fts-cta-btn--whatsapp:hover {
+    background: #f1f5f9 !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-1px) !important;
+    color: #1e293b !important;
+    text-decoration: none !important;
+}
+
+.fts-cta-btn--whatsapp svg {
+    flex-shrink: 0 !important;
+    color: #25d366 !important;
+    fill: #25d366 !important;
+}
+
+/* ── Trust Points ────────────────────────────────────────── */
+
+.fts-cta-trust {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 24px !important;
+    flex-wrap: wrap !important;
+    margin-top: 4px !important;
+}
+
+.fts-cta-trust-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.fts-cta-trust-item svg {
+    flex-shrink: 0 !important;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-cta {
+        padding: 80px 20px !important;
+    }
+}
+
+/* ── Responsive: Mobile ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-cta {
+        padding: 64px 16px !important;
+    }
+
+    .fts-cta-inner {
+        gap: 16px !important;
+    }
+
+    .fts-cta-badge {
+        font-size: 0.72rem !important;
+        padding: 6px 14px !important;
+    }
+
+    .fts-cta-buttons {
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 320px !important;
+    }
+
+    .fts-cta-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 14px 24px !important;
+    }
+
+    .fts-cta-trust {
+        gap: 16px !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-cta {
+        padding: 48px 12px !important;
+    }
+
+    .fts-cta-trust {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .fts-cta-btn {
+        font-size: 0.875rem !important;
+        padding: 12px 20px !important;
+    }
+}

@@ -1,0 +1,2187 @@
+/**
+ * FTS Custom Checkout — WP Travel Engine
+ *
+ * @package FTS_Checkout
+ */
+
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+.fts-checkout-page .fts-checkout {
+	--fts-coral: #e8604c;
+	--fts-navy: #1b2a4a;
+	--fts-navy-soft: #2d3f63;
+	--fts-muted: #64748b;
+	--fts-border: #e2e8f0;
+	--fts-bg: #f8f9fc;
+	--fts-card: #ffffff;
+	--fts-green: #16a34a;
+	--fts-blue-badge: #3b82f6;
+	--fts-radius: 24px;
+	--fts-radius-sm: 24px;
+	--fts-shadow: 0 4px 24px rgba(27, 42, 74, 0.08);
+	--fts-font: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	/* Hero + stepper (spec) */
+	--fts-header-bg: #f8f9fc;
+	--fts-header-title: #0c213a;
+	--fts-header-kicker: #e08a7a;
+	--fts-header-desc: #6c757d;
+	--fts-step-green: #27ae60;
+	--fts-step-line: #e0e0e0;
+	--fts-step-num-muted: #adb5bd;
+	--fts-card-radius: 24px;
+	--fts-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+	/* Vertical/horizontal gap between major containers (cards, columns, form sections) */
+	--fts-container-gap: 15px;
+}
+
+.fts-checkout {
+	font-family: var(--fts-font);
+	background: var(--fts-bg);
+	color: var(--fts-muted);
+	padding-bottom: 120px;
+}
+
+.fts-checkout * {
+	box-sizing: border-box;
+}
+
+/* Footer: hidden on checkout (hooks removed in fts-checkout.php; CSS catches any leftover markup) */
+body.fts-checkout-page #colophon.site-footer,
+body.fts-checkout-page footer#colophon,
+body.fts-checkout-page .elementor-location-footer,
+body.fts-checkout-page .hfe-footer {
+	display: none !important;
+}
+
+/* ── Top: hero + steps (two stacked cards) ──────────────────────────────── */
+/* Horizontal padding lives on .fts-checkout__top-inner only (same box model as .fts-checkout__inner) so top & main column align */
+.fts-checkout__top {
+	background: var(--fts-header-bg);
+	padding: var(--fts-container-gap) 0 0;
+}
+
+.fts-checkout__top-inner {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 var(--fts-container-gap) var(--fts-container-gap);
+	display: flex;
+	flex-direction: column;
+	gap: var(--fts-container-gap);
+}
+
+.fts-checkout__card {
+	background: #ffffff;
+	border-radius: var(--fts-card-radius);
+	box-shadow: var(--fts-card-shadow);
+	border: none;
+}
+
+/* Header card */
+.fts-checkout__card--hero {
+	padding: 28px 32px;
+	text-align: left;
+}
+
+.fts-checkout__card-kicker {
+	margin: 0 0 10px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--fts-header-kicker);
+	line-height: 1.3;
+}
+
+.fts-checkout__card-title {
+	margin: 0 0 12px;
+	font-size: 32px;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--fts-header-title);
+	letter-spacing: -0.02em;
+}
+
+.fts-checkout__card-desc {
+	margin: 0;
+	max-width: 100%;
+	font-size: 15px;
+	line-height: 1.55;
+	color: var(--fts-header-desc);
+	font-weight: 400;
+}
+
+/* Stepper card (desktop / tablet default — mobile overrides below) */
+.fts-checkout__card--steps {
+	padding: 20px 36px;
+	border-top: 3px solid var(--fts-step-green);
+}
+
+.fts-steps__track {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 48px;
+}
+
+.fts-steps__group {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.fts-steps__rule {
+	flex: 1 1 0;
+	min-width: 16px;
+	height: 2px;
+	border-radius: 1px;
+	align-self: center;
+}
+
+.fts-steps__rule:first-of-type {
+	background: linear-gradient(90deg, var(--fts-step-green) 0%, #5cb85c 100%);
+}
+
+.fts-steps__rule:last-of-type {
+	background: linear-gradient(90deg, var(--fts-step-green) 0%, var(--fts-step-line) 100%);
+}
+
+.fts-steps__badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.fts-steps__badge--done {
+	background: var(--fts-step-green);
+	box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12), 0 2px 6px rgba(39, 174, 96, 0.2);
+}
+
+.fts-steps__check {
+	width: 14px;
+	height: 12px;
+	display: block;
+}
+
+.fts-steps__badge--num {
+	background: var(--fts-header-title);
+	border: none;
+	font-size: 13px;
+	font-weight: 700;
+	color: #ffffff;
+	line-height: 1;
+	box-shadow: 0 0 0 3px rgba(12, 33, 58, 0.12);
+}
+
+.fts-steps__label {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--fts-header-title);
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+.fts-steps__label--muted {
+	font-weight: 600;
+	color: var(--fts-navy-soft);
+}
+
+.fts-checkout__inner {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: var(--fts-container-gap) var(--fts-container-gap) 3rem;
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────────── */
+.fts-checkout__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 380px;
+	gap: var(--fts-container-gap);
+	align-items: start;
+}
+
+@media (max-width: 1024px) {
+	.fts-checkout__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ── Section labels (design) ──────────────────────────────────────────────── */
+.fts-checkout .fts-section-label {
+	display: block;
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--fts-coral);
+	margin-bottom: 0.35rem;
+}
+
+.fts-checkout__main {
+	min-width: 0;
+}
+
+/* ── WTE boxes → cards ───────────────────────────────────────────────────── */
+.fts-checkout__main .wpte-checkout__main,
+.fts-checkout__main {
+	width: 100%;
+}
+
+.fts-checkout__main .wpte-checkout__content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fts-container-gap);
+}
+
+.fts-checkout .wpte-checkout__form-section:not(:last-child) {
+	border-bottom: none;
+}
+
+/* ── Billing Details (static card — design spec) ─────────────────────────── */
+.fts-checkout__main .fts-checkout-billing {
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	border-radius: 24px;
+	box-shadow: 0 2px 16px rgba(10, 29, 74, 0.06);
+	overflow: visible;
+}
+
+.fts-checkout__main .fts-checkout-billing .wpte-checkout__box-toggle-button {
+	display: none !important;
+}
+
+.fts-checkout-billing__header {
+	padding: 0;
+	text-align: left;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.fts-checkout-billing__header-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--fts-container-gap);
+	padding: 18px 20px 14px;
+}
+
+.fts-checkout-billing__header-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.fts-checkout-billing__back {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	margin: 0;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid #bfdbfe;
+	border-radius: 50%;
+	background: #fff;
+	color: #0a1d4a;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.fts-checkout-billing__back:hover {
+	border-color: #93c5fd;
+	background: #f8fafc;
+}
+
+.fts-checkout-billing__back:focus-visible {
+	outline: 2px solid #0a1d4a;
+	outline-offset: 2px;
+}
+
+.fts-checkout-billing__kicker {
+	margin: 0 0 8px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #ff7878;
+	line-height: 1.3;
+}
+
+.fts-checkout-billing__title {
+	margin: 0 0 10px;
+	font-size: 24px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #0a1d4a;
+	letter-spacing: -0.02em;
+}
+
+.fts-checkout-billing__desc {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.55;
+	font-weight: 400;
+	color: #6b7280;
+	max-width: 52rem;
+}
+
+.fts-checkout-billing__content {
+	padding: 16px 20px 20px !important;
+}
+
+.fts-checkout-billing__copy-lead {
+	margin: 0 0 20px !important;
+}
+
+.fts-checkout-billing .wpte-checkout__form-section {
+	margin: 0;
+	padding: 0;
+}
+
+.fts-checkout-billing .wpte-checkout__form-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--fts-container-gap);
+	align-items: start;
+}
+
+.fts-checkout-billing .wpte-checkout__form-col {
+	width: 100%;
+	min-width: 0;
+}
+
+/* Classic labels only — WTE billing uses .wpte-material-ui-input-control (floating label); do not add block margin there */
+.fts-checkout-billing .wpte-checkout__form-control:not(.wpte-material-ui-input-control) label,
+.fts-checkout-billing .fts-checkout-billing__optional-field label {
+	display: block;
+	font-size: 14px;
+	font-weight: 600;
+	color: #0a1d4a;
+	margin-bottom: 8px;
+	line-height: 1.4;
+}
+
+/* Material floating labels: restore stacking so label isn’t painted under the input */
+.fts-checkout-billing .wpte-material-ui-input-control {
+	position: relative;
+}
+
+.fts-checkout-billing .wpte-material-ui-input-control > label {
+	margin-bottom: 0;
+	line-height: 1.25;
+	z-index: 2;
+}
+
+/* WTE Material: single outline from theme — only match color + radius */
+.fts-checkout-billing .wpte-material-ui-input-control input.wpte-checkout__input,
+.fts-checkout-billing .wpte-material-ui-input-control select.wpte-checkout__input,
+.fts-checkout-billing .wpte-material-ui-input-control textarea.wpte-checkout__input {
+	position: relative;
+	z-index: 1;
+}
+
+.fts-checkout-billing .wpte-material-ui-input-control fieldset {
+	z-index: 0;
+	border-color: #d1d5db;
+	border-radius: 24px;
+}
+
+.fts-checkout-billing .wpte-material-ui-input-control:focus-within fieldset {
+	border-color: #0a1d4a;
+}
+
+/* Optional block fields — padding (see also override after .fts-checkout__main input rules) */
+.fts-checkout-billing__optional-field .wpte-checkout__input,
+.fts-checkout-billing__optional-field input[type="text"],
+.fts-checkout-billing__optional-field textarea {
+	border: 1px solid #d1d5db;
+	border-radius: 24px;
+	padding: 12px 14px;
+	font-size: 15px;
+	line-height: 1.45;
+	color: #4b5563;
+	background: #fff;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.fts-checkout-billing__optional-field textarea,
+.fts-checkout-billing__optional-field .fts-checkout-billing__optional-textarea {
+	min-height: 120px;
+	resize: vertical;
+}
+
+.fts-checkout-billing__optional-field .wpte-checkout__input:focus,
+.fts-checkout-billing__optional-field textarea:focus {
+	border-color: #0a1d4a;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(10, 29, 74, 0.08);
+}
+
+/* Optional block: native <details> accordion */
+.fts-checkout-billing__optional {
+	margin-top: var(--fts-container-gap);
+	border: 1px solid #e5e7eb;
+	border-radius: 24px;
+	background: #fafafa;
+	overflow: hidden;
+}
+
+.fts-checkout-billing__optional-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--fts-container-gap);
+	padding: 14px 16px;
+	cursor: pointer;
+	list-style: none;
+	font-weight: 700;
+	color: #0a1d4a;
+	user-select: none;
+}
+
+.fts-checkout-billing__optional-summary::-webkit-details-marker {
+	display: none;
+}
+
+.fts-checkout-billing__optional-text {
+	font-size: 14px;
+	font-weight: 700;
+	color: #0a1d4a;
+}
+
+@media (max-width: 768px) {
+	.fts-checkout-billing__optional-text {
+		font-size: 10px;
+		line-height: 1.35;
+	}
+}
+
+.fts-checkout-billing__optional-chevron {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #0a1d4a;
+	opacity: 0.75;
+	flex-shrink: 0;
+	transition: transform 0.2s ease;
+}
+
+.fts-checkout-billing__optional-chevron svg {
+	display: block;
+}
+
+.fts-checkout-billing__optional[open] .fts-checkout-billing__optional-chevron {
+	transform: rotate(180deg);
+}
+
+.fts-checkout-billing__optional-panel {
+	padding: 0 16px 18px;
+	border-top: 1px solid #e5e7eb;
+	background: #fff;
+}
+
+.fts-checkout-billing__optional-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--fts-container-gap);
+	padding-top: var(--fts-container-gap);
+}
+
+.fts-checkout-billing__optional-field {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.fts-checkout-billing__optional-field--full {
+	grid-column: 1 / -1;
+	padding-top: 4px;
+}
+
+.fts-checkout-billing__optional-textarea {
+	min-height: 120px;
+	resize: vertical;
+	line-height: 1.5;
+}
+
+.fts-checkout-billing__optional-textarea::placeholder {
+	color: #9ca3af;
+}
+
+@media (max-width: 600px) {
+	.fts-checkout-billing .wpte-checkout__form-row {
+		grid-template-columns: 1fr;
+	}
+
+	.fts-checkout-billing__optional-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.fts-checkout-billing__title {
+		font-size: 20px;
+	}
+}
+
+.fts-checkout__main .wpte-checkout__box {
+	background: var(--fts-card);
+	border: 1px solid var(--fts-border);
+	border-radius: var(--fts-radius);
+	box-shadow: var(--fts-shadow);
+	overflow: hidden;
+}
+
+@media (max-width: 768px) {
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box {
+		padding: 10px;
+	}
+
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box-title {
+		padding: 0.75rem 0 0;
+	}
+
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box-content {
+		padding: 0.75rem 0 0.75rem;
+	}
+
+	.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__header-row {
+		padding: 12px 0 10px;
+	}
+
+	.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__content {
+		padding: 12px 0 14px !important;
+	}
+}
+
+@media (max-width: 480px) {
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box {
+		padding: 15px;
+	}
+
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box-title {
+		padding: 0.5rem 0 0;
+	}
+
+	.fts-checkout-page .fts-checkout__main .wpte-checkout__box-content {
+		padding: 0.5rem 0 0.5rem;
+	}
+
+	.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__header-row {
+		padding: 10px 0 8px;
+	}
+
+	.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__content {
+		padding: 10px 0 12px !important;
+	}
+}
+
+/* Billing fields use WTE Material-style labels; generic box overflow:hidden clips label tops */
+.fts-checkout__main .fts-checkout-billing.wpte-checkout__box {
+	overflow: visible;
+}
+
+.fts-checkout-billing .wpte-checkout__form-col,
+.fts-checkout-billing .wpte-material-ui-input-control {
+	overflow: visible;
+}
+
+.fts-checkout__main .wpte-checkout__box-title {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: var(--fts-navy);
+	margin: 0;
+	padding: 1.5rem 1.5rem 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border: none;
+	background: transparent;
+}
+
+.fts-checkout__main .wpte-checkout__box-content {
+	padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.fts-checkout__main .wpte-checkout__box.collapsible .wpte-checkout__box-content {
+	padding-top: 0.5rem;
+}
+
+/* Form grid — billing fields */
+.fts-checkout__main .wpte-checkout__form-grid,
+.fts-checkout__main .wpte-checkout__form-row,
+.fts-checkout__main .wpte-bf-field-group {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--fts-container-gap);
+}
+
+@media (max-width: 600px) {
+	.fts-checkout__main .wpte-checkout__form-grid,
+	.fts-checkout__main .wpte-checkout__form-row,
+	.fts-checkout__main .wpte-bf-field-group {
+		grid-template-columns: 1fr;
+	}
+}
+
+.fts-checkout__main .wpte-checkout__form-control label,
+.fts-checkout__main .wpte-bf-field label,
+.fts-checkout__main label.wpte-bf-label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--fts-navy-soft);
+	margin-bottom: 0.35rem;
+	display: block;
+}
+
+@media (max-width: 768px) {
+	.fts-checkout__main .wpte-checkout__form-control label {
+		font-size: 0.6125rem;
+	}
+}
+
+.fts-checkout__main input[type="text"],
+.fts-checkout__main input[type="email"],
+.fts-checkout__main input[type="tel"],
+.fts-checkout__main input[type="number"],
+.fts-checkout__main select,
+.fts-checkout__main textarea {
+	width: 100%;
+	border: 1px solid var(--fts-border);
+	border-radius: var(--fts-radius-sm);
+	padding: 0.75rem 1rem;
+	font-size: 0.9375rem;
+	color: var(--fts-navy);
+	background: #fff;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fts-checkout__main input:focus,
+.fts-checkout__main select:focus,
+.fts-checkout__main textarea:focus {
+	outline: none;
+	border-color: var(--fts-navy);
+	box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.12);
+}
+
+/* Optional details: win over generic .fts-checkout__main input (padding + single border) */
+.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__optional-field input.wpte-checkout__input,
+.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__optional-field textarea {
+	padding: 12px 14px;
+	border: 1px solid #d1d5db;
+	border-radius: 24px;
+	font-size: 15px;
+	line-height: 1.45;
+	color: #4b5563;
+	background: #fff;
+	box-sizing: border-box;
+}
+
+.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__optional-field textarea {
+	min-height: 120px;
+	resize: vertical;
+}
+
+.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__optional-field input.wpte-checkout__input:focus,
+.fts-checkout-page .fts-checkout__main .fts-checkout-billing .fts-checkout-billing__optional-field textarea:focus {
+	border-color: #0a1d4a;
+	box-shadow: 0 0 0 3px rgba(10, 29, 74, 0.08);
+}
+
+/* Strip only the duplicate FTS border on WTE Material rows (fieldset = theme outline) */
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control input,
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control select,
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control textarea {
+	border: none;
+	box-shadow: none;
+	outline: none;
+	background: transparent;
+}
+
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control input:focus,
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control select:focus,
+.fts-checkout__main .fts-checkout-billing .wpte-material-ui-input-control textarea:focus {
+	border: none;
+	box-shadow: none;
+	outline: none;
+}
+
+/* Payment section (FTS header + gateway cards) */
+.fts-checkout__main .fts-checkout-payment {
+	background: #ffffff;
+	border: 1px solid #e0deff;
+	border-radius: 24px;
+	box-shadow: 0 4px 20px rgba(99, 91, 255, 0.06);
+	overflow: hidden;
+}
+
+.fts-checkout__main .fts-checkout-payment .wpte-checkout__box-content {
+	padding: 0;
+}
+
+.fts-checkout-payment__header {
+	padding: 20px 22px 16px;
+	text-align: left;
+	border-bottom: 1px solid #f0eeff;
+	background: linear-gradient(180deg, #faf9ff 0%, #ffffff 100%);
+}
+
+.fts-checkout-payment__kicker {
+	margin: 0 0 6px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #635BFF;
+	line-height: 1.3;
+}
+
+.fts-checkout-payment__title.wpte-checkout__box-title,
+.fts-checkout-payment .fts-checkout-payment__title {
+	margin: 0 0 8px;
+	padding: 0;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.25;
+	color: #0a1d4a;
+	letter-spacing: -0.02em;
+	border: none;
+	background: transparent;
+	display: block;
+}
+
+.fts-checkout-payment__desc {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.55;
+	font-weight: 400;
+	color: #9ca3af;
+	max-width: 52rem;
+}
+
+.fts-checkout-payment__content {
+	padding: 18px 22px 22px !important;
+}
+
+@media (max-width: 768px) {
+	.fts-checkout-payment__header {
+		padding: 14px 14px 12px;
+	}
+
+	.fts-checkout-payment__content {
+		padding: 14px 14px 16px !important;
+	}
+}
+
+@media (max-width: 600px) {
+	.fts-checkout-payment__title.wpte-checkout__box-title,
+	.fts-checkout-payment .fts-checkout-payment__title {
+		font-size: 18px;
+	}
+
+	.fts-checkout-payment__kicker {
+		font-size: 10px;
+	}
+
+	.fts-checkout-payment__desc {
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 480px) {
+	.fts-checkout-payment__header {
+		padding: 12px 12px 10px;
+	}
+
+	.fts-checkout-payment__content {
+		padding: 12px 12px 14px !important;
+	}
+}
+
+.fts-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Payment box — legacy title hook for injected kickers */
+.fts-checkout__main .wpte-checkout__box:has([data-checkout-payment-methods]) .wpte-checkout__box-title,
+.fts-checkout__main .wpte-checkout__box .wpte-checkout__box-title {
+	position: relative;
+}
+
+.fts-checkout__main .wpte-checkout__ssl-message {
+	font-size: 0.8125rem;
+	color: var(--fts-muted);
+	margin-bottom: 1rem;
+	padding: 0.75rem 1rem;
+	background: #f1f5f9;
+	border-radius: var(--fts-radius-sm);
+}
+
+/* Payment modes (partial / full) */
+.fts-checkout__main .wpte-checkout__payment-options,
+.fts-checkout__main [data-checkout-payment-modes] {
+	margin-bottom: var(--fts-container-gap);
+}
+
+.fts-checkout__main [data-checkout-payment-modes] .wpte-bf-label,
+.fts-checkout__main .wpte-checkout__payment-options .wpte-bf-label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--fts-navy);
+	margin-bottom: 0.75rem;
+}
+
+.fts-checkout__main [data-checkout-payment-modes] .wpte-checkout__form-control,
+.fts-checkout__main .wpte-checkout__payment-options .wpte-checkout__form-control {
+	margin-bottom: 0.5rem;
+}
+
+/* Payment method cards */
+.fts-checkout__main [data-checkout-payment-methods-details] {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.fts-checkout__main .wpte-checkout__payment-methods {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	border: 0;
+	box-shadow: none;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0;
+	padding: 1.15rem 1.25rem;
+	border: 1.5px solid #e5e7eb;
+	border-radius: 16px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+	position: relative;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method:hover {
+	border-color: #c7d2fe;
+	background: #fafaff;
+	box-shadow: 0 2px 8px rgba(99, 91, 255, 0.08);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method:has(input:checked),
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method:has(.wpte-checkout__form-control.checked) {
+	border-color: #635BFF;
+	background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+	box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1), 0 2px 12px rgba(99, 91, 255, 0.1);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method:has(input:checked):hover,
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method:has(.wpte-checkout__form-control.checked):hover {
+	border-color: #635BFF;
+	background: linear-gradient(135deg, #f8f7ff 0%, #f0eeff 100%);
+	box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12), 0 4px 16px rgba(99, 91, 255, 0.12);
+}
+
+.fts-checkout-payment-method__row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	width: 100%;
+}
+
+.fts-checkout-payment-method__media {
+	flex-shrink: 0;
+	width: 48px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	background: #f4f3ff;
+	border: 1px solid #e8e6ff;
+	transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.wpte-checkout__payment-method.fts-checkout-payment-method:has(input:checked) .fts-checkout-payment-method__media,
+.wpte-checkout__payment-method.fts-checkout-payment-method:has(.wpte-checkout__form-control.checked) .fts-checkout-payment-method__media {
+	background: #ede9ff;
+	border-color: #c7d2fe;
+}
+
+.fts-checkout-payment-method--booking .fts-checkout-payment-method__media {
+	background: #f0fdf4;
+	border-color: #bbf7d0;
+}
+
+.wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(input:checked) .fts-checkout-payment-method__media,
+.wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(.wpte-checkout__form-control.checked) .fts-checkout-payment-method__media {
+	background: #dcfce7;
+	border-color: #86efac;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking:hover {
+	border-color: #86efac;
+	background: #f8fefb;
+	box-shadow: 0 2px 8px rgba(22, 163, 74, 0.08);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(input:checked),
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(.wpte-checkout__form-control.checked) {
+	border-color: #16a34a;
+	background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+	box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1), 0 2px 12px rgba(22, 163, 74, 0.08);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(input:checked):hover,
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking:has(.wpte-checkout__form-control.checked):hover {
+	border-color: #16a34a;
+	background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+	box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12), 0 4px 16px rgba(22, 163, 74, 0.1);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking input[type="radio"]:checked {
+	border-color: #16a34a;
+	box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method--booking input[type="radio"]:checked::after {
+	background: #16a34a;
+}
+
+.fts-checkout-payment-method__media--empty {
+	background: #f9fafb;
+	border-color: #e5e7eb;
+	min-height: 1px;
+	width: 48px;
+	height: 48px;
+}
+
+.fts-checkout-payment-method__media--svg {
+	padding: 0;
+}
+
+.fts-checkout-payment-method__media img {
+	max-height: 28px;
+	width: auto;
+	display: block;
+}
+
+.fts-checkout-payment-method__icon-svg {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.fts-checkout-payment-method__icon-svg--stripe {
+	max-height: 22px;
+	width: auto;
+}
+
+.fts-checkout-payment-method__icon-svg--booking {
+	max-height: 26px;
+	width: 26px;
+}
+
+.fts-checkout-payment-method__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.fts-checkout-payment-method__title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 10px;
+	margin-bottom: 4px;
+}
+
+.fts-checkout-payment-method__label {
+	font-weight: 700;
+	color: #0a1d4a;
+	font-size: 0.9375rem;
+	line-height: 1.3;
+}
+
+.fts-payment-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	line-height: 1.3;
+	white-space: nowrap;
+	text-transform: uppercase;
+}
+
+.fts-payment-badge--recommended {
+	background: rgba(99, 91, 255, 0.1);
+	color: #4f46e5;
+}
+
+.fts-payment-badge--friction {
+	background: rgba(22, 163, 74, 0.1);
+	color: #15803d;
+}
+
+.fts-checkout-payment-method__subtitle {
+	margin: 0 0 4px;
+	font-size: 13px;
+	font-weight: 500;
+	color: #6b7280;
+	line-height: 1.4;
+}
+
+.fts-checkout-payment-method__desc {
+	font-size: 0.8125rem;
+	color: #9ca3af;
+	line-height: 1.5;
+}
+
+.fts-checkout-payment-method__desc p {
+	margin: 0 0 0.35rem;
+}
+
+.fts-checkout-payment-method__desc p:last-child {
+	margin-bottom: 0;
+}
+
+.fts-checkout-payment-method__control {
+	flex-shrink: 0;
+	padding-top: 0;
+	align-self: center;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method .fts-checkout-payment-method__control .wpte-checkout__form-control {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method input[type="radio"] {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	margin: 0;
+	width: 20px;
+	height: 20px;
+	border: 2px solid #d1d5db;
+	border-radius: 50%;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method input[type="radio"]:checked {
+	border-color: #635BFF;
+	box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15);
+}
+
+.fts-checkout__main .wpte-checkout__payment-method input[type="radio"]:checked::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #635BFF;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method .wpte-checkout__payment-method-logo {
+	order: unset;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method-info {
+	order: unset;
+}
+
+.fts-checkout__main .wpte-checkout__payment-method > :not(.fts-checkout-payment-method__row) {
+	margin-top: var(--fts-container-gap);
+	width: 100%;
+}
+
+@media (max-width: 768px) {
+	.fts-checkout__main [data-checkout-payment-methods-details] {
+		gap: 10px;
+	}
+
+	.fts-checkout__main .wpte-checkout__payment-methods {
+		gap: 10px;
+	}
+
+	.fts-checkout__main .wpte-checkout__payment-method.fts-checkout-payment-method {
+		padding: 0.75rem 0.85rem;
+		border-radius: 14px;
+	}
+
+	.fts-checkout-payment-method__row {
+		gap: 12px;
+		align-items: center;
+	}
+
+	.fts-checkout-payment-method__media {
+		width: 40px;
+		height: 40px;
+		border-radius: 10px;
+	}
+
+	.fts-checkout-payment-method__media--empty {
+		width: 40px;
+		height: 40px;
+	}
+
+	.fts-checkout-payment-method__media img {
+		max-height: 22px;
+	}
+
+	.fts-checkout-payment-method__icon-svg--stripe {
+		max-height: 18px;
+	}
+
+	.fts-checkout-payment-method__icon-svg--booking {
+		max-height: 22px;
+		width: 22px;
+	}
+
+	.fts-checkout-payment-method__title-row {
+		gap: 4px 6px;
+		margin-bottom: 2px;
+	}
+
+	.fts-checkout-payment-method__label {
+		font-size: 0.8125rem;
+		line-height: 1.25;
+	}
+
+	.fts-payment-badge {
+		padding: 2px 6px;
+		font-size: 8px;
+	}
+
+	.fts-checkout-payment-method__subtitle {
+		margin: 0 0 2px;
+		font-size: 0.6875rem;
+	}
+
+	.fts-checkout-payment-method__desc {
+		font-size: 0.6875rem;
+		line-height: 1.4;
+	}
+
+	.fts-checkout-payment-method__control {
+		padding-top: 0;
+		align-self: center;
+	}
+
+	.fts-checkout__main .wpte-checkout__payment-method input[type="radio"] {
+		width: 18px;
+		height: 18px;
+	}
+
+	.fts-checkout__main .wpte-checkout__payment-method input[type="radio"]:checked::after {
+		width: 8px;
+		height: 8px;
+	}
+
+	.fts-checkout__main .wpte-checkout__payment-method > :not(.fts-checkout-payment-method__row) {
+		margin-top: 0.45rem;
+	}
+}
+
+/* Trust row — three cards */
+.fts-checkout-trust {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--fts-container-gap);
+	margin-top: var(--fts-container-gap);
+	padding-top: var(--fts-container-gap);
+	border-top: 1px solid var(--fts-border);
+}
+
+@media (max-width: 768px) {
+	.fts-checkout-trust {
+		grid-template-columns: 1fr;
+	}
+}
+
+.fts-checkout-trust__card {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 1rem 1rem 1.1rem;
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 24px;
+	box-shadow: 0 2px 12px rgba(10, 29, 74, 0.05);
+	min-height: 100%;
+}
+
+.fts-checkout-trust__card-title {
+	margin: 0;
+	font-size: 0.9375rem;
+	font-weight: 700;
+	color: var(--fts-green);
+	line-height: 1.35;
+}
+
+.fts-checkout-trust__card-desc {
+	margin: 0;
+	font-size: 0.8125rem;
+	font-weight: 400;
+	color: #6b7280;
+	line-height: 1.5;
+}
+
+a.fts-checkout-trust__card--wa {
+	text-decoration: none;
+	color: inherit;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+a.fts-checkout-trust__card--wa:hover {
+	border-color: #16a34a;
+	box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12);
+	background: #f8fafc;
+}
+
+a.fts-checkout-trust__card--wa:focus-visible {
+	outline: 2px solid #16a34a;
+	outline-offset: 2px;
+}
+
+.fts-checkout-trust__icon {
+	width: 22px;
+	height: 22px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background: rgba(22, 163, 74, 0.12);
+}
+
+.fts-checkout-trust__icon--ok::before {
+	content: "";
+	display: block;
+	width: 8px;
+	height: 4px;
+	border-left: 2px solid var(--fts-green);
+	border-bottom: 2px solid var(--fts-green);
+	transform: rotate(-45deg);
+	margin: 6px auto;
+}
+
+.fts-checkout-trust__icon--chat {
+	background: rgba(22, 163, 74, 0.12);
+	position: relative;
+}
+
+.fts-checkout-trust__icon--chat::before {
+	content: "";
+	position: absolute;
+	inset: 5px;
+	border: 2px solid var(--fts-green);
+	border-radius: 24px;
+}
+
+/* Terms + submit — default in flow; sticky variant below */
+.fts-checkout__main .wpte-checkout__term-condition {
+	margin-top: var(--fts-container-gap);
+	padding: 1rem;
+	background: #f8fafc;
+	border-radius: var(--fts-radius-sm);
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+.fts-checkout__main .wpte-checkout__term-condition a {
+	color: var(--fts-coral);
+	font-weight: 600;
+}
+
+.fts-checkout__main .wpte-checkout__form-submit {
+	margin-top: var(--fts-container-gap);
+}
+
+.fts-checkout__main .wpte-checkout__form-submit-button,
+.fts-checkout__main #wte-stripe-payment-button {
+	width: 100%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 1rem 1.5rem;
+	font-size: 1rem;
+	font-weight: 700;
+	color: #fff !important;
+	background: var(--fts-coral) !important;
+	border: none !important;
+	border-radius: var(--fts-radius-sm);
+	cursor: pointer;
+	transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.fts-checkout__main .wpte-checkout__form-submit-button:hover,
+.fts-checkout__main #wte-stripe-payment-button:hover {
+	filter: brightness(1.05);
+}
+
+.fts-checkout__main .wpte-checkout__form-submit-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Stripe element —
+   WTE core hides this with `display:none` and relies on `.checked ~ .wpte-checkout__payment-cc-placeholder`
+   (sibling selector) to reveal it. In the FTS card layout the `.checked` wrapper is nested deeper,
+   so the sibling selector never matches. Override with :has() on the parent card. */
+.fts-checkout__main .wpte-checkout__payment-method:has(input:checked) > .wpte-checkout__payment-cc-placeholder,
+.fts-checkout__main .wpte-checkout__payment-method:has(.wpte-checkout__form-control.checked) > .wpte-checkout__payment-cc-placeholder {
+	display: block !important;
+	width: 100%;
+}
+
+.fts-checkout__main .wpte-checkout__payment-cc-placeholder {
+	margin-top: var(--fts-container-gap);
+	padding: 1rem;
+	border: 1px solid var(--fts-border);
+	border-radius: var(--fts-radius-sm);
+	background: #fafafa;
+}
+
+/* ── Sidebar: unified Tour Details column ─────────────────────────────────── */
+.fts-checkout__sidebar {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fts-container-gap);
+	position: sticky;
+	top: 1rem;
+}
+
+@media (max-width: 1024px) {
+	.fts-checkout__sidebar {
+		position: static;
+	}
+}
+
+.fts-checkout-tour-details {
+	background: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 16px;
+	box-shadow: var(--fts-shadow);
+	overflow: hidden;
+}
+
+.fts-checkout-tour-details__header {
+	padding: 1.1rem 1.25rem 0.85rem;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.fts-checkout-tour-details__kicker {
+	margin: 0 0 0.35rem;
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #f87171;
+}
+
+.fts-checkout-tour-details__title {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: #0a1d4a;
+	letter-spacing: -0.02em;
+	line-height: 1.25;
+}
+
+.fts-checkout-tour-details__stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fts-container-gap);
+	padding: var(--fts-container-gap);
+}
+
+.fts-checkout-tour-details__panel {
+	border: 1px solid #e5e7eb;
+	border-radius: 14px;
+	background: #fff;
+	padding: 1rem 1rem 1.05rem;
+}
+
+.fts-checkout-tour-details__panel--timer {
+	padding: 1.1rem 1rem 1rem;
+}
+
+/* Timer — centered column */
+.fts-checkout-tour-details__panel--timer .fts-checkout-timer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: 0.35rem;
+	font-size: 0.875rem;
+	color: #6b7280;
+}
+
+.fts-checkout-tour-details__panel--timer .fts-checkout-timer__icon {
+	display: flex;
+	justify-content: center;
+	color: #9ca3af;
+	margin-bottom: 0.1rem;
+}
+
+.fts-checkout-tour-details__panel--timer .fts-checkout-timer__label {
+	margin: 0;
+	max-width: 18rem;
+	line-height: 1.45;
+}
+
+.fts-checkout-tour-details__panel--timer .fts-checkout-timer__value {
+	font-size: 2rem;
+	font-weight: 800;
+	color: var(--fts-coral);
+	font-variant-numeric: tabular-nums;
+	margin: 0.2rem 0 0;
+	line-height: 1.1;
+}
+
+.fts-checkout-tour-details__panel--timer .fts-checkout-timer__unit {
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: #9ca3af;
+	margin-top: 0.05rem;
+}
+
+/* Tour info table */
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.875rem;
+}
+
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details tr:first-child td {
+	font-size: 1.05rem;
+	font-weight: 800;
+	color: var(--fts-navy);
+	padding-top: 0.15rem;
+	padding-bottom: 1rem;
+	text-align: left;
+}
+
+/* Title row: override td:last-child { text-align: right } when the trip name is a single full-width cell */
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details tr:first-child td:last-child {
+	text-align: left;
+}
+
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details td {
+	padding: 0.65rem 0;
+	vertical-align: top;
+}
+
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details td:first-child {
+	color: var(--fts-muted);
+	width: 42%;
+}
+
+.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details td:last-child {
+	color: #0a1d4a;
+	font-weight: 600;
+	text-align: right;
+}
+
+/* Tour details block: force white (overrides WTE grey table striping) */
+.fts-checkout-page .wpte-checkout__tour-details {
+	background: #ffffff !important;
+}
+
+.fts-checkout-page .wpte-checkout__tour-details table,
+.fts-checkout-page .wpte-checkout__tour-details thead,
+.fts-checkout-page .wpte-checkout__tour-details tbody,
+.fts-checkout-page .wpte-checkout__tour-details tr,
+.fts-checkout-page .wpte-checkout__tour-details th,
+.fts-checkout-page .wpte-checkout__tour-details td {
+	background: #ffffff !important;
+}
+
+/* Row spacing + light dividers between detail rows */
+.fts-checkout-page .wpte-checkout__tour-details td {
+	padding: 0.65rem 0 !important;
+}
+
+.fts-checkout-page .wpte-checkout__tour-details tr:first-child td {
+	padding-top: 0.2rem !important;
+	padding-bottom: 1rem !important;
+	text-align: left !important;
+}
+
+.fts-checkout-page .wpte-checkout__tour-details tr:not(:last-child) td {
+	border-bottom: 1px solid #e8eaed !important;
+}
+
+/* Tour Details column — maximum compaction on phones */
+@media (max-width: 768px) {
+	.fts-checkout-tour-details {
+		border-radius: 12px;
+	}
+
+	.fts-checkout-tour-details__header {
+		padding: 0.4rem 0.55rem 0.3rem;
+	}
+
+	.fts-checkout-tour-details__kicker {
+		font-size: 0.5rem;
+		margin: 0 0 0.12rem;
+		letter-spacing: 0.06em;
+	}
+
+	.fts-checkout-tour-details__title {
+		font-size: 0.8125rem;
+		line-height: 1.2;
+	}
+
+	.fts-checkout-tour-details__stack {
+		gap: 0.4rem;
+		padding: 0.4rem;
+	}
+
+	.fts-checkout-tour-details__panel {
+		padding: 0.4rem 0.45rem 0.45rem;
+		border-radius: 10px;
+	}
+
+	.fts-checkout-tour-details__panel--timer {
+		padding: 0.35rem 0.4rem;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer {
+		gap: 0.1rem;
+		font-size: 0.5625rem;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer__icon svg {
+		width: 14px;
+		height: 14px;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer__value {
+		font-size: 1.125rem;
+		margin: 0;
+		line-height: 1;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer__unit {
+		font-size: 0.5625rem;
+		margin-top: 0;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer__label {
+		line-height: 1.25;
+		max-width: 100%;
+	}
+
+	.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details table {
+		font-size: 0.625rem;
+	}
+
+	.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details tr:first-child td {
+		font-size: 0.6875rem;
+		padding-top: 0 !important;
+		padding-bottom: 0.35rem !important;
+	}
+
+	.fts-checkout-page .wpte-checkout__tour-details td {
+		padding: 0.28rem 0 !important;
+	}
+
+	.fts-checkout-page .wpte-checkout__tour-details tr:first-child td {
+		padding-top: 0 !important;
+		padding-bottom: 0.35rem !important;
+		text-align: left !important;
+	}
+
+	.fts-checkout__cart-summary {
+		gap: 0.4rem;
+	}
+
+	.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table {
+		font-size: 0.6875rem;
+	}
+
+	.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table td {
+		padding: 0.22rem 0;
+	}
+
+	.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table .wpte-checkout__booking-summary-total td {
+		font-size: 0.8125rem;
+		padding-top: 0.35rem;
+	}
+
+	.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-payable td {
+		font-size: 0.75rem !important;
+	}
+
+	.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-payable strong {
+		font-size: 0.75rem !important;
+	}
+
+	.fts-checkout-coupon-details__summary {
+		padding: 0.45rem 0.55rem;
+		font-size: 0.6875rem;
+	}
+
+	.fts-checkout-tour-details__panel--coupon .wpte-checkout__coupon-card {
+		margin: 0.4rem 0.45rem 0.5rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.fts-checkout-tour-details__stack {
+		gap: 0.3rem;
+		padding: 0.3rem;
+	}
+
+	.fts-checkout-tour-details__title {
+		font-size: 0.75rem;
+	}
+
+	.fts-checkout-tour-details__panel--timer .fts-checkout-timer__value {
+		font-size: 1rem;
+	}
+
+	.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details table {
+		font-size: 0.5625rem;
+	}
+
+	.fts-checkout-tour-details__panel--tour .wpte-checkout__tour-details tr:first-child td {
+		font-size: 0.625rem;
+	}
+}
+
+.fts-checkout__cart-summary {
+	display: flex;
+	flex-direction: column;
+	gap: var(--fts-container-gap);
+}
+
+/* Coupon panel + accordion */
+.fts-checkout-tour-details__panel--coupon {
+	padding: 0;
+	overflow: hidden;
+}
+
+.fts-checkout-coupon-details {
+	border: none;
+	margin: 0;
+}
+
+.fts-checkout-coupon-details__summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	cursor: pointer;
+	list-style: none;
+	font-weight: 700;
+	font-size: 0.9375rem;
+	color: #0a1d4a;
+	user-select: none;
+}
+
+.fts-checkout-coupon-details__summary::-webkit-details-marker {
+	display: none;
+}
+
+.fts-checkout-coupon-details__summary-main {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.fts-checkout-coupon-details__icon {
+	display: flex;
+	color: #0a1d4a;
+	flex-shrink: 0;
+}
+
+.fts-checkout-coupon-details__chev {
+	display: flex;
+	color: #0a1d4a;
+	opacity: 0.65;
+	transition: transform 0.2s ease;
+}
+
+.fts-checkout-coupon-details[open] .fts-checkout-coupon-details__chev {
+	transform: rotate(180deg);
+}
+
+.fts-checkout-coupon-details__body {
+	padding: 0 1rem 1rem;
+	border-top: 1px solid #f3f4f6;
+}
+
+.fts-checkout-tour-details__panel--coupon .wpte-checkout__coupon-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 0.5rem;
+	margin: 0;
+}
+
+.fts-checkout-tour-details__panel--coupon .wpte-checkout__coupon-form .wpte-checkout__form-control {
+	flex: 1 1 160px;
+	min-width: 0;
+}
+
+.fts-checkout-tour-details__panel--coupon .wpte-checkout__form-submit {
+	margin: 0;
+}
+
+.fts-checkout-tour-details__panel--coupon .wpte-checkout__form-submit-button {
+	min-width: 5.5rem;
+	border-radius: 12px !important;
+	background: #0a1d4a !important;
+	color: #fff !important;
+}
+
+.fts-checkout-tour-details__panel--coupon .wpte-checkout__coupon-card {
+	margin: 0.75rem 1rem 1rem;
+}
+
+/* Pricing panel */
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary {
+	padding: 0;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-title {
+	display: none !important;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.875rem;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table td {
+	padding: 0.4rem 0;
+	vertical-align: top;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-table .wpte-checkout__booking-summary-total td {
+	font-size: 1.125rem;
+	font-weight: 800;
+	color: var(--fts-navy);
+	padding-top: 0.75rem;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-payable td {
+	color: var(--fts-coral) !important;
+	font-weight: 800 !important;
+}
+
+.fts-checkout-tour-details__panel--pricing .wpte-checkout__booking-summary-payable strong {
+	color: var(--fts-coral) !important;
+}
+
+.fts-checkout-tour-details__panel--pricing #wte-checkout-coupon,
+.fts-checkout-tour-details__panel--pricing .wte-coupon-whole-wrap {
+	margin-bottom: var(--fts-container-gap);
+}
+
+.fts-checkout-tour-details__panel--pricing .coupon {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.fts-checkout-tour-details__panel--pricing .coupon .input-text {
+	flex: 1;
+	min-width: 140px;
+}
+
+.fts-checkout-tour-details__panel--pricing .wp-travel-engine-coupons-apply-btn,
+.fts-checkout-tour-details__panel--pricing .button.wp-travel-engine-coupons-apply-btn {
+	background: #0a1d4a !important;
+	color: #fff !important;
+	border: none !important;
+	border-radius: var(--fts-radius-sm);
+	padding: 0.65rem 1.25rem;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.fts-checkout-tour-details__panel--pricing .coupon-close-button {
+	display: none;
+}
+
+.fts-checkout__main .fts-section-label--inject {
+	display: block;
+	margin-bottom: 0.35rem;
+}
+
+/* Empty state */
+.fts-checkout--empty .fts-checkout__inner,
+.fts-checkout__empty-msg {
+	text-align: center;
+	padding: 3rem 1.25rem;
+	max-width: 36rem;
+	margin: 0 auto;
+	font-size: 1rem;
+	color: var(--fts-muted);
+}
+
+/* ── Sticky footer (appended inside form by JS) ───────────────────────────── */
+.fts-checkout-sticky--in-form {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 99998;
+	background: var(--fts-card);
+	border-top: 1px solid var(--fts-border);
+	box-shadow: 0 -8px 32px rgba(27, 42, 74, 0.12);
+	padding: 0.75rem 1.25rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--fts-container-gap);
+}
+
+/* Sticky bar: row on wide viewports; column on narrow. flex: 1 1 280px on terms
+   only applies when main axis is horizontal — in column mode it becomes vertical
+   sizing and causes a large empty gap (must not apply on mobile). */
+.fts-checkout-sticky--in-form .wpte-checkout__term-condition {
+	margin: 0;
+	min-width: 0;
+	background: transparent;
+	padding: 0;
+}
+
+@media (min-width: 641px) {
+	.fts-checkout-sticky--in-form .wpte-checkout__term-condition {
+		flex: 1 1 280px;
+	}
+}
+
+@media (max-width: 640px) {
+	/* DOM order is terms → pay row; reverse so CTA + price sit above legal copy */
+	.fts-checkout-sticky--in-form {
+		flex-direction: column-reverse;
+		align-items: stretch;
+		justify-content: flex-start;
+		padding: 0.35rem 0.55rem max(0.35rem, env(safe-area-inset-bottom, 0px));
+		gap: 0.35rem;
+		box-shadow: 0 -3px 14px rgba(27, 42, 74, 0.1);
+	}
+
+	.fts-checkout-sticky--in-form .wpte-checkout__term-condition {
+		flex: 0 1 auto;
+		min-height: 0;
+		font-size: 0.625rem;
+		line-height: 1.35;
+	}
+
+	.fts-checkout-sticky--in-form .wpte-checkout__term-condition a {
+		font-weight: 600;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__right {
+		gap: 0.3rem;
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__payline {
+		flex-direction: row;
+		align-items: baseline;
+		justify-content: space-between;
+		width: 100%;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__payline-label {
+		font-size: 0.5rem;
+		letter-spacing: 0.06em;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__payline-amt {
+		font-size: 0.8125rem;
+		font-weight: 800;
+	}
+
+	.fts-checkout-sticky--in-form .wpte-checkout__form-submit-button,
+	.fts-checkout-sticky--in-form #wte-stripe-payment-button {
+		padding: 0.4rem 0.65rem;
+		font-size: 0.6875rem;
+		border-radius: 10px;
+		line-height: 1.2;
+		min-height: 0;
+	}
+}
+
+.fts-checkout-sticky--in-form .fts-checkout-sticky__right {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--fts-container-gap);
+}
+
+.fts-checkout-sticky--in-form .fts-checkout-sticky__payline {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+.fts-checkout-sticky--in-form .fts-checkout-sticky__payline-label {
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	color: var(--fts-muted);
+}
+
+.fts-checkout-sticky--in-form .fts-checkout-sticky__payline-amt {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: var(--fts-navy);
+}
+
+.fts-checkout-sticky--in-form .wpte-checkout__form-submit {
+	margin: 0;
+}
+
+.fts-checkout-sticky--in-form .wpte-checkout__form-submit-button,
+.fts-checkout-sticky--in-form #wte-stripe-payment-button {
+	width: auto;
+	min-width: 220px;
+	padding: 0.875rem 1.5rem;
+	white-space: nowrap;
+}
+
+/* Hide original in-flow terms + submit when sticky is active */
+.fts-checkout-page.fts-checkout--sticky-active .fts-checkout__main .wpte-checkout__box:has([data-checkout-payment-methods]) .wpte-checkout__term-condition,
+.fts-checkout-page.fts-checkout--sticky-active .fts-checkout__main .wpte-checkout__box:has([data-checkout-payment-methods]) .wpte-checkout__form-submit {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Collapsible toggles */
+.fts-checkout__main .wpte-checkout__box-toggle-button {
+	background: transparent;
+	border: 1px solid var(--fts-border);
+	border-radius: 24px;
+	padding: 0.35rem;
+	cursor: pointer;
+}
+
+/* Main checkout title duplicate hide */
+.fts-checkout-page .wpte-checkout__page-title {
+	display: none;
+}
+
+/* Container inside WTE main */
+.fts-checkout .wpte-checkout__container {
+	max-width: none;
+	padding: 0;
+}
+
+/* ── Tablet & mobile polish ───────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+	.fts-checkout__card--hero {
+		padding: 24px 22px;
+	}
+
+	.fts-checkout__card--steps {
+		padding: 16px 20px;
+	}
+}
+
+@media (max-width: 768px) {
+	.fts-checkout {
+		padding-bottom: 160px;
+		overflow-x: hidden;
+	}
+
+	.fts-checkout__top {
+		padding: var(--fts-container-gap) 0 0;
+	}
+
+	.fts-checkout__top-inner {
+		gap: var(--fts-container-gap);
+	}
+
+	.fts-checkout__card--hero {
+		padding: 22px 20px;
+	}
+
+	.fts-checkout__card-title {
+		font-size: clamp(1.5rem, 6vw, 1.875rem);
+	}
+
+	.fts-checkout__card-desc {
+		font-size: 14px;
+	}
+
+	.fts-checkout__card--steps {
+		padding: 10px 12px;
+		overflow: visible;
+		border-radius: 16px;
+		border-top: none;
+	}
+
+	/* Stepper: stack on small screens — avoids horizontal scroll + clipped steps */
+	.fts-steps__track {
+		flex-direction: column;
+		align-items: stretch;
+		min-width: 0;
+		width: 100%;
+		gap: 0;
+	}
+
+	.fts-steps__rule {
+		display: none;
+	}
+
+	.fts-steps__group {
+		gap: 8px;
+		padding: 6px 0;
+		width: 100%;
+	}
+
+	.fts-steps__group:not(:last-of-type) {
+		border-bottom: 1px solid rgba( 226, 232, 240, 0.9 );
+	}
+
+	.fts-steps__badge {
+		width: 22px;
+		height: 22px;
+	}
+
+	.fts-steps__badge--done {
+		box-shadow: none;
+	}
+
+	.fts-steps__badge--done .fts-steps__check {
+		width: 10px;
+		height: 9px;
+	}
+
+	.fts-steps__badge--num {
+		background: #ffffff;
+		border: 1px solid var(--fts-step-line);
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--fts-step-num-muted);
+		box-shadow: none;
+	}
+
+	.fts-steps__label {
+		font-size: 12px;
+		line-height: 1.35;
+		white-space: normal;
+	}
+
+	.fts-steps__label--muted {
+		font-weight: 500;
+		color: var(--fts-header-desc);
+	}
+
+	.fts-checkout-sticky--in-form .wpte-checkout__form-submit-button,
+	.fts-checkout-sticky--in-form #wte-stripe-payment-button {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__right {
+		width: 100%;
+		justify-content: stretch;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__payline {
+		align-items: flex-start;
+		width: 100%;
+	}
+}
+
+/* Narrow phones: sticky rules above 768px must not undo column-reverse / compact bar */
+@media (max-width: 640px) {
+	.fts-checkout {
+		padding-bottom: 112px;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__payline {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.fts-checkout-sticky--in-form .fts-checkout-sticky__right {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.3rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.fts-checkout__card-kicker {
+		font-size: 10px;
+	}
+
+	.fts-steps__label {
+		font-size: 11px;
+	}
+}
+
+/* WTE trip-checkout: payment methods list — no outer frame */
+.fts-checkout-page .fts-checkout .wpte-checkout__payment-methods {
+	border: 0 !important;
+	box-shadow: none !important;
+	outline: none;
+}
+
+/* WTE trip-checkout: unify radius on boxes / non-billing inputs */
+.fts-checkout-page .fts-checkout .wpte-checkout__box,
+.fts-checkout-page .fts-checkout .wpte-checkout__coupon-form .wpte-checkout__input,
+.fts-checkout-page .fts-checkout .wpte-checkout__payment-cc-placeholder {
+	border-radius: 24px !important;
+}
+
+.fts-checkout-page .fts-checkout .wpte-checkout__payment-method {
+	border-radius: 16px !important;
+}
+
+.fts-checkout-page .fts-checkout .wpte-material-ui-input-control fieldset {
+	border-color: #d1d5db;
+	border-radius: 24px !important;
+}

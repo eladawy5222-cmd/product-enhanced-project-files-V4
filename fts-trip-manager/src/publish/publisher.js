@@ -934,6 +934,16 @@ function mapAirtableToWordPress_(data, tripFields) {
     if (safeExcerpt && safeExcerpt !== rawExcerpt) log('Publisher: Sanitized Excerpt (unsupported claims removed)');
   }
 
+  var trustindexCode = g.Trustindex_Code || g.trustindex_code || g['trustindex_code'] || g.Reviews || g['Reviews'] || '';
+  if (Array.isArray(trustindexCode)) trustindexCode = trustindexCode.length ? trustindexCode[0] : '';
+  trustindexCode = String(trustindexCode || '').trim();
+  if (trustindexCode) payload.meta.trustindex_code = trustindexCode;
+
+  var cancelHours = g.Cancellation_Window_Hours || g['Cancellation_Window_Hours'] || g.CancellationHours || g['Cancellation Hours'] || '';
+  if (Array.isArray(cancelHours)) cancelHours = cancelHours.length ? cancelHours[0] : '';
+  cancelHours = parseInt(String(cancelHours || '').trim(), 10);
+  if (isFinite(cancelHours) && cancelHours > 0) payload.meta.fts_cancel_hours = String(cancelHours);
+
   var metaCandidate = snippet.meta_description || rawSeoMeta;
   if (metaCandidate) {
     var safeMeta = pub_finalizeSeoMetaDescription_(pub_removeUnsupportedHighRiskParts_(pub_sanitizeSeoText_(metaCandidate), seoFlags), 160);
@@ -1043,10 +1053,6 @@ function mapAirtableToWordPress_(data, tripFields) {
     var addonNorms = (data.addons || []).map(function (r) {
       return r && r.fields ? String(r.fields.AI_AddOn_Title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
     }).filter(Boolean)
-    var excludesLc = (data.excludes || []).map(function (r) {
-      return r && r.fields ? String(r.fields.ExcludeItem || '').toLowerCase().replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-    }).join(' | ')
-    var entranceExcluded = /\b(entrance fee|entrance fees|tickets?|admission)\b/.test(excludesLc)
     var evidenceLc = [
       String(g.AI_Trip_Description || ''),
       String(g.AI_Itinerary_Description || ''),
@@ -1054,9 +1060,26 @@ function mapAirtableToWordPress_(data, tripFields) {
       (data.itinerary || []).map(function (r) { return r && r.fields ? String(r.fields.AI_Step_Title || '') + ' ' + String(r.fields.AI_Step_Description || '') : '' }).join(' | ')
     ].join(' | ').toLowerCase()
 
+    function pub_normLine_(t) {
+      return String(t || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    }
+    function pub_isEntrance_(lc) { return /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc) }
+    function pub_isGuide_(lc) { return /\b(egyptologist|tour guide|guide)\b/.test(lc) }
+    function pub_isOptional_(lc) { return /\b(optional|add-?on|extra|if selected|depending on the option|upon request)\b/.test(lc) }
+    function pub_hasEntranceIncludeEvidence_(lc) {
+      if (/\b(included|cover(?:ed)?|all)\b[^.]{0,40}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return true
+      if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,40}\b(included|cover(?:ed)?)\b/.test(lc)) return true
+      return false
+    }
+    function pub_hasEntranceExcludeEvidence_(lc) {
+      if (/\b(not included|excluded)\b[^.]{0,40}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return true
+      if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,40}\b(not included|excluded)\b/.test(lc)) return true
+      return false
+    }
+
     var safeIncludes = data.includes
       .map(function (r) { return r && r.fields ? String(r.fields.IncludeItem || '') : '' })
-      .map(function (t) { return String(t || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })
+      .map(function (t) { return pub_normLine_(t) })
       .filter(function (t) {
         if (!t) return false
         var lc = t.toLowerCase()
@@ -1064,7 +1087,6 @@ function mapAirtableToWordPress_(data, tripFields) {
         if (/\bif selected\b/.test(lc)) return false
         if (/\boptional add-?on\b/.test(lc)) return false
         if (/\[\s*optional\b/.test(lc)) return false
-        if (entranceExcluded && /\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(lc)) return false
         if (/\bnile\b/.test(lc) && evidenceLc.indexOf('nile') === -1) return false
         if (/\b(felucca|faluka)\b/.test(lc) && !/\b(felucca|faluka)\b/.test(evidenceLc)) return false
         if (/\bboat\b/.test(lc) && evidenceLc.indexOf('boat') === -1) return false
@@ -1082,10 +1104,48 @@ function mapAirtableToWordPress_(data, tripFields) {
         return true
       })
 
+    var excludesLines = (data.excludes || []).map(function (r) { return r && r.fields ? String(r.fields.ExcludeItem || '') : '' }).map(function (t) { return pub_normLine_(t) }).filter(Boolean)
+    var excHasEntrance = pub_isEntrance_(excludesLines.join(' ').toLowerCase())
+    var incHasEntrance = pub_isEntrance_(safeIncludes.join(' ').toLowerCase())
+    var entranceConflict = incHasEntrance && excHasEntrance
+    var entranceDecision = ''
+    if (entranceConflict) {
+      var evInc = pub_hasEntranceIncludeEvidence_(evidenceLc)
+      var evExc = pub_hasEntranceExcludeEvidence_(evidenceLc)
+      if (evInc && !evExc) entranceDecision = 'include'
+      else if (evExc && !evInc) entranceDecision = 'exclude'
+      else entranceDecision = 'unknown'
+    }
+
+    var incHasGuide = pub_isGuide_(safeIncludes.join(' ').toLowerCase()) && !pub_isOptional_(safeIncludes.join(' ').toLowerCase())
+    var excHasGuide = pub_isGuide_(excludesLines.join(' ').toLowerCase())
+    var guideConflict = incHasGuide && excHasGuide
+
+    if (entranceConflict) {
+      if (entranceDecision === 'include') {
+        excludesLines = excludesLines.filter(function (x) { return !pub_isEntrance_(String(x || '').toLowerCase()) })
+      } else if (entranceDecision === 'exclude') {
+        safeIncludes = safeIncludes.filter(function (x) { return !pub_isEntrance_(String(x || '').toLowerCase()) })
+      } else {
+        safeIncludes = safeIncludes.filter(function (x) { return !pub_isEntrance_(String(x || '').toLowerCase()) })
+        excludesLines = excludesLines.filter(function (x) { return !pub_isEntrance_(String(x || '').toLowerCase()) })
+        safeIncludes.push("Attraction entrance fees depend on the option selected. Please rely on the What's Included/Excluded lists.")
+      }
+    }
+
+    if (guideConflict) {
+      safeIncludes = safeIncludes.filter(function (x) { return !(pub_isGuide_(String(x || '').toLowerCase()) && !pub_isOptional_(String(x || '').toLowerCase())) })
+      excludesLines = excludesLines.filter(function (x) { return !pub_isGuide_(String(x || '').toLowerCase()) })
+      safeIncludes.push("Guiding depends on the option selected.")
+    }
+
     wte.cost.cost_includes = safeIncludes.join('\n');
     wte.cost_includes = wte.cost.cost_includes;
+    if (excludesLines.length > 0) {
+      wte.cost.cost_excludes = excludesLines.join('\n');
+    }
   }
-  if (data.excludes.length > 0) {
+  if (data.excludes.length > 0 && !wte.cost.cost_excludes) {
     wte.cost.cost_excludes = data.excludes.map(function(r){ return r.fields.ExcludeItem; }).join('\n');
   }
   

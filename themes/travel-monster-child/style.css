@@ -1,0 +1,198 @@
+/*
+Theme Name: Travel Monster Child
+Theme URI: https://wptravelengine.com/wordpress-travel-themes/travel-monster/
+Template: travel-monster
+Author: WP Travel Engine
+Author URI: https://wordpress.org/themes/author/wptravelengine/
+Description: Travel Monster is a free travel and tour booking WordPress theme for travel agencies. It is powered by the WP Travel Engine plugin, the most popular travel booking plugin. You can use the Travel Monster theme to create websites such as travel agencies, tour operators, trekking, camping, mountaineering, surfing, city tour, rafting, jungle safari, hiking, tourism, summer holidays, winter holidays, wine tours, cruise websites, beach holidays, etc. You can create itineraries, destinations, activities, trip types. etc. Your website visitors can quickly search for tours and book them. Travel Monster is mobile-friendly, SEO-optimized, translation-ready and RTL-ready. Plus, it is compatible with Elementor and Gutenberg, offering more flexibility to customise your website. Check the demos here: https://wptravelengine.com/travel-monster-demo/. Documentation at https://docs.wptravelengine.com/docs-category/travel-monster/, and get support at https://wptravelengine.com/support/.
+Tags: one-column,two-columns,right-sidebar,left-sidebar,footer-widgets,custom-background,custom-header,custom-menu,custom-logo,featured-images,threaded-comments,full-width-template,rtl-language-support,translation-ready,theme-options,food-and-drink,holiday,entertainment
+Version: 1.3.2.1774612800
+Updated: 2026-03-27 12:00:00
+
+*/
+
+/* ── Trip Review Stars ──────────────────────────────────── */
+
+.trip-review {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffc107;
+    /* لون النجمة */
+    margin-top: 4px;
+}
+
+.trip-review-count {
+    color: #666;
+    font-weight: 400;
+}
+
+@media screen and (max-width: 991px) {
+    #wte-cc-currency-list-container .wte-cc-currency-list-display {
+        font-size: 10px !important;
+        background: black;
+        border-radius: 3px !important;
+        padding: 13px 10px !important;
+    }
+
+}
+
+#wte-cc-currency-list-container .wte-cc-currency-list-display {
+    font-size: 10px !important;
+}
+
+.wte-currency-switcher-drpdown .wte-cc-currency-list-display:after {
+    display: none !important;
+}
+
+/* ==========================================================================
+   Premium Currency Switcher Styling
+   ========================================================================== */
+.wte-currency-switcher-drpdown {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.wte-currency-switcher-drpdown .nice-select {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
+    /* Pill shape for modern look */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    height: 44px;
+    line-height: 42px;
+    padding-left: 20px;
+    padding-right: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 140px;
+    float: none;
+    display: block;
+}
+
+.wte-currency-switcher-drpdown .nice-select:hover {
+    border-color: #ff7f50;
+    box-shadow: 0 10px 15px -3px rgba(255, 127, 80, 0.15), 0 4px 6px -2px rgba(255, 127, 80, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Custom Checkmark/Arrow */
+.wte-currency-switcher-drpdown .nice-select:after {
+    border-bottom: 2px solid #94a3b8;
+    border-right: 2px solid #94a3b8;
+    content: '';
+    display: block;
+    height: 8px;
+    width: 8px;
+    margin-top: -5px;
+    pointer-events: none;
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform-origin: 66% 66%;
+    transform: rotate(45deg);
+    transition: all 0.2s ease-in-out;
+}
+
+.wte-currency-switcher-drpdown .nice-select:hover:after {
+    border-color: #ff7f50;
+}
+
+.wte-currency-switcher-drpdown .nice-select.open {
+    border-color: #ff7f50;
+}
+
+.wte-currency-switcher-drpdown .nice-select.open:after {
+    transform: rotate(-135deg);
+    border-color: #ff7f50;
+}
+
+/* Dropdown List */
+.wte-currency-switcher-drpdown .nice-select .list {
+    background-color: #ffffff;
+    border-radius: 16px;
+    /* Super rounded corners */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+    margin-top: 8px;
+    opacity: 0;
+    overflow: hidden;
+    padding: 8px;
+    pointer-events: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    transform-origin: 50% 0;
+    transform: scale(0.9) translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.5, 0, 0, 1);
+    width: 100%;
+    min-width: 180px;
+    z-index: 999;
+    border: 1px solid #f1f5f9;
+}
+
+.wte-currency-switcher-drpdown .nice-select.open .list {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1) translateY(0);
+}
+
+/* List Options */
+.wte-currency-switcher-drpdown .nice-select .option {
+    cursor: pointer;
+    font-weight: 500;
+    line-height: 40px;
+    list-style: none;
+    min-height: 40px;
+    outline: none;
+    padding-left: 16px;
+    padding-right: 16px;
+    text-align: left;
+    transition: all 0.2s;
+    border-radius: 10px;
+    /* Bubble options */
+    margin-bottom: 2px;
+    color: #475569;
+}
+
+.wte-currency-switcher-drpdown .nice-select .option:last-child {
+    margin-bottom: 0;
+}
+
+.wte-currency-switcher-drpdown .nice-select .option:hover,
+.wte-currency-switcher-drpdown .nice-select .option.focus,
+.wte-currency-switcher-drpdown .nice-select .option.selected.focus {
+    background-color: #fff1eb;
+    /* Light orange background */
+    color: #ff7f50;
+    font-weight: 600;
+    padding-left: 20px;
+    /* Cute shift effect */
+}
+
+.wte-currency-switcher-drpdown .nice-select .option.selected {
+    font-weight: 700;
+    background-color: transparent;
+    color: #ff7f50;
+}
+
+/* Scrollbar for list if needed */
+.wte-currency-switcher-drpdown .nice-select .list:hover {
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.wte-currency-switcher-drpdown .nice-select .list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.wte-currency-switcher-drpdown .nice-select .list::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 4px;
+}

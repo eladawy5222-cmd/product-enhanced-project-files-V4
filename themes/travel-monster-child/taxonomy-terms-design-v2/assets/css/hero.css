@@ -1,0 +1,91 @@
+/* ====================================================================
+   FTS Taxonomy Terms V2 - Minimal Page Header
+   ==================================================================== */
+
+.fts-terms-v2-page-header {
+    background: var(--v2-bg) !important;
+    border-bottom: 1px solid var(--v2-border) !important;
+    padding: 0 !important;
+}
+
+.fts-terms-v2-page-header-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding: 28px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+}
+
+.fts-terms-v2-page-header-left {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Breadcrumbs */
+.fts-terms-v2-breadcrumbs {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--v2-font-body) !important;
+    font-size: 13px !important;
+    color: var(--v2-text-muted) !important;
+    margin: 0 0 8px 0 !important;
+}
+
+.fts-terms-v2-breadcrumbs a {
+    color: var(--v2-text-light) !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease !important;
+}
+
+.fts-terms-v2-breadcrumbs a:hover {
+    color: var(--v2-primary) !important;
+}
+
+.fts-terms-v2-breadcrumbs .sep {
+    color: var(--v2-text-muted) !important;
+    font-size: 11px !important;
+}
+
+.fts-terms-v2-page-title {
+    font-family: var(--v2-font-heading) !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: var(--v2-dark) !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.3px !important;
+}
+
+.fts-terms-v2-page-desc {
+    font-family: var(--v2-font-body) !important;
+    font-size: 14px !important;
+    color: var(--v2-text-light) !important;
+    margin: 6px 0 0 0 !important;
+    line-height: 1.5 !important;
+}
+
+.fts-terms-v2-page-header-right {
+    flex-shrink: 0 !important;
+}
+
+.fts-terms-v2-page-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: var(--v2-bg-gray) !important;
+    border: 1px solid var(--v2-border) !important;
+    border-radius: 50px !important;
+    padding: 8px 18px !important;
+    font-family: var(--v2-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--v2-text) !important;
+}
+
+.fts-terms-v2-page-count svg {
+    color: var(--v2-primary) !important;
+    flex-shrink: 0 !important;
+}

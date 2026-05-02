@@ -1,0 +1,53 @@
+/* ====================================================================
+   FTS Taxonomy Terms V2 - Main Layout
+   ==================================================================== */
+
+.fts-terms-v2-root {
+    background: var(--v2-bg-page) !important;
+    font-family: var(--v2-font-body) !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    min-height: 60vh !important;
+}
+
+.fts-terms-v2-container {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding: 32px 24px 80px !important;
+}
+
+/* Grid: 4 columns for image-overlay cards */
+.fts-terms-v2-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+}
+
+/* Empty state */
+.fts-terms-v2-empty {
+    text-align: center !important;
+    padding: 80px 24px !important;
+    color: var(--v2-text-light) !important;
+    font-size: 16px !important;
+}
+
+/* Hide default WTE / theme elements */
+body.page-template-template-destination .site-content > .container,
+body.page-template-template-destination #primary,
+body.page-template-template-trip_types .site-content > .container,
+body.page-template-template-trip_types #primary,
+body.page-template-template-activities .site-content > .container,
+body.page-template-template-activities #primary {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body.page-template-template-destination .entry-header,
+body.page-template-template-destination .page-header,
+body.page-template-template-trip_types .entry-header,
+body.page-template-template-trip_types .page-header,
+body.page-template-template-activities .entry-header,
+body.page-template-template-activities .page-header {
+    display: none !important;
+}

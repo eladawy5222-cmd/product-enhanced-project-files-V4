@@ -1,0 +1,120 @@
+/**
+ * FTS Home Page Sections — Shared Design Tokens & Utilities
+ *
+ * All section-specific CSS should import these variables via the
+ * dependency chain: wp_enqueue_style( ..., array('fts-sections-common') ).
+ *
+ * @package FTS_Home_Sections
+ */
+
+:root {
+    /* ── Typography ─────────────────────────────────────── */
+    --fts-font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --fts-font-body:    'Poppins', ui-sans-serif, system-ui, sans-serif;
+
+    /* ── Brand Palette ──────────────────────────────────── */
+    --fts-primary:       #2563eb;
+    --fts-primary-hover: #1d4ed8;
+    --fts-primary-light: #dbeafe;
+    --fts-secondary:     #f59e0b;
+    --fts-accent:        #10b981;
+
+    /* ── Neutrals ───────────────────────────────────────── */
+    --fts-white:         #ffffff;
+    --fts-gray-50:       #f8fafc;
+    --fts-gray-100:      #f1f5f9;
+    --fts-gray-200:      #e2e8f0;
+    --fts-gray-300:      #cbd5e1;
+    --fts-gray-400:      #94a3b8;
+    --fts-gray-500:      #64748b;
+    --fts-gray-600:      #475569;
+    --fts-gray-700:      #334155;
+    --fts-gray-800:      #1e293b;
+    --fts-gray-900:      #0f172a;
+
+    /* ── Layout ─────────────────────────────────────────── */
+    --fts-section-max-width: 1280px;
+    --fts-section-padding:   80px 24px;
+    --fts-section-gap:       0;
+
+    /* ── Spacing Scale ──────────────────────────────────── */
+    --fts-space-xs:  4px;
+    --fts-space-sm:  8px;
+    --fts-space-md:  16px;
+    --fts-space-lg:  24px;
+    --fts-space-xl:  32px;
+    --fts-space-2xl: 48px;
+    --fts-space-3xl: 64px;
+
+    /* ── Borders & Radius ───────────────────────────────── */
+    --fts-radius-sm:  6px;
+    --fts-radius-md:  12px;
+    --fts-radius-lg:  16px;
+    --fts-radius-xl:  24px;
+    --fts-radius-full: 9999px;
+
+    /* ── Shadows ─────────────────────────────────────────── */
+    --fts-shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
+    --fts-shadow-md:  0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --fts-shadow-lg:  0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --fts-shadow-xl:  0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+    /* ── Transitions ─────────────────────────────────────── */
+    --fts-transition-fast:   150ms ease;
+    --fts-transition-normal: 250ms ease;
+    --fts-transition-slow:   350ms ease;
+}
+
+/* ── Section Wrapper Utility ──────────────────────────────── */
+
+.fts-section {
+    width: 100%;
+    padding: var(--fts-section-padding);
+}
+
+.fts-section-inner {
+    max-width: var(--fts-section-max-width);
+    margin: 0 auto;
+}
+
+.fts-section-header {
+    text-align: center;
+    margin-bottom: var(--fts-space-2xl);
+}
+
+.fts-section-title {
+    font-family: var(--fts-font-heading);
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 700;
+    color: var(--fts-gray-900);
+    margin: 0 0 var(--fts-space-sm) 0;
+    line-height: 1.2;
+}
+
+.fts-section-subtitle {
+    font-family: var(--fts-font-body);
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    color: var(--fts-gray-500);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ── Responsive Breakpoints ───────────────────────────────── */
+
+@media (max-width: 1024px) {
+    :root {
+        --fts-section-padding: 60px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --fts-section-padding: 48px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --fts-section-padding: 40px 12px;
+    }
+}

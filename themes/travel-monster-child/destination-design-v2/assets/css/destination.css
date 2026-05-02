@@ -1,0 +1,189 @@
+/* ====================================================================
+   FTS Destination V2 - Main Layout
+   ==================================================================== */
+
+/* --- Root --- */
+.fts-dest-v2-root {
+    background: var(--v2-bg-page);
+    font-family: var(--v2-font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 60vh;
+}
+
+/* --- Container --- */
+.fts-dest-v2-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* --- Layout: sidebar hidden by default --- */
+.fts-dest-v2-layout {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    padding-top: 32px;
+    padding-bottom: 64px;
+    align-items: start;
+    transition: grid-template-columns 0.35s ease !important;
+}
+
+/* Sidebar hidden by default on desktop */
+.fts-dest-v2-sidebar {
+    display: none !important;
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    transition: all 0.35s ease !important;
+}
+
+/* When sidebar is open */
+.fts-dest-v2-layout.sidebar-open {
+    grid-template-columns: 280px 1fr !important;
+    gap: 28px !important;
+}
+
+.fts-dest-v2-layout.sidebar-open .fts-dest-v2-sidebar {
+    display: block !important;
+}
+
+/* Main */
+.fts-dest-v2-main {
+    min-width: 0;
+}
+
+/* --- Sort (base, shared with toolbar) --- */
+.fts-dest-v2-sort {
+    font-family: var(--v2-font-body);
+    font-size: 14px;
+    padding: 8px 14px;
+    border: 1px solid var(--v2-border);
+    border-radius: var(--v2-radius-sm);
+    background: var(--v2-bg);
+    color: var(--v2-text);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s !important;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23636e72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+}
+
+.fts-dest-v2-sort:focus {
+    border-color: var(--v2-primary) !important;
+}
+
+/* --- Trip Grid: 4 columns default, 3 when sidebar open --- */
+.fts-dest-v2-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
+    transition: grid-template-columns 0.35s ease !important;
+}
+
+.fts-dest-v2-layout.sidebar-open .fts-dest-v2-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+/* --- Load More --- */
+.fts-dest-v2-load-more-wrap {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.fts-dest-v2-load-more {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: var(--v2-bg) !important;
+    color: var(--v2-primary) !important;
+    border: 2px solid var(--v2-primary) !important;
+    border-radius: var(--v2-radius-sm) !important;
+    padding: 12px 36px !important;
+    font-family: var(--v2-font-heading) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.fts-dest-v2-load-more:hover {
+    background: var(--v2-primary) !important;
+    color: #fff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3) !important;
+}
+
+.fts-dest-v2-load-more:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.fts-dest-v2-load-more.is-loading {
+    pointer-events: none !important;
+    opacity: 0.7 !important;
+}
+
+/* Loading skeleton for card placeholder */
+.fts-dest-v2-skeleton {
+    background: var(--v2-bg);
+    border-radius: var(--v2-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--v2-border);
+}
+
+.fts-dest-v2-skeleton-media {
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(90deg, var(--v2-bg-gray) 25%, #eee 50%, var(--v2-bg-gray) 75%);
+    background-size: 200% 100%;
+    animation: ftsShimmer 1.5s infinite;
+}
+
+.fts-dest-v2-skeleton-body {
+    padding: 18px;
+}
+
+.fts-dest-v2-skeleton-line {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--v2-bg-gray) 25%, #eee 50%, var(--v2-bg-gray) 75%);
+    background-size: 200% 100%;
+    animation: ftsShimmer 1.5s infinite;
+    margin-bottom: 10px;
+}
+
+.fts-dest-v2-skeleton-line:nth-child(1) { width: 40%; }
+.fts-dest-v2-skeleton-line:nth-child(2) { width: 80%; height: 18px; }
+.fts-dest-v2-skeleton-line:nth-child(3) { width: 60%; }
+
+@keyframes ftsShimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Hide default WTE / theme elements on taxonomy archives */
+body.tax-destination .site-content > .container,
+body.tax-destination #primary,
+body.tax-trip_types .site-content > .container,
+body.tax-trip_types #primary,
+body.tax-activities .site-content > .container,
+body.tax-activities #primary {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body.tax-destination .entry-header,
+body.tax-destination .page-header,
+body.tax-trip_types .entry-header,
+body.tax-trip_types .page-header,
+body.tax-activities .entry-header,
+body.tax-activities .page-header {
+    display: none !important;
+}

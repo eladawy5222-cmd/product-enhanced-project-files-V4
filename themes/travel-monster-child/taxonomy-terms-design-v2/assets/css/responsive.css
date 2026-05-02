@@ -1,0 +1,131 @@
+/* ====================================================================
+   FTS Taxonomy Terms V2 - Responsive
+   ==================================================================== */
+
+/* ─── Tablet (<=1024px) ─── */
+@media (max-width: 1024px) {
+    .fts-terms-v2-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .fts-terms-v2-container {
+        padding: 28px 20px 60px !important;
+    }
+
+    .fts-terms-v2-card-title {
+        font-size: 19px !important;
+    }
+}
+
+/* ─── Small Tablet (<=768px) ─── */
+@media (max-width: 768px) {
+    .fts-terms-v2-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 14px !important;
+    }
+
+    .fts-terms-v2-container {
+        padding: 20px 16px 48px !important;
+    }
+
+    .fts-terms-v2-card {
+        aspect-ratio: 3 / 4 !important;
+    }
+
+    .fts-terms-v2-card-overlay {
+        padding: 16px !important;
+    }
+
+    .fts-terms-v2-card-title {
+        font-size: 17px !important;
+    }
+
+    .fts-terms-v2-card-count {
+        font-size: 11px !important;
+        padding: 4px 10px !important;
+    }
+
+    /* Children always visible on touch */
+    .fts-terms-v2-card-children {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+
+    /* Page header */
+    .fts-terms-v2-page-header-inner {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 20px 16px !important;
+    }
+
+    .fts-terms-v2-page-title {
+        font-size: 24px !important;
+    }
+}
+
+/* ─── Phone (<=480px) ─── */
+@media (max-width: 480px) {
+    .fts-terms-v2-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .fts-terms-v2-container {
+        padding: 16px 12px 36px !important;
+    }
+
+    .fts-terms-v2-card {
+        aspect-ratio: 2 / 3 !important;
+        border-radius: var(--v2-radius-md) !important;
+    }
+
+    .fts-terms-v2-card-overlay {
+        padding: 14px !important;
+    }
+
+    .fts-terms-v2-card-title {
+        font-size: 15px !important;
+    }
+
+    .fts-terms-v2-card-count {
+        font-size: 10px !important;
+        padding: 3px 8px !important;
+    }
+
+    .fts-terms-v2-card-bottom {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+
+    .fts-terms-v2-child-tag {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+    }
+
+    .fts-terms-v2-child-more {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+    }
+
+    /* Page header */
+    .fts-terms-v2-page-header-inner {
+        padding: 16px 12px !important;
+        gap: 10px !important;
+    }
+
+    .fts-terms-v2-page-title {
+        font-size: 20px !important;
+    }
+
+    .fts-terms-v2-page-desc {
+        font-size: 13px !important;
+    }
+
+    .fts-terms-v2-page-count {
+        font-size: 12px !important;
+        padding: 6px 14px !important;
+    }
+}

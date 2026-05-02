@@ -1,0 +1,314 @@
+/* ============================================================================
+   FTS Top Destinations — Bento Grid
+   ============================================================================ */
+
+.fts-destinations {
+    background: #ffffff !important;
+    padding: 56px 48px !important;
+}
+
+.fts-destinations-inner {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+/* ── Section Header ────────────────────────────────────── */
+
+.fts-destinations-header {
+    margin-bottom: 40px !important;
+}
+
+.fts-destinations-label {
+    display: block !important;
+    font-family: var(--fts-font-body, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #f3680f !important;
+    letter-spacing: 0.08em !important;
+    margin-bottom: 10px !important;
+}
+
+.fts-destinations-heading {
+    font-family: var(--fts-font-heading, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: clamp(24px, 3vw, 36px) !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    line-height: 1.15 !important;
+    margin: 0 0 12px 0 !important;
+    letter-spacing: -0.02em !important;
+}
+
+.fts-destinations-subtitle {
+    font-family: var(--fts-font-body, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    max-width: 520px !important;
+}
+
+/* ── Bento Grid ────────────────────────────────────────── */
+
+.fts-destinations-grid {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 16px !important;
+}
+
+.fts-dest-card--large:nth-child(1) {
+    grid-column: span 7 !important;
+}
+
+.fts-dest-card--large:nth-child(2) {
+    grid-column: span 5 !important;
+}
+
+.fts-dest-card:not(.fts-dest-card--large):nth-child(3) {
+    grid-column: span 4 !important;
+}
+
+.fts-dest-card:not(.fts-dest-card--large):nth-child(4) {
+    grid-column: span 4 !important;
+}
+
+.fts-dest-card:not(.fts-dest-card--large):nth-child(5) {
+    grid-column: span 4 !important;
+}
+
+/* ── Card Base ─────────────────────────────────────────── */
+
+.fts-dest-card {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-color: #1e293b !important;
+    text-decoration: none !important;
+    min-height: 240px !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.fts-dest-card--large {
+    min-height: 310px !important;
+}
+
+.fts-dest-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Overlay ───────────────────────────────────────────── */
+
+.fts-dest-card-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 30%,
+        rgba(0, 0, 0, 0.55) 70%,
+        rgba(0, 0, 0, 0.75) 100%
+    ) !important;
+    border-radius: 16px !important;
+    z-index: 1 !important;
+    transition: background 0.25s ease !important;
+}
+
+.fts-dest-card:hover .fts-dest-card-overlay {
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 20%,
+        rgba(0, 0, 0, 0.6) 65%,
+        rgba(0, 0, 0, 0.8) 100%
+    ) !important;
+}
+
+/* ── Card Content ──────────────────────────────────────── */
+
+.fts-dest-card-content {
+    position: relative !important;
+    z-index: 2 !important;
+    padding: 24px !important;
+    width: 100% !important;
+}
+
+/* ── Badge ─────────────────────────────────────────────── */
+
+.fts-dest-card-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 6px !important;
+}
+
+.fts-dest-card-badge-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    flex-shrink: 0 !important;
+}
+
+/* ── Name ──────────────────────────────────────────────── */
+
+.fts-dest-card-name {
+    font-family: var(--fts-font-heading, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
+    margin: 0 0 6px 0 !important;
+}
+
+.fts-dest-card--large .fts-dest-card-name {
+    font-size: 26px !important;
+}
+
+/* ── Description ───────────────────────────────────────── */
+
+.fts-dest-card-desc {
+    font-family: var(--fts-font-body, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    line-height: 1.45 !important;
+    margin: 0 0 8px 0 !important;
+    max-width: 380px !important;
+}
+
+/* ── Experience Count ──────────────────────────────────── */
+
+.fts-dest-card-count {
+    font-family: var(--fts-font-body, 'Poppins', ui-sans-serif, system-ui, sans-serif) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #f3680f !important;
+}
+
+/* ── Responsive: Tablet ────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-destinations {
+        padding: 48px 32px !important;
+    }
+
+    .fts-dest-card--large {
+        min-height: 280px !important;
+    }
+
+    .fts-dest-card:not(.fts-dest-card--large) {
+        min-height: 220px !important;
+    }
+
+    .fts-dest-card--large .fts-dest-card-name {
+        font-size: 22px !important;
+    }
+
+    .fts-dest-card-name {
+        font-size: 20px !important;
+    }
+}
+
+/* ── Responsive: Mobile ────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-destinations {
+        padding: 40px 20px !important;
+    }
+
+    .fts-destinations-header {
+        margin-bottom: 28px !important;
+    }
+
+    .fts-destinations-heading {
+        font-size: 24px !important;
+    }
+
+    .fts-destinations-subtitle {
+        font-size: 14px !important;
+        max-width: 100% !important;
+    }
+
+    .fts-destinations-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+
+    .fts-dest-card--large:nth-child(1),
+    .fts-dest-card--large:nth-child(2) {
+        grid-column: span 1 !important;
+    }
+
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(3),
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(4) {
+        grid-column: span 1 !important;
+    }
+
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(5) {
+        grid-column: span 2 !important;
+    }
+
+    .fts-dest-card,
+    .fts-dest-card--large {
+        min-height: 200px !important;
+    }
+
+    .fts-dest-card-content {
+        padding: 16px !important;
+    }
+
+    .fts-dest-card-name,
+    .fts-dest-card--large .fts-dest-card-name {
+        font-size: 18px !important;
+    }
+
+    .fts-dest-card-desc {
+        font-size: 11px !important;
+        -webkit-line-clamp: 2 !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ──────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-destinations {
+        padding: 32px 16px !important;
+    }
+
+    .fts-destinations-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .fts-dest-card--large:nth-child(1),
+    .fts-dest-card--large:nth-child(2),
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(3),
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(4),
+    .fts-dest-card:not(.fts-dest-card--large):nth-child(5) {
+        grid-column: span 1 !important;
+    }
+
+    .fts-dest-card,
+    .fts-dest-card--large {
+        min-height: 180px !important;
+    }
+
+    .fts-dest-card-name,
+    .fts-dest-card--large .fts-dest-card-name {
+        font-size: 20px !important;
+    }
+
+    .fts-dest-card-desc {
+        font-size: 12px !important;
+    }
+}

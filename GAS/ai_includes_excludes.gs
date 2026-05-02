@@ -499,29 +499,23 @@ function createAiIncludesExcludesExtractorTrigger() {
 function fetchRawTripIncludes_(tripId, tripNumber, tripFields) {
   if (!tripId) return [];
   var out = [];
-  
-  // Try with Record ID first
-  var formulaByRecordId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + tripId + "'";
-  var res1 = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByRecordId, pageSize: 100 });
-  var recs1 = res1 && res1.records ? res1.records : [];
-  var recs = recs1;
+ 
+  var tripName = (tripFields && (tripFields.Title || tripFields.Name)) ? String(tripFields.Title || tripFields.Name).trim() : '';
+  var conditions = [];
+  conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripId)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
+  if (tripNumber) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripNumber)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
+  if (tripName) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripName)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
+  var formula = (conditions.length === 1) ? conditions[0] : ("OR(" + conditions.join(", ") + ")");
 
-  // Try with TripID if no results
-  if (!recs1.length && tripNumber) {
-    var formulaByTripId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + tripNumber + "'";
-    var res2 = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByTripId, pageSize: 100 });
-    var recs2 = res2 && res2.records ? res2.records : [];
-    recs = recs2;
-  }
-  
-  // Try with display key if still no results
+  var res = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
+  var recs = res && res.records ? res.records : [];
+
   if (!recs.length) {
     var displayKey = computeTripDisplayKey_(tripFields);
     if (displayKey) {
-      var formulaByDisplay = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + AirtableUtils.escapeFormulaValue(displayKey) + "'";
-      var res3 = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 });
-      var recs3 = res3 && res3.records ? res3.records : [];
-      recs = recs3;
+      var fallbackFormula = "FIND('" + AirtableUtils.escapeFormulaValue(String(displayKey)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))";
+      var resF = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: fallbackFormula, pageSize: 100 });
+      recs = resF && resF.records ? resF.records : [];
     }
   }
 
@@ -537,28 +531,22 @@ function fetchRawTripExcludes_(tripId, tripNumber, tripFields) {
   if (!tripId) return [];
   var out = [];
   
-  // Try with Record ID first
-  var formulaByRecordId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + tripId + "'";
-  var res1 = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByRecordId, pageSize: 100 });
-  var recs1 = res1 && res1.records ? res1.records : [];
-  var recs = recs1;
+  var tripName = (tripFields && (tripFields.Title || tripFields.Name)) ? String(tripFields.Title || tripFields.Name).trim() : '';
+  var conditions = [];
+  conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripId)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
+  if (tripNumber) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripNumber)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
+  if (tripName) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripName)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
+  var formula = (conditions.length === 1) ? conditions[0] : ("OR(" + conditions.join(", ") + ")");
 
-  // Try with TripID if no results
-  if (!recs1.length && tripNumber) {
-    var formulaByTripId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + tripNumber + "'";
-    var res2 = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByTripId, pageSize: 100 });
-    var recs2 = res2 && res2.records ? res2.records : [];
-    recs = recs2;
-  }
-  
-  // Try with display key if still no results
+  var res = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
+  var recs = res && res.records ? res.records : [];
+
   if (!recs.length) {
     var displayKey = computeTripDisplayKey_(tripFields);
     if (displayKey) {
-      var formulaByDisplay = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + AirtableUtils.escapeFormulaValue(displayKey) + "'";
-      var res3 = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 });
-      var recs3 = res3 && res3.records ? res3.records : [];
-      recs = recs3;
+      var fallbackFormula = "FIND('" + AirtableUtils.escapeFormulaValue(String(displayKey)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))";
+      var resF = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: fallbackFormula, pageSize: 100 });
+      recs = resF && resF.records ? resF.records : [];
     }
   }
 

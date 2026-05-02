@@ -708,28 +708,30 @@ async function fetchRawTripIncludes_(tripId, tripNumber, tripFields) {
   if (!tripId) return [];
   const out = []
   
-  // Try with Record ID first
-  const formulaByRecordId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + tripId + "'"
-  const res1 = await airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByRecordId, pageSize: 100 })
-  const recs1 = res1 && res1.records ? res1.records : []
-  let recs = recs1
-
-  // Try with TripID if no results
-  if (!recs1.length && tripNumber) {
-    const formulaByTripId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + tripNumber + "'"
-    const res2 = await airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByTripId, pageSize: 100 })
-    const recs2 = res2 && res2.records ? res2.records : []
-    recs = recs2
+  const tripName = tripFields && tripFields.Title ? String(tripFields.Title) : ''
+  const parts = []
+  parts.push("FIND('" + escapeSingleQuotes_(tripId) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))")
+  if (tripNumber) parts.push("FIND('" + escapeSingleQuotes_(tripNumber) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))")
+  if (tripName) parts.push("FIND('" + escapeSingleQuotes_(tripName) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))")
+  let recs = []
+  try {
+    const formula = parts.length === 1 ? parts[0] : ("OR(" + parts.join(", ") + ")")
+    const res = await airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 })
+    recs = res && res.records ? res.records : []
+  } catch (e) {
+    recs = []
   }
-  
-  // Try with display key if still no results
+
   if (!recs.length) {
     const displayKey = computeTripDisplayKey_(tripFields)
     if (displayKey) {
-      const formulaByDisplay = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}) = '" + escapeFormulaValue(displayKey) + "'"
-      const res3 = await airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 })
-      const recs3 = res3 && res3.records ? res3.records : []
-      recs = recs3
+      try {
+        const formulaByDisplay = "FIND('" + escapeSingleQuotes_(displayKey) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))"
+        const res3 = await airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 })
+        recs = res3 && res3.records ? res3.records : []
+      } catch (e) {
+        recs = []
+      }
     }
   }
 
@@ -745,28 +747,30 @@ async function fetchRawTripExcludes_(tripId, tripNumber, tripFields) {
   if (!tripId) return [];
   const out = []
   
-  // Try with Record ID first
-  const formulaByRecordId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + tripId + "'"
-  const res1 = await airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByRecordId, pageSize: 100 })
-  const recs1 = res1 && res1.records ? res1.records : []
-  let recs = recs1
-
-  // Try with TripID if no results
-  if (!recs1.length && tripNumber) {
-    const formulaByTripId = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + tripNumber + "'"
-    const res2 = await airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByTripId, pageSize: 100 })
-    const recs2 = res2 && res2.records ? res2.records : []
-    recs = recs2
+  const tripName = tripFields && tripFields.Title ? String(tripFields.Title) : ''
+  const parts = []
+  parts.push("FIND('" + escapeSingleQuotes_(tripId) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))")
+  if (tripNumber) parts.push("FIND('" + escapeSingleQuotes_(tripNumber) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))")
+  if (tripName) parts.push("FIND('" + escapeSingleQuotes_(tripName) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))")
+  let recs = []
+  try {
+    const formula = parts.length === 1 ? parts[0] : ("OR(" + parts.join(", ") + ")")
+    const res = await airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 })
+    recs = res && res.records ? res.records : []
+  } catch (e) {
+    recs = []
   }
-  
-  // Try with display key if still no results
+
   if (!recs.length) {
     const displayKey = computeTripDisplayKey_(tripFields)
     if (displayKey) {
-      const formulaByDisplay = "ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}) = '" + escapeFormulaValue(displayKey) + "'"
-      const res3 = await airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 })
-      const recs3 = res3 && res3.records ? res3.records : []
-      recs = recs3
+      try {
+        const formulaByDisplay = "FIND('" + escapeSingleQuotes_(displayKey) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))"
+        const res3 = await airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formulaByDisplay, pageSize: 100 })
+        recs = res3 && res3.records ? res3.records : []
+      } catch (e) {
+        recs = []
+      }
     }
   }
 

@@ -1,0 +1,24 @@
+.customize-control-travel-monster-sortable ul.ui-sortable li {
+    padding: 5px 10px;
+    border: 1px solid #333 !important;
+    background: #fff; 
+}
+
+.customize-control-travel-monster-sortable ul.ui-sortable li .dashicons.dashicons-menu {
+    float: right; 
+}
+
+.customize-control-travel-monster-sortable ul.ui-sortable li .dashicons.visibility {
+    margin-right: 10px; 
+}
+
+.customize-control-travel-monster-sortable ul.ui-sortable li.invisible {
+    color: #aaa;
+    border: 1px dashed #aaa !important;
+}
+    
+.customize-control-travel-monster-sortable ul.ui-sortable li.invisible .dashicons.visibility {
+    color: #aaa; 
+}
+
+/*# sourceMappingURL=sortable.css.map */

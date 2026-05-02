@@ -1,0 +1,279 @@
+/**
+ * FTS "Why Us" Section
+ */
+
+/* ── Section Wrapper ─────────────────────────────────────── */
+
+.fts-why-us {
+    background: #0f172a !important;
+    padding: 80px 24px !important;
+    width: 100% !important;
+}
+
+.fts-why-us-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.fts-why-us-header {
+    text-align: center !important;
+    margin-bottom: 48px !important;
+}
+
+.fts-why-us-label {
+    display: inline-block !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: #e65100 !important;
+    margin-bottom: 12px !important;
+}
+
+.fts-why-us-heading {
+    font-family: var(--fts-font-heading) !important;
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem) !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1.25 !important;
+    margin: 0 0 16px 0 !important;
+}
+
+.fts-why-us-heading span {
+    background: linear-gradient(90deg, #f59e0b, #ef4444) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.fts-why-us-subtitle {
+    font-family: var(--fts-font-body) !important;
+    font-size: clamp(0.9rem, 1.4vw, 1.05rem) !important;
+    color: #94a3b8 !important;
+    line-height: 1.7 !important;
+    margin: 0 auto !important;
+    max-width: 680px !important;
+}
+
+/* ── Cards Grid ──────────────────────────────────────────── */
+
+.fts-why-us-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    margin-bottom: 48px !important;
+}
+
+.fts-why-us-card {
+    background: #1e293b !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    padding: 28px 24px !important;
+    transition: border-color var(--fts-transition-normal) !important;
+}
+
+.fts-why-us-card:hover {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ── Icon Circles ────────────────────────────────────────── */
+
+.fts-why-us-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 18px !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-why-us-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+
+.fts-why-us-icon--orange {
+    background: rgba(230, 81, 0, 0.15) !important;
+    color: #fb923c !important;
+}
+
+.fts-why-us-icon--teal {
+    background: rgba(20, 184, 166, 0.15) !important;
+    color: #2dd4bf !important;
+}
+
+.fts-why-us-icon--coral {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+}
+
+.fts-why-us-icon--green {
+    background: rgba(34, 197, 94, 0.15) !important;
+    color: #4ade80 !important;
+}
+
+/* ── Card Text ───────────────────────────────────────────── */
+
+.fts-why-us-card-title {
+    font-family: var(--fts-font-heading) !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin: 0 0 8px 0 !important;
+    line-height: 1.3 !important;
+}
+
+.fts-why-us-card-desc {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.875rem !important;
+    color: #94a3b8 !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+}
+
+/* ── Trust Bar ───────────────────────────────────────────── */
+
+.fts-why-us-trust-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 14px !important;
+    background: #1e293b !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 50px !important;
+    padding: 10px 24px !important;
+    width: fit-content !important;
+    margin: 0 auto !important;
+}
+
+.fts-why-us-avatars {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.fts-why-us-avatar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin-left: -6px !important;
+    border: 2px solid #1e293b !important;
+}
+
+.fts-why-us-avatar:first-child {
+    margin-left: 0 !important;
+}
+
+.fts-why-us-stars {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+.fts-why-us-stars svg {
+    display: block !important;
+}
+
+.fts-why-us-rating {
+    font-family: var(--fts-font-heading) !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    margin-left: 4px !important;
+}
+
+.fts-why-us-review-count {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    color: #94a3b8 !important;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-why-us {
+        padding: 60px 20px !important;
+    }
+
+    .fts-why-us-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+}
+
+/* ── Responsive: Mobile ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-why-us {
+        padding: 48px 16px !important;
+    }
+
+    .fts-why-us-header {
+        margin-bottom: 32px !important;
+    }
+
+    .fts-why-us-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 32px !important;
+    }
+
+    .fts-why-us-card {
+        padding: 20px 16px !important;
+    }
+
+    .fts-why-us-icon {
+        width: 38px !important;
+        height: 38px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .fts-why-us-icon svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .fts-why-us-card-title {
+        font-size: 0.9rem !important;
+    }
+
+    .fts-why-us-card-desc {
+        font-size: 0.8rem !important;
+    }
+
+    .fts-why-us-trust-bar {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        border-radius: 16px !important;
+        padding: 12px 16px !important;
+        gap: 10px !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-why-us {
+        padding: 40px 12px !important;
+    }
+
+    .fts-why-us-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .fts-why-us-card {
+        padding: 18px 14px !important;
+    }
+}

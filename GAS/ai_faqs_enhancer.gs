@@ -156,6 +156,32 @@ function runAiFaqsEnhancementBatch() {
         
         Logger.log('AI FAQs: Trip ' + tripId + ' → created ' + createdCount + ' FAQs');
         
+        try {
+          var bestHours = 0;
+          faqs.forEach(function(faq) {
+            var q = String(faq.question || '').toLowerCase();
+            if (!q || q.indexOf('cancel') === -1) return;
+            var a = String(faq.answer || '');
+            var m = a.match(/(\d+)\s*(hours?|days?)/i);
+            if (!m) return;
+            var n = parseInt(m[1], 10);
+            var unit = String(m[2] || '').toLowerCase();
+            if (!isFinite(n) || n <= 0) return;
+            var h = unit.indexOf('day') !== -1 ? (n * 24) : n;
+            if (h > bestHours) bestHours = h;
+          });
+          if (bestHours > 0) {
+            var impParams2 = {
+              filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
+              maxRecords: 1
+            };
+            var impRes2 = airtableGet_(IMPROVEMENT_TABLE, impParams2);
+            if (impRes2 && impRes2.records && impRes2.records.length) {
+              airtableUpdate_(IMPROVEMENT_TABLE, impRes2.records[0].id, { Cancellation_Window_Hours: bestHours });
+            }
+          }
+        } catch (eCh) {}
+
         // 8) Update trip status
         updateTripFaqsStatus_(tripId, 'Done');
         
@@ -858,6 +884,49 @@ function buildFaqTruth_(ctx) {
   function hasGuide_(s) { return /\b(egyptologist|tour guide|guide)\b/.test(s); }
   function hasOptionalMarker_(s) { return /\b(optional|add-?on|extra|if selected|upon request)\b/.test(s); }
   function hasNile_(s) { return /\b(nile|boat|cruise|felucca)\b/.test(s); }
+  function entranceDecisionByMajority_() {
+    var includeCount = 0;
+    var excludeCount = 0;
+
+    function countByListRole_(items, role) {
+      for (var i = 0; i < items.length; i++) {
+        var t = lc_(items[i]);
+        if (!t) continue;
+        if (!hasEntrance_(t)) continue;
+        if (role === 'include') includeCount++;
+        else excludeCount++;
+      }
+    }
+
+    function countByTextEvidence_(text) {
+      var s = lc_(text);
+      if (!s) return;
+      if (!hasEntrance_(s)) return;
+      if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,60}\b(not included|excluded)\b/.test(s)) excludeCount++;
+      else if (/\b(not included|excluded)\b[^.]{0,60}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) excludeCount++;
+      else if (/\byou(?:\s+will|\s*'ll)?\s+need\s+to\s+pay\b[^.]{0,80}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) excludeCount++;
+      else if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,60}\b(included|covered)\b/.test(s)) includeCount++;
+      else if (/\b(included|covered)\b[^.]{0,60}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) includeCount++;
+    }
+
+    countByListRole_(rawInc, 'include');
+    countByListRole_(rawExc, 'exclude');
+    countByListRole_(impInc, 'include');
+    countByListRole_(impExc, 'exclude');
+
+    var evidenceTexts = [
+      (ctx && ctx.tripDescription) ? ctx.tripDescription : '',
+      (ctx && ctx.aiTripDescription) ? ctx.aiTripDescription : '',
+      (ctx && ctx.highlights) ? ctx.highlights.join(' ') : '',
+      (ctx && ctx.itinerary) ? ctx.itinerary.join(' ') : ''
+    ];
+    for (var k = 0; k < evidenceTexts.length; k++) countByTextEvidence_(evidenceTexts[k]);
+
+    if (includeCount > excludeCount) return 'include';
+    if (excludeCount > includeCount) return 'exclude';
+    if (includeCount > 0 && excludeCount > 0) return 'conflict';
+    return 'unknown';
+  }
 
   var incOut = [];
   for (var i = 0; i < incBase.length; i++) {
@@ -882,10 +951,15 @@ function buildFaqTruth_(ctx) {
 
   var rawIncLc = lc_(rawInc.join(' '));
   var rawExcLc = lc_(rawExc.join(' '));
+  var impIncLc = lc_(impInc.join(' '));
+  var impExcLc = lc_(impExc.join(' '));
+  var excLc = lc_(excOut.join(' '));
+  var entranceDecision = entranceDecisionByMajority_();
   var truth = {
-    entrance_included: hasEntrance_(rawIncLc) || (!rawInc.length && hasEntrance_(incLc)),
-    entrance_excluded: hasEntrance_(rawExcLc) || (!rawExc.length && hasEntrance_(lc_(excOut.join(' ')))),
-    guide_included: hasGuide_(rawIncLc) || (!rawInc.length && hasGuide_(incLc)),
+    entrance_included: entranceDecision === 'include',
+    entrance_excluded: entranceDecision === 'exclude',
+    entrance_conflict: entranceDecision === 'conflict',
+    guide_included: hasGuide_(rawIncLc) || hasGuide_(incLc) || hasGuide_(impIncLc),
     guide_conditional: hasGuide_(rawIncLc) && hasOptionalMarker_(rawIncLc),
     nile_evidence: hasNile_(lc_(((ctx && ctx.itinerary) ? ctx.itinerary.join(' ') : '') + ' ' + ((ctx && ctx.highlights) ? ctx.highlights.join(' ') : '') + ' ' + rawIncLc + ' ' + incLc))
   };
@@ -929,6 +1003,10 @@ function enforceFaqTruth_(faqs, ctx) {
 
   function removeEntranceContradiction_(a) {
     var s = String(a || '');
+    if (T && T.entrance_conflict) {
+      s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:included|not included|excluded|cover(?:ed)?|pay|need to pay)\b[^.?!]*(?:[.?!]|$)/ig, '').trim();
+      s = s.replace(/[^.?!]*\bbring\b[^.?!]*\b(cash|money)\b[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:[.?!]|$)/ig, '').trim();
+    }
     if (T && T.entrance_included) {
       s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*\bnot included\b[^.?!]*(?:[.?!]|$)/ig, '').trim();
       s = s.replace(/[^.?!]*\bbring\b[^.?!]*\b(cash|money)\b[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:[.?!]|$)/ig, '').trim();
@@ -941,6 +1019,7 @@ function enforceFaqTruth_(faqs, ctx) {
   }
 
   function buildEntranceLine_() {
+    if (T && T.entrance_conflict) return "Entrance-fee coverage depends on the option selected. Please rely on the What's Included and What's Not Included lists.";
     if (T && T.entrance_included) return "Entrance fees are included as listed in What's Included.";
     if (T && T.entrance_excluded) return "Entrance fees/tickets are not included (see What's Not Included).";
     return "Please rely on the What's Included and What's Not Included lists for entrance-fee coverage.";

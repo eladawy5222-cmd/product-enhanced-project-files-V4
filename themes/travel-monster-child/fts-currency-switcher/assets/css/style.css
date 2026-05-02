@@ -1,0 +1,145 @@
+/* Main Container */
+.fts-currency-switcher {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    font-family: 'Inter', sans-serif;
+    min-width: 80px;
+    z-index: 999;
+}
+
+/* Current Selected View (Pill Style) */
+.fts-cs-current {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 36px;
+    box-sizing: border-box;
+    /* No shadow as requested */
+}
+
+.fts-cs-current:hover {
+    border-color: #ff7f50;
+    /* Orange Theme Color */
+    transform: translateY(-1px);
+}
+
+.fts-cs-flag {
+    font-weight: 700;
+    margin-right: 6px;
+    color: #ff7f50;
+    font-size: 14px;
+}
+
+.fts-cs-code {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+.fts-cs-arrow {
+    font-size: 10px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+/* Rotate arrow when open */
+.fts-currency-switcher.open .fts-cs-arrow {
+    transform: rotate(180deg);
+    color: #ff7f50;
+}
+
+/* Dropdown Menu */
+.fts-cs-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    /* No shadow */
+    border: 1px solid #e2e8f0;
+    padding: 6px;
+    margin: 0;
+    list-style: none !important;
+    min-width: 140px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.fts-currency-switcher.open .fts-cs-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Dropdown Items */
+.fts-cs-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    /* Tighter padding */
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+    margin-bottom: 0 !important;
+    /* Zero spacing as requested */
+    color: #475569;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.fts-cs-item:hover,
+.fts-cs-item.active {
+    background-color: #fff1eb;
+    color: #ff7f50;
+    font-weight: 400;
+}
+
+/* Unique Class for Currency Code Text */
+.fts-unique-currency-text {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 400 !important;
+    color: inherit;
+}
+
+.fts-cs-item:last-child {
+    margin-bottom: 0;
+}
+
+.fts-cs-item-symbol {
+    font-weight: 400;
+    width: 20px;
+    text-align: center;
+    margin-right: 4px;
+    /* Reduced spacing */
+}
+
+.fts-cs-item-code {
+    margin-right: auto;
+}
+
+/* Scrollbar Styling */
+.fts-cs-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.fts-cs-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fts-cs-dropdown::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}

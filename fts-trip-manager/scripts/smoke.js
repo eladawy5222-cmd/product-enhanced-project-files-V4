@@ -20,8 +20,18 @@ async function main() {
   const config = getAppConfig({ rootDir: root })
   const logger = createLogger({ rootDir: root, debug: config.DEBUG })
   const http = createHttpClient({ logger, debug: config.DEBUG })
-  if (config.AIRTABLE_API_KEY && config.AIRTABLE_BASE_ID) {
-    createAirtableClient({ http, logger, baseId: config.AIRTABLE_BASE_ID, apiKey: config.AIRTABLE_API_KEY })
+  function out(level, msg) {
+    const s = String(msg == null ? '' : msg)
+    if (level === 'warn') logger.warn(s)
+    else if (level === 'error') logger.error(s)
+    else logger.info(s)
+    console.log(s)
+  }
+  let airtableClient = null
+  const airtableApiKey = String(process.env.AIRTABLE_API_KEY || config.AIRTABLE_API_KEY || '').trim()
+  const airtableBaseId = String(process.env.AIRTABLE_BASE_ID || config.AIRTABLE_BASE_ID || '').trim()
+  if (airtableApiKey && airtableBaseId) {
+    airtableClient = createAirtableClient({ http, logger, baseId: airtableBaseId, apiKey: airtableApiKey })
   }
 
   await createServices(root, { logger })
@@ -86,7 +96,85 @@ async function main() {
   assert_(ctxB.flags.has_nile === true, 'itinerary evidence enables nile')
   assert_(convEnf_hasUnsupportedHighRiskClaims_('Nile cruise by boat', ctxB.flags) === false, 'claims allowed when evidenced')
 
-  logger.info('Smoke test ok')
+  if (airtableClient) {
+    let tripRec = null
+    let tripRecId = null
+    let tripTitle = ''
+    let TRIP_ID = String(process.env.SMOKE_TRIP_ID || '').trim()
+
+    if (TRIP_ID) {
+      out('info', 'Airtable smoke: checking trip ' + TRIP_ID)
+      tripRec = await airtableClient.airtableFindOneByField('Trips', 'TripID', TRIP_ID)
+    }
+
+    if (!tripRec) {
+      out('warn', 'Airtable smoke: SMOKE_TRIP_ID not provided or not found. Falling back to first Trips record.')
+      const resTrips = await airtableClient.airtableGet('Trips', { maxRecords: 1, pageSize: 1 })
+      tripRec = (resTrips && resTrips.records && resTrips.records[0]) ? resTrips.records[0] : null
+      if (tripRec && tripRec.fields && tripRec.fields.TripID) TRIP_ID = String(tripRec.fields.TripID)
+    }
+
+    if (tripRec && tripRec.id) {
+      tripRecId = tripRec.id
+      tripTitle = tripRec.fields && tripRec.fields.Title ? String(tripRec.fields.Title) : ''
+      out('info', 'Airtable smoke: trip_record_id=' + tripRecId + (TRIP_ID ? (' | TripID=' + TRIP_ID) : '') + (tripTitle ? (' | title=' + tripTitle) : ''))
+    } else {
+      out('warn', 'Airtable smoke: Trips table has no records or is not accessible. Running table existence checks only.')
+    }
+
+    function findFormula(linkField) {
+      const parts = []
+      if (tripRecId) parts.push(`FIND('${String(tripRecId).replace(/'/g, "\\'")}', ARRAYJOIN({${linkField}}))`)
+      if (TRIP_ID) parts.push(`FIND('${String(TRIP_ID).replace(/'/g, "\\'")}', ARRAYJOIN({${linkField}}))`)
+      if (tripTitle) parts.push(`FIND('${tripTitle.replace(/'/g, "\\'")}', ARRAYJOIN({${linkField}}))`)
+      if (!parts.length) return ''
+      return parts.length === 1 ? parts[0] : `OR(${parts.join(', ')})`
+    }
+
+    async function sampleTable(tableName, linkField, pickFields) {
+      const params = { maxRecords: 3, pageSize: 3 }
+      const formula = linkField ? findFormula(linkField) : ''
+      if (formula) params.filterByFormula = formula
+      const res = await airtableClient.airtableGet(tableName, params)
+      const recs = res && res.records ? res.records : []
+      const sample = []
+      for (let i = 0; i < recs.length; i++) {
+        const f = recs[i].fields || {}
+        const row = {}
+        for (const k of pickFields) row[k] = f[k]
+        sample.push(row)
+      }
+      return { count: recs.length, sample }
+    }
+
+    const checks = [
+      { table: 'TripIncludes', link: 'Trip', fields: ['IncludeItem', 'Item', 'Title'] },
+      { table: 'TripExcludes', link: 'Trip', fields: ['ExcludeItem', 'Item', 'Title'] },
+      { table: 'TripIncludes Improvement With AI', link: 'Trip', fields: ['IncludeItem', 'AI_IncludeItem', 'AI_IncludeText'] },
+      { table: 'TripExcludes Improvement With AI', link: 'Trip', fields: ['ExcludeItem', 'AI_ExcludeItem', 'AI_ExcludeText'] },
+      { table: 'FAQs Improvement With AI', link: 'Trip', fields: ['AI_Question', 'AI_Answer'] },
+      { table: 'TripFAQs', link: 'Trip', fields: ['Question', 'Answer'] },
+      { table: 'AddOns', link: 'Trip', fields: ['AddOnTitle', 'AddOnPrice', 'Price', 'Cost'] },
+      { table: 'AddOns Improvement With AI', link: 'Trip', fields: ['AI_AddOn_Title', 'AI_AddOn_Price'] },
+      { table: 'Packages', link: 'Trip', fields: ['PackageName', 'ShortDescription'] },
+      { table: 'TripDetails', link: 'Trip', fields: ['DetailTitle', 'DetailText', 'TourType'] },
+      { table: 'Improvement With AI', link: 'Trip', fields: ['AI_Status', 'AI_SEO_Status', 'AI_Trip_Description', 'AI_SEO_Title'] }
+    ]
+
+    for (const c of checks) {
+      try {
+        const r = await sampleTable(c.table, c.link, c.fields)
+        out('info', `Airtable smoke: ${c.table} -> sample_count=${r.count}`)
+        if (r.sample && r.sample.length) out('info', JSON.stringify({ table: c.table, sample: r.sample }, null, 2))
+      } catch (e) {
+        out('warn', `Airtable smoke: ${c.table} check failed: ${String(e && e.message ? e.message : e)}`)
+      }
+    }
+  } else {
+    out('warn', 'Airtable smoke: skipped (missing AIRTABLE_API_KEY / AIRTABLE_BASE_ID)')
+  }
+
+  out('info', 'Smoke test ok')
 }
 
 main().catch((e) => {

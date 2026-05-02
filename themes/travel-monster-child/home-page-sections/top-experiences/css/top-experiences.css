@@ -1,0 +1,730 @@
+/**
+ * FTS Top Experiences Section — Frontend Styles
+ *
+ * @package FTS_Home_Sections
+ */
+
+/* ── Section ────────────────────────────────────────────── */
+
+.fts-top-exp {
+    background: var(--fts-white, #ffffff) !important;
+    padding: var(--fts-section-padding, 80px 24px) !important;
+}
+
+.fts-top-exp-inner {
+    max-width: var(--fts-section-max-width, 1280px) !important;
+    margin: 0 auto !important;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.fts-te-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    margin-bottom: 24px !important;
+    gap: 24px !important;
+}
+
+.fts-te-header-left {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.fts-te-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #e65100 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 8px !important;
+}
+
+.fts-te-label svg {
+    color: #e65100 !important;
+    stroke: #e65100 !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-heading {
+    font-family: var(--fts-font-heading, 'Poppins', sans-serif) !important;
+    font-size: clamp(1.5rem, 3vw, 2.25rem) !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+}
+
+.fts-te-view-all {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #e65100 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    transition: color var(--fts-transition-fast, 150ms ease) !important;
+}
+
+.fts-te-view-all:hover {
+    color: #bf360c !important;
+}
+
+.fts-te-view-all svg {
+    transition: transform var(--fts-transition-fast, 150ms ease) !important;
+}
+
+.fts-te-view-all:hover svg {
+    transform: translateX(3px) !important;
+}
+
+/* ── Arrow Buttons ──────────────────────────────────────── */
+
+.fts-te-arrows {
+    display: flex !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-arrow {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    border: 1.5px solid var(--fts-gray-300, #cbd5e1) !important;
+    background: var(--fts-white, #ffffff) !important;
+    color: var(--fts-gray-600, #475569) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+}
+
+.fts-te-arrow:hover {
+    border-color: #e65100 !important;
+    color: #e65100 !important;
+    background: #fff7ed !important;
+}
+
+/* ── Social Proof Bar ───────────────────────────────────── */
+
+.fts-te-proof-bar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 24px !important;
+    background: #1e293b !important;
+    padding: 12px 24px !important;
+    border-radius: 50px !important;
+    margin-bottom: 28px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.fts-te-proof-bar::-webkit-scrollbar {
+    display: none !important;
+}
+
+.fts-te-proof-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    white-space: nowrap !important;
+}
+
+.fts-te-proof-item svg {
+    color: #fbbf24 !important;
+    stroke: #fbbf24 !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-proof-item strong {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.fts-te-proof-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #22c55e !important;
+    flex-shrink: 0 !important;
+    animation: fts-te-pulse 2s ease-in-out infinite !important;
+}
+
+@keyframes fts-te-pulse {
+    0%, 100% { opacity: 1 !important; }
+    50% { opacity: 0.4 !important; }
+}
+
+.fts-te-proof-num {
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.fts-te-proof-num.is-fading {
+    opacity: 0 !important;
+}
+
+.fts-te-proof-trending svg {
+    color: rgba(255, 255, 255, 0.6) !important;
+    stroke: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ── Carousel ───────────────────────────────────────────── */
+
+.fts-te-viewport {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.fts-te-track {
+    display: flex !important;
+    gap: 20px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    scroll-behavior: smooth !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    padding-right: 48px !important;
+}
+
+.fts-te-track::-webkit-scrollbar {
+    display: none !important;
+}
+
+.fts-te-fade {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 80px !important;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.85) 60%, #ffffff 100%) !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+}
+
+/* ── Card ───────────────────────────────────────────────── */
+
+.fts-te-card {
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--fts-white, #ffffff) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    border: 1px solid var(--fts-gray-200, #e2e8f0) !important;
+    transition: border-color var(--fts-transition-normal, 250ms ease) !important;
+    flex-shrink: 0 !important;
+    width: 280px !important;
+    scroll-snap-align: start !important;
+}
+
+.fts-te-card:hover {
+    border-color: #e65100 !important;
+}
+
+/* ── Card Image ─────────────────────────────────────────── */
+
+.fts-te-card-image-wrap {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+    aspect-ratio: 4 / 3 !important;
+    text-decoration: none !important;
+}
+
+.fts-te-card-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    transition: transform 0.4s ease !important;
+}
+
+.fts-te-card:hover .fts-te-card-img {
+    transform: scale(1.05) !important;
+}
+
+/* ── Badges ─────────────────────────────────────────────── */
+
+.fts-te-badge {
+    position: absolute !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 5px 12px !important;
+    border-radius: 6px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    z-index: 2 !important;
+    line-height: 1 !important;
+}
+
+.fts-te-badge--featured {
+    top: 12px !important;
+    left: 12px !important;
+    background: #1e293b !important;
+}
+
+.fts-te-badge--type {
+    top: 12px !important;
+    left: 12px !important;
+    background: #16a34a !important;
+}
+
+.fts-te-badge--featured ~ .fts-te-badge--type {
+    top: 36px !important;
+}
+
+.fts-te-badge--discount {
+    top: 12px !important;
+    right: 12px !important;
+    background: #ef4444 !important;
+    border-radius: 6px !important;
+}
+
+/* ── Duration Pill ──────────────────────────────────────── */
+
+.fts-te-duration {
+    position: absolute !important;
+    bottom: 12px !important;
+    right: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 12px !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border-radius: 50px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    z-index: 2 !important;
+    line-height: 1 !important;
+}
+
+.fts-te-duration svg {
+    flex-shrink: 0 !important;
+}
+
+/* ── Card Body ──────────────────────────────────────────── */
+
+.fts-te-card-body {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 14px 12px 12px !important;
+    flex: 1 !important;
+}
+
+.fts-te-card-dest {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #0d9488 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 6px !important;
+}
+
+.fts-te-card-dest svg {
+    color: #0d9488 !important;
+    stroke: #0d9488 !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-card-title {
+    font-family: var(--fts-font-heading, 'Poppins', sans-serif) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+    margin: 0 0 8px !important;
+    line-height: 1.35 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.fts-te-card-title a {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.fts-te-card-title a:hover {
+    color: #e65100 !important;
+}
+
+/* ── Stars ───────────────────────────────────────────────── */
+
+.fts-te-card-rating {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+}
+
+.fts-te-card-stars {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 1px !important;
+}
+
+.fts-te-card-avg {
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+}
+
+.fts-te-card-count {
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 12px !important;
+    color: var(--fts-gray-400, #94a3b8) !important;
+}
+
+/* ── Card Footer ────────────────────────────────────────── */
+
+.fts-te-card-footer {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-top: auto !important;
+}
+
+.fts-te-card-prices {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.fts-te-card-old-price {
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 12px !important;
+    color: var(--fts-gray-400, #94a3b8) !important;
+    text-decoration: line-through !important;
+    line-height: 1.3 !important;
+}
+
+.fts-te-card-current {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 5px !important;
+}
+
+.fts-te-card-from {
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 12px !important;
+    color: var(--fts-gray-500, #64748b) !important;
+}
+
+.fts-te-card-price {
+    font-family: var(--fts-font-heading, 'Poppins', sans-serif) !important;
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem) !important;
+    font-weight: 800 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+    line-height: 1 !important;
+}
+
+/* ── View Trip Link ─────────────────────────────────────── */
+
+.fts-te-card-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-family: var(--fts-font-body, 'Poppins', sans-serif) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #e65100 !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    transition: color var(--fts-transition-fast, 150ms ease) !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-te-card-link:hover {
+    color: #bf360c !important;
+}
+
+.fts-te-card-link svg {
+    transition: transform var(--fts-transition-fast, 150ms ease) !important;
+}
+
+.fts-te-card-link:hover svg {
+    transform: translateX(3px) !important;
+}
+
+/* ── Responsive: Tablet ─────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-te-card {
+        width: 260px !important;
+    }
+
+    .fts-te-track {
+        gap: 16px !important;
+    }
+
+    .fts-te-proof-bar {
+        gap: 18px !important;
+        padding: 10px 20px !important;
+    }
+}
+
+/* ── Responsive: Small Tablet ───────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-te-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .fts-te-header-right {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    .fts-te-heading {
+        font-size: 1.3rem !important;
+    }
+
+    .fts-te-card {
+        width: 230px !important;
+        border-radius: 12px !important;
+    }
+
+    .fts-te-card-image-wrap {
+        border-radius: 12px !important;
+    }
+
+    .fts-te-card-body {
+        padding: 12px 10px 10px !important;
+    }
+
+    .fts-te-card-title {
+        font-size: 13px !important;
+    }
+
+    .fts-te-card-rating {
+        margin-bottom: 8px !important;
+    }
+
+    .fts-te-card-stars svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+
+    .fts-te-card-avg {
+        font-size: 12px !important;
+    }
+
+    .fts-te-card-count {
+        font-size: 11px !important;
+    }
+
+    .fts-te-card-link {
+        font-size: 12px !important;
+    }
+
+    .fts-te-arrow {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    .fts-te-arrow svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .fts-te-proof-bar {
+        border-radius: 12px !important;
+        padding: 10px 16px !important;
+        gap: 16px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .fts-te-proof-item {
+        font-size: 11px !important;
+    }
+
+    .fts-te-badge {
+        padding: 4px 8px !important;
+        font-size: 9px !important;
+    }
+
+    .fts-te-badge--type {
+        top: 10px !important;
+    }
+
+    .fts-te-badge--featured ~ .fts-te-badge--type {
+        top: 32px !important;
+    }
+
+    .fts-te-duration {
+        font-size: 10px !important;
+        padding: 5px 10px !important;
+    }
+
+    .fts-te-fade {
+        width: 50px !important;
+    }
+
+    .fts-te-track {
+        gap: 14px !important;
+        padding-right: 20px !important;
+    }
+}
+
+/* ── Responsive: Mobile ─────────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-te-heading {
+        font-size: 1.15rem !important;
+    }
+
+    .fts-te-card {
+        width: 200px !important;
+        border-radius: 10px !important;
+    }
+
+    .fts-te-card-image-wrap {
+        border-radius: 10px !important;
+    }
+
+    .fts-te-card-body {
+        padding: 10px 8px 8px !important;
+    }
+
+    .fts-te-card-title {
+        font-size: 12px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .fts-te-card-dest {
+        font-size: 9px !important;
+    }
+
+    .fts-te-card-dest svg {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    .fts-te-card-rating {
+        gap: 4px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .fts-te-card-stars svg {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    .fts-te-card-avg {
+        font-size: 11px !important;
+    }
+
+    .fts-te-card-count {
+        font-size: 10px !important;
+    }
+
+    .fts-te-card-old-price {
+        font-size: 10px !important;
+    }
+
+    .fts-te-card-from {
+        font-size: 10px !important;
+    }
+
+    .fts-te-card-price {
+        font-size: 1rem !important;
+    }
+
+    .fts-te-card-link {
+        font-size: 11px !important;
+    }
+
+    .fts-te-proof-bar {
+        border-radius: 10px !important;
+        padding: 8px 12px !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .fts-te-proof-item {
+        font-size: 10px !important;
+        gap: 5px !important;
+    }
+
+    .fts-te-proof-item svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+
+    .fts-te-badge {
+        padding: 3px 6px !important;
+        font-size: 8px !important;
+        border-radius: 4px !important;
+    }
+
+    .fts-te-badge--type {
+        top: 8px !important;
+    }
+
+    .fts-te-badge--featured ~ .fts-te-badge--type {
+        top: 28px !important;
+    }
+
+    .fts-te-duration {
+        font-size: 9px !important;
+        padding: 4px 8px !important;
+    }
+
+    .fts-te-duration svg {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    .fts-te-track {
+        gap: 12px !important;
+        padding-right: 16px !important;
+    }
+
+    .fts-te-fade {
+        width: 40px !important;
+    }
+
+    .fts-te-view-all {
+        font-size: 12px !important;
+    }
+}

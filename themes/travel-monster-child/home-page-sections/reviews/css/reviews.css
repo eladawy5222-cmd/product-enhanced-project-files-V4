@@ -1,0 +1,466 @@
+/**
+ * FTS Traveler Reviews Section
+ */
+
+/* ── Section Wrapper ─────────────────────────────────────── */
+
+.fts-reviews {
+    background: #fff8f3 !important;
+    padding: 80px 24px !important;
+    width: 100% !important;
+}
+
+.fts-reviews-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.fts-reviews-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    margin-bottom: 40px !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+}
+
+.fts-reviews-header-left {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+.fts-reviews-label {
+    font-family: var(--fts-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: #e65100 !important;
+}
+
+.fts-reviews-heading {
+    font-family: var(--fts-font-heading) !important;
+    font-size: clamp(1.5rem, 3vw, 2.25rem) !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.fts-reviews-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body) !important;
+    white-space: nowrap !important;
+}
+
+.fts-reviews-header-right strong {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+}
+
+.fts-reviews-header-right span {
+    font-size: 0.9rem !important;
+    color: var(--fts-gray-500, #64748b) !important;
+}
+
+/* ── Card Grid: 3 top + 2 bottom centered ────────────────── */
+
+.fts-reviews-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    margin-bottom: 40px !important;
+}
+
+.fts-reviews-grid .fts-reviews-card:nth-child(4),
+.fts-reviews-grid .fts-reviews-card:nth-child(5) {
+    grid-column: auto !important;
+}
+
+.fts-reviews-grid::after {
+    content: '' !important;
+    display: none !important;
+}
+
+/* Center the bottom row (cards 4 & 5) */
+@supports (grid-template-columns: subgrid) {
+    .fts-reviews-grid {
+        justify-items: center !important;
+    }
+}
+
+/* Fallback centering for the 2-card bottom row */
+.fts-reviews-grid {
+    justify-content: center !important;
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+
+.fts-reviews-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    transition: border-color var(--fts-transition-normal) !important;
+}
+
+.fts-reviews-card:hover {
+    border-color: #f97316 !important;
+}
+
+.fts-reviews-card-top {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
+.fts-reviews-stars {
+    display: flex !important;
+    gap: 2px !important;
+}
+
+.fts-reviews-stars svg {
+    display: block !important;
+}
+
+.fts-reviews-card-text {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.875rem !important;
+    color: var(--fts-gray-700, #334155) !important;
+    line-height: 1.65 !important;
+    margin: 0 !important;
+    flex: 1 !important;
+}
+
+/* ── Trip Tag ────────────────────────────────────────────── */
+
+.fts-reviews-card-trip {
+    display: inline-block !important;
+    align-self: flex-start !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    color: #e65100 !important;
+    background: rgba(230, 81, 0, 0.08) !important;
+    border: 1px solid rgba(230, 81, 0, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 4px 12px !important;
+}
+
+/* ── Author ──────────────────────────────────────────────── */
+
+.fts-reviews-card-author {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 4px !important;
+}
+
+.fts-reviews-avatar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 50% !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+}
+
+.fts-reviews-author-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+}
+
+.fts-reviews-author-info strong {
+    font-family: var(--fts-font-heading) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+}
+
+.fts-reviews-author-info span {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.75rem !important;
+    color: var(--fts-gray-400, #94a3b8) !important;
+}
+
+/* ── Trustindex Embed ────────────────────────────────────── */
+
+.fts-reviews-trustindex {
+    margin-bottom: 40px !important;
+    overflow: hidden !important;
+    border-radius: 12px !important;
+}
+
+.fts-reviews-trustindex .ti-widget {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.fts-reviews-trustindex .ti-widget-container {
+    max-width: 100% !important;
+}
+
+.fts-reviews-trustindex .ti-reviews-container-wrapper {
+    overflow: hidden !important;
+}
+
+.fts-reviews-trustindex .ti-review-item {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.fts-reviews-trustindex .ti-review-item .ti-inner {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.fts-reviews-trustindex .ti-review-text-container {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    overflow: hidden !important;
+}
+
+.fts-reviews-trustindex .ti-review-image img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px !important;
+}
+
+.fts-reviews-trustindex .ti-footer {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.fts-reviews-trustindex .ti-footer .ti-fade-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px 10px !important;
+}
+
+@media (min-width: 769px) {
+    .fts-reviews-trustindex .ti-footer .ti-fade-container {
+        flex-direction: row !important;
+    }
+}
+
+.fts-reviews-trustindex .ti-controls {
+    z-index: 5 !important;
+}
+
+/* ── Trusted On Bar ──────────────────────────────────────── */
+
+.fts-reviews-trusted {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+    padding-top: 24px !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+.fts-reviews-trusted-label {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.875rem !important;
+    color: var(--fts-gray-500, #64748b) !important;
+}
+
+.fts-reviews-platform {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: var(--fts-gray-700, #334155) !important;
+}
+
+.fts-reviews-platform-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-reviews {
+        padding: 60px 20px !important;
+    }
+
+    .fts-reviews-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .fts-reviews-trustindex .ti-review-item {
+        min-width: 260px !important;
+    }
+}
+
+/* ── Responsive: Mobile ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-reviews {
+        padding: 48px 16px !important;
+    }
+
+    .fts-reviews-header {
+        flex-direction: column !important;
+        margin-bottom: 28px !important;
+    }
+
+    .fts-reviews-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+        margin-bottom: 28px !important;
+    }
+
+    .fts-reviews-card {
+        padding: 20px !important;
+    }
+
+    .fts-reviews-trusted {
+        gap: 14px !important;
+    }
+
+    .fts-reviews-trustindex {
+        margin-bottom: 28px !important;
+        margin-left: -16px !important;
+        margin-right: -16px !important;
+        border-radius: 0 !important;
+    }
+
+    .fts-reviews-trustindex .ti-widget {
+        padding: 0 !important;
+    }
+
+    .fts-reviews-trustindex .ti-widget-container {
+        padding: 0 8px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 8px !important;
+        padding: 12px 8px !important;
+        overflow: hidden !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-fade-container {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-rating-text {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 13px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-stars {
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-large-logo {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-large-logo img {
+        max-width: 120px !important;
+        height: auto !important;
+    }
+
+    .fts-reviews-trustindex .ti-review-item {
+        min-width: 240px !important;
+        max-width: 280px !important;
+    }
+
+    .fts-reviews-trustindex .ti-review-text-container {
+        font-size: 13px !important;
+    }
+
+    .fts-reviews-trustindex .ti-controls .ti-next,
+    .fts-reviews-trustindex .ti-controls .ti-prev {
+        width: 28px !important;
+        height: 28px !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-reviews {
+        padding: 40px 12px !important;
+    }
+
+    .fts-reviews-card {
+        padding: 16px !important;
+    }
+
+    .fts-reviews-card-text {
+        font-size: 0.8rem !important;
+    }
+
+    .fts-reviews-trusted {
+        gap: 10px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .fts-reviews-platform {
+        font-size: 0.8rem !important;
+    }
+
+    .fts-reviews-trustindex {
+        margin-left: -12px !important;
+        margin-right: -12px !important;
+    }
+
+    .fts-reviews-trustindex .ti-review-item {
+        min-width: 200px !important;
+        max-width: 250px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-rating-text {
+        font-size: 12px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-large-logo img {
+        max-width: 100px !important;
+    }
+
+    .fts-reviews-trustindex .ti-footer .ti-stars img {
+        width: 14px !important;
+        height: 14px !important;
+    }
+}

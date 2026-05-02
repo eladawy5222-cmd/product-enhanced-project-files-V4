@@ -1,0 +1,283 @@
+/**
+ * FTS Custom Footer
+ */
+
+/* ── Footer Wrapper ──────────────────────────────────────── */
+
+.fts-footer {
+    background: #0f1520 !important;
+    width: 100% !important;
+    color: #ffffff !important;
+}
+
+.fts-footer-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding: 56px 24px !important;
+}
+
+/* ── 4-Column Grid ───────────────────────────────────────── */
+
+.fts-footer-grid {
+    display: grid !important;
+    grid-template-columns: 1.2fr 1fr 1fr 1.3fr !important;
+    gap: 40px !important;
+}
+
+/* ── Brand Column ────────────────────────────────────────── */
+
+.fts-footer-logo {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+}
+
+.fts-footer-logo-letters {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+.fts-footer-letter {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    font-family: var(--fts-font-heading) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+.fts-footer-logo-text {
+    font-family: var(--fts-font-heading) !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+.fts-footer-desc {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    line-height: 1.7 !important;
+    margin: 0 0 20px 0 !important;
+    max-width: 280px !important;
+}
+
+/* ── Social Icons ────────────────────────────────────────── */
+
+.fts-footer-socials {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.fts-footer-social {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.fts-footer-social:hover {
+    background: #ff6b35 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.fts-footer-social svg {
+    display: block !important;
+}
+
+/* ── Column Headings ─────────────────────────────────────── */
+
+.fts-footer-heading {
+    font-family: var(--fts-font-heading) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin: 0 0 16px 0 !important;
+}
+
+/* ── Link Lists ──────────────────────────────────────────── */
+
+.fts-footer-links {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+}
+
+.fts-footer-links li {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fts-footer-links a {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease !important;
+}
+
+.fts-footer-links a:hover {
+    color: #ff6b35 !important;
+    text-decoration: none !important;
+}
+
+/* ── Contact List ────────────────────────────────────────── */
+
+.fts-footer-contact-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+
+.fts-footer-contact-list li {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fts-footer-contact-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease !important;
+}
+
+a.fts-footer-contact-item:hover {
+    color: #ff6b35 !important;
+    text-decoration: none !important;
+}
+
+.fts-footer-contact-item svg {
+    flex-shrink: 0 !important;
+}
+
+/* ── Bottom Bar ──────────────────────────────────────────── */
+
+.fts-footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.fts-footer-bottom-inner {
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+    padding: 18px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+}
+
+.fts-footer-copyright {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.78rem !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    margin: 0 !important;
+}
+
+.fts-footer-payments {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.fts-footer-payments-label {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.78rem !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.fts-footer-payment-badge {
+    display: inline-block !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.68rem !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    padding: 3px 10px !important;
+    border-radius: 4px !important;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-footer-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 32px !important;
+    }
+
+    .fts-footer-inner {
+        padding: 48px 20px !important;
+    }
+}
+
+/* ── Responsive: Mobile ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-footer-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 28px !important;
+    }
+
+    .fts-footer-inner {
+        padding: 40px 16px !important;
+    }
+
+    .fts-footer-brand {
+        grid-column: span 2 !important;
+    }
+
+    .fts-footer-desc {
+        max-width: 100% !important;
+    }
+
+    .fts-footer-bottom-inner {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 16px !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-footer-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+
+    .fts-footer-brand {
+        grid-column: span 1 !important;
+    }
+
+    .fts-footer-inner {
+        padding: 32px 12px !important;
+    }
+
+    .fts-footer-bottom-inner {
+        padding: 14px 12px !important;
+    }
+}

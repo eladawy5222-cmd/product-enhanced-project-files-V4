@@ -1,0 +1,289 @@
+/**
+ * FTS FAQ Section
+ */
+
+/* ── Section Wrapper ─────────────────────────────────────── */
+
+.fts-faq {
+    background: #ffffff !important;
+    padding: 80px 24px !important;
+    width: 100% !important;
+}
+
+.fts-faq-inner {
+    max-width: 800px !important;
+    margin: 0 auto !important;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.fts-faq-header {
+    text-align: center !important;
+    margin-bottom: 40px !important;
+}
+
+.fts-faq-label {
+    display: inline-block !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    color: #e65100 !important;
+    margin-bottom: 8px !important;
+}
+
+.fts-faq-heading {
+    font-family: var(--fts-font-heading) !important;
+    font-size: clamp(1.5rem, 3vw, 2.25rem) !important;
+    font-weight: 700 !important;
+    color: var(--fts-gray-900, #0f172a) !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* ── Accordion ───────────────────────────────────────────── */
+
+.fts-faq-accordion {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 40px !important;
+}
+
+/* ── Accordion Item ──────────────────────────────────────── */
+
+.fts-faq-item {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    transition: all 0.25s ease !important;
+    background: #ffffff !important;
+}
+
+.fts-faq-item.is-open {
+    border-color: #fed7aa !important;
+    background: #fff7ed !important;
+    border-left: 3px solid #e65100 !important;
+}
+
+/* ── Question Button ─────────────────────────────────────── */
+
+.fts-faq-question {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+    padding: 18px 20px !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: var(--fts-gray-800, #1e293b) !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    transition: color 0.2s ease !important;
+}
+
+.fts-faq-item.is-open .fts-faq-question {
+    color: #e65100 !important;
+}
+
+.fts-faq-q-icon {
+    flex-shrink: 0 !important;
+    color: var(--fts-gray-400, #94a3b8) !important;
+    transition: color 0.2s ease !important;
+}
+
+.fts-faq-item.is-open .fts-faq-q-icon {
+    color: #e65100 !important;
+}
+
+.fts-faq-q-text {
+    flex: 1 !important;
+}
+
+.fts-faq-chevron {
+    flex-shrink: 0 !important;
+    color: var(--fts-gray-400, #94a3b8) !important;
+    transition: transform 0.3s ease, color 0.2s ease !important;
+}
+
+.fts-faq-item.is-open .fts-faq-chevron {
+    transform: rotate(180deg) !important;
+    color: #e65100 !important;
+}
+
+/* ── Answer ──────────────────────────────────────────────── */
+
+.fts-faq-answer {
+    max-height: 0;
+    overflow: hidden !important;
+    transition: max-height 0.35s ease !important;
+}
+
+.fts-faq-answer-inner {
+    padding: 0 20px 18px 52px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.875rem !important;
+    color: var(--fts-gray-600, #475569) !important;
+    line-height: 1.7 !important;
+}
+
+.fts-faq-answer-inner p {
+    margin: 0 0 8px 0 !important;
+}
+
+.fts-faq-answer-inner p:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ── Contact Bar ─────────────────────────────────────────── */
+
+.fts-faq-contact {
+    text-align: center !important;
+    background: var(--fts-gray-50, #f8fafc) !important;
+    border-radius: 16px !important;
+    padding: 28px 24px !important;
+}
+
+.fts-faq-contact-text {
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.95rem !important;
+    color: var(--fts-gray-700, #334155) !important;
+    margin: 0 0 16px 0 !important;
+}
+
+.fts-faq-contact-buttons {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+.fts-faq-contact-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-family: var(--fts-font-body) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 50px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    border: none !important;
+    line-height: 1 !important;
+}
+
+.fts-faq-contact-btn--whatsapp {
+    background: #25d366 !important;
+    color: #ffffff !important;
+}
+
+.fts-faq-contact-btn--whatsapp:hover {
+    background: #1da851 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.fts-faq-contact-btn--whatsapp svg {
+    fill: #ffffff !important;
+}
+
+.fts-faq-contact-btn--email {
+    background: #ea580c !important;
+    color: #ffffff !important;
+}
+
+.fts-faq-contact-btn--email:hover {
+    background: #c2410c !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.fts-faq-contact-btn--call {
+    background: #ffffff !important;
+    color: var(--fts-gray-800, #1e293b) !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.fts-faq-contact-btn--call:hover {
+    background: var(--fts-gray-50, #f8fafc) !important;
+    border-color: #cbd5e1 !important;
+    color: var(--fts-gray-800, #1e293b) !important;
+    text-decoration: none !important;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .fts-faq {
+        padding: 60px 20px !important;
+    }
+}
+
+/* ── Responsive: Mobile ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .fts-faq {
+        padding: 48px 16px !important;
+    }
+
+    .fts-faq-header {
+        margin-bottom: 28px !important;
+    }
+
+    .fts-faq-question {
+        padding: 14px 16px !important;
+        font-size: 0.875rem !important;
+        gap: 10px !important;
+    }
+
+    .fts-faq-answer-inner {
+        padding: 0 16px 14px 42px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .fts-faq-contact {
+        padding: 20px 16px !important;
+    }
+
+    .fts-faq-contact-btn {
+        font-size: 0.8rem !important;
+        padding: 8px 16px !important;
+    }
+}
+
+/* ── Responsive: Small Mobile ────────────────────────────── */
+
+@media (max-width: 480px) {
+    .fts-faq {
+        padding: 40px 12px !important;
+    }
+
+    .fts-faq-question {
+        padding: 12px 14px !important;
+    }
+
+    .fts-faq-q-icon {
+        display: none !important;
+    }
+
+    .fts-faq-answer-inner {
+        padding: 0 14px 12px 14px !important;
+    }
+
+    .fts-faq-contact-buttons {
+        flex-direction: column !important;
+    }
+
+    .fts-faq-contact-btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}

@@ -1,0 +1,188 @@
+/* For inter linking in customizer control */
+
+::-moz-selection {
+    /* Code for Firefox */
+    color: #ffffff;
+    background: #0073aa;
+}
+
+::selection {
+    color: #ffffff;
+    background: #0073aa;
+}
+
+.text-inner-link {
+    text-decoration: underline;
+    color: #0073aa;
+}
+
+.text-inner-link:hover {
+    color: #00a0d2;
+    cursor: pointer;
+}
+
+#customize-controls .control-section>h3.accordion-section-title {
+    display: flex;
+    align-items: center;
+    padding: 14px 26px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 13px;
+    border-left: none;
+    border-bottom: none;
+    background-color: transparent;
+}
+
+#customize-controls .travel-monster-group-title {
+    height: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    margin: 18px 0 0 0 !important;
+    padding: 30px 26px 20px 26px !important;
+    border-bottom: none;
+    border-top: 1px solid #ddd;
+}
+
+
+/* Customizer Design css added*/
+
+.text-inner-link {
+    text-decoration: underline;
+    color: #0073aa;
+}
+
+.text-inner-link:hover {
+    color: #00a0d2;
+    cursor: pointer;
+}
+
+.accordion-section {
+    background: #fff;
+}
+
+#customize-controls .control-section>h3.accordion-section-title {
+    display: flex;
+    align-items: center;
+    padding: 4px 5px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 13px;
+    border-left: none;
+    border-bottom: none;
+    background-color: transparent;
+}
+
+#customize-controls .travel-monster-group-title {
+    height: auto !important;
+    display: block !important;
+    visibility: visible !important;
+    margin: 18px 0 0 0 !important;
+    padding: 1px 15px !important;
+    border-bottom: none;
+    margin-top: 10px;
+    background: #fff;
+}
+
+#customize-theme-controls .accordion-section-content.control-section {
+    background: #fff !important;
+    height: 100%;
+}
+
+.customize-control-travel-monster-radio-image .image {
+    margin-top: 15px;
+}
+
+.customize-control-travel-monster-radio-image label svg,
+.customize-control-travel-monster-radio-image label img {
+    max-width: 125px;
+    height: auto;
+}
+
+#input_separator_icon {
+    grid-template-columns: 45px 45px 45px;
+}
+
+#input_separator_icon .img-input-wrapper svg {
+    padding: 12px;
+    border-width: 2px;
+}
+
+[data-col] {
+    display: grid !important;
+    grid-gap: 10px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+[data-col] .img-input-wrapper {
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+[data-col="col-2"] {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+[data-col="col-3"] {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+#input_header_layout[data-col] {
+    grid-template-columns: repeat(1, 1fr) !important;
+}
+
+.customize-control-travel-monster-radio-image label svg,
+.customize-control-travel-monster-radio-image label img {
+    max-width: 100%;
+}
+
+.customize-control-description {
+    margin: 0 0 10px;
+}
+
+.customize-control {
+    padding: 15px 0;
+    border-bottom: 1px dashed #dddbdb;
+    margin-bottom: 0;
+}
+
+.travel-monster-slider.ui-slider {
+    margin: 0 20px 0 0;
+}
+
+.customize-section-description-container {
+    margin-bottom: 0;
+}
+
+.wte-customizer-group ul.controls li:first-child {
+    border-top: 2px solid #dddbdb;
+}
+
+.wte-customizer-group ul.controls li:last-child {
+    border-bottom: none;
+    padding-bottom: 5px;
+}
+
+.wte-customizer-group-collapsible.is-active .group-head .head-label .title {
+    color: #3498D9;
+}
+
+
+/* refinememt */
+
+#customize-theme-controls .customize-pane-child.accordion-section-content {
+    padding: 12px 12px 0;
+}
+
+.wte-customizer-group-collapsible {
+    margin: 0;
+}
+
+#customize-controls .customize-info {
+    margin-bottom: 0;
+}
+
+.customize-partial-edit-shortcut-mobile_menu_label .customize-partial-edit-shortcut-button {
+    left: -60px;
+    top: -2px;
+}

@@ -348,6 +348,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   ctx.groupSize = tripFields.Group_Size || '';
   ctx.languages = Array.isArray(tripFields.Languages) ? tripFields.Languages.join(', ') : '';
   var tripNumber = tripFields.TripID || '';
+  var tripName = tripFields.Title || '';
   
   // 1) Get improved trip data (Description + SEO)
   try {
@@ -379,7 +380,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   ctx.rawIncludes = [];
   ctx.rawExcludes = [];
   try {
-    var incRawRecs = await fetchRecordsByTripLocal_('TripIncludes', 'Trip', tripId, tripNumber, 200)
+    var incRawRecs = await fetchRecordsByTripLocal_('TripIncludes', 'Trip', tripId, tripNumber, tripName, 200)
     ctx.rawIncludes = (incRawRecs || [])
       .map(function(r) {
         var f = r && r.fields ? r.fields : {}
@@ -388,7 +389,7 @@ async function buildFaqsContext_(tripFields, tripId) {
       .filter(Boolean)
   } catch (e) {}
   try {
-    var excRawRecs = await fetchRecordsByTripLocal_('TripExcludes', 'Trip', tripId, tripNumber, 200)
+    var excRawRecs = await fetchRecordsByTripLocal_('TripExcludes', 'Trip', tripId, tripNumber, tripName, 200)
     ctx.rawExcludes = (excRawRecs || [])
       .map(function(r) {
         var f = r && r.fields ? r.fields : {}
@@ -405,7 +406,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   // 5) Get trip facts
   ctx.facts = [];
   try {
-    var factsRecs = await fetchRecordsByTripLocal_(TRIPFACTS_IMPROVEMENT_TABLE, 'Trip', tripId, tripNumber, 100)
+    var factsRecs = await fetchRecordsByTripLocal_(TRIPFACTS_IMPROVEMENT_TABLE, 'Trip', tripId, tripNumber, tripName, 100)
     if (factsRecs && factsRecs.length) {
       factsRecs.forEach(function(rec) {
         var f = rec.fields || {};
@@ -421,7 +422,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   // 6) Get images (for visual context)
   ctx.imageCount = 0;
   try {
-    var imgRecs = await fetchRecordsByTripLocal_('Images Improvement With AI', 'Trip', tripId, tripNumber, 1)
+    var imgRecs = await fetchRecordsByTripLocal_('Images Improvement With AI', 'Trip', tripId, tripNumber, tripName, 1)
     if (imgRecs && imgRecs.length) {
       ctx.imageCount = imgRecs.length;
     }
@@ -432,7 +433,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   // 7) Get pickup locations (if available)
   ctx.pickupLocations = [];
   try {
-    var pickupRecs = await fetchRecordsByTripLocal_('PickupLocations Improvement With AI', 'Trip', tripId, tripNumber, 100)
+    var pickupRecs = await fetchRecordsByTripLocal_('PickupLocations Improvement With AI', 'Trip', tripId, tripNumber, tripName, 100)
     if (pickupRecs && pickupRecs.length) {
       pickupRecs.forEach(function(rec) {
         var f = rec.fields || {};
@@ -448,7 +449,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   // 8) Get itinerary steps (meals info)
   ctx.meals = [];
   try {
-    var stepsRecs = await fetchRecordsByTripLocal_('Itinerary Improvement With AI', 'Trip', tripId, tripNumber, 100)
+    var stepsRecs = await fetchRecordsByTripLocal_('Itinerary Improvement With AI', 'Trip', tripId, tripNumber, tripName, 100)
     if (stepsRecs && stepsRecs.length) {
       stepsRecs.forEach(function(rec) {
         var f = rec.fields || {};
@@ -1037,6 +1038,49 @@ function buildFaqTruth_(ctx) {
   function hasGuide_(s) { return /\b(egyptologist|tour guide|guide)\b/.test(s) }
   function hasOptionalMarker_(s) { return /\b(optional|add-?on|extra|if selected|upon request)\b/.test(s) }
   function hasNile_(s) { return /\b(nile|boat|cruise|felucca)\b/.test(s) }
+  function entranceDecisionByMajority_() {
+    var includeCount = 0
+    var excludeCount = 0
+
+    function countByListRole_(items, role) {
+      for (var i = 0; i < items.length; i++) {
+        var t = lc_(items[i])
+        if (!t) continue
+        if (!hasEntrance_(t)) continue
+        if (role === 'include') includeCount++
+        else excludeCount++
+      }
+    }
+
+    function countByTextEvidence_(text) {
+      var s = lc_(text)
+      if (!s) return
+      if (!hasEntrance_(s)) return
+      if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,60}\b(not included|excluded)\b/.test(s)) excludeCount++
+      else if (/\b(not included|excluded)\b[^.]{0,60}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) excludeCount++
+      else if (/\byou(?:\s+will|\s*'ll)?\s+need\s+to\s+pay\b[^.]{0,80}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) excludeCount++
+      else if (/\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b[^.]{0,60}\b(included|covered)\b/.test(s)) includeCount++
+      else if (/\b(included|covered)\b[^.]{0,60}\b(entrance|admission|ticket|tickets|entrance fee|entrance fees)\b/.test(s)) includeCount++
+    }
+
+    countByListRole_(rawInc, 'include')
+    countByListRole_(rawExc, 'exclude')
+    countByListRole_(impInc, 'include')
+    countByListRole_(impExc, 'exclude')
+
+    const evidenceTexts = [
+      ctx && ctx.tripDescription ? ctx.tripDescription : '',
+      ctx && ctx.aiTripDescription ? ctx.aiTripDescription : '',
+      ctx && ctx.highlights ? ctx.highlights.join(' ') : '',
+      ctx && ctx.itinerary ? ctx.itinerary.join(' ') : ''
+    ]
+    for (var k = 0; k < evidenceTexts.length; k++) countByTextEvidence_(evidenceTexts[k])
+
+    if (includeCount > excludeCount) return 'include'
+    if (excludeCount > includeCount) return 'exclude'
+    if (includeCount > 0 && excludeCount > 0) return 'conflict'
+    return 'unknown'
+  }
 
   var incOut = []
   for (var i = 0; i < incBase.length; i++) {
@@ -1061,10 +1105,15 @@ function buildFaqTruth_(ctx) {
 
   var rawIncLc = lc_(rawInc.join(' '))
   var rawExcLc = lc_(rawExc.join(' '))
+  var impIncLc = lc_(impInc.join(' '))
+  var impExcLc = lc_(impExc.join(' '))
+  var excLc = lc_(excOut.join(' '))
+  var entranceDecision = entranceDecisionByMajority_()
   var truth = {
-    entrance_included: hasEntrance_(rawIncLc) || (!rawInc.length && hasEntrance_(incLc)),
-    entrance_excluded: hasEntrance_(rawExcLc) || (!rawExc.length && hasEntrance_(lc_(excOut.join(' ')))),
-    guide_included: hasGuide_(rawIncLc) || (!rawInc.length && hasGuide_(incLc)),
+    entrance_included: entranceDecision === 'include',
+    entrance_excluded: entranceDecision === 'exclude',
+    entrance_conflict: entranceDecision === 'conflict',
+    guide_included: hasGuide_(rawIncLc) || hasGuide_(incLc) || hasGuide_(impIncLc),
     guide_conditional: hasGuide_(rawIncLc) && hasOptionalMarker_(rawIncLc),
     nile_evidence: hasNile_(lc_((ctx && ctx.itinerary ? ctx.itinerary.join(' ') : '') + ' ' + (ctx && ctx.highlights ? ctx.highlights.join(' ') : '') + ' ' + rawIncLc + ' ' + incLc))
   }
@@ -1108,6 +1157,10 @@ function enforceFaqTruth_(faqs, ctx) {
 
   function removeEntranceContradiction_(a) {
     var s = String(a || '')
+    if (T && T.entrance_conflict) {
+      s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:included|not included|excluded|cover(?:ed)?|pay|need to pay)\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+      s = s.replace(/[^.?!]*\bbring\b[^.?!]*\b(cash|money)\b[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
+    }
     if (T && T.entrance_included) {
       s = s.replace(/[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*\bnot included\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
       s = s.replace(/[^.?!]*\bbring\b[^.?!]*\b(cash|money)\b[^.?!]*\b(entrance|ticket|tickets|admission)\b[^.?!]*(?:[.?!]|$)/ig, '').trim()
@@ -1120,6 +1173,7 @@ function enforceFaqTruth_(faqs, ctx) {
   }
 
   function buildEntranceLine_() {
+    if (T && T.entrance_conflict) return "Entrance-fee coverage depends on the option selected. Please rely on the What's Included and What's Not Included lists."
     if (T && T.entrance_included) return "Entrance fees are included as listed in What's Included."
     if (T && T.entrance_excluded) return "Entrance fees/tickets are not included (see What's Not Included)."
     return "Please rely on the What's Included and What's Not Included lists for entrance-fee coverage."
@@ -1225,18 +1279,18 @@ function ensureMinimumFaqs_(faqs, ctx) {
   return faqs;
 }
 
-async function fetchRecordsByTripLocal_(tableName, linkFieldName, tripId, tripNumber, pageSize) {
+async function fetchRecordsByTripLocal_(tableName, linkFieldName, tripId, tripNumber, tripName, pageSize) {
   var records = [];
   try {
-    var p1 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripId + "'", pageSize: pageSize || 100 };
+    var parts = []
+    if (tripId) parts.push("FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))")
+    if (tripNumber) parts.push("FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))")
+    if (tripName) parts.push("FIND('" + String(tripName).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))")
+    if (!parts.length) return []
+    var formula = parts.length === 1 ? parts[0] : ("OR(" + parts.join(", ") + ")")
+    var p1 = { filterByFormula: formula, pageSize: pageSize || 100 };
     var r1 = await airtableGet_(tableName, p1)
-    var recs1 = r1 && r1.records ? r1.records : [];
-    records = recs1;
-    if (!records.length && tripNumber) {
-      var p2 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripNumber + "'", pageSize: pageSize || 100 };
-      var r2 = await airtableGet_(tableName, p2)
-      records = r2 && r2.records ? r2.records : [];
-    }
+    records = r1 && r1.records ? r1.records : [];
   } catch (e) {}
   return records;
 }

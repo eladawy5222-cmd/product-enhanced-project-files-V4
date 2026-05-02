@@ -1,0 +1,64 @@
+.travel-monster-font-family {
+	margin-bottom: 12px;
+}
+
+.travel-monster-weight-transform-wrapper {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-pack: justify;
+	-ms-flex-pack: justify;
+	justify-content: space-between;
+}
+
+.travel-monster-font-weight,
+.travel-monster-font-transform {
+    width: 100%;
+}
+
+.travel-monster-font-family label,
+.travel-monster-font-weight label,
+.travel-monster-font-transform label{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.travel-monster-font-family label p,
+.travel-monster-font-weight label p,
+.travel-monster-font-transform label p{
+    flex: 0 0 50%;
+}
+
+span.select2-container.select2-container--default.select2-container--open li.select2-results__option {
+	margin:0;
+}
+
+span.select2-container.select2-container--default.select2-container--open{
+	z-index:999999;
+}
+
+.select2-selection__rendered li {
+    margin-bottom: 0;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-container--default.select2-container .select2-selection--multiple,
+.select2-dropdown,
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+	border-color: #ddd;
+	border-radius: 0;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+	color: rgba(0,0,0,0.4);
+}
+
+#customize-control-font_heading_1_control,
+#customize-control-font_heading_2_control,
+#customize-control-font_heading_3_control {
+	margin-top: 20px;
+}
+.select2-hidden-accessible option{
+	color: #ffffff;
+}
