@@ -323,6 +323,11 @@ class FTS_Trip_Redesign_V2 {
             }
         }
 
+        $ti_reviews = $settings['tab_content']['9_wpeditor'] ?? '';
+        if ( is_string( $ti_reviews ) && trim( $ti_reviews ) !== '' ) {
+            $reviews_tab_content = $ti_reviews;
+        }
+
         // ── Duration ──
         $duration      = $settings['trip_duration'] ?? '';
         $duration_unit = $settings['trip_duration_unit'] ?? 'days';

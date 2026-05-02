@@ -264,7 +264,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <section id="fts-v2-sec-reviews" class="fts-v2-section">
         <h2 class="fts-v2-section-title"><?php echo esc_html__( 'What Travelers Say', 'fts' ); ?></h2>
 
-        <?php if ( $review_count > 0 ) : ?>
+        <?php if ( $review_count > 0 && empty( $reviews_tab_content ) ) : ?>
         <div class="fts-v2-reviews-header">
             <div class="fts-v2-reviews-score">
                 <span class="fts-v2-score-num"><?php echo number_format( $avg_rating, 1 ); ?></span>

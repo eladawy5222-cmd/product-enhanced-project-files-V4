@@ -2861,11 +2861,26 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   if (g.AI_Overview_Section_Title) wte.overview_section_title = g.AI_Overview_Section_Title;
   
   // Tab Content (Overview & Why People Love)
-  wte.tab_content = {};
-  if (g.AI_Trip_Description) wte.tab_content['1_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Overview_Section_Title || 'Overview', g.AI_Trip_Description); // Assuming 1 is Overview
+  var tabContent = null;
+  if (g.AI_Trip_Description) {
+    tabContent = tabContent || {};
+    tabContent['1_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Overview_Section_Title || 'Overview', g.AI_Trip_Description); // Assuming 1 is Overview
+  }
   
   if (g.AI_Why_People_Love_This_Trip_Section_Title) wte.tab_8_title = g.AI_Why_People_Love_This_Trip_Section_Title;
-  if (g.AI_Tab_Content) wte.tab_content['8_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Why_People_Love_This_Trip_Section_Title || 'Why People Love This Trip', g.AI_Tab_Content); // Assuming 8 is "Why People Love"
+  if (g.AI_Tab_Content) {
+    tabContent = tabContent || {};
+    tabContent['8_wpeditor'] = dedupeRepeatedSectionIntroFromHtml_Updater_(g.AI_Why_People_Love_This_Trip_Section_Title || 'Why People Love This Trip', g.AI_Tab_Content); // Assuming 8 is "Why People Love"
+  }
+  
+  if (trustindexCode) {
+    tabContent = tabContent || {};
+    tabContent['9_wpeditor'] = trustindexCode;
+  }
+  
+  if (tabContent) {
+    wte.tab_content = tabContent;
+  }
 
   var overviewHtml = (wte.tab_content && wte.tab_content['1_wpeditor']) ? wte.tab_content['1_wpeditor'] : '';
   if (overviewHtml) {

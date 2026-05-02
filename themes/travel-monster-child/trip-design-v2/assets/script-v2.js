@@ -1509,6 +1509,120 @@
             }
         });
 
+        function ftsV2InitTrustindexMiniSummary() {
+            var mini = document.getElementById('fts-v2-ti-mini');
+            if (!mini) return;
+
+            var scoreEl = mini.querySelector('.fts-v2-ti-mini-score');
+            var countEl = mini.querySelector('.fts-v2-ti-mini-count');
+            var sepEl   = mini.querySelector('.fts-v2-ti-mini-sep');
+            var labelEl = mini.querySelector('.fts-v2-ti-mini-label');
+            if (!scoreEl) return;
+
+            var reviewsSec = document.getElementById('fts-v2-sec-reviews');
+            if (!reviewsSec) return;
+
+            var source = reviewsSec.querySelector('.fts-v2-reviews-tab-content') || reviewsSec;
+            var done = false;
+
+            function normalizeInt(str) {
+                var s = String(str || '').replace(/[^\d]/g, '');
+                var n = parseInt(s, 10);
+                return isFinite(n) ? n : 0;
+            }
+
+            function normalizeRating(str) {
+                var s = String(str || '').replace(',', '.').match(/([0-4](?:\.\d+)?|5(?:\.0+)?)/);
+                if (!s) return 0;
+                var n = parseFloat(s[1]);
+                if (!isFinite(n)) return 0;
+                if (n < 0) n = 0;
+                if (n > 5) n = 5;
+                return n;
+            }
+
+            function pickLabel(rating) {
+                if (rating >= 4.5) return 'EXCELLENT';
+                if (rating >= 4.0) return 'VERY GOOD';
+                if (rating >= 3.0) return 'GOOD';
+                return 'RATED';
+            }
+
+            function extractFromAttributes(root) {
+                var el = root.querySelector('[data-rating],[data-average],[data-score],[data-rating-value]');
+                if (!el) return null;
+
+                var r = el.getAttribute('data-rating') || el.getAttribute('data-average') || el.getAttribute('data-score') || el.getAttribute('data-rating-value') || '';
+                var rating = normalizeRating(r);
+                if (!rating) return null;
+
+                var c = el.getAttribute('data-review-count') || el.getAttribute('data-reviews') || el.getAttribute('data-count') || '';
+                var count = normalizeInt(c);
+                return { rating: rating, count: count };
+            }
+
+            function extractFromText(root) {
+                var text = String(root && root.textContent ? root.textContent : '').replace(/\s+/g, ' ').trim();
+                if (!text) return null;
+
+                var ratingMatch = text.match(/\b([0-4](?:[.,]\d+)?|5(?:[.,]0+)?)\s*(?:\/\s*5)?\b/);
+                if (!ratingMatch) return null;
+                var rating = normalizeRating(ratingMatch[1]);
+                if (!rating) return null;
+
+                var count = 0;
+                var countMatch =
+                    text.match(/\b(\d{1,3}(?:,\d{3})*)\s*(?:reviews?|ratings?)\b/i) ||
+                    text.match(/\bbased on\s+(\d{1,3}(?:,\d{3})*)\b/i) ||
+                    text.match(/\b(\d+)\s*(?:مراجعة|مراجعات|تقييم|تقييمات)\b/i);
+                if (countMatch) count = normalizeInt(countMatch[1]);
+
+                return { rating: rating, count: count };
+            }
+
+            function fillUI(rating, count) {
+                scoreEl.textContent = rating.toFixed(1);
+                if (labelEl) labelEl.textContent = pickLabel(rating);
+
+                if (countEl) {
+                    if (count > 0) {
+                        countEl.textContent = String(count) + ' reviews';
+                        if (sepEl) sepEl.style.display = '';
+                        countEl.style.display = '';
+                    } else {
+                        countEl.textContent = '';
+                        if (sepEl) sepEl.style.display = 'none';
+                        countEl.style.display = 'none';
+                    }
+                }
+
+                mini.style.display = 'flex';
+            }
+
+            function attempt() {
+                if (done) return;
+                var res = extractFromAttributes(source) || extractFromText(source);
+                if (!res || !res.rating) return;
+                fillUI(res.rating, res.count || 0);
+                done = true;
+            }
+
+            attempt();
+
+            if (done || !window.MutationObserver) return;
+
+            var observer = new MutationObserver(function() {
+                attempt();
+                if (done) observer.disconnect();
+            });
+            observer.observe(source, { childList: true, subtree: true, characterData: true });
+            setTimeout(function() {
+                try { observer.disconnect(); } catch (e) {}
+            }, 15000);
+        }
+
+        ftsV2InitTrustindexMiniSummary();
+
         /* ══════════════════════════════════════════════
            Mobile Sticky Book Now Bar
            ══════════════════════════════════════════════ */
