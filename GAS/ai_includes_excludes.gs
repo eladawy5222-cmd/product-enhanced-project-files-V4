@@ -704,8 +704,9 @@ function fetchImprovedHighlightsForTrip_(tripId) {
   if (!tripId) return "";
   
   var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 20
   };
   
@@ -735,8 +736,9 @@ function fetchImprovedItineraryForTrip_(tripId) {
   if (!tripId) return "";
   
   var ITINERARY_IMPROVEMENT_TABLE = 'Itinerary Improvement With AI';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 20
   };
   
@@ -777,16 +779,9 @@ function fetchImprovedAddOnsDataForTrip_(tripId, tripNumber, tripName) {
   
   var ADDONS_IMPROVEMENT_TABLE = 'AddOns Improvement With AI';
   var ADDONS_BASE_TABLE = 'AddOns';
-  
-  var conditions = [];
-  if (tripId) conditions.push("ARRAYJOIN({Trip}) = '" + tripId + "'");
-  if (tripNumber) conditions.push("ARRAYJOIN({Trip}) = '" + tripNumber + "'");
-  if (tripName) {
-    var safeName = tripName.replace(/'/g, "\\'");
-    conditions.push("FIND('" + safeName + "', ARRAYJOIN({Trip}))");
-  }
-  
-  var formula = "OR(" + conditions.join(", ") + ")";
+
+  var tripKey = String(tripNumber || tripId || '').trim();
+  var formula = "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))";
   
   var params = {
     filterByFormula: formula,
@@ -1157,8 +1152,9 @@ function fetchImprovedAddOnsForTrip_(tripId) {
   if (!tripId) return "";
   
   var ADDONS_IMPROVEMENT_TABLE = 'AddOns Improvement With AI';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 20
   };
   
@@ -1267,14 +1263,16 @@ function deleteOldIncludesExcludesForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   
   Logger.log('🔍 AI Inc/Exc: Starting deletion of old records for Trip ' + tripId + ' (TripID: ' + tripNumber + ')');
+  var tripKey = String(tripNumber || '').trim();
+  if (!tripKey) tripKey = String(tripId || '').trim();
+  var safeTripKey = tripKey.replace(/'/g, "\\'");
   
   var deletedIncludes = 0;
   var deletedExcludes = 0;
   
   try {
-    // 🆕 حذف Includes القديمة - المحاولة الأولى بـ Record ID
-    var includesFormula = "ARRAYJOIN({Trip}) = '" + tripId + "'";
-    Logger.log('🔍 Includes Filter Formula (Record ID): ' + includesFormula);
+    var includesFormula = "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))";
+    Logger.log('🔍 Includes Filter Formula (TripKey): ' + includesFormula);
     
     var includesParams = {
       filterByFormula: includesFormula,
@@ -1283,22 +1281,7 @@ function deleteOldIncludesExcludesForTrip_(tripId, tripNumber) {
     var includesRes = airtableGet_(TRIP_INCLUDES_IMPROVEMENT_TABLE, includesParams);
     var includesRecs = includesRes && includesRes.records ? includesRes.records : [];
     
-    Logger.log('🔍 Found ' + includesRecs.length + ' includes records with Record ID');
-    
-    // 🆕 إذا لم نجد بـ Record ID، نحاول بـ TripID
-    if (includesRecs.length === 0 && tripNumber) {
-      var includesFormulaTripId = "ARRAYJOIN({Trip}) = '" + tripNumber + "'";
-      Logger.log('🔍 Includes Filter Formula (TripID): ' + includesFormulaTripId);
-      
-      var includesParamsTripId = {
-        filterByFormula: includesFormulaTripId,
-        pageSize: 100
-      };
-      var includesResTripId = airtableGet_(TRIP_INCLUDES_IMPROVEMENT_TABLE, includesParamsTripId);
-      includesRecs = includesResTripId && includesResTripId.records ? includesResTripId.records : [];
-      
-      Logger.log('🔍 Found ' + includesRecs.length + ' includes records with TripID');
-    }
+    Logger.log('🔍 Found ' + includesRecs.length + ' includes records with TripKey');
     
     if (includesRecs.length > 0) {
       Logger.log('AI Inc/Exc: found ' + includesRecs.length + ' old includes to delete for Trip ' + tripId);
@@ -1313,9 +1296,8 @@ function deleteOldIncludesExcludesForTrip_(tripId, tripNumber) {
       });
     }
     
-    // 🆕 حذف Excludes القديمة - المحاولة الأولى بـ Record ID
-    var excludesFormula = "ARRAYJOIN({Trip}) = '" + tripId + "'";
-    Logger.log('🔍 Excludes Filter Formula (Record ID): ' + excludesFormula);
+    var excludesFormula = "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))";
+    Logger.log('🔍 Excludes Filter Formula (TripKey): ' + excludesFormula);
     
     var excludesParams = {
       filterByFormula: excludesFormula,
@@ -1324,22 +1306,7 @@ function deleteOldIncludesExcludesForTrip_(tripId, tripNumber) {
     var excludesRes = airtableGet_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, excludesParams);
     var excludesRecs = excludesRes && excludesRes.records ? excludesRes.records : [];
     
-    Logger.log('🔍 Found ' + excludesRecs.length + ' excludes records with Record ID');
-    
-    // 🆕 إذا لم نجد بـ Record ID، نحاول بـ TripID
-    if (excludesRecs.length === 0 && tripNumber) {
-      var excludesFormulaTripId = "ARRAYJOIN({Trip}) = '" + tripNumber + "'";
-      Logger.log('🔍 Excludes Filter Formula (TripID): ' + excludesFormulaTripId);
-      
-      var excludesParamsTripId = {
-        filterByFormula: excludesFormulaTripId,
-        pageSize: 100
-      };
-      var excludesResTripId = airtableGet_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, excludesParamsTripId);
-      excludesRecs = excludesResTripId && excludesResTripId.records ? excludesResTripId.records : [];
-      
-      Logger.log('🔍 Found ' + excludesRecs.length + ' excludes records with TripID');
-    }
+    Logger.log('🔍 Found ' + excludesRecs.length + ' excludes records with TripKey');
     
     if (excludesRecs.length > 0) {
       Logger.log('AI Inc/Exc: found ' + excludesRecs.length + ' old excludes to delete for Trip ' + tripId);

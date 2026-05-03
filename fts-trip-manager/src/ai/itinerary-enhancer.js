@@ -242,7 +242,7 @@ async function runAiItineraryBatch() {
       try {
         await deleteItineraryImprovementForTrip_(tripId, tripFields.TripID || '')
 
-        var impRecord = await findImprovementRecordForTrip_(tripId)
+        var impRecord = await findImprovementRecordForTrip_(tripId, tripFields.TripID || '', tripFields.Title || '')
 
         await generateItineraryStepsForTripWithContext_(tripRec, impRecord)
 
@@ -274,7 +274,7 @@ async function testGenerateItineraryForSingleTrip() {
 
   log("Found Trip record: " + tripRecord.id);
 
-  var impRecord = await findImprovementRecordForTrip_(tripRecord.id)
+  var impRecord = await findImprovementRecordForTrip_(tripRecord.id, (tripRecord.fields || {}).TripID || tripIdValue, (tripRecord.fields || {}).Title || '')
 
   await deleteItineraryImprovementForTrip_(tripRecord.id)
   await generateItineraryStepsForTripWithContext_(tripRecord, impRecord)
@@ -353,12 +353,10 @@ async function deleteItineraryImprovementForTrip_(tripId, tripNumber) {
 /************************************************************
  * IMPROVEMENT WITH AI — LINKED RECORD
  ************************************************************/
-async function findImprovementRecordForTrip_(tripRecordId) {
-  var formula = "ARRAYJOIN({Trip}) = '" + tripRecordId + "'";
-  var params  = { filterByFormula: formula, maxRecords: 1 };
-  var res     = await airtableGet_(IMPROVEMENTS_TABLE, params)
-  if (!res || !res.records || !res.records.length) return null;
-  return res.records[0];
+async function findImprovementRecordForTrip_(tripRecordId, tripPublicId, tripName) {
+  const recs = await fetchRecordsByTrip_(IMPROVEMENTS_TABLE, tripRecordId, tripPublicId, 1, tripName)
+  if (!recs || !recs.length) return null
+  return recs[0]
 }
 
 /************************************************************
@@ -804,21 +802,14 @@ function buildItineraryGeneratorPrompt_(ctx) {
 /**
  * جلب الهايلايتس المحسنة من جدول Highlights Improvement With AI
  */
-async function fetchImprovedHighlightsForTrip_(tripId) {
-  if (!tripId) return "";
-  
-  var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
-  var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-    pageSize: 20
-  };
-  
+async function fetchImprovedHighlightsForTrip_(tripRecordId, tripPublicId, tripName) {
+  if (!tripRecordId && !tripPublicId && !tripName) return "";
   try {
-    var res = await airtableGet_(HIGHLIGHTS_IMPROVEMENT_TABLE, params)
-    if (!res || !res.records || !res.records.length) return "";
-    
+    var recs = await fetchRecordsByTrip_('Highlights Improvement With AI', tripRecordId, tripPublicId, 20, tripName)
+    if (!recs || !recs.length) return "";
+
     var texts = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       var txt = f.AI_Highlight || "";
       if (txt) texts.push("- " + txt);
@@ -834,21 +825,14 @@ async function fetchImprovedHighlightsForTrip_(tripId) {
 /**
  * جلب خطوات البرنامج الخام من جدول ItinerarySteps
  */
-async function fetchRawItineraryStepsForTrip_(tripId) {
-  if (!tripId) return "";
-  
-  var ITINERARY_STEPS_TABLE = 'ItinerarySteps';
-  var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-    pageSize: 50
-  };
-  
+async function fetchRawItineraryStepsForTrip_(tripRecordId, tripPublicId, tripName) {
+  if (!tripRecordId && !tripPublicId && !tripName) return "";
   try {
-    var res = await airtableGet_(ITINERARY_STEPS_TABLE, params)
-    if (!res || !res.records || !res.records.length) return "";
-    
+    var recs = await fetchRecordsByTrip_('ItinerarySteps', tripRecordId, tripPublicId, 50, tripName)
+    if (!recs || !recs.length) return "";
+
     var steps = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       steps.push({
         order: f.StepOrder || 999,

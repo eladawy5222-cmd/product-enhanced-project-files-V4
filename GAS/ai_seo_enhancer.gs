@@ -1525,8 +1525,8 @@ function createAiSeoEnhancerTrigger() {
  * - تمر على الجداول المرتبطة بالرحلة وتجمع نصوص مفيدة لتغذية الـ SEO Prompt
  * - ترجع Array من النصوص القصيرة (max ~300 char لكل بلوك)
  */
-function fetchLinkedContextTextForTrip_(tripId) {
-  if (!tripId) return [];
+function fetchLinkedContextTextForTrip_(tripId, tripNumber, tripName) {
+  if (!tripId && !tripNumber && !tripName) return [];
 
   var out = [];
 
@@ -1561,12 +1561,17 @@ function fetchLinkedContextTextForTrip_(tripId) {
     return out;
   }
 
+  var tripKey = String(tripNumber || '').trim();
+  if (!tripKey) tripKey = String(tripId || '').trim();
+  if (!tripKey) return out;
+  var safeTripKey = tripKey.replace(/'/g, "\\'");
+
   for (var i = 0; i < tables.length; i++) {
     var tname = tables[i];
     var lf    = CONFIG.LINK_FIELDS[tname] || linkField;
 
     var res1 = airtableGet_(tname, {
-      filterByFormula: "ARRAYJOIN({" + lf + "}) = '" + tripId + "'",
+      filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({" + lf + "}))",
       pageSize: 100
     });
 

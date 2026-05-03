@@ -1017,20 +1017,16 @@ function getRandomIntInclusive_(min, max) {
 /**
  * جلب الإضافات المحسنة من جدول AddOns Improvement With AI (Stage 2)
  */
-async function fetchImprovedAddOnsForTrip_(tripId) {
-  if (!tripId) return '';
+async function fetchImprovedAddOnsForTrip_(tripRecordId, tripPublicId, tripName) {
+  if (!tripRecordId && !tripPublicId && !tripName) return '';
   
   var tableName = 'AddOns Improvement With AI';
-  var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-    pageSize: 50
-  };
   
   try {
-    var res = await airtableGet_(tableName, params)
-    if (!res || !res.records || !res.records.length) return '';
+    var recs = await fetchRecordsByTrip_(tableName, tripRecordId, tripPublicId, 50, tripName)
+    if (!recs || !recs.length) return '';
     
-    var addOnsText = res.records.map(function(r) {
+    var addOnsText = recs.map(function(r) {
       var f = r.fields || {};
       var title = f.AddOnTitle || f.AI_AddOn_Title || '';
       var desc = f.AI_AddOn_Description || '';

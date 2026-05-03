@@ -516,11 +516,11 @@ function deleteOldTripFactsForTrip_(tripId, tripCode) {
 
   try {
     while (true) {
-      var params = tripCode ? {
-        filterByFormula: "FIND('" + tripCode + "', ARRAYJOIN({Trip}))",
-        pageSize: 100
-      } : {
-        filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
+      var tripKey = String(tripCode || '').trim();
+      if (!tripKey) tripKey = String(tripId || '').trim();
+      var safeTripKey = tripKey.replace(/'/g, "\\'");
+      var params = {
+        filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))",
         pageSize: 100
       };
 

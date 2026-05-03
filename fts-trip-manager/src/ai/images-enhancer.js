@@ -2837,11 +2837,11 @@ async function getTripImprovementCached_AiImages_(tripId, tripFields) {
 
   var out = {};
   try {
-    var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + id + "'",
-      maxRecords: 1
-    };
-    var impRes = await airtableGet_(IMPROVEMENT_TABLE, impParams)
+    var tripNumber = tripFields && tripFields.TripID ? String(tripFields.TripID).trim() : ''
+    var tripName = tripFields && tripFields.Title ? String(tripFields.Title).trim() : ''
+
+    var impRecs = await fetchRecordsByTrip_(IMPROVEMENT_TABLE, id, tripNumber, 1, tripName)
+    var impRes = (impRecs && impRecs.length) ? { records: [impRecs[0]] } : null
 
     if ((!impRes || !impRes.records || !impRes.records.length) && tripFields && tripFields['Improvement With AI']) {
       var impLinked = tripFields['Improvement With AI'];

@@ -377,13 +377,11 @@ async function buildAddOnsContext_(tripFields, tripId) {
   
   // Get improved description
   try {
-    var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-      maxRecords: 1
-    };
-    var impRes = await airtableGet_(IMPROVEMENT_TABLE, impParams)
-    if (impRes && impRes.records && impRes.records.length) {
-      var f = impRes.records[0].fields || {};
+    var tripNumber = tripFields.TripID || ''
+    var tripName = tripFields.Title || ''
+    var impRecs = await fetchRecordsByTrip_(IMPROVEMENT_TABLE, tripId, tripNumber, 1, tripName)
+    if (impRecs && impRecs.length) {
+      var f = impRecs[0].fields || {};
       ctx.tripDescription = f.AI_Trip_Description || '';
       ctx.focusKeyword = f.AI_SEO_FocusKeywords || '';
     }

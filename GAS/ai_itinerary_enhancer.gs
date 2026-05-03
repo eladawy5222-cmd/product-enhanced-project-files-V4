@@ -44,7 +44,7 @@ function runAiItineraryBatch() {
       try {
         deleteItineraryImprovementForTrip_(tripId, tripFields.TripID || '');
 
-        var impRecord = findImprovementRecordForTrip_(tripId);
+        var impRecord = findImprovementRecordForTrip_(tripFields.TripID || '');
 
         generateItineraryStepsForTripWithContext_(tripRec, impRecord);
 
@@ -76,7 +76,7 @@ function testGenerateItineraryForSingleTrip() {
 
   Logger.log("Found Trip record: " + tripRecord.id);
 
-  var impRecord = findImprovementRecordForTrip_(tripRecord.id);
+  var impRecord = findImprovementRecordForTrip_(tripIdValue);
 
   deleteItineraryImprovementForTrip_(tripRecord.id);
   generateItineraryStepsForTripWithContext_(tripRecord, impRecord);
@@ -152,8 +152,10 @@ function deleteItineraryImprovementForTrip_(tripId, tripNumber) {
 /************************************************************
  * IMPROVEMENT WITH AI — LINKED RECORD
  ************************************************************/
-function findImprovementRecordForTrip_(tripRecordId) {
-  var formula = "ARRAYJOIN({Trip}) = '" + tripRecordId + "'";
+function findImprovementRecordForTrip_(tripNumber) {
+  var tripKey = String(tripNumber || '').trim();
+  if (!tripKey) return null;
+  var formula = "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))";
   var params  = { filterByFormula: formula, maxRecords: 1 };
   var res     = airtableGet_(IMPROVEMENTS_TABLE, params);
   if (!res || !res.records || !res.records.length) return null;
@@ -606,8 +608,9 @@ function fetchImprovedHighlightsForTrip_(tripId) {
   if (!tripId) return "";
   
   var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 20
   };
   
@@ -636,8 +639,9 @@ function fetchRawItineraryStepsForTrip_(tripId) {
   if (!tripId) return "";
   
   var ITINERARY_STEPS_TABLE = 'ItinerarySteps';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 50
   };
   

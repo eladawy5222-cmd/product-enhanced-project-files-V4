@@ -2220,34 +2220,7 @@ function runAiImagesEnhancementBatch() {
       deleteOldImprovedImagesForTrip_(tripId, tripNumber);
       
       // 4) Get all images for this trip
-      // Support both TripID (string) and Record ID (starts with "rec")
-      var imagesFormula;
-      var tripIdNeedle = String(tripId || '').replace(/'/g, "\\'");
-      var tripNumberNeedle = String(tripNumber || '').replace(/'/g, "\\'");
-      if (tripNumber && tripNumber.indexOf('rec') === 0) {
-        // It's a Record ID - use exact match
-        imagesFormula =
-          "OR(" +
-          "FIND('" + tripIdNeedle + "', ARRAYJOIN({SourceTrip})), " +
-          "ARRAYJOIN({SourceTrip}) = '" + tripNumberNeedle + "'" +
-          ")";
-      } else {
-        // It's a TripID - use FIND for partial match (legacy support)
-        imagesFormula =
-          "OR(" +
-          "FIND('" + tripIdNeedle + "', ARRAYJOIN({SourceTrip})), " +
-          "FIND('" + tripNumberNeedle + "', ARRAYJOIN({SourceTrip}))" +
-          ")";
-      }
-      
-      Logger.log('AI Images: searching with formula: ' + imagesFormula);
-      
-      var imagesParams = {
-        filterByFormula: imagesFormula
-      };
-      
-      var imagesRes = airtableGet_(IMAGES_TABLE, imagesParams);
-      var images = imagesRes && imagesRes.records ? imagesRes.records : [];
+      var images = fetchRecordsByTrip_(IMAGES_TABLE, tripId, tripNumber, 100, tripFields.Title) || [];
       
       var existingTitles = images.map(function(r) { return (r.fields.Title || '').toString().trim(); });
       var existingUrls = images.map(function(r) { return (r.fields.URL || '').toString().trim(); });
@@ -2725,8 +2698,11 @@ function getTripImprovementCached_AiImages_(tripId, tripFields) {
 
   var out = {};
   try {
+    var tripNumber = tripFields && tripFields.TripID ? String(tripFields.TripID).trim() : '';
+    var tripKey = tripNumber || id;
+    var safeTripKey = String(tripKey || '').replace(/'/g, "\\'");
     var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + id + "'",
+      filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))",
       maxRecords: 1
     };
     var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
@@ -2767,19 +2743,7 @@ function deleteOldImprovedImagesForTrip_(tripId, tripNumber) {
   Logger.log('AI Images: deleting old improved records for Trip ' + tripId);
   
   while (true) {
-    // Build a robust formula: Find by TripNumber OR TripID (Record ID)
-    var formula = "OR(";
-    if (tripNumber) {
-      formula += "FIND('" + tripNumber + "', ARRAYJOIN({Trip})), ";
-    }
-    formula += "FIND('" + tripId + "', ARRAYJOIN({Trip})))";
-
-    var params = {
-      filterByFormula: formula,
-      pageSize: 100
-    };
-    var res = airtableGet_(IMAGES_IMPROVEMENT_TABLE, params);
-    var recs = res && res.records ? res.records : [];
+    var recs = fetchRecordsByTrip_(IMAGES_IMPROVEMENT_TABLE, tripId, tripNumber, 100) || [];
     if (!recs.length) {
       Logger.log('AI Images: no old records to delete for Trip ' + tripId);
       break;

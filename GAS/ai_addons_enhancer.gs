@@ -123,42 +123,7 @@ function fetchRawAddOnsForTrip_(tripId, tripNumber, tripName) {
   var addOns = [];
   try {
     Logger.log('AI AddOns: fetching raw AddOns for Trip ' + tripId + ' (TripID: ' + tripNumber + ', Name: ' + tripName + ')');
-    
-    // Build a robust formula:
-    // In Airtable, {Trip} (linked field) returns the PRIMARY FIELD VALUE of the linked record, not the Record ID.
-    // So we must search for the Trip Name or Trip Number (if that's the primary field).
-    // We also keep the Record ID search just in case.
-    
-    var conditions = [];
-    
-    // 1. Search by Trip Name (Primary Field usually)
-    if (tripName) {
-      // Escape single quotes in name
-      var safeName = tripName.replace(/'/g, "\\'");
-      conditions.push("FIND('" + safeName + "', ARRAYJOIN({Trip}))");
-    }
-    
-    // 2. Search by Trip Number (in case Primary Field is ID)
-    if (tripNumber) {
-      conditions.push("FIND('" + tripNumber + "', ARRAYJOIN({Trip}))");
-    }
-    
-    // 3. Search by Record ID (Unlikely to work in formula unless Primary Field is Record ID, but harmless)
-    if (tripId) {
-      conditions.push("FIND('" + tripId + "', ARRAYJOIN({Trip}))");
-    }
-    
-    var formula = "OR(" + conditions.join(", ") + ")";
-    
-    Logger.log('AI AddOns: using filter formula: ' + formula);
-
-    var res = airtableGet_(ADDONS_TABLE, { filterByFormula: formula, pageSize: 100 });
-    var records = res && res.records ? res.records : [];
-    
-    // Fallback: If formula fails (e.g. too complex or empty), try fetch by Trip Name EXACT match if simple
-    if (!records.length && tripName) {
-       // ... (Optional fallback logic could go here, but let's trust the OR formula first)
-    }
+    var records = fetchRecordsByTrip_(ADDONS_TABLE, tripId, tripNumber, 100, tripName) || [];
 
     Logger.log('AI AddOns: found ' + records.length + ' raw records');
     records.forEach(function(rec) {
@@ -216,13 +181,10 @@ function buildAddOnsContext_(tripFields, tripId) {
   
   // Get improved description
   try {
-    var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-      maxRecords: 1
-    };
-    var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
-    if (impRes && impRes.records && impRes.records.length) {
-      var f = impRes.records[0].fields || {};
+    var tripNumber = tripFields.TripID || '';
+    var impRecs = fetchRecordsByTrip_(IMPROVEMENT_TABLE, tripId, tripNumber, 1, tripFields.Title) || [];
+    if (impRecs && impRecs.length) {
+      var f = impRecs[0].fields || {};
       ctx.tripDescription = f.AI_Trip_Description || '';
       ctx.focusKeyword = f.AI_SEO_FocusKeywords || '';
     }
@@ -357,19 +319,7 @@ function deleteOldAddOnsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
 
   while (true) {
-    // Build a robust formula: Find by TripNumber OR TripID (Record ID)
-    var formula = "OR(";
-    if (tripNumber) {
-      formula += "FIND('" + tripNumber + "', ARRAYJOIN({Trip})), ";
-    }
-    formula += "FIND('" + tripId + "', ARRAYJOIN({Trip})))";
-
-    var params = {
-      filterByFormula: formula,
-      pageSize: 100
-    };
-    var res = airtableGet_(ADDONS_IMPROVEMENT_TABLE, params);
-    var recs = res && res.records ? res.records : [];
+    var recs = fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId, tripNumber, 100) || [];
     if (!recs.length) {
       Logger.log('AI AddOns: no old records to delete for Trip ' + tripId);
       break;

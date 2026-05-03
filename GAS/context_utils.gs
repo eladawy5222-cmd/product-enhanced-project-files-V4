@@ -3,34 +3,14 @@ function fetchRecordsByTrip_(tableName, tripId, tripNumber, pageSize, tripName) 
   var recs = [];
   
   try {
-    // Robust fetching strategy similar to ai_addons_enhancer.gs
-    // 1. Search by Trip Name (Primary Field usually)
-    // 2. Search by Trip Number (in case Primary Field is ID)
-    // 3. Search by Record ID (Standard link)
-    
-    var conditions = [];
-    
-    // Condition 1: Link field contains Trip ID
-    conditions.push("FIND('" + tripId + "', ARRAYJOIN({" + linkField + "}))");
-    
-    // Condition 2: Link field contains Trip Number (if provided)
-    if (tripNumber) {
-      conditions.push("FIND('" + tripNumber + "', ARRAYJOIN({" + linkField + "}))");
+    var tripKey = String(tripNumber || '').trim();
+    if (!tripKey) {
+      tripKey = String(tripId || '').trim();
     }
-    
-    // Condition 3: Link field contains Trip Name (if provided)
-    if (tripName) {
-      var safeName = tripName.replace(/'/g, "\\'");
-      conditions.push("FIND('" + safeName + "', ARRAYJOIN({" + linkField + "}))");
-    }
-    
-    // Also check Fallback ID field if mapped
-    var tripIdField = TABLE_TRIPID_FALLBACK_MAP[tableName];
-    if (tripIdField && tripNumber) {
-      conditions.push("{" + tripIdField + "} = '" + tripNumber + "'");
-    }
-    
-    var formula = "OR(" + conditions.join(", ") + ")";
+    if (!tripKey) return [];
+
+    var safeTripKey = tripKey.replace(/'/g, "\\'");
+    var formula = "FIND('" + safeTripKey + "', ARRAYJOIN({" + linkField + "}))";
     
     var params = {
       filterByFormula: formula,

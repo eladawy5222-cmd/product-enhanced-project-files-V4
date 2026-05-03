@@ -594,7 +594,7 @@ function buildTripLevelContext_(tripId, tripFields) {
   var U = buildUnifiedTripContext_(tripId, tripFields);
 
   // 🆕 جلب البيانات المحسنة من جدول "Improvement With AI" (الوصف العام المحسن)
-  var mainAiRec = fetchMainAiImprovementForTrip_(tripId);
+  var mainAiRec = fetchMainAiImprovementForTrip_(tripFields.TripID || '');
   if (mainAiRec) {
     var f = mainAiRec.fields || {};
     // لو فيه وصف محسن، نستخدمه بدل الوصف الخام أو نضيفه
@@ -630,12 +630,13 @@ function buildTripLevelContext_(tripId, tripFields) {
 /**
  * جلب سجل واحد من جدول Improvement With AI مرتبط بالرحلة
  */
-function fetchMainAiImprovementForTrip_(tripId) {
-  if (!tripId) return null;
+function fetchMainAiImprovementForTrip_(tripNumber) {
+  var tripKey = String(tripNumber || '').trim();
+  if (!tripKey) return null;
   // نفترض أن اسم الجدول هو 'Improvement With AI' كما في ai_enhancer.gs
   var tableName = 'Improvement With AI';
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     maxRecords: 1
   };
   var res = airtableGet_(tableName, params);
@@ -823,8 +824,9 @@ function fetchImprovedAddOnsForTrip_(tripId) {
   if (!tripId) return '';
   
   var tableName = 'AddOns Improvement With AI';
+  var tripKey = String(tripId || '').trim();
   var params = {
-    filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
+    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
     pageSize: 50
   };
   
