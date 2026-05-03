@@ -655,19 +655,15 @@ function fetchLinkedContextText_(tripId, tripFields) {
   var linkField = CONFIG.DEFAULT_TRIP_LINK_FIELD;
   var tables = [];
   for (var k in CONFIG.LINK_FIELDS) { if (CONFIG.LINK_FIELDS.hasOwnProperty(k)) tables.push(k); }
+  var tripKey = String((tripFields && tripFields.TripID) ? tripFields.TripID : '').trim();
+  if (!tripKey) tripKey = String(tripId || '').trim();
+  if (!tripKey) return out;
+  var safeTripKey = tripKey.replace(/'/g, "\\'");
   for (var i = 0; i < tables.length; i++) {
     var tname = tables[i];
     var lf = (CONFIG.LINK_FIELDS[tname] || linkField);
-    var res1 = airtableGet_(tname, { filterByFormula: "ARRAYJOIN({" + lf + "}) = '" + tripId + "'", pageSize: 100 });
+    var res1 = airtableGet_(tname, { filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({" + lf + "}))", pageSize: 100 });
     var recs = res1 && res1.records ? res1.records : [];
-    if (!recs.length) {
-      var displayKey = computeTripDisplayKey_(tripFields);
-      if (displayKey) {
-        var res2 = airtableGet_(tname, { filterByFormula: "ARRAYJOIN({" + lf + "}) = '" + AirtableUtils.escapeFormulaValue(displayKey) + "'", pageSize: 100 });
-        var recs2 = res2 && res2.records ? res2.records : [];
-        recs = recs2;
-      }
-    }
     for (var j = 0; j < recs.length; j++) {
       var f = recs[j].fields || {};
       for (var fk in f) {

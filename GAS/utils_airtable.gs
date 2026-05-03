@@ -209,18 +209,10 @@ function upsertTripByTripID_(tripID, fields) {
 function fetchChildRecordsByTripIdentifier_(tableName, linkField, tripIdentifier) {
   if (!tripIdentifier) return [];
   
-  var formula;
-  
-  // Check if it's a Record ID (starts with "rec")
-  if (tripIdentifier.indexOf('rec') === 0) {
-    // Use Record ID directly
-    formula = "ARRAYJOIN({" + linkField + "}) = '" + tripIdentifier + "'";
-  } else {
-    // It's a TripID - need to find the Record ID first
-    var recordId = AirtableUtils.getTripRecordIdByTripID(tripIdentifier);
-    if (!recordId) return [];
-    formula = "ARRAYJOIN({" + linkField + "}) = '" + recordId + "'";
-  }
+  var tripKey = String(tripIdentifier || '').trim();
+  if (!tripKey) return [];
+  var safeTripKey = AirtableUtils.escapeFormulaValue(tripKey);
+  var formula = "FIND('" + safeTripKey + "', ARRAYJOIN({" + linkField + "}))";
   
   var res = airtableGet_(tableName, { filterByFormula: formula });
   return res && res.records ? res.records : [];
