@@ -2615,6 +2615,9 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'trustindex_code')) delete payload.meta.trustindex_code;
 
   var cancelHours = g.Cancellation_Window_Hours || g['Cancellation_Window_Hours'] || g.CancellationHours || g['Cancellation Hours'] || '';
+  if ((!cancelHours || (Array.isArray(cancelHours) && !cancelHours.length)) && tripFields) {
+    cancelHours = tripFields.Cancellation_Window_Hours || tripFields['Cancellation_Window_Hours'] || tripFields.CancellationHours || tripFields['Cancellation Hours'] || '';
+  }
   if (Array.isArray(cancelHours)) cancelHours = cancelHours.length ? cancelHours[0] : '';
   cancelHours = parseInt(String(cancelHours || '').trim(), 10);
   if (!isFinite(cancelHours) || cancelHours <= 0) {
@@ -2625,13 +2628,11 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
         var q = String(f.AI_Question || f.Question || '').toLowerCase();
         if (!q || q.indexOf('cancel') === -1) return;
         var a = String(f.AI_Answer || f.Answer || '');
-        var m = a.match(/(\d+)\s*(hours?|days?)/i);
+        var m = a.match(/at\s+least\s+(\d+)\s*hours?/i) || a.match(/(\d+)\s*hours?\s+before/i);
         if (!m) return;
         var n = parseInt(m[1], 10);
-        var unit = String(m[2] || '').toLowerCase();
         if (!isFinite(n) || n <= 0) return;
-        var h = unit.indexOf('day') !== -1 ? (n * 24) : n;
-        if (h > best) best = h;
+        if (n > best) best = n;
       });
       if (best > 0) cancelHours = best;
     } catch (eCh) {}

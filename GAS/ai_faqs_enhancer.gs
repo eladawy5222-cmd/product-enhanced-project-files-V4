@@ -86,13 +86,10 @@ function runAiFaqsEnhancementBatch() {
         // 2) Delete old FAQs for this trip
         deleteOldFaqsForTrip_(tripId, tripFields.TripID || '');
         
-        // 3) Build comprehensive context
         var ctx = buildFaqsContext_(tripFields, tripId);
         
-        // 4) Build AI prompt
         var prompt = buildFaqsPrompt_(ctx);
         
-        // 5) Call AI
         var aiResult = callAi_(prompt);
         
         if (!aiResult || !aiResult.faqs || !Array.isArray(aiResult.faqs)) {
@@ -157,30 +154,45 @@ function runAiFaqsEnhancementBatch() {
         Logger.log('AI FAQs: Trip ' + tripId + ' → created ' + createdCount + ' FAQs');
         
         try {
-          var bestHours = 0;
-          faqs.forEach(function(faq) {
-            var q = String(faq.question || '').toLowerCase();
-            if (!q || q.indexOf('cancel') === -1) return;
-            var a = String(faq.answer || '');
-            var m = a.match(/(\d+)\s*(hours?|days?)/i);
-            if (!m) return;
-            var n = parseInt(m[1], 10);
-            var unit = String(m[2] || '').toLowerCase();
-            if (!isFinite(n) || n <= 0) return;
-            var h = unit.indexOf('day') !== -1 ? (n * 24) : n;
-            if (h > bestHours) bestHours = h;
-          });
-          if (bestHours > 0) {
-            var impParams2 = {
-              filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
-              maxRecords: 1
-            };
-            var impRes2 = airtableGet_(IMPROVEMENT_TABLE, impParams2);
-            if (impRes2 && impRes2.records && impRes2.records.length) {
-              airtableUpdate_(IMPROVEMENT_TABLE, impRes2.records[0].id, { Cancellation_Window_Hours: bestHours });
-            }
+          var tripNumber0 = '';
+          try { tripNumber0 = String((tripFields && tripFields.TripID) ? tripFields.TripID : '').trim(); } catch (eTn) {}
+          var bestHours = ctx && isFinite(parseInt(ctx.cancellationWindowHours || 0, 10))
+            ? parseInt(ctx.cancellationWindowHours || 0, 10)
+            : 0;
+
+          if (!bestHours || bestHours < 1) {
+            faqs.forEach(function(faq) {
+              var q = String(faq.question || '').toLowerCase();
+              if (!q || q.indexOf('cancel') === -1) return;
+              var a = String(faq.answer || '');
+              var m = a.match(/at\s+least\s+(\d+)\s*hours?/i) || a.match(/(\d+)\s*hours?\s+before/i);
+              if (!m) return;
+              var n = parseInt(m[1], 10);
+              if (!isFinite(n) || n <= 0) return;
+              if (n > bestHours) bestHours = n;
+            });
           }
-        } catch (eCh) {}
+
+          if (bestHours > 0) {
+            var tripLinkValue0 = tripNumber0 || tripId;
+            var safeTripLinkValue0 = String(tripLinkValue0).replace(/'/g, "\\'");
+            var impParams2 = { filterByFormula: "FIND('" + safeTripLinkValue0 + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+            var impRes2 = airtableGet_(IMPROVEMENT_TABLE, impParams2);
+            var impRecs2 = impRes2 && impRes2.records ? impRes2.records : [];
+            if (impRecs2.length) {
+              impRecs2.forEach(function(r) {
+                try { airtableUpdate_(IMPROVEMENT_TABLE, r.id, { Cancellation_Window_Hours: bestHours }); } catch (eU) {}
+              });
+              Logger.log('AI FAQs: Updated Improvement With AI.Cancellation_Window_Hours = ' + bestHours + ' for trip ' + String(tripLinkValue0) + ' (records=' + impRecs2.length + ')');
+            } else {
+              Logger.log('AI FAQs: Could not find Improvement With AI records to set Cancellation_Window_Hours for trip ' + String(tripLinkValue0));
+            }
+          } else {
+            Logger.log('AI FAQs: No cancellationWindowHours detected for trip ' + tripId + ' (multi-day or no policy hours).');
+          }
+        } catch (eCh) {
+          Logger.log('AI FAQs: Failed setting Cancellation_Window_Hours for trip ' + tripId + ' — ' + eCh.message);
+        }
 
         // 8) Update trip status
         updateTripFaqsStatus_(tripId, 'Done');
@@ -216,10 +228,9 @@ function buildFaqsContext_(tripFields, tripId) {
   
   // 1) Get improved trip data (Description + SEO)
   try {
-    var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-      maxRecords: 1
-    };
+    var tripLinkValue = String(tripNumber || tripId || '').trim();
+    var safeTripLinkValue = tripLinkValue.replace(/'/g, "\\'");
+    var impParams = { filterByFormula: "FIND('" + safeTripLinkValue + "', ARRAYJOIN({Trip}))", maxRecords: 1 };
     var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
     if (impRes && impRes.records && impRes.records.length) {
       var impFields = impRes.records[0].fields || {};
@@ -493,7 +504,6 @@ function buildFaqsPrompt_(ctx) {
 
 function upsertCancellationFaq_(faqs, ctx) {
   if (!Array.isArray(faqs)) return faqs;
-  return faqs;
 
   // Determine which policy to use
   var policyAnswer = CANCELLATION_FIXED_ANSWER; // Default (24h)
@@ -528,6 +538,26 @@ function upsertCancellationFaq_(faqs, ctx) {
     return 0;
   }
 
+  function getDaysFromItinerary_(itineraryArr) {
+    if (!Array.isArray(itineraryArr) || !itineraryArr.length) return 0;
+    var maxDay = 0;
+    var hasDayToken = false;
+    itineraryArr.forEach(function(item) {
+      var s = String(item || '');
+      var m = s.match(/\bday\s*(\d+)\b/i);
+      if (m && m[1]) {
+        hasDayToken = true;
+        var n = parseInt(m[1], 10);
+        if (isFinite(n) && n > maxDay) maxDay = n;
+        return;
+      }
+      if (/\bday\b/i.test(s)) hasDayToken = true;
+    });
+    if (maxDay > 0) return maxDay;
+    if (hasDayToken) return 1;
+    return 0;
+  }
+
   // 1. Check Duration Field
   days = getDaysFromText(durationRaw);
 
@@ -559,20 +589,13 @@ function upsertCancellationFaq_(faqs, ctx) {
       // 3. Fallback: Check Itinerary length
       // ONLY if we still have 0 days and didn't find "hours" anywhere
       if (days === 0 && ctx && Array.isArray(ctx.itinerary) && ctx.itinerary.length > 0) {
-         // 🆕 Safety check: Only count itinerary items if they look like Days? 
-         // For now, let's assume if we reached here, we have NO duration info.
-         // But wait, if durationRaw was "1" (just number), getDaysFromText returned 0 (not -1).
-         // So we risk treating "1 hour" (stored as "1") as 4 days (itinerary).
-         
-         // If durationRaw is a small number (< 24) and no unit, assume hours? Dangerous.
-         // Let's rely on the fact that standard multi-day trips usually have "Day" in duration.
-         
-         Logger.log('AI FAQs: Duration/Title inconclusive, checking Itinerary Items: ' + ctx.itinerary.length);
-         days = ctx.itinerary.length;
+         var daysFromItinerary = getDaysFromItinerary_(ctx.itinerary);
+         Logger.log('AI FAQs: Duration/Title inconclusive, checking Itinerary Day markers → ' + daysFromItinerary);
+         if (daysFromItinerary > 0) days = daysFromItinerary;
       }
   }
 
-  if (days > 3) {
+  if (days > 1) {
     isMultiDay = true;
     Logger.log('AI FAQs: Detected multi-day trip (' + days + ' days). Using STRICT policy.');
   } else {
@@ -588,6 +611,10 @@ function upsertCancellationFaq_(faqs, ctx) {
                          "✔ Less than 30 days before the tour start date\n" +
                          "Unfortunately, no refund can be provided, as hotels, transportation, and other services will already be fully booked and confirmed.\n\n" +
                          "If you need assistance with cancellation, rescheduling, or have any questions, our customer service team will be happy to help.";
+  }
+
+  if (ctx) {
+    ctx.cancellationWindowHours = isMultiDay ? 0 : 24;
   }
 
   var found = false;
@@ -1078,13 +1105,16 @@ function deleteOldFaqsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   Logger.log('AI FAQs: deleting old FAQs for Trip ' + tripId);
   try {
-    var params1 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'", pageSize: 100 };
-    var res1 = airtableGet_(FAQS_IMPROVEMENT_TABLE, params1);
-    var recs = res1 && res1.records ? res1.records : [];
-    if (!recs.length && tripNumber) {
-      var params2 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripNumber + "'", pageSize: 100 };
-      var res2 = airtableGet_(FAQS_IMPROVEMENT_TABLE, params2);
-      recs = res2 && res2.records ? res2.records : [];
+    var recs = [];
+    if (tripNumber) {
+      var paramsA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var resA = airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsA);
+      recs = resA && resA.records ? resA.records : [];
+    }
+    if (!recs.length) {
+      var paramsB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var resB = airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsB);
+      recs = resB && resB.records ? resB.records : [];
     }
     var toDelete = [];
     for (var i = 0; i < recs.length; i++) {
@@ -1123,14 +1153,15 @@ function ensureMinimumFaqs_(faqs, ctx) {
 function fetchRecordsByTripLocal_(tableName, linkFieldName, tripId, tripNumber, pageSize) {
   var records = [];
   try {
-    var p1 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripId + "'", pageSize: pageSize || 100 };
-    var r1 = airtableGet_(tableName, p1);
-    var recs1 = r1 && r1.records ? r1.records : [];
-    records = recs1;
-    if (!records.length && tripNumber) {
-      var p2 = { filterByFormula: "ARRAYJOIN({" + linkFieldName + "}) = '" + tripNumber + "'", pageSize: pageSize || 100 };
-      var r2 = airtableGet_(tableName, p2);
-      records = r2 && r2.records ? r2.records : [];
+    if (tripNumber) {
+      var pA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))", pageSize: pageSize || 100 };
+      var rA = airtableGet_(tableName, pA);
+      records = rA && rA.records ? rA.records : [];
+    }
+    if (!records.length) {
+      var pB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))", pageSize: pageSize || 100 };
+      var rB = airtableGet_(tableName, pB);
+      records = rB && rB.records ? rB.records : [];
     }
   } catch (e) {}
   return records;

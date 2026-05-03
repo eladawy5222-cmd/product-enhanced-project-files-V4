@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             </div>
 
             <a class="fts-v2-countdown-bar fts-v2-policy-link" href="<?php echo esc_url( $terms_url ?? home_url( '/terms-and-conditions/' ) ); ?>" target="_blank" rel="noopener noreferrer nofollow">
-                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html__( 'Free cancellation', 'fts' ); ?><?php if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) : ?> <?php echo esc_html__( 'up to', 'fts' ); ?> <?php echo intval( $cancel_hours ); ?>h<?php endif; ?> (<?php echo esc_html__( 'terms apply', 'fts' ); ?>)</span>
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) : ?><?php echo esc_html__( 'Free cancellation', 'fts' ); ?> <?php echo esc_html__( 'up to', 'fts' ); ?> <?php echo intval( $cancel_hours ); ?>h<?php else : ?><?php echo esc_html__( 'Cancellation policy', 'fts' ); ?><?php endif; ?> (<?php echo esc_html__( 'terms apply', 'fts' ); ?>)</span>
             </a>
 
             <?php if ( isset( $urgency_text ) && is_string( $urgency_text ) && trim( $urgency_text ) !== '' ) : ?>
@@ -45,10 +45,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             </div>
             <?php endif; ?>
 
+            <?php if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) : ?>
             <a class="fts-v2-countdown-bar" id="fts-v2-cancel-countdown" href="<?php echo esc_url( $terms_url ?? home_url( '/terms-and-conditions/' ) ); ?>" target="_blank" rel="noopener noreferrer nofollow" style="display:none">
                 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html__( 'Free cancellation ends in:', 'fts' ); ?></span>
                 <span class="fts-v2-countdown-timer" id="fts-v2-cancel-countdown-timer"></span>
             </a>
+            <?php endif; ?>
 
             <!-- ═══ Calendar Accordion ═══ -->
             <div class="fts-v2-calendar-section fts-v2-cal-collapsed" id="fts-v2-cal-accordion">

@@ -61,7 +61,11 @@ function fts_v2_default_free_cancellation_text( $trip_id = 0 ) {
     $v = trim( $v );
     if ( $v !== '' ) return $v;
 
-    return 'Free cancellation up to 24 hours before the tour start time (unless otherwise stated).';
+    $h = $trip_id > 0 ? intval( get_post_meta( $trip_id, 'fts_cancel_hours', true ) ) : 0;
+    if ( $h > 0 ) {
+        return 'Free cancellation up to ' . $h . ' hours before the tour start time (unless otherwise stated).';
+    }
+    return '';
 }
 
 add_filter( 'fts_v2_free_cancellation_text', function( $text, $trip_id, $settings ) {

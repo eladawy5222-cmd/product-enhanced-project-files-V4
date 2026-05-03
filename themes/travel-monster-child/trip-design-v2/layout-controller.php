@@ -858,7 +858,7 @@ class FTS_Trip_Redesign_V2 {
         $free_cancellation_text      = (string) apply_filters( 'fts_v2_free_cancellation_text', '', $trip_id, $settings );
 
         $cancel_hours = intval( get_post_meta( $trip_id, 'fts_cancel_hours', true ) );
-        if ( $cancel_hours <= 0 ) $cancel_hours = 24;
+        if ( $cancel_hours <= 0 ) $cancel_hours = 0;
         $terms_url = home_url( '/terms-and-conditions/' );
 
         $pp_enabled = false;
@@ -992,7 +992,7 @@ class FTS_Trip_Redesign_V2 {
             'fsdDates'       => (object) $data['fsd_dates'],
             'excludedDates'  => (object) $data['excluded_dates_map'],
             'excludedDatesYearly' => (object) $data['excluded_dates_yearly'],
-            'cancelHours'    => intval( $data['cancel_hours'] ?? 24 ),
+            'cancelHours'    => intval( $data['cancel_hours'] ?? 0 ),
             'termsUrl'       => esc_url_raw( $data['terms_url'] ?? home_url( '/terms-and-conditions/' ) ),
             'packages'       => $packages_for_js,
             'bookingModal'   => $bm_raw,

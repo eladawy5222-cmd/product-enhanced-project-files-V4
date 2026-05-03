@@ -1461,30 +1461,6 @@
         }
 
         /* ══════════════════════════════════════════════
-           Countdown Timer
-           ══════════════════════════════════════════════ */
-        if ($('.fts-v2-countdown-timer').length) {
-            var totalSecs = 2 * 60 * 60;
-            var stored    = sessionStorage.getItem('fts_v2_countdown_' + tripId);
-            if (stored) totalSecs = parseInt(stored, 10);
-
-            function updateCountdown() {
-                if (totalSecs <= 0) totalSecs = 2 * 60 * 60;
-                var h = Math.floor(totalSecs / 3600);
-                var m = Math.floor((totalSecs % 3600) / 60);
-                var s = totalSecs % 60;
-                $('.fts-v2-countdown-timer').text(
-                    String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
-                );
-                totalSecs--;
-                sessionStorage.setItem('fts_v2_countdown_' + tripId, totalSecs);
-            }
-
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
-        }
-
-        /* ══════════════════════════════════════════════
            Random Urgency Spots
            ══════════════════════════════════════════════ */
         var spots = [2, 3, 4, 5, 3, 2, 4];

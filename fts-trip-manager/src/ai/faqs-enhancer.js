@@ -316,6 +316,44 @@ async function runAiFaqsEnhancementBatch() {
         }
         
         log('AI FAQs: Trip ' + tripId + ' → created ' + createdCount + ' FAQs');
+
+        try {
+          var bestHours = ctx && isFinite(parseInt(ctx.cancellationWindowHours || 0, 10))
+            ? parseInt(ctx.cancellationWindowHours || 0, 10)
+            : 0;
+
+          if (!bestHours || bestHours < 1) {
+            for (let x = 0; x < faqs.length; x++) {
+              var qx = String(faqs[x].question || '').toLowerCase();
+              if (!qx || qx.indexOf('cancel') === -1) continue;
+              var ax = String(faqs[x].answer || '');
+              var mx = ax.match(/at\s+least\s+(\d+)\s*hours?/i) || ax.match(/(\d+)\s*hours?\s+before/i);
+              if (!mx) continue;
+              var nx = parseInt(mx[1], 10);
+              if (!isFinite(nx) || nx <= 0) continue;
+              if (nx > bestHours) bestHours = nx;
+            }
+          }
+
+          if (bestHours > 0) {
+            const tripNumber0 = String((tripFields && tripFields.TripID) ? tripFields.TripID : '').trim()
+            const tripLinkValue0 = tripNumber0 || tripId
+            const impRes2 = await airtableGet_(IMPROVEMENT_TABLE, { filterByFormula: "FIND('" + String(tripLinkValue0).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 })
+            const impRecs2 = impRes2 && impRes2.records ? impRes2.records : []
+            if (impRecs2.length) {
+              for (let y = 0; y < impRecs2.length; y++) {
+                try { await airtableUpdate_(IMPROVEMENT_TABLE, String(impRecs2[y].id || ''), { Cancellation_Window_Hours: bestHours }) } catch (eU) {}
+              }
+              log('AI FAQs: Updated Improvement With AI.Cancellation_Window_Hours = ' + bestHours + ' for trip ' + String(tripLinkValue0) + ' (records=' + impRecs2.length + ')')
+            } else {
+              log('AI FAQs: Could not find Improvement With AI records to set Cancellation_Window_Hours for trip ' + String(tripLinkValue0))
+            }
+          } else {
+            log('AI FAQs: No cancellationWindowHours detected for trip ' + tripId + ' (multi-day or no policy hours).')
+          }
+        } catch (eCh) {
+          log('AI FAQs: Failed setting Cancellation_Window_Hours for trip ' + tripId + ' — ' + eCh.message)
+        }
         
         // 8) Update trip status
         await updateTripFaqsStatus_(tripId, 'Done')
@@ -352,10 +390,8 @@ async function buildFaqsContext_(tripFields, tripId) {
   
   // 1) Get improved trip data (Description + SEO)
   try {
-    var impParams = {
-      filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'",
-      maxRecords: 1
-    };
+    const tripLinkValue = String(tripNumber || tripId || '').trim()
+    var impParams = { filterByFormula: "FIND('" + tripLinkValue.replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", maxRecords: 1 };
     var impRes = await airtableGet_(IMPROVEMENT_TABLE, impParams)
     if (impRes && impRes.records && impRes.records.length) {
       var impFields = impRes.records[0].fields || {};
@@ -647,7 +683,6 @@ function buildFaqsPrompt_(ctx) {
 
 function upsertCancellationFaq_(faqs, ctx) {
   if (!Array.isArray(faqs)) return faqs;
-  return faqs;
 
   // Determine which policy to use
   var policyAnswer = CANCELLATION_FIXED_ANSWER; // Default (24h)
@@ -726,7 +761,7 @@ function upsertCancellationFaq_(faqs, ctx) {
       }
   }
 
-  if (days > 3) {
+  if (days > 1) {
     isMultiDay = true;
     log('AI FAQs: Detected multi-day trip (' + days + ' days). Using STRICT policy.');
   } else {
@@ -742,6 +777,10 @@ function upsertCancellationFaq_(faqs, ctx) {
                          "✔ Less than 30 days before the tour start date\n" +
                          "Unfortunately, no refund can be provided, as hotels, transportation, and other services will already be fully booked and confirmed.\n\n" +
                          "If you need assistance with cancellation, rescheduling, or have any questions, our customer service team will be happy to help.";
+  }
+
+  if (ctx) {
+    ctx.cancellationWindowHours = isMultiDay ? 0 : 24;
   }
 
   var found = false;
@@ -1232,13 +1271,16 @@ async function deleteOldFaqsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   log('AI FAQs: deleting old FAQs for Trip ' + tripId);
   try {
-    var params1 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripId + "'", pageSize: 100 };
-    var res1 = await airtableGet_(FAQS_IMPROVEMENT_TABLE, params1)
-    var recs = res1 && res1.records ? res1.records : [];
-    if (!recs.length && tripNumber) {
-      var params2 = { filterByFormula: "ARRAYJOIN({Trip}) = '" + tripNumber + "'", pageSize: 100 };
-      var res2 = await airtableGet_(FAQS_IMPROVEMENT_TABLE, params2)
-      recs = res2 && res2.records ? res2.records : [];
+    var recs = []
+    if (tripNumber) {
+      var paramsA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var resA = await airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsA)
+      recs = resA && resA.records ? resA.records : []
+    }
+    if (!recs.length) {
+      var paramsB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var resB = await airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsB)
+      recs = resB && resB.records ? resB.records : []
     }
     var toDelete = [];
     for (var i = 0; i < recs.length; i++) {
