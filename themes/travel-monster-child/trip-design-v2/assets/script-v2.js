@@ -1509,119 +1509,44 @@
             }
         });
 
-        function ftsV2InitTrustindexMiniSummary() {
-            var mini = document.getElementById('fts-v2-ti-mini');
-            if (!mini) return;
-
-            var scoreEl = mini.querySelector('.fts-v2-ti-mini-score');
-            var countEl = mini.querySelector('.fts-v2-ti-mini-count');
-            var sepEl   = mini.querySelector('.fts-v2-ti-mini-sep');
-            var labelEl = mini.querySelector('.fts-v2-ti-mini-label');
-            if (!scoreEl) return;
-
-            var reviewsSec = document.getElementById('fts-v2-sec-reviews');
-            if (!reviewsSec) return;
-
-            var source = reviewsSec.querySelector('.fts-v2-reviews-tab-content') || reviewsSec;
-            var done = false;
-
-            function normalizeInt(str) {
-                var s = String(str || '').replace(/[^\d]/g, '');
-                var n = parseInt(s, 10);
-                return isFinite(n) ? n : 0;
+        var ftsTiBadHost = 'admin.trustindex.test';
+        var ftsTiGoodHost = 'admin.trustindex.io';
+        function ftsTiRewriteUrl(u) {
+            if (!u || typeof u !== 'string') return u;
+            return u.indexOf(ftsTiBadHost) !== -1 ? u.replace(ftsTiBadHost, ftsTiGoodHost) : u;
+        }
+        function ftsTiFixEl(el) {
+            if (!el || el.nodeType !== 1) return;
+            var attrs = ['src', 'href', 'data-src', 'data-href'];
+            for (var i = 0; i < attrs.length; i++) {
+                var a = attrs[i];
+                if (el.hasAttribute(a)) {
+                    var v = el.getAttribute(a);
+                    var nv = ftsTiRewriteUrl(v);
+                    if (nv !== v) el.setAttribute(a, nv);
+                }
             }
-
-            function normalizeRating(str) {
-                var s = String(str || '').replace(',', '.').match(/([0-4](?:\.\d+)?|5(?:\.0+)?)/);
-                if (!s) return 0;
-                var n = parseFloat(s[1]);
-                if (!isFinite(n)) return 0;
-                if (n < 0) n = 0;
-                if (n > 5) n = 5;
-                return n;
-            }
-
-            function pickLabel(rating) {
-                if (rating >= 4.5) return 'EXCELLENT';
-                if (rating >= 4.0) return 'VERY GOOD';
-                if (rating >= 3.0) return 'GOOD';
-                return 'RATED';
-            }
-
-            function extractFromAttributes(root) {
-                var el = root.querySelector('[data-rating],[data-average],[data-score],[data-rating-value]');
-                if (!el) return null;
-
-                var r = el.getAttribute('data-rating') || el.getAttribute('data-average') || el.getAttribute('data-score') || el.getAttribute('data-rating-value') || '';
-                var rating = normalizeRating(r);
-                if (!rating) return null;
-
-                var c = el.getAttribute('data-review-count') || el.getAttribute('data-reviews') || el.getAttribute('data-count') || '';
-                var count = normalizeInt(c);
-                return { rating: rating, count: count };
-            }
-
-            function extractFromText(root) {
-                var text = String(root && root.textContent ? root.textContent : '').replace(/\s+/g, ' ').trim();
-                if (!text) return null;
-
-                var ratingMatch = text.match(/\b([0-4](?:[.,]\d+)?|5(?:[.,]0+)?)\s*(?:\/\s*5)?\b/);
-                if (!ratingMatch) return null;
-                var rating = normalizeRating(ratingMatch[1]);
-                if (!rating) return null;
-
-                var count = 0;
-                var countMatch =
-                    text.match(/\b(\d{1,3}(?:,\d{3})*)\s*(?:reviews?|ratings?)\b/i) ||
-                    text.match(/\bbased on\s+(\d{1,3}(?:,\d{3})*)\b/i) ||
-                    text.match(/\b(\d+)\s*(?:مراجعة|مراجعات|تقييم|تقييمات)\b/i);
-                if (countMatch) count = normalizeInt(countMatch[1]);
-
-                return { rating: rating, count: count };
-            }
-
-            function fillUI(rating, count) {
-                scoreEl.textContent = rating.toFixed(1);
-                if (labelEl) labelEl.textContent = pickLabel(rating);
-
-                if (countEl) {
-                    if (count > 0) {
-                        countEl.textContent = String(count) + ' reviews';
-                        if (sepEl) sepEl.style.display = '';
-                        countEl.style.display = '';
-                    } else {
-                        countEl.textContent = '';
-                        if (sepEl) sepEl.style.display = 'none';
-                        countEl.style.display = 'none';
+        }
+        function ftsTiFixTree(root) {
+            if (!root || root.nodeType !== 1) return;
+            ftsTiFixEl(root);
+            var sel = '[src*="' + ftsTiBadHost + '"],[href*="' + ftsTiBadHost + '"],[data-src*="' + ftsTiBadHost + '"],[data-href*="' + ftsTiBadHost + '"]';
+            var nodes = root.querySelectorAll(sel);
+            for (var i = 0; i < nodes.length; i++) ftsTiFixEl(nodes[i]);
+        }
+        ftsTiFixTree(document.documentElement);
+        if (typeof MutationObserver !== 'undefined' && document.body) {
+            var ftsTiObserver = new MutationObserver(function(muts) {
+                for (var i = 0; i < muts.length; i++) {
+                    var added = muts[i].addedNodes;
+                    if (!added) continue;
+                    for (var j = 0; j < added.length; j++) {
+                        ftsTiFixTree(added[j]);
                     }
                 }
-
-                mini.style.display = 'flex';
-            }
-
-            function attempt() {
-                if (done) return;
-                var res = extractFromAttributes(source) || extractFromText(source);
-                if (!res || !res.rating) return;
-                fillUI(res.rating, res.count || 0);
-                done = true;
-            }
-
-            attempt();
-
-            if (done || !window.MutationObserver) return;
-
-            var observer = new MutationObserver(function() {
-                attempt();
-                if (done) observer.disconnect();
             });
-            observer.observe(source, { childList: true, subtree: true, characterData: true });
-            setTimeout(function() {
-                try { observer.disconnect(); } catch (e) {}
-            }, 15000);
+            ftsTiObserver.observe(document.body, { childList: true, subtree: true });
         }
-
-        ftsV2InitTrustindexMiniSummary();
 
         /* ══════════════════════════════════════════════
            Mobile Sticky Book Now Bar

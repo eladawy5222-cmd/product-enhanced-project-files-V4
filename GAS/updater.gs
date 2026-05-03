@@ -2607,9 +2607,12 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   }
 
   var trustindexCode = g.Trustindex_Code || g.trustindex_code || g['trustindex_code'] || g.Reviews || g['Reviews'] || '';
+  if (!trustindexCode && tripFields) {
+    trustindexCode = tripFields.Trustindex_Code || tripFields.trustindex_code || tripFields['trustindex_code'] || tripFields.Reviews || tripFields['Reviews'] || '';
+  }
   if (Array.isArray(trustindexCode)) trustindexCode = trustindexCode.length ? trustindexCode[0] : '';
   trustindexCode = String(trustindexCode || '').trim();
-  if (trustindexCode) payload.meta.trustindex_code = trustindexCode;
+  if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'trustindex_code')) delete payload.meta.trustindex_code;
 
   var cancelHours = g.Cancellation_Window_Hours || g['Cancellation_Window_Hours'] || g.CancellationHours || g['Cancellation Hours'] || '';
   if (Array.isArray(cancelHours)) cancelHours = cancelHours.length ? cancelHours[0] : '';

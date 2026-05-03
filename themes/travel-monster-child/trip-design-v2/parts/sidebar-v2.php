@@ -35,16 +35,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <?php endif; ?>
             </div>
 
-            <?php if ( ( empty( $trustindex_quickbar_code ) || ! is_string( $trustindex_quickbar_code ) || trim( $trustindex_quickbar_code ) === '' ) && ! empty( $trustindex_code ) && is_string( $trustindex_code ) ) : ?>
-            <div class="fts-v2-trustindex-inline">
-                <?php if ( strpos( $trustindex_code, 'cdn.trustindex.io/loader.js' ) !== false ) : ?>
-                    <?php echo $trustindex_code; ?>
-                <?php else : ?>
-                    <?php echo wp_kses_post( $trustindex_code ); ?>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
-
             <a class="fts-v2-countdown-bar fts-v2-policy-link" href="<?php echo esc_url( $terms_url ?? home_url( '/terms-and-conditions/' ) ); ?>" target="_blank" rel="noopener noreferrer nofollow">
                 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html__( 'Free cancellation', 'fts' ); ?><?php if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) : ?> <?php echo esc_html__( 'up to', 'fts' ); ?> <?php echo intval( $cancel_hours ); ?>h<?php endif; ?> (<?php echo esc_html__( 'terms apply', 'fts' ); ?>)</span>
             </a>

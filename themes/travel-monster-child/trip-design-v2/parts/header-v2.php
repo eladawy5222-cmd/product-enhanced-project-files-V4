@@ -38,12 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
         <!-- Meta Row -->
         <div class="fts-v2-meta-row">
-            <?php if ( ! empty( $trustindex_code ) ) : ?>
-            <div class="fts-v2-meta-item fts-v2-meta-tidx">
-                <?php echo wp_kses_post( $trustindex_code ); ?>
-            </div>
-            <span class="fts-v2-meta-sep">|</span>
-            <?php elseif ( $avg_rating > 0 ) : ?>
+            <?php if ( $avg_rating > 0 ) : ?>
             <div class="fts-v2-meta-item fts-v2-meta-rating">
                 <div class="fts-v2-stars-inline">
                     <?php for ( $i = 1; $i <= 5; $i++ ) : ?>

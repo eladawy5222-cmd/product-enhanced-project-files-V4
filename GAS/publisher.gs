@@ -491,9 +491,12 @@ function mapAirtableToWordPress_(data, tripFields) {
   }
 
   var trustindexCode = g.Trustindex_Code || g.trustindex_code || g['trustindex_code'] || g.Reviews || g['Reviews'] || '';
+  if (!trustindexCode && tripFields) {
+    trustindexCode = tripFields.Trustindex_Code || tripFields.trustindex_code || tripFields['trustindex_code'] || tripFields.Reviews || tripFields['Reviews'] || '';
+  }
   if (Array.isArray(trustindexCode)) trustindexCode = trustindexCode.length ? trustindexCode[0] : '';
   trustindexCode = String(trustindexCode || '').trim();
-  if (trustindexCode) payload.meta.trustindex_code = trustindexCode;
+  if (payload.meta && Object.prototype.hasOwnProperty.call(payload.meta, 'trustindex_code')) delete payload.meta.trustindex_code;
 
   var cancelHours = g.Cancellation_Window_Hours || g['Cancellation_Window_Hours'] || g.CancellationHours || g['Cancellation Hours'] || '';
   if (Array.isArray(cancelHours)) cancelHours = cancelHours.length ? cancelHours[0] : '';
@@ -608,6 +611,7 @@ function mapAirtableToWordPress_(data, tripFields) {
   
   if (g.AI_Why_People_Love_This_Trip_Section_Title) wte.tab_8_title = g.AI_Why_People_Love_This_Trip_Section_Title;
   if (g.AI_Tab_Content) wte.tab_content['8_wpeditor'] = g.AI_Tab_Content; // Assuming 8 is "Why People Love"
+  if (trustindexCode) wte.tab_content['9_wpeditor'] = trustindexCode;
   
   // Highlights
   if (g.AI_Trip_Highlights_Section_Title) wte.trip_highlights_title = g.AI_Trip_Highlights_Section_Title;

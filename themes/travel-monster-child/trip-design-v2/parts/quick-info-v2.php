@@ -44,25 +44,16 @@ if ( is_array( $at_a_glance ) ) {
             </div>
             <div class="fts-v2-quick-price-cta">
                 <div class="fts-v2-price-block">
-                    <div class="fts-v2-ti-mini" id="fts-v2-ti-mini">
-                        <span class="fts-v2-ti-mini-label">EXCELLENT</span>
-                        <span class="fts-v2-ti-mini-stars" aria-hidden="true">★★★★★</span>
-                        <span class="fts-v2-ti-mini-score"></span>
-                        <span class="fts-v2-ti-mini-sep" aria-hidden="true">|</span>
-                        <span class="fts-v2-ti-mini-count"></span>
-                    </div>
-                    <div class="fts-v2-price-line">
-                        <?php if ( $old_price > 0 ) : ?>
-                            <span class="fts-v2-price-old"><?php echo esc_html( wte_get_formated_price( $old_price ) ); ?></span>
-                        <?php endif; ?>
-                        <?php if ( $display_price > 0 ) : ?>
-                            <span class="fts-v2-price-current"><?php echo esc_html( wte_get_formated_price( $display_price ) ); ?></span>
-                            <span class="fts-v2-price-person"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
-                        <?php endif; ?>
-                        <?php if ( $discount_pct > 0 ) : ?>
-                            <span class="fts-v2-discount-badge">-<?php echo intval( $discount_pct ); ?>%</span>
-                        <?php endif; ?>
-                    </div>
+                    <?php if ( $old_price > 0 ) : ?>
+                        <span class="fts-v2-price-old"><?php echo esc_html( wte_get_formated_price( $old_price ) ); ?></span>
+                    <?php endif; ?>
+                    <?php if ( $display_price > 0 ) : ?>
+                        <span class="fts-v2-price-current"><?php echo esc_html( wte_get_formated_price( $display_price ) ); ?></span>
+                        <span class="fts-v2-price-person"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
+                    <?php endif; ?>
+                    <?php if ( $discount_pct > 0 ) : ?>
+                        <span class="fts-v2-discount-badge">-<?php echo intval( $discount_pct ); ?>%</span>
+                    <?php endif; ?>
                 </div>
                 <a href="#" class="fts-v2-book-now-btn fts-bm-trigger"><?php echo esc_html__( 'Book Now', 'fts' ); ?></a>
             </div>
