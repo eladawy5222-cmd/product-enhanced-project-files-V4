@@ -149,15 +149,20 @@ var ImprovementRepository = (function() {
       if (!tripRecordId) return null;
 
       var directId = tripFields && tripFields.ImprovementRecordId ? String(tripFields.ImprovementRecordId) : '';
+      if (directId && String(directId) === String(tripRecordId)) {
+        directId = '';
+      }
       var rec = fetchImprovementRecordForTrip({
         tripRecordId: tripRecordId,
+        tripPublicId: tripFields && tripFields.TripID ? tripFields.TripID : null,
+        tripName: tripFields && tripFields.Title ? tripFields.Title : null,
         directRecordId: directId || null,
         tableName: tableName,
         tripLinkField: tripLinkField
       });
 
       if (rec && rec.id) {
-        if (!directId) {
+        if (!directId || String(directId) !== String(rec.id)) {
           try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: rec.id }); } catch (e1) {}
         }
         return rec;

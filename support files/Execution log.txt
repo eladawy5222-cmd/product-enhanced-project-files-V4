@@ -1,152 +1,152 @@
+
 Execution log
-1:07:39 AM	Notice	Execution started
-1:07:41 AM	Info	Updater: Starting batch...
-1:07:41 AM	Info	VERBOSE LOGGING DISABLED
-1:07:41 AM	Info	SUPPORTED LANGUAGES MAP UPDATED
-1:07:41 AM	Info	Updater: Processing Trip recUDehvj1S32179Q (TripID: 23024, Type: WORDPRESS)
-1:07:42 AM	Info	LANGUAGE RESOLVED: English -> en
-1:07:42 AM	Info	TRANSLATION LANGUAGES LIST: ["en"]
-1:07:42 AM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recUDehvj1S32179Q
-1:07:43 AM	Info	Updater: Found General Improvement record: recK4GDXe9yy5Fat9
-1:07:43 AM	Info	Updater: Found TripDetails record: recDRsiZFDSTqxWaq
-1:07:49 AM	Info	Updater: Starting AI classification for Activities...
-1:07:49 AM	Info	AI: prompt placeholder leakage prevented
-1:07:50 AM	Info	Updater: AI suggested activities: ["City Tours","Pyramids & History"]
-1:07:50 AM	Info	Updater: Removed Pyramids & History (no explicit pyramids signal)
-1:07:50 AM	Info	Updater: Starting AI classification for Trip Types...
-1:07:50 AM	Info	AI: prompt placeholder leakage prevented
-1:07:51 AM	Info	Updater: AI suggested trip types: ["Day Trips","Guided Tours"]
-1:07:51 AM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 8, dMinutes: 0, tourType: single, Title: Cairo Day Tour: NMEC, Citadel & Old Cairo
-1:07:51 AM	Info	Updater: Language set to: en
-1:07:51 AM	Info	Updater: Found 1 AI Activities. Mapping to payload...
-1:07:51 AM	Info	Updater: Payload.activities set to: [400]
-1:07:51 AM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
-1:07:51 AM	Info	Updater: Payload.trip_types set to: [407,408]
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
-1:07:51 AM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
-1:07:51 AM	Info	Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
-1:07:51 AM	Info	Updater: Adding new fact "Meals" (69801669) to template
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
-1:07:51 AM	Info	Updater: Adding new fact "Duration" (97932390) to template
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
-1:07:51 AM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
-1:07:51 AM	Info	Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
-1:07:51 AM	Info	Updater: Adding new fact "Language" (12647846) to template
-1:07:51 AM	Info	Updater: Trip Facts structure ready with 8 fields
-1:07:51 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=core.title desc=AI_Short_Summary
-1:07:51 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)
-1:07:51 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage meta): title=rank_math_title desc=rank_math_description
-1:07:51 AM	Info	Updater: PRESERVING existing slug for primary trip: cairo-egyptian-civilization-museum-citadel
-1:07:51 AM	Info	Updater: Updating existing WordPress trip 23024
-1:08:03 AM	Info	Updater: Throttling before publish packages for 2200 ms
-1:08:06 AM	Info	Updater: Found 1 packages and 5 prices for Trip recUDehvj1S32179Q
-1:08:07 AM	Info	Updater: Single package detected. Linking ALL 5 prices to it.
-1:08:07 AM	Info	Updater: Skipping category Passengers because price is 0 and no valid group pricing
-1:08:07 AM	Info	Updater: Skipping category Infant because price is 0 and no valid group pricing
-1:08:07 AM	Info	Updater: Skipping dummy group pricing for Child (Regular: 60)
-1:08:07 AM	Info	Updater: Skipping dummy group pricing for Student (with ID) (Regular: 75)
-1:08:07 AM	Info	CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33442
-1:08:07 AM	Info	Updater: Sending package "Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour" to WP...
-1:08:07 AM	Info	Updater: Package copy -> excerpt_chars=131, content_html_chars=453
-1:08:08 AM	Info	Updater: Updated Package 33442
-1:08:08 AM	Info	EXISTING OBJECT REUSED AND REFRESHED (package ): 33442
-1:08:08 AM	Info	EXISTING TRANSLATED CONTENT REFRESHED (package airtable record recO7Jc1TQ4LD9Qrk)
-1:08:08 AM	Info	Updater: Updating 5 prices with new PackageID 33442...
-1:08:08 AM	Info	Updater: Price recLRZEcxeFxiw7Ob already has correct PackageID
-1:08:08 AM	Info	Updater: Price recVJZdcSYIIulNtq already has correct PackageID
-1:08:08 AM	Info	Updater: Price recmYP4FRdiMQCUX6 already has correct PackageID
-1:08:08 AM	Info	Updater: Price recrT0nfPuy7qdjI3 already has correct PackageID
-1:08:08 AM	Info	Updater: Price recte9m1unCknrysK already has correct PackageID
-1:08:17 AM	Info	Updater: Linked packages 33442 to Trip 23024
-1:08:17 AM	Info	Updater: Throttling before publish images for 2200 ms
-1:08:20 AM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
-1:08:22 AM	Info	Updater: Image record rec0IU62plCnP4KRE Type raw value: "Gallery", wpMediaId: 30660
-1:08:22 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:22 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:22 AM	Info	Updater: Throttling before update media 30660 for 900 ms
-1:08:23 AM	Info	Updater: Media 30660 update payload: {"title":"Statues in the National Museum of Egyptian Civilization","caption":"The museum displays impressive ancient Egyptian sculptures.","alt_text":"Large seated statue with smaller figures on display in a museum","description":"This image showcases a large statue of a seated figure holding smaller figures surrounded by various artifacts The modern museum setting enhances the historical significance of the exhibits."}
-1:08:24 AM	Info	Updater: Updated Media 30660 metadata (Title: Yes, Alt: Yes)
-1:08:24 AM	Info	Updater: Throttling before ensure filename 30660 for 1400 ms
-1:08:29 AM	Info	Updater: Filename ensured for Media 30660
-1:08:30 AM	Info	Updater: Image record recAgKfBcqdF8V1tO Type raw value: "Gallery", wpMediaId: 30656
-1:08:30 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:30 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:30 AM	Info	Updater: Throttling before update media 30656 for 900 ms
-1:08:31 AM	Info	Updater: Media 30656 update payload: {"title":"National Museum of Egyptian Civilization at Night","caption":"The National Museum of Egyptian Civilization illuminated at night.","alt_text":"Illuminated National Museum of Egyptian Civilization with palm trees and water","description":"The National Museum of Egyptian Civilization stands majestically illuminated against the night sky Palm trees line the foreground reflecting in the calm waters nearby."}
-1:08:32 AM	Info	Updater: Updated Media 30656 metadata (Title: Yes, Alt: Yes)
-1:08:33 AM	Info	Updater: Throttling before ensure filename 30656 for 1400 ms
-1:08:35 AM	Info	Updater: Filename ensured for Media 30656
-1:08:37 AM	Info	Updater: Image record recFF253gCTI1V92a Type raw value: "Featured", wpMediaId: 30663
-1:08:37 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:37 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:37 AM	Info	Updater: Throttling before update media 30663 for 900 ms
-1:08:38 AM	Info	Updater: Media 30663 update payload: {"title":"Statue at National Museum of Egyptian Civilization","caption":"A detailed statue of a pharaoh stands in the museum.","alt_text":"Statue of a pharaoh with detailed carvings on display in a museum","description":"This striking statue of a pharaoh showcases intricate carvings and a commanding presence It is displayed prominently within the National Museum of Egyptian Civilization surrounded by a modern exhibit space."}
-1:08:38 AM	Info	Updater: Updated Media 30663 metadata (Title: Yes, Alt: Yes)
-1:08:39 AM	Info	Updater: Throttling before ensure filename 30663 for 1400 ms
-1:08:41 AM	Info	Updater: Filename ensured for Media 30663
-1:08:42 AM	Info	Updater: Image record recTmQ8AfMRF0jGsr Type raw value: "Gallery", wpMediaId: 30661
-1:08:43 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:43 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:43 AM	Info	Updater: Throttling before update media 30661 for 900 ms
-1:08:44 AM	Info	Updater: Media 30661 update payload: {"title":"National Museum of Egyptian Civilization Entrance","caption":"The entrance to the National Museum of Egyptian Civilization in Cairo.","alt_text":"Facade of the National Museum of Egyptian Civilization with plants.","description":"The facade of the National Museum of Egyptian Civilization features large signage in both English and Arabic Surrounding the entrance are neatly arranged plants and flowers contributing to the inviting atmosphere of the museum."}
-1:08:44 AM	Info	Updater: Updated Media 30661 metadata (Title: Yes, Alt: Yes)
-1:08:45 AM	Info	Updater: Throttling before ensure filename 30661 for 1400 ms
-1:08:47 AM	Info	Updater: Filename ensured for Media 30661
-1:08:48 AM	Info	Updater: Image record recbInDcxAeBdtLgD Type raw value: "Gallery", wpMediaId: 30659
-1:08:49 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:49 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:49 AM	Info	Updater: Throttling before update media 30659 for 900 ms
-1:08:49 AM	Info	Updater: Media 30659 update payload: {"title":"Artifacts from the National Museum of Egyptian Civilization","caption":"A collection of ancient artifacts displayed at the museum.","alt_text":"Ancient Egyptian artifacts including pottery and a decorated box.","description":"This display features various ancient artifacts including a painted wooden box pottery and figurines The items showcase the rich history and craftsmanship of ancient Egypt."}
-1:08:50 AM	Info	Updater: Updated Media 30659 metadata (Title: Yes, Alt: Yes)
-1:08:51 AM	Info	Updater: Throttling before ensure filename 30659 for 1400 ms
-1:08:53 AM	Info	Updater: Filename ensured for Media 30659
-1:08:54 AM	Info	Updater: Image record reccNs3vQRBMaaGNq Type raw value: "Gallery", wpMediaId: 30658
-1:08:55 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:08:55 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:08:55 AM	Info	Updater: Throttling before update media 30658 for 900 ms
-1:08:55 AM	Info	Updater: Media 30658 update payload: {"title":"View of Cairo with Historic Mosques","caption":"A panoramic view showcasing Cairo's skyline and historic architecture.","alt_text":"Panoramic view of Cairo featuring historic mosques and sunset.","description":"This image captures a stunning panorama of Cairo highlighting the intricate architecture of historic mosques amidst the urban landscape The warm hues of the sunset illuminate the city creating a picturesque scene."}
-1:08:56 AM	Info	Updater: Updated Media 30658 metadata (Title: Yes, Alt: Yes)
-1:08:57 AM	Info	Updater: Throttling before ensure filename 30658 for 1400 ms
-1:08:59 AM	Info	Updater: Filename ensured for Media 30658
-1:09:00 AM	Info	Updater: Image record rechfIRaCarOcDbub Type raw value: "Gallery", wpMediaId: 30662
-1:09:01 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:09:01 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:09:01 AM	Info	Updater: Throttling before update media 30662 for 900 ms
-1:09:01 AM	Info	Updater: Media 30662 update payload: {"title":"Citadel of Saladin at Sunset","caption":"The Citadel of Saladin stands majestically against a sunset sky.","alt_text":"Citadel of Saladin with minarets and domes during sunset","description":"The Citadel of Saladin features prominent minarets and domes illuminated by the warm hues of sunset Surrounding palm trees and historic walls enhance the scene reflecting Cairo's rich architectural heritage."}
-1:09:02 AM	Info	Updater: Updated Media 30662 metadata (Title: Yes, Alt: Yes)
-1:09:03 AM	Info	Updater: Throttling before ensure filename 30662 for 1400 ms
-1:09:06 AM	Info	Updater: Filename ensured for Media 30662
-1:09:07 AM	Info	Updater: Image record reculfmU2xk6cMJ6c Type raw value: "Gallery", wpMediaId: 30664
-1:09:07 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:09:07 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:09:07 AM	Info	Updater: Throttling before update media 30664 for 900 ms
-1:09:08 AM	Info	Updater: Media 30664 update payload: {"title":"Artifacts at National Museum of Egyptian Civilization","caption":"A display of beautifully crafted ancient artifacts.","alt_text":"Display of ancient Egyptian artifacts including a chair and canopic jars.","description":"This exhibit showcases intricately designed artifacts including a colorful chair and several canopic jars Each piece reflects the artistry and culture of ancient Egypt providing insight into their burial practices and daily life."}
-1:09:09 AM	Info	Updater: Updated Media 30664 metadata (Title: Yes, Alt: Yes)
-1:09:10 AM	Info	Updater: Throttling before ensure filename 30664 for 1400 ms
-1:09:18 AM	Info	Updater: Filename ensured for Media 30664
-1:09:20 AM	Info	Updater: Image record recxGfLYxwikhHkT4 Type raw value: "Gallery", wpMediaId: 30657
-1:09:20 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-1:09:20 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-1:09:20 AM	Info	Updater: Throttling before update media 30657 for 900 ms
-1:09:21 AM	Info	Updater: Media 30657 update payload: {"title":"Exhibits Inside the National Museum of Egyptian Civilization","caption":"Artifacts displayed in glass cases at the museum.","alt_text":"Artifacts in glass cases at the National Museum of Egyptian Civilization","description":"The image showcases various artifacts housed in glass display cases within the National Museum of Egyptian Civilization The exhibits include intricately designed items highlighting the rich history of Egypt."}
-1:09:22 AM	Info	Updater: Updated Media 30657 metadata (Title: Yes, Alt: Yes)
-1:09:23 AM	Info	Updater: Throttling before ensure filename 30657 for 1400 ms
-1:09:25 AM	Info	Updater: Filename ensured for Media 30657
-1:09:36 AM	Info	Updater: Published Images for Trip 23024 (Featured: 30663, Gallery: 8)
-1:09:36 AM	Info	Updater: Throttling before generate primary schema for 900 ms
-1:09:37 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-1:09:37 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip): title=AI_SEO_Title desc=AI_SEO_Meta_Description
-1:09:38 AM	Info	SCHEMA PRICES SOURCE RESOLVED (en, TouristTrip): source=Prices offers=AggregateOffer count=5
-1:09:38 AM	Info	SCHEMA BYPASSED PACKAGES FALLBACK (en, TouristTrip): used Prices
-1:09:38 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage): title=rank_math_title desc=rank_math_description
-1:09:38 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, FAQPage): used rank_math_description
-1:09:47 AM	Info	TRIP SCHEMA GENERATED (en)
-1:09:47 AM	Info	Updater: Throttling before store SEO validation for 900 ms
-1:09:48 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-1:09:48 AM	Info	CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=civilization source=wp_core
-1:09:49 AM	Info	Updater: Throttling before store translation url map for 900 ms
-1:09:50 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-1:10:01 AM	Info	Updater: Successfully published Trip recUDehvj1S32179Q
-1:10:01 AM	Notice	Execution completed
+2:14:53 AM	Notice	Execution started
+2:14:55 AM	Info	Updater: Starting batch...
+2:14:55 AM	Info	VERBOSE LOGGING DISABLED
+2:14:55 AM	Info	SUPPORTED LANGUAGES MAP UPDATED
+2:14:55 AM	Info	Updater: Processing Trip recUDehvj1S32179Q (TripID: 23024, Type: WORDPRESS)
+2:14:56 AM	Info	LANGUAGE RESOLVED: English -> en
+2:14:56 AM	Info	TRANSLATION LANGUAGES LIST: ["en"]
+2:14:57 AM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recUDehvj1S32179Q
+2:14:57 AM	Info	Updater: Found General Improvement record: recK4GDXe9yy5Fat9
+2:14:58 AM	Info	Updater: Found TripDetails record: recDRsiZFDSTqxWaq
+2:15:04 AM	Info	Updater: Starting AI classification for Activities...
+2:15:04 AM	Info	AI: prompt placeholder leakage prevented
+2:15:05 AM	Info	Updater: AI suggested activities: ["City Tours","Pyramids & History","Boat Cruises"]
+2:15:05 AM	Info	Updater: Starting AI classification for Trip Types...
+2:15:05 AM	Info	AI: prompt placeholder leakage prevented
+2:15:06 AM	Info	Updater: AI suggested trip types: ["Day Trips","Guided Tours"]
+2:15:06 AM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 8, dMinutes: 0, tourType: single, Title: Cairo Day Tour: NMEC, Citadel & Old Cairo – 5,000 Years in O
+2:15:06 AM	Info	Updater: Language set to: en
+2:15:06 AM	Info	Updater: Found 3 AI Activities. Mapping to payload...
+2:15:06 AM	Info	Updater: Payload.activities set to: [400,399,390]
+2:15:06 AM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
+2:15:06 AM	Info	Updater: Payload.trip_types set to: [407,408]
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
+2:15:06 AM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
+2:15:06 AM	Info	Updater: Adding new fact "Duration" (97932390) to template
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
+2:15:06 AM	Info	Updater: Adding new fact "Meals" (69801669) to template
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
+2:15:06 AM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
+2:15:06 AM	Info	Updater: Adding new fact "Language" (12647846) to template
+2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97943192 for "Tour Availability"
+2:15:06 AM	Info	Updater: Adding new fact "Tour Availability" (97943192) to template
+2:15:06 AM	Info	Updater: Trip Facts structure ready with 8 fields
+2:15:06 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=core.title desc=AI_Short_Summary
+2:15:06 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)
+2:15:06 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage meta): title=rank_math_title desc=rank_math_description
+2:15:06 AM	Info	Updater: PRESERVING existing slug for primary trip: cairo-egyptian-civilization-museum-citadel
+2:15:06 AM	Info	Updater: Updating existing WordPress trip 23024
+2:15:16 AM	Info	Updater: Throttling before publish packages for 2200 ms
+2:15:19 AM	Info	Updater: Found 1 packages and 5 prices for Trip recUDehvj1S32179Q
+2:15:19 AM	Info	Updater: Single package detected. Linking ALL 5 prices to it.
+2:15:19 AM	Info	Updater: Skipping category Passengers because price is 0 and no valid group pricing
+2:15:19 AM	Info	Updater: Skipping category Infant because price is 0 and no valid group pricing
+2:15:19 AM	Info	Updater: Skipping dummy group pricing for Child (Regular: 60)
+2:15:19 AM	Info	Updater: Skipping dummy group pricing for Student (with ID) (Regular: 75)
+2:15:19 AM	Info	CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33442
+2:15:19 AM	Info	Updater: Sending package "Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour" to WP...
+2:15:19 AM	Info	Updater: Package copy -> excerpt_chars=131, content_html_chars=453
+2:15:21 AM	Info	Updater: Updated Package 33442
+2:15:21 AM	Info	EXISTING OBJECT REUSED AND REFRESHED (package ): 33442
+2:15:21 AM	Info	EXISTING TRANSLATED CONTENT REFRESHED (package airtable record recO7Jc1TQ4LD9Qrk)
+2:15:21 AM	Info	Updater: Updating 5 prices with new PackageID 33442...
+2:15:21 AM	Info	Updater: Price recLRZEcxeFxiw7Ob already has correct PackageID
+2:15:21 AM	Info	Updater: Price recVJZdcSYIIulNtq already has correct PackageID
+2:15:21 AM	Info	Updater: Price recmYP4FRdiMQCUX6 already has correct PackageID
+2:15:21 AM	Info	Updater: Price recrT0nfPuy7qdjI3 already has correct PackageID
+2:15:21 AM	Info	Updater: Price recte9m1unCknrysK already has correct PackageID
+2:15:33 AM	Info	Updater: Linked packages 33442 to Trip 23024
+2:15:33 AM	Info	Updater: Throttling before publish images for 2200 ms
+2:15:36 AM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
+2:15:37 AM	Info	Updater: Image record rec14USvp5y8bjb4x Type raw value: "Gallery", wpMediaId: 30657
+2:15:37 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:15:37 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:15:37 AM	Info	Updater: Throttling before update media 30657 for 900 ms
+2:15:38 AM	Info	Updater: Media 30657 update payload: {"title":"Artifacts at the National Museum of Egyptian Civilization","caption":"Display of ancient artifacts in a modern museum setting.","alt_text":"Interior view of the National Museum of Egyptian Civilization with artifacts.","description":"The image showcases various artifacts housed in glass cases within the National Museum of Egyptian Civilization The spacious interior features a minimalist design highlighting the intricate details of the displayed items."}
+2:15:39 AM	Info	Updater: Updated Media 30657 metadata (Title: Yes, Alt: Yes)
+2:15:40 AM	Info	Updater: Throttling before ensure filename 30657 for 1400 ms
+2:15:52 AM	Info	Updater: Filename ensured for Media 30657
+2:15:53 AM	Info	Updater: Image record rec274epvMaKJUeAS Type raw value: "Gallery", wpMediaId: 30661
+2:15:53 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:15:53 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:15:53 AM	Info	Updater: Throttling before update media 30661 for 900 ms
+2:15:54 AM	Info	Updater: Media 30661 update payload: {"title":"National Museum of Egyptian Civilization Entrance","caption":"The entrance of the National Museum of Egyptian Civilization in Cairo.","alt_text":"Entrance to the National Museum of Egyptian Civilization with plants.","description":"This image showcases the entrance of the National Museum of Egyptian Civilization featuring its prominent signage Surrounding the building are well-maintained plants and a clear blue sky creating a welcoming atmosphere."}
+2:15:55 AM	Info	Updater: Updated Media 30661 metadata (Title: Yes, Alt: Yes)
+2:15:56 AM	Info	Updater: Throttling before ensure filename 30661 for 1400 ms
+2:15:58 AM	Info	Updater: Filename ensured for Media 30661
+2:15:59 AM	Info	Updater: Image record rec3aLuBZB1c5y9L2 Type raw value: "Gallery", wpMediaId: 30664
+2:15:59 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:15:59 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:15:59 AM	Info	Updater: Throttling before update media 30664 for 900 ms
+2:16:00 AM	Info	Updater: Media 30664 update payload: {"title":"Ancient Artifacts Displayed at the Museum","caption":"A collection of intricately designed ancient Egyptian artifacts.","alt_text":"Display of ancient Egyptian artifacts including a chair and sarcophagi.","description":"This display features a beautifully crafted chair alongside several colorful sarcophagi and decorative boxes Each piece showcases detailed hieroglyphics and vibrant illustrations reflecting the artistry of ancient Egyptian civilization."}
+2:16:01 AM	Info	Updater: Updated Media 30664 metadata (Title: Yes, Alt: Yes)
+2:16:02 AM	Info	Updater: Throttling before ensure filename 30664 for 1400 ms
+2:16:08 AM	Info	Updater: Filename ensured for Media 30664
+2:16:09 AM	Info	Updater: Image record rec5EFNNLTV6VrUcs Type raw value: "Gallery", wpMediaId: 30660
+2:16:09 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:09 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:09 AM	Info	Updater: Throttling before update media 30660 for 900 ms
+2:16:10 AM	Info	Updater: Media 30660 update payload: {"title":"Statues Inside the National Museum of Egyptian Civilization","caption":"A collection of ancient Egyptian statues on display.","alt_text":"Ancient Egyptian statues displayed in a museum setting.","description":"The image showcases several ancient Egyptian statues within the Prominently featured is a large seated figure surrounded by smaller sculptures all set against a modern museum backdrop."}
+2:16:11 AM	Info	Updater: Updated Media 30660 metadata (Title: Yes, Alt: Yes)
+2:16:12 AM	Info	Updater: Throttling before ensure filename 30660 for 1400 ms
+2:16:18 AM	Info	Updater: Filename ensured for Media 30660
+2:16:19 AM	Info	Updater: Image record rec8tJGevKl2cf0hl Type raw value: "Gallery", wpMediaId: 30659
+2:16:19 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:19 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:19 AM	Info	Updater: Throttling before update media 30659 for 900 ms
+2:16:20 AM	Info	Updater: Media 30659 update payload: {"title":"Artifacts at National Museum of Egyptian Civilization","caption":"A collection of ancient artifacts showcased in the museum.","alt_text":"Ancient artifacts including pottery tools and sculptures.","description":"This display features a variety of ancient artifacts including decorative boxes pottery and carved figures Each piece reflects the rich history and craftsmanship of ancient Egyptian civilization."}
+2:16:21 AM	Info	Updater: Updated Media 30659 metadata (Title: Yes, Alt: Yes)
+2:16:22 AM	Info	Updater: Throttling before ensure filename 30659 for 1400 ms
+2:16:28 AM	Info	Updater: Filename ensured for Media 30659
+2:16:29 AM	Info	Updater: Image record recA2o6u1LN7DRvl8 Type raw value: "Gallery", wpMediaId: 30656
+2:16:29 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:29 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:29 AM	Info	Updater: Throttling before update media 30656 for 900 ms
+2:16:30 AM	Info	Updater: Media 30656 update payload: {"title":"National Museum of Egyptian Civilization at Night","caption":"The National Museum of Egyptian Civilization illuminated at night.","alt_text":"Illuminated National Museum of Egyptian Civilization with palm trees and water.","description":"The National Museum of Egyptian Civilization stands majestically lit warmly against the night sky Palm trees line the foreground reflecting in the calm waters nearby."}
+2:16:32 AM	Info	Updater: Updated Media 30656 metadata (Title: Yes, Alt: Yes)
+2:16:32 AM	Info	Updater: Throttling before ensure filename 30656 for 1400 ms
+2:16:35 AM	Info	Updater: Filename ensured for Media 30656
+2:16:36 AM	Info	Updater: Image record recTuDwFoLSPxVrIr Type raw value: "Gallery", wpMediaId: 30658
+2:16:36 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:36 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:36 AM	Info	Updater: Throttling before update media 30658 for 900 ms
+2:16:37 AM	Info	Updater: Media 30658 update payload: {"title":"Sunset View Over Cairo's Historic Skyline","caption":"A stunning sunset casts vibrant colors over Cairo's skyline.","alt_text":"Panoramic view of Cairo at sunset with mosque silhouettes.","description":"The image captures a panoramic view of Cairo during sunset highlighting the intricate architecture of mosques and buildings The warm hues of the sky contrast beautifully with the cityscape creating a serene atmosphere."}
+2:16:38 AM	Info	Updater: Updated Media 30658 metadata (Title: Yes, Alt: Yes)
+2:16:39 AM	Info	Updater: Throttling before ensure filename 30658 for 1400 ms
+2:16:45 AM	Info	Updater: Filename ensured for Media 30658
+2:16:46 AM	Info	Updater: Image record reci0bgGezxnq9jbK Type raw value: "Gallery", wpMediaId: 30662
+2:16:46 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:46 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:46 AM	Info	Updater: Throttling before update media 30662 for 900 ms
+2:16:47 AM	Info	Updater: Media 30662 update payload: {"title":"Citadel of Saladin at Sunset","caption":"The Citadel of Saladin glows under a golden sunset.","alt_text":"Silhouette of the Citadel of Saladin during sunset","description":"The Citadel of Saladin stands majestically against a stunning sunset backdrop Its towering minarets and domes are illuminated by warm hues creating a captivating atmosphere."}
+2:16:48 AM	Info	Updater: Updated Media 30662 metadata (Title: Yes, Alt: Yes)
+2:16:49 AM	Info	Updater: Throttling before ensure filename 30662 for 1400 ms
+2:16:51 AM	Info	Updater: Filename ensured for Media 30662
+2:16:52 AM	Info	Updater: Image record recw8ulRGDGiVvpYC Type raw value: "Featured", wpMediaId: 30663
+2:16:52 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
+2:16:52 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
+2:16:52 AM	Info	Updater: Throttling before update media 30663 for 900 ms
+2:16:53 AM	Info	Updater: Media 30663 update payload: {"title":"Ancient Egyptian Statue at the Museum","caption":"A detailed statue of an ancient Egyptian figure.","alt_text":"Statue of an ancient Egyptian figure holding a scepter.","description":"This striking statue carved from dark stone depicts an ancient Egyptian figure holding a scepter The intricate details showcase the craftsmanship of the period set against a softly lit museum background."}
+2:16:54 AM	Info	Updater: Updated Media 30663 metadata (Title: Yes, Alt: Yes)
+2:16:55 AM	Info	Updater: Throttling before ensure filename 30663 for 1400 ms
+2:17:06 AM	Info	Updater: Filename ensured for Media 30663
+2:17:16 AM	Info	Updater: Published Images for Trip 23024 (Featured: 30663, Gallery: 8)
+2:17:16 AM	Info	Updater: Throttling before generate primary schema for 900 ms
+2:17:17 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
+2:17:18 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip): title=AI_SEO_Title desc=AI_SEO_Meta_Description
+2:17:18 AM	Info	SCHEMA PRICES SOURCE RESOLVED (en, TouristTrip): source=Prices offers=AggregateOffer count=5
+2:17:18 AM	Info	SCHEMA BYPASSED PACKAGES FALLBACK (en, TouristTrip): used Prices
+2:17:18 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage): title=rank_math_title desc=rank_math_description
+2:17:18 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, FAQPage): used rank_math_description
+2:17:28 AM	Info	TRIP SCHEMA GENERATED (en)
+2:17:28 AM	Info	Updater: Throttling before store SEO validation for 900 ms
+2:17:29 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
+2:17:29 AM	Info	CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=civilization source=wp_core
+2:17:30 AM	Info	Updater: Throttling before store translation url map for 900 ms
+2:17:31 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
+2:17:41 AM	Info	Updater: Successfully published Trip recUDehvj1S32179Q
+2:17:41 AM	Notice	Execution completed

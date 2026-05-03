@@ -338,7 +338,7 @@ async function runAiFaqsEnhancementBatch() {
           if (bestHours > 0) {
             const tripNumber0 = String((tripFields && tripFields.TripID) ? tripFields.TripID : '').trim()
             const tripLinkValue0 = tripNumber0 || tripId
-            const impRes2 = await airtableGet_(IMPROVEMENT_TABLE, { filterByFormula: "FIND('" + String(tripLinkValue0).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 })
+            const impRes2 = await airtableGet_(IMPROVEMENT_TABLE, { filterByFormula: "FIND('" + String(tripLinkValue0).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 })
             const impRecs2 = impRes2 && impRes2.records ? impRes2.records : []
             if (impRecs2.length) {
               for (let y = 0; y < impRecs2.length; y++) {
@@ -391,7 +391,7 @@ async function buildFaqsContext_(tripFields, tripId) {
   // 1) Get improved trip data (Description + SEO)
   try {
     const tripLinkValue = String(tripNumber || tripId || '').trim()
-    var impParams = { filterByFormula: "FIND('" + tripLinkValue.replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", maxRecords: 1 };
+    var impParams = { filterByFormula: "FIND('" + tripLinkValue.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", maxRecords: 1 };
     var impRes = await airtableGet_(IMPROVEMENT_TABLE, impParams)
     if (impRes && impRes.records && impRes.records.length) {
       var impFields = impRes.records[0].fields || {};
@@ -1273,12 +1273,12 @@ async function deleteOldFaqsForTrip_(tripId, tripNumber) {
   try {
     var recs = []
     if (tripNumber) {
-      var paramsA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var paramsA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
       var resA = await airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsA)
       recs = resA && resA.records ? resA.records : []
     }
     if (!recs.length) {
-      var paramsB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, \"\\\\'\") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
+      var paramsB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
       var resB = await airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsB)
       recs = resB && resB.records ? resB.records : []
     }

@@ -178,7 +178,16 @@ function progressTripPipeline_(tripId, f) {
     });
 
     if (imp && imp.id) {
-      airtableUpdate_('Improvement With AI', imp.id, { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' });
+      var impId = String(imp.id || '').trim();
+      if (impId && impId === String(tripId)) {
+        var recovered = resolveImprovementRecordForTripRobust_(tripId, f, true);
+        if (recovered && recovered.id) impId = String(recovered.id || '').trim();
+      }
+      if (!impId) {
+        Logger.log('❌ Failed to resolve Improvement record id for Trip ' + tripId);
+      } else {
+        airtableUpdate_('Improvement With AI', impId, { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' });
+      }
       Logger.log('✅ Ensured Improvement record with Content = Pending (SEO = Waiting)');
       airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress', AI_Status: 'Pending' });
       Logger.log('✅ Trip ' + tripId + ': Pipeline moved to In Progress');
