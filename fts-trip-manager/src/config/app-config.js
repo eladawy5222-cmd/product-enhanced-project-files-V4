@@ -39,6 +39,11 @@ function getAppConfig(options) {
 
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 
+    SERPER_API_KEY: process.env.SERPER_API_KEY || '',
+    SERPER_HL: process.env.SERPER_HL || 'en',
+    SERPER_GL: process.env.SERPER_GL || 'us',
+    SERPER_COMPETITOR_MAX_RESULTS: parseIntSafe(process.env.SERPER_COMPETITOR_MAX_RESULTS, 10),
+
     DEBUG: parseBool(process.env.DEBUG, true),
     PUBLISHER_WORKFLOW_ENABLED: parseBool(process.env.PUBLISHER_WORKFLOW_ENABLED, false),
 
@@ -93,4 +98,3 @@ function getAppConfig(options) {
 }
 
 module.exports = { getAppConfig }
-

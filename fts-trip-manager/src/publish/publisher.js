@@ -1993,7 +1993,7 @@ async function publishPackagesSafe_(tripId, wpTripId) {
    try {
      // 1. Fetch Packages & Prices from Airtable
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
-     const pkgRecords = await findRecordsByLinkedId_('Packages', 'Trip', tripId)
+     let pkgRecords = await findRecordsByLinkedId_('Packages', 'Trip', tripId)
      const priceRecords = await findRecordsByLinkedId_('Prices', 'Trip', tripId)
      const pkgState = getLookupState_('Packages', 'Trip', tripId, 'multi')
      const priceState = getLookupState_('Prices', 'Trip', tripId, 'multi')
@@ -2008,6 +2008,12 @@ async function publishPackagesSafe_(tripId, wpTripId) {
        return
      }
      
+     pkgRecords = (pkgRecords || []).filter(function (r) {
+       var f = r && r.fields ? r.fields : {}
+       var st = String(f.Status || '').toLowerCase().trim()
+       return !(st === 'reference' || st === 'competitor' || st === 'draft' || st === 'proposed')
+     })
+
      if (pkgRecords.length === 0 && priceRecords.length === 0) {
        log('Publisher: No packages or prices found for Trip ' + tripId);
        return;

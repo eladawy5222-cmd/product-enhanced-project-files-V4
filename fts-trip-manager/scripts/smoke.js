@@ -34,10 +34,11 @@ async function main() {
     airtableClient = createAirtableClient({ http, logger, baseId: airtableBaseId, apiKey: airtableApiKey })
   }
 
-  await createServices(root, { logger })
+  const services = await createServices(root, { logger })
 
   const { __test__ } = require('../src/ai/conversion-enforcer')
   assert_(__test__ && typeof __test__ === 'object', 'conversion-enforcer test hooks are available')
+  if (__test__.init && services) __test__.init(services)
 
   const {
     convEnf_buildStandardContext_,
@@ -45,7 +46,9 @@ async function main() {
     convEnf_removeUnsupportedHighRiskParts_,
     convEnf_rewriteUnsupportedContentText_,
     convEnf_sanitizeItineraryByFlags_,
-    convEnf_rewriteUnsupportedFaqAnswer_
+    convEnf_rewriteUnsupportedFaqAnswer_,
+    convEnf_serperSearch_,
+    convEnf_serperScrape_
   } = __test__
 
   const basePayload = {
@@ -96,6 +99,70 @@ async function main() {
   assert_(ctxB.flags.has_nile === true, 'itinerary evidence enables nile')
   assert_(convEnf_hasUnsupportedHighRiskClaims_('Nile cruise by boat', ctxB.flags) === false, 'claims allowed when evidenced')
 
+  const serperKey = String(process.env.SERPER_API_KEY || '').trim()
+  if (serperKey && typeof convEnf_serperSearch_ === 'function' && typeof convEnf_serperScrape_ === 'function') {
+    out('info', 'Serper smoke: testing search + scrape')
+    try {
+      const queries = [
+        'NMEC Citadel Old Cairo day tour site:getyourguide.com',
+        'Cairo day tour NMEC Citadel Old Cairo',
+        'GetYourGuide Cairo day tour',
+        'Cairo day tour',
+        'guided day tour',
+        'private guided tour',
+        'book tours online',
+        'حجز جولات سياحية',
+        'جولة سياحية',
+        'tour',
+        'travel'
+      ]
+      let results = []
+      let used = ''
+      for (const q of queries) {
+        used = q
+        results = await convEnf_serperSearch_(q, serperKey)
+        out('info', `Serper smoke: query="${q}" results_count=${Array.isArray(results) ? results.length : 0}`)
+        if (Array.isArray(results) && results.length) break
+      }
+
+      if (Array.isArray(results) && results.length) {
+        let pickedUrl = ''
+        let bestLen = 0
+        function isUsefulTourUrl(url) {
+          const u = String(url || '').toLowerCase()
+          if (!u) return false
+          return u.includes('/tour') ||
+            u.includes('/tours/') ||
+            u.includes('/attractionproductreview') ||
+            u.includes('things-to-do') ||
+            u.includes('activities') ||
+            u.includes('/activity/')
+        }
+        const filtered = results.filter((r) => r && r.url && isUsefulTourUrl(r.url))
+        const candidates = filtered.length ? filtered : results
+        const lim = Math.min(5, candidates.length)
+        for (let i = 0; i < lim; i++) {
+          const r = candidates[i]
+          if (!r || !r.url) continue
+          const text = await convEnf_serperScrape_(r.url, serperKey)
+          const len = String(text || '').length
+          out('info', `Serper smoke: scrape_try url=${String(r.url)} chars=${len}`)
+          if (len > bestLen) {
+            bestLen = len
+            pickedUrl = r.url
+          }
+          if (len > 200) break
+        }
+        out('info', 'Serper smoke: picked_url=' + String(pickedUrl || (candidates[0] && candidates[0].url ? candidates[0].url : '')))
+        out('info', 'Serper smoke: best_scrape_chars=' + String(bestLen) + (used ? (' | used_query="' + used + '"') : ''))
+      }
+    } catch (e) {
+      out('warn', 'Serper smoke failed: ' + String(e && e.message ? e.message : e))
+    }
+  } else {
+    out('info', 'Serper smoke: skipped (SERPER_API_KEY not set)')
+  }
+
   if (airtableClient) {
     let tripRec = null
     let tripRecId = null
@@ -120,6 +187,79 @@ async function main() {
       out('info', 'Airtable smoke: trip_record_id=' + tripRecId + (TRIP_ID ? (' | TripID=' + TRIP_ID) : '') + (tripTitle ? (' | title=' + tripTitle) : ''))
     } else {
       out('warn', 'Airtable smoke: Trips table has no records or is not accessible. Running table existence checks only.')
+    }
+
+    const wantExternalBench = String(process.env.SMOKE_EXTERNAL_BENCHMARK || '').trim() === '1'
+    if (wantExternalBench && tripRec && tripRec.fields && __test__ && typeof __test__.convEnf_fetchExternalBenchmarkInsights_ === 'function') {
+      out('info', 'External benchmark smoke: building insights (safe output; no competitor text)')
+      try {
+        const hasDeepseek = !!String(process.env.DEEPSEEK_API_KEY || config.DEEPSEEK_API_KEY || '').trim()
+        out('info', 'External benchmark smoke: deepseek_key_configured=' + String(hasDeepseek))
+        const brief = await __test__.convEnf_fetchExternalBenchmarkInsights_(tripRec.fields, { truth: {} })
+        const s = String(brief || '').trim()
+        const urls = s.split('\n').map((x) => String(x || '').trim()).filter((x) => x.startsWith('- http'))
+        const gygOnly = urls.every((u) => u.toLowerCase().includes('getyourguide.com') || u.toLowerCase().includes('serper://search'))
+        out('info', 'External benchmark smoke: ok=' + String(!!s) + ' chars=' + String(s.length) + ' sources=' + String(urls.length) + ' gyg_only=' + String(gygOnly))
+        if (urls.length) out('info', JSON.stringify({ sources: urls.slice(0, 6) }, null, 2))
+      } catch (e) {
+        out('warn', 'External benchmark smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    } else if (wantExternalBench) {
+      out('warn', 'External benchmark smoke: skipped (missing trip record or test hook)')
+    }
+
+    const wantItinerary = String(process.env.SMOKE_RUN_ITINERARY || '').trim() === '1'
+    if (wantItinerary && services && tripRecId) {
+      out('info', 'Itinerary smoke: resetting stage -> running itinerary enhancer batch')
+      try {
+        await services.resetTripStage(tripRecId, 'itinerary')
+        await services.itineraryEnhancer.runAiItineraryBatch()
+        out('info', 'Itinerary smoke: done')
+      } catch (e) {
+        out('warn', 'Itinerary smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    } else if (wantItinerary) {
+      out('warn', 'Itinerary smoke: skipped (missing trip record or services)')
+    }
+
+    const wantConv = String(process.env.SMOKE_RUN_CONVERSION_ENFORCER || '').trim() === '1'
+    if (wantConv && services && tripRecId) {
+      out('info', 'Conversion Enforcer smoke: running (updates Airtable enhancement tables)')
+      try {
+        const { createConversionEnforcer } = require('../src/ai/conversion-enforcer')
+        const conv = createConversionEnforcer({
+          airtable: services.airtable,
+          http: services.http,
+          config: services.config,
+          logger: services.logger,
+          lock: services.lock,
+          store: services.store,
+          aiProvider: services.aiProvider
+        })
+        await conv.runConversionEnforcer({ id: tripRecId, fields: tripRec.fields || {} })
+        out('info', 'Conversion Enforcer smoke: done')
+      } catch (e) {
+        out('warn', 'Conversion Enforcer smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    } else if (wantConv) {
+      out('warn', 'Conversion Enforcer smoke: skipped (missing trip record or services)')
+    }
+
+    const wantPublish = String(process.env.SMOKE_PUBLISH || '').trim() === '1'
+    if (wantPublish && services && tripRecId && TRIP_ID) {
+      out('info', 'Publish smoke: setting Publish_Status=Pending -> running updater batch')
+      try {
+        process.env.UPDATER_ONLY_TRIP_ID = String(TRIP_ID)
+        await services.airtable.airtableUpdate('Trips', tripRecId, { Publish_Status: 'Pending' })
+        await services.updater.runUpdaterBatch()
+        const tripAfter = await services.airtable.airtableFindOneByField('Trips', 'TripID', TRIP_ID)
+        const st = tripAfter && tripAfter.fields ? String(tripAfter.fields.Publish_Status || '') : ''
+        out('info', 'Publish smoke: finished. Publish_Status=' + st)
+      } catch (e) {
+        out('warn', 'Publish smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    } else if (wantPublish) {
+      out('warn', 'Publish smoke: skipped (missing trip record/services or SMOKE_TRIP_ID)')
     }
 
     function findFormula(linkField) {

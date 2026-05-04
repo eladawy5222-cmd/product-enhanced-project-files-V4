@@ -333,6 +333,8 @@ var UPDATER_AIRTABLE_TABLE_CACHE = {};
 var UPDATER_AIRTABLE_TABLE_CACHE_META = {};
 var UPDATER_AIRTABLE_QUERY_CACHE = {};
 var UPDATER_LINKED_LOOKUP_STATE = {};
+var UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID = {};
+var UPDATER_TRIP_TITLE_BY_RECORD_ID = {};
 var UPDATER_AIRTABLE_PAGE_SIZE = 25;
 var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
 var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
@@ -350,6 +352,8 @@ function clearUpdaterCaches_Updater_() {
   UPDATER_AIRTABLE_TABLE_CACHE_META = {};
   UPDATER_AIRTABLE_QUERY_CACHE = {};
   UPDATER_LINKED_LOOKUP_STATE = {};
+  UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID = {};
+  UPDATER_TRIP_TITLE_BY_RECORD_ID = {};
   log('Updater: Cleared in-memory caches');
 }
 
@@ -445,7 +449,10 @@ function getLookupState_Updater_(tableName, linkFieldName, targetId, mode) {
 
 function isLookupStateIncomplete_Updater_(state) {
   if (!state) return false;
-  return !!(state.partial || state.formulaQuotaHit || state.cacheQuotaHit || state.pageCapHit);
+  var c = Number(state.recordsCount || 0);
+  if (state.formulaQuotaHit || state.cacheQuotaHit) return true;
+  if ((state.pageCapHit || state.partial) && c === 0) return true;
+  return false;
 }
 
 function describeLookupState_Updater_(state) {
@@ -887,6 +894,14 @@ async function runUpdaterBatch() {
   // Criteria: AI_Status = 'Done' AND Publish_Status = 'Pending' (or 'Ready')
   // Adjust criteria as needed.
   var formula = "{" + UPDATER_PUBLISH_STATUS_FIELD + "}='Pending'";
+  var onlyTrip = String(process.env.UPDATER_ONLY_TRIP_ID || '').trim()
+  if (onlyTrip) {
+    if (onlyTrip.indexOf('rec') === 0) {
+      formula = "AND(" + formula + ", RECORD_ID()='" + String(onlyTrip).replace(/'/g, "\\'") + "')"
+    } else {
+      formula = "AND(" + formula + ", {TripID}='" + String(onlyTrip).replace(/'/g, "\\'") + "')"
+    }
+  }
   
   // Assuming airtableGet_ is a shared helper in another file (e.g. airtable.gs)
   var trips = await airtableGet_(UPDATER_TRIPS_TABLE, {
@@ -1990,6 +2005,18 @@ async function storeSeoValidationByLanguageMap_Updater_(tripId, mapObj) {
 async function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   var data = {};
   var o = opts || {};
+  try {
+    if (tripId && tripFields && (tripFields.TripID || tripFields['TripID'])) {
+      UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID[String(tripId)] = String(tripFields.TripID || tripFields['TripID'] || '').trim()
+    }
+  } catch (e) {
+  }
+  try {
+    if (tripId && tripFields && (tripFields.Title || tripFields['Title'])) {
+      UPDATER_TRIP_TITLE_BY_RECORD_ID[String(tripId)] = String(tripFields.Title || tripFields['Title'] || '').replace(/\s+/g, ' ').trim()
+    }
+  } catch (e) {
+  }
   
   // Strategy: Client-Side Filtering by ID.
   // Formulas failed for ID (resolves to Name) and Name (character mismatches).
@@ -2024,6 +2051,30 @@ async function fetchCompleteTripData_Updater_(tripId, tripFields, opts) {
   
   // 4. FAQs (One-to-Many)
   data.faqs = await findRecordsByLinkedId_Updater_(UPDATER_FAQS_IMPROVEMENT_TABLE, 'Trip', tripId);
+  try {
+    var pubId = tripFields && (tripFields.TripID || tripFields['TripID']) ? String(tripFields.TripID || tripFields['TripID'] || '').trim() : ''
+    if (pubId) {
+      var f2 = "FIND('" + String(pubId).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))"
+      var resFaq2 = await airtableGet_(UPDATER_FAQS_IMPROVEMENT_TABLE, { filterByFormula: f2, pageSize: 100 })
+      var moreFaqs = (resFaq2 && resFaq2.records) ? resFaq2.records : []
+      if (moreFaqs && moreFaqs.length) {
+        var seenFaq = {}
+        var mergedFaqs = []
+        ;(data.faqs || []).forEach(function (r) {
+          if (!r || !r.id) return
+          seenFaq[r.id] = true
+          mergedFaqs.push(r)
+        })
+        moreFaqs.forEach(function (r2) {
+          if (!r2 || !r2.id) return
+          if (seenFaq[r2.id]) return
+          mergedFaqs.push(r2)
+        })
+        data.faqs = mergedFaqs
+      }
+    }
+  } catch (e) {
+  }
   
   // 5. Includes/Excludes (One-to-Many)
   data.includes = await findRecordsByLinkedId_Updater_(UPDATER_TRIP_INCLUDES_IMPROVEMENT_TABLE, 'Trip', tripId);
@@ -2308,7 +2359,27 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
     partial: false,
     usedFallback: false
   };
-  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var safeTarget = String(targetId).replace(/'/g, "\\'")
+  var pub = ''
+  var title = ''
+  try {
+    pub = String(UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID[String(targetId)] || '').trim()
+  } catch (e) {
+    pub = ''
+  }
+  try {
+    title = String(UPDATER_TRIP_TITLE_BY_RECORD_ID[String(targetId)] || '').trim()
+    if (title.length > 80) title = title.slice(0, 80)
+  } catch (e) {
+    title = ''
+  }
+  var formula = "FIND('" + safeTarget + "', ARRAYJOIN({" + linkFieldName + "}))";
+  if (pub && pub !== String(targetId)) {
+    formula = "OR(" + formula + ", FIND('" + String(pub).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
+  }
+  if (title) {
+    formula = "OR(" + formula + ", FIND('" + String(title).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
+  }
   var offset = null;
   do {
     var params = { pageSize: 100, filterByFormula: formula };
@@ -2336,13 +2407,13 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
       var rec = records[i];
       var links = rec.fields[linkFieldName];
       if (Array.isArray(links)) {
-        if (links.indexOf(targetId) !== -1) {
+        if (links.indexOf(targetId) !== -1 || (pub && links.indexOf(pub) !== -1)) {
           state.recordsCount = 1;
           setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
           return rec;
         }
       } else if (typeof links === 'string') {
-        if (links === targetId) {
+        if (links === targetId || (pub && links === pub)) {
           state.recordsCount = 1;
           setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
           return rec;
@@ -2364,13 +2435,13 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
     if (!rec2 || !rec2.fields) continue;
     var links2 = rec2.fields[linkFieldName];
     if (Array.isArray(links2)) {
-      if (links2.indexOf(targetId) !== -1) {
+      if (links2.indexOf(targetId) !== -1 || (pub && links2.indexOf(pub) !== -1)) {
         state.recordsCount = 1;
         setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
         return rec2;
       }
     } else if (typeof links2 === 'string') {
-      if (links2 === targetId) {
+      if (links2 === targetId || (pub && links2 === pub)) {
         state.recordsCount = 1;
         setLookupState_Updater_(tableName, linkFieldName, targetId, 'single', state);
         return rec2;
@@ -2394,7 +2465,27 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
     partial: false,
     usedFallback: false
   };
-  var formula = "FIND('" + String(targetId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))";
+  var safeTarget = String(targetId).replace(/'/g, "\\'")
+  var pub = ''
+  var title = ''
+  try {
+    pub = String(UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID[String(targetId)] || '').trim()
+  } catch (e) {
+    pub = ''
+  }
+  try {
+    title = String(UPDATER_TRIP_TITLE_BY_RECORD_ID[String(targetId)] || '').trim()
+    if (title.length > 80) title = title.slice(0, 80)
+  } catch (e) {
+    title = ''
+  }
+  var formula = "FIND('" + safeTarget + "', ARRAYJOIN({" + linkFieldName + "}))";
+  if (pub && pub !== String(targetId)) {
+    formula = "OR(" + formula + ", FIND('" + String(pub).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
+  }
+  if (title) {
+    formula = "OR(" + formula + ", FIND('" + String(title).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
+  }
   var offset = null;
   do {
     var params = { pageSize: 100, filterByFormula: formula };
@@ -2421,7 +2512,7 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
       for (var i = 0; i < res.records.length; i++) {
         var rec = res.records[i];
         var links = rec.fields[linkFieldName];
-        if (links && Array.isArray(links) && links.indexOf(targetId) !== -1) {
+        if (links && Array.isArray(links) && (links.indexOf(targetId) !== -1 || (pub && links.indexOf(pub) !== -1))) {
           matches.push(rec);
         }
       }
@@ -2429,6 +2520,29 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
     offset = res ? res.offset : null;
     if (offset) await sleep(50);
   } while (offset);
+
+  if (matches.length > 0 && matches.length < 8 && String(tableName || '') === String(UPDATER_FAQS_IMPROVEMENT_TABLE || '')) {
+    try {
+      var cachedA = await getAllAirtableRecordsCached_Updater_(tableName);
+      var cacheMetaA = UPDATER_AIRTABLE_TABLE_CACHE_META[String(tableName || '')] || {};
+      state.usedFallback = true;
+      state.cacheQuotaHit = !!cacheMetaA.quotaHit;
+      state.pageCapHit = !!cacheMetaA.pageCapHit;
+      state.partial = !!(state.partial || cacheMetaA.partial);
+      var seenId = {};
+      matches.forEach(function (r0) { if (r0 && r0.id) seenId[r0.id] = true; });
+      for (var kk = 0; kk < cachedA.length; kk++) {
+        var rc = cachedA[kk];
+        if (!rc || !rc.id || seenId[rc.id] || !rc.fields) continue;
+        var l2 = rc.fields[linkFieldName];
+        if (l2 && Array.isArray(l2) && (l2.indexOf(targetId) !== -1 || (pub && l2.indexOf(pub) !== -1))) {
+          matches.push(rc);
+          seenId[rc.id] = true;
+        }
+      }
+    } catch (e) {
+    }
+  }
 
   if (matches.length === 0) {
     var cached = await getAllAirtableRecordsCached_Updater_(tableName);
@@ -2441,7 +2555,7 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
       var rec2 = cached[j];
       if (!rec2 || !rec2.fields) continue;
       var links2 = rec2.fields[linkFieldName];
-      if (links2 && Array.isArray(links2) && links2.indexOf(targetId) !== -1) {
+      if (links2 && Array.isArray(links2) && (links2.indexOf(targetId) !== -1 || (pub && links2.indexOf(pub) !== -1))) {
         matches.push(rec2);
       }
     }
@@ -9476,6 +9590,12 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
      var pkgRecords = await findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId);
      var priceRecords = await findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId);
+
+     pkgRecords = (pkgRecords || []).filter(function (r) {
+       var f = r && r.fields ? r.fields : {}
+       var st = String(f.Status || '').toLowerCase().trim()
+       return !(st === 'reference' || st === 'competitor' || st === 'draft' || st === 'proposed')
+     })
 
      var pkgState = getLookupState_Updater_('Packages', 'Trip', tripId, 'multi');
      var priceState = getLookupState_Updater_('Prices', 'Trip', tripId, 'multi');
