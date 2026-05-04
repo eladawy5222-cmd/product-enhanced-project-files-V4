@@ -28,6 +28,22 @@ function runConversionEnforcer(record) {
     } catch (eExt0) {
       try { Logger.log('convEnf_fetchExternalBenchmarkInsights_ error: ' + (eExt0 && eExt0.message ? eExt0.message : String(eExt0))); } catch (eExt1) {}
     }
+
+    var wantGygOptionsIntel = String(convEnf_getScriptProperty_('GYG_OPTIONS_INTEL') || '').trim() === '1';
+    var wantWriteGygRef = String(convEnf_getScriptProperty_('GYG_OPTIONS_WRITE_REFERENCE') || '').trim() === '1';
+    if (wantGygOptionsIntel || wantWriteGygRef) {
+      var intel = convEnf_fetchGygOptionsIntel_(tripFields);
+      if (intel && intel.summary) {
+        try {
+          Logger.log('🧾 GYG options intel:');
+          Logger.log(intel.summary);
+        } catch (eLogGyg) {}
+      }
+      if (wantWriteGygRef && intel && intel.packages && intel.packages.length) {
+        convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber || '', intel, nowIso);
+      }
+    }
+
     var existingHighlights = convEnf_fetchHighlights_(tripLinkValue);
     var existingItinerary = convEnf_fetchItinerary_(tripLinkValue);
     var existingIncludes = convEnf_fetchIncExc_(tripLinkValue, 'TripIncludes Improvement With AI', 'IncludeItem');
@@ -446,21 +462,15 @@ function convEnf_fetchExternalBenchmarkInsights_(tripFields, rawCtx) {
   var picked = convEnf_pickCompetitorResults_(results, 3);
   if (!picked.length) return '';
 
-  var pages = [];
-  for (var i = 0; i < picked.length; i++) {
-    var r = picked[i];
-    var url = r.url;
-    var pageText = convEnf_fetchAndExtractWebText_(url);
-    if (!pageText) continue;
-    pages.push({
-      url: url,
-      title: r.title || '',
-      snippet: r.snippet || '',
-      text: pageText
-    });
-    if (pages.length >= 2) break;
-  }
-  if (!pages.length) return '';
+  var pickRes = convEnf_pickBestCompetitorResultBySimilarity_(picked, seed);
+  var best = pickRes && pickRes.best ? pickRes.best : null;
+  if (!best || !best.url || !best.text) return '';
+  var pages = [{
+    url: best.url,
+    title: best.title || '',
+    snippet: best.snippet || '',
+    text: best.text || ''
+  }];
 
   var brief = convEnf_summarizeExternalBenchmarksToInsights_(seed, pages, rawCtx);
   if (!brief) return '';
@@ -478,8 +488,7 @@ function convEnf_buildExternalQuery_(seed) {
   if (!s) return '';
   var base = s;
   if (base.length > 110) base = base.slice(0, 110);
-  var sites = "(site:viator.com OR site:getyourguide.com OR site:tripadvisor.com OR site:tiqets.com)";
-  return base + " " + sites;
+  return base + " site:getyourguide.com";
 }
 
 function convEnf_serperSearch_(query, limit, apiKey) {
@@ -525,10 +534,7 @@ function convEnf_pickCompetitorResults_(results, max) {
   var out = [];
   var seen = {};
   var allow = [
-    'viator.com',
-    'getyourguide.com',
-    'tripadvisor.com',
-    'tiqets.com'
+    'getyourguide.com'
   ];
   for (var i = 0; i < rs.length; i++) {
     var r = rs[i] || {};
@@ -547,6 +553,427 @@ function convEnf_pickCompetitorResults_(results, max) {
     if (typeof max === 'number' && out.length >= max) break;
   }
   return out;
+}
+
+function convEnf_isUsefulTourUrl_(url) {
+  var u = String(url || '').trim().toLowerCase();
+  if (!u) return false;
+  if (u.indexOf('getyourguide.com') === -1) return false;
+  if (u.indexOf('/-t') !== -1) return true;
+  if (/-t\d+/.test(u)) return true;
+  if (u.indexOf('/activity/') !== -1) return true;
+  if (u.indexOf('/tour') !== -1 || u.indexOf('/tours/') !== -1 || u.indexOf('things-to-do') !== -1 || u.indexOf('activities') !== -1) return true;
+  return false;
+}
+
+function convEnf_tokenizeSimilarity_(text) {
+  var t0 = String(text || '').toLowerCase();
+  if (!t0.trim()) return [];
+  var stop = {
+    'the': 1, 'and': 1, 'or': 1, 'with': 1, 'without': 1, 'from': 1, 'to': 1, 'in': 1, 'on': 1, 'at': 1, 'for': 1, 'by': 1, 'of': 1, 'a': 1, 'an': 1,
+    'tour': 1, 'tours': 1, 'trip': 1, 'tickets': 1, 'ticket': 1, 'entry': 1, 'day': 1, 'half': 1, 'full': 1, 'private': 1, 'shared': 1, 'guided': 1,
+    'skip': 1, 'line': 1, 'best': 1, 'top': 1, 'visit': 1, 'visiting': 1, 'includes': 1, 'including': 1, 'include': 1,
+    'getyourguide': 1, 'get': 1, 'your': 1, 'guide': 1
+  };
+  var m = t0.match(/[a-z0-9\u0600-\u06ff]+/g) || [];
+  var out = [];
+  var seen = {};
+  for (var i = 0; i < m.length; i++) {
+    var tok = String(m[i] || '').trim();
+    if (!tok) continue;
+    if (tok.length < 3 && !/^\d+$/.test(tok)) continue;
+    if (stop[tok]) continue;
+    if (seen[tok]) continue;
+    seen[tok] = 1;
+    out.push(tok);
+  }
+  return out;
+}
+
+function convEnf_similarityScore_(seedTokens, candidateText) {
+  var seed = Array.isArray(seedTokens) ? seedTokens : [];
+  if (!seed.length) return 0;
+  var candTokens = convEnf_tokenizeSimilarity_(candidateText);
+  if (!candTokens.length) return 0;
+  var seedSet = {};
+  for (var i = 0; i < seed.length; i++) seedSet[seed[i]] = 1;
+  var inter = 0;
+  for (var j = 0; j < candTokens.length; j++) if (seedSet[candTokens[j]]) inter++;
+  var denom = Math.sqrt(seed.length * candTokens.length);
+  if (!denom) return 0;
+  return inter / denom;
+}
+
+function convEnf_pickBestCompetitorResultBySimilarity_(picked, seedText) {
+  var rs = Array.isArray(picked) ? picked : [];
+  var seed = String(seedText || '').trim();
+  if (!rs.length || !seed) return { best: null, scored: [] };
+  var seedTokens = convEnf_tokenizeSimilarity_(seed);
+  var scored = [];
+
+  for (var i = 0; i < rs.length; i++) {
+    var r = rs[i] || {};
+    var u = String(r.url || '').trim();
+    if (!u) continue;
+    if (!convEnf_isUsefulTourUrl_(u)) continue;
+    var pageText = convEnf_fetchAndExtractWebText_(u);
+    var candText = [r.title || '', r.snippet || '', u, (pageText ? pageText.slice(0, 12000) : '')].join("\n");
+    var score = convEnf_similarityScore_(seedTokens, candText);
+    scored.push({ url: u, title: r.title || '', snippet: r.snippet || '', text: pageText || '', score: score });
+  }
+
+  scored.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+  return { best: scored.length ? scored[0] : null, scored: scored };
+}
+
+function convEnf_appendQueryParams_(url, params) {
+  var u0 = String(url || '').trim();
+  if (!u0) return '';
+  params = params && typeof params === 'object' ? params : {};
+  var parts = [];
+  for (var k in params) {
+    if (!params.hasOwnProperty(k)) continue;
+    var v = params[k];
+    if (v === null || v === undefined) continue;
+    var arr = Array.isArray(v) ? v : [v];
+    for (var i = 0; i < arr.length; i++) {
+      var s = String(arr[i] == null ? '' : arr[i]).trim();
+      if (!s) continue;
+      parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(s));
+    }
+  }
+  if (!parts.length) return u0;
+  return u0 + (u0.indexOf('?') !== -1 ? '&' : '?') + parts.join('&');
+}
+
+function convEnf_applyGygCurrencyToUrl_(url, currency) {
+  var u0 = String(url || '').trim();
+  if (!u0) return '';
+  var cur = String(currency || '').trim().toUpperCase();
+  if (!cur) return u0;
+  var has = /(?:\?|&)(currency)=/i.test(u0);
+  if (has) return u0.replace(/([?&]currency=)[^&]*/i, '$1' + encodeURIComponent(cur));
+  return u0 + (u0.indexOf('?') !== -1 ? '&' : '?') + 'currency=' + encodeURIComponent(cur);
+}
+
+function convEnf_hash8_(s) {
+  var t = String(s == null ? '' : s);
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, t, Utilities.Charset.UTF_8);
+  var hex = bytes.map(function(b) {
+    var v = (b < 0 ? b + 256 : b);
+    var h = v.toString(16);
+    return h.length === 1 ? '0' + h : h;
+  }).join('');
+  return hex.slice(0, 8);
+}
+
+function convEnf_parseGygPcSetting_() {
+  var raw = String(convEnf_getScriptProperty_('GYG_PC') || '').trim();
+  if (!raw) return [];
+  var chunks = raw.split(/[;|]/g).map(function(x) { return String(x || '').trim(); }).filter(function(x) { return !!x; });
+  var out = [];
+  for (var i = 0; i < chunks.length; i++) {
+    var v = chunks[i];
+    out.push(v);
+  }
+  return out;
+}
+
+function convEnf_extractFromPerPersonPrice_(text) {
+  var t = String(text || '');
+  if (!t.trim()) return { currency: '', regular: null, sale: null };
+  var head = t.slice(0, 12000);
+  var re = /\bfrom\b[\s\S]{0,120}?(?:\b(USD|EUR|GBP|AED|EGP)\b|([$€£]))\s*([0-9]{1,3}(?:[, ][0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)[\s\S]{0,220}?(?:\b(USD|EUR|GBP|AED|EGP)\b|([$€£]))\s*([0-9]{1,3}(?:[, ][0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)[\s\S]{0,120}?\bper person\b/ig;
+  var matches = [];
+  var m;
+  while ((m = re.exec(head)) !== null && matches.length < 8) {
+    var cur1 = (m[1] ? String(m[1]).toUpperCase() : (m[2] || '')).trim();
+    var cur2 = (m[4] ? String(m[4]).toUpperCase() : (m[5] || '')).trim();
+    if (cur1 === '€') cur1 = 'EUR';
+    else if (cur1 === '$') cur1 = 'USD';
+    else if (cur1 === '£') cur1 = 'GBP';
+    if (cur2 === '€') cur2 = 'EUR';
+    else if (cur2 === '$') cur2 = 'USD';
+    else if (cur2 === '£') cur2 = 'GBP';
+    var n1 = Number(String(m[3] || '').replace(/[, ]/g, ''));
+    var n2 = Number(String(m[6] || '').replace(/[, ]/g, ''));
+    if (!isFinite(n1) || !isFinite(n2)) continue;
+    var currency = cur2 || cur1 || '';
+    var sale = (n2 < n1 ? n2 : null);
+    matches.push({ currency: currency, regular: n1, sale: sale });
+  }
+  if (!matches.length) return { currency: '', regular: null, sale: null };
+  var best = matches[0];
+  for (var i = 1; i < matches.length; i++) {
+    var x = matches[i];
+    var bSale = (best.sale != null) ? best.sale : best.regular;
+    var xSale = (x.sale != null) ? x.sale : x.regular;
+    if (xSale < bSale) best = x;
+  }
+  return best;
+}
+
+function convEnf_extractCategoryPricesFromText_(text, currencyPref) {
+  var t = String(text || '');
+  if (!t.trim()) return [];
+  var cur = String(currencyPref || '').trim().toUpperCase();
+  var out = [];
+  function push_(label, amount) {
+    if (amount == null || !isFinite(Number(amount))) return;
+    out.push({ label: label, currency: cur || 'EUR', regular_price: Number(amount), sale_price: null });
+  }
+  function find_(label) {
+    var re = new RegExp('\\b' + label + '\\b[\\s\\S]{0,60}?(?:EUR|€)\\s*([0-9]+(?:\\.[0-9]+)?)', 'i');
+    var m = t.match(re);
+    if (!m) return null;
+    return Number(String(m[1] || '').replace(/[, ]/g, ''));
+  }
+  var adult = find_('Adult');
+  var child = find_('Child');
+  var infant = find_('Infant');
+  var passengers = find_('Passengers');
+  var student = find_('Student');
+  if (adult != null && isFinite(adult)) push_('Adult', adult);
+  if (child != null && isFinite(child)) push_('Child', child);
+  if (infant != null && isFinite(infant)) push_('Infant', infant);
+  if (passengers != null && isFinite(passengers)) push_('Passengers', passengers);
+  if (student != null && isFinite(student)) push_('Student (with ID)', student);
+  return out;
+}
+
+function convEnf_fetchGygOptionsIntel_(tripFields) {
+  var key = convEnf_getScriptProperty_('SERPER_API_KEY');
+  if (!key) return null;
+  var title = (tripFields && tripFields.Title) ? String(tripFields.Title).replace(/\s+/g, ' ').trim() : '';
+  var slug = (tripFields && tripFields.Slug) ? String(tripFields.Slug).replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  var seed = title || slug;
+  if (!seed) return null;
+
+  var currencyPref = String(convEnf_getScriptProperty_('GYG_CURRENCY') || 'EUR').trim().toUpperCase();
+  var dateFrom = String(convEnf_getScriptProperty_('GYG_DATE_FROM') || '').trim();
+  var pcs = convEnf_parseGygPcSetting_();
+
+  var q = convEnf_buildExternalQuery_(seed);
+  var results = convEnf_serperSearch_(q, 10, key);
+  var picked = convEnf_pickCompetitorResults_(results, 4);
+  if (!picked.length) return null;
+
+  var pickRes = convEnf_pickBestCompetitorResultBySimilarity_(picked, seed);
+  var best = pickRes && pickRes.best ? pickRes.best : null;
+  if (!best || !best.url) return null;
+
+  var url = best.url;
+  if (dateFrom || (pcs && pcs.length)) {
+    var params = {};
+    if (dateFrom) params.date_from = dateFrom;
+    if (pcs && pcs.length) params._pc = pcs;
+    url = convEnf_appendQueryParams_(url, params);
+  }
+  url = convEnf_applyGygCurrencyToUrl_(url, currencyPref);
+
+  var pageText = convEnf_fetchAndExtractWebText_(url);
+  if (!pageText) return null;
+
+  var lines = String(pageText || '').split(/\r?\n/).map(function(x) { return String(x || '').replace(/\s+/g, ' ').trim(); }).filter(function(x) { return !!x; });
+  var seedTokens = convEnf_tokenizeSimilarity_(seed);
+  var cand = [];
+  var seen = {};
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (line.length < 10 || line.length > 160) continue;
+    if (/[€$£]/.test(line)) continue;
+    var lc = line.toLowerCase();
+    if (lc.indexOf('getyourguide') !== -1) continue;
+    if (seen[lc]) continue;
+    var sc = convEnf_similarityScore_(seedTokens, line);
+    if (sc <= 0) continue;
+    seen[lc] = 1;
+    cand.push({ t: line, score: sc });
+  }
+  cand.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+  var titles = cand.slice(0, 6).map(function(x) { return x.t; });
+
+  var packages = [];
+  for (var j = 0; j < titles.length && packages.length < 3; j++) {
+    var t = titles[j];
+    var idx = pageText.toLowerCase().indexOf(t.toLowerCase());
+    var windowText = idx >= 0 ? pageText.slice(idx, idx + 2500) : pageText.slice(0, 2500);
+    var m = convEnf_extractFromPerPersonPrice_(windowText);
+    var cats = convEnf_extractCategoryPricesFromText_(windowText, currencyPref);
+    if (!cats.length) cats = convEnf_extractCategoryPricesFromText_(pageText, currencyPref);
+    var cur = (m && m.currency) ? m.currency : currencyPref;
+    var regular = (m && m.regular != null && isFinite(m.regular)) ? Number(m.regular) : null;
+    var sale = (m && m.sale != null && isFinite(m.sale)) ? Number(m.sale) : null;
+    if (regular == null && cats.length) regular = cats[0].regular_price;
+
+    packages.push({
+      PackageID: 'GYGOPT-' + convEnf_hash8_(url + '|' + t),
+      PackageTitle: t,
+      Currency: cur,
+      RegularPrice: regular,
+      SalePrice: sale,
+      PricingCategories: cats,
+      PackageLink: url,
+      Status: 'Reference'
+    });
+  }
+
+  if (!packages.length) {
+    var m0 = convEnf_extractFromPerPersonPrice_(pageText);
+    packages.push({
+      PackageID: 'GYG-' + convEnf_hash8_(url),
+      PackageTitle: seed,
+      Currency: (m0 && m0.currency) ? m0.currency : currencyPref,
+      RegularPrice: (m0 && m0.regular != null) ? Number(m0.regular) : null,
+      SalePrice: (m0 && m0.sale != null) ? Number(m0.sale) : null,
+      PricingCategories: [],
+      PackageLink: url,
+      Status: 'Reference'
+    });
+  }
+
+  var summaryLines = [];
+  summaryLines.push('seed: ' + seed);
+  if (pickRes && Array.isArray(pickRes.scored) && pickRes.scored.length) {
+    summaryLines.push('candidates (score):');
+    pickRes.scored.slice(0, 6).forEach(function(x) {
+      summaryLines.push('- ' + (Number(x.score || 0).toFixed(4)) + ' ' + x.url);
+    });
+  }
+  summaryLines.push('selected:');
+  summaryLines.push('- ' + url);
+  summaryLines.push('options:');
+  packages.forEach(function(p) {
+    var headPrice = (p.RegularPrice != null) ? ('from ' + String(p.Currency || '') + ' ' + String(p.RegularPrice)) : '';
+    summaryLines.push('- ' + String(p.PackageTitle || '').slice(0, 120) + (headPrice ? (' (' + headPrice + ')') : ''));
+  });
+
+  return { sources: [url], packages: packages, summary: summaryLines.join("\n") };
+}
+
+function convEnf_slugify_(s) {
+  var raw = String(s || '').trim().toLowerCase();
+  if (!raw) return '';
+  var t = raw
+    .replace(/&amp;/g, 'and')
+    .replace(/&/g, 'and')
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return t;
+}
+
+function convEnf_buildTripPackagesLink_(packageTitle) {
+  var slug = convEnf_slugify_(packageTitle);
+  if (!slug) return '';
+  return 'https://ftstravels.com/trip-packages/' + slug;
+}
+
+function convEnf_categoryIdFromLabel_(label) {
+  var t = String(label || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!t) return null;
+  if (t === 'adult' || t === 'adults') return 11;
+  if (t === 'child' || t === 'children') return 12;
+  if (t === 'infant' || t === 'infants') return 87;
+  if (t === 'passengers' || t === 'passenger') return 88;
+  if (t === 'student' || t === 'student (with id)' || t.indexOf('student') !== -1) return 264;
+  return null;
+}
+
+function convEnf_inferSalePrice10_(regularPrice, salePrice) {
+  var s = (salePrice != null) ? Number(salePrice) : null;
+  if (s != null && isFinite(s)) return s;
+  var r = (regularPrice != null) ? Number(regularPrice) : null;
+  if (r == null || !isFinite(r)) return null;
+  var out = r * 0.9;
+  if (!isFinite(out)) return null;
+  return Math.round(out * 100) / 100;
+}
+
+function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, intel, nowIso) {
+  var pkgs = intel && intel.packages && intel.packages.length ? intel.packages : [];
+  if (!pkgs.length) return;
+  var tripLink = String(tripNumber || tripId || '').trim();
+  if (!tripLink) return;
+
+  var resPkg = airtableGet_('Packages', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 });
+  var existingPkgs = resPkg && resPkg.records ? resPkg.records : [];
+  var toDeletePkg = [];
+  var pkgIdsToDelete = {};
+  existingPkgs.forEach(function(r) {
+    var f = r && r.fields ? r.fields : {};
+    var st = String(f.Status || '').toLowerCase().trim();
+    var pid = String(f.PackageID || '').trim();
+    if (st === 'reference' && (/^(FTS-GYG-|FTS-GYGOPT-|GYG-|GYGOPT-)/i.test(pid))) {
+      toDeletePkg.push(r.id);
+      if (pid) pkgIdsToDelete[pid] = 1;
+      pkgIdsToDelete[r.id] = 1;
+    }
+  });
+
+  var resPrice = airtableGet_('Prices', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 });
+  var existingPrices = resPrice && resPrice.records ? resPrice.records : [];
+  var toDeletePrice = [];
+  existingPrices.forEach(function(r) {
+    var f = r && r.fields ? r.fields : {};
+    var pidRaw = f.PackageID;
+    var pid = (Array.isArray(pidRaw) && pidRaw.length) ? String(pidRaw[0] || '').trim() : String(pidRaw || '').trim();
+    if (pid && pkgIdsToDelete[pid]) toDeletePrice.push(r.id);
+  });
+
+  if (toDeletePrice.length) airtableBatchDelete_('Prices', toDeletePrice);
+  if (toDeletePkg.length) airtableBatchDelete_('Packages', toDeletePkg);
+
+  var pkgFieldsArray = [];
+  var priceFieldsArray = [];
+  for (var i = 0; i < pkgs.length; i++) {
+    var p = pkgs[i] || {};
+    var pid2 = String(p.PackageID || '').trim();
+    var pt = String(p.PackageTitle || '').trim();
+    if (!pid2 || !pt) continue;
+    var currency = String(p.Currency || '').trim();
+    var cats = Array.isArray(p.PricingCategories) ? p.PricingCategories : [];
+    var internalLink = convEnf_buildTripPackagesLink_(pt);
+
+    pkgFieldsArray.push({
+      Trip: [tripId],
+      PackageID: pid2,
+      PackageTitle: pt,
+      Currency: currency,
+      RegularPrice: (p.RegularPrice != null && isFinite(Number(p.RegularPrice))) ? Number(p.RegularPrice) : null,
+      SalePrice: (p.SalePrice != null && isFinite(Number(p.SalePrice))) ? Number(p.SalePrice) : null,
+      PricingCategories: '',
+      PackageLink: internalLink,
+      Status: 'Reference',
+      AI_LastUpdated: nowIso
+    });
+
+    cats.forEach(function(c) {
+      var label = String(c && c.label ? c.label : '').trim();
+      if (!label) return;
+      var catId = convEnf_categoryIdFromLabel_(label);
+      var rp = (c && c.regular_price != null && isFinite(Number(c.regular_price))) ? Number(c.regular_price) : null;
+      var spRaw = (c && c.sale_price != null && isFinite(Number(c.sale_price))) ? Number(c.sale_price) : null;
+      var sp = convEnf_inferSalePrice10_(rp, spRaw);
+      priceFieldsArray.push({
+        Trip: [tripId],
+        PackageID: pid2,
+        CategoryID: catId,
+        Label: label,
+        RegularPrice: rp,
+        SalePrice: sp,
+        Currency: String(c && c.currency ? c.currency : currency).trim(),
+        MinPax: 1,
+        MaxPax: 100,
+        PricingType: 'per-person',
+        GroupPricing: ''
+      });
+    });
+  }
+
+  if (pkgFieldsArray.length) airtableBatchCreate_('Packages', pkgFieldsArray);
+  if (priceFieldsArray.length) airtableBatchCreate_('Prices', priceFieldsArray);
 }
 
 function convEnf_fetchAndExtractWebText_(url) {

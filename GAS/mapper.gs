@@ -725,7 +725,7 @@ function extractPackages_(trip) {
       }
     }
 
-    var pricingCatsText = cats && cats.length ? JSON.stringify(cats) : '';
+    var pricingCatsText = '';
     var groupPricingArr = [];
     if (Array.isArray(cats)) {
       for (var j = 0; j < cats.length; j++) {
@@ -852,6 +852,11 @@ function extractPrices_(trip) {
         PricingType: cat.pricing_type || '',
         GroupPricing: ''
       };
+
+      if ((row.SalePrice === null || row.SalePrice === undefined || row.SalePrice === '') && row.RegularPrice != null && row.RegularPrice !== '') {
+        var r = Number(row.RegularPrice);
+        if (isFinite(r)) row.SalePrice = Math.round((r * 0.9) * 100) / 100;
+      }
 
       var gp = cat.group_pricing || [];
       if (Array.isArray(gp) && gp.length) {

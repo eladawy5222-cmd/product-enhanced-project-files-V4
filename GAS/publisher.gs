@@ -1584,13 +1584,42 @@ function publishPackagesSafe_(tripId, wpTripId) {
    try {
      // 1. Fetch Packages & Prices from Airtable
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
-     var pkgRecords = findRecordsByLinkedId_('Packages', 'Trip', tripId);
-     var priceRecords = findRecordsByLinkedId_('Prices', 'Trip', tripId);
+     var pkgRecordsAll = findRecordsByLinkedId_('Packages', 'Trip', tripId);
+     var priceRecordsAll = findRecordsByLinkedId_('Prices', 'Trip', tripId);
      
-     if (pkgRecords.length === 0 && priceRecords.length === 0) {
+     if (pkgRecordsAll.length === 0 && priceRecordsAll.length === 0) {
        Logger.log('Publisher: No packages or prices found for Trip ' + tripId);
        return;
      }
+
+     var excludedStatus = { 'reference': 1, 'competitor': 1, 'draft': 1, 'proposed': 1 };
+     var pkgRecords = pkgRecordsAll.filter(function(r) {
+       var f = r && r.fields ? r.fields : {};
+       var st = String(f.Status || '').trim().toLowerCase();
+       if (!st) return true;
+       return !excludedStatus[st];
+     });
+
+     if (pkgRecords.length === 0 && pkgRecordsAll.length > 0) {
+       Logger.log('Publisher: Packages exist but all are excluded by Status. Skipping packages publish for Trip ' + tripId);
+       return;
+     }
+
+     var allowedPkgKeys = {};
+     pkgRecords.forEach(function(r) {
+       if (r && r.id) allowedPkgKeys[String(r.id)] = 1;
+       var pid = r && r.fields ? r.fields.PackageID : null;
+       if (pid) allowedPkgKeys[String(pid).trim()] = 1;
+     });
+
+     var priceRecords = priceRecordsAll.filter(function(r) {
+       var f = r && r.fields ? r.fields : {};
+       var pidRaw = f.PackageID;
+       var pid = (Array.isArray(pidRaw) && pidRaw.length > 0) ? pidRaw[0] : pidRaw;
+       pid = pid ? String(pid).trim() : '';
+       if (!pid) return pkgRecords.length === 1;
+       return !!allowedPkgKeys[pid];
+     });
 
      Logger.log('Publisher: Found ' + pkgRecords.length + ' packages and ' + priceRecords.length + ' prices for Trip ' + tripId);
 
@@ -1619,7 +1648,7 @@ function publishPackagesSafe_(tripId, wpTripId) {
     var CATEGORY_ID_MAP = {
       'Adult': 11,
       'Child': 12,
-      'Children': 330,
+      'Children': 12,
       'Infant': 87,
       'Passengers': 88,
       'Student (with ID)': 264
