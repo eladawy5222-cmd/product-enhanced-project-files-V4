@@ -9479,8 +9479,8 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
    try {
      // 1. Fetch Packages & Prices from Airtable
      // Using findRecordsByLinkedId_ for reliable client-side filtering (ignores formula pitfalls)
-     var pkgRecords = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId, null, tripPublicId);
-     var priceRecords = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId, null, tripPublicId);
+     var pkgRecordsAll = findRecordsByLinkedId_Updater_('Packages', 'Trip', tripId, null, tripPublicId);
+     var priceRecordsAll = findRecordsByLinkedId_Updater_('Prices', 'Trip', tripId, null, tripPublicId);
 
      var pkgState = getLookupState_Updater_('Packages', 'Trip', tripId, 'multi');
      var priceState = getLookupState_Updater_('Prices', 'Trip', tripId, 'multi');
@@ -9494,10 +9494,39 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
       );
      }
      
-     if (pkgRecords.length === 0 && priceRecords.length === 0) {
+     if (pkgRecordsAll.length === 0 && priceRecordsAll.length === 0) {
        Logger.log('Updater: No packages or prices found for Trip ' + tripId);
        return;
      }
+
+     var excludedStatus = { 'reference': 1, 'competitor': 1, 'draft': 1, 'proposed': 1 };
+     var pkgRecords = pkgRecordsAll.filter(function(r) {
+       var f = r && r.fields ? r.fields : {};
+       var st = String(f.Status || '').trim().toLowerCase();
+       if (!st) return true;
+       return !excludedStatus[st];
+     });
+
+     if (pkgRecords.length === 0 && pkgRecordsAll.length > 0) {
+       Logger.log('Updater: Packages exist but all are excluded by Status. Skipping packages publish for Trip ' + tripId);
+       return;
+     }
+
+     var allowedPkgKeys = {};
+     pkgRecords.forEach(function(r) {
+       if (r && r.id) allowedPkgKeys[String(r.id)] = 1;
+       var pid = r && r.fields ? r.fields.PackageID : null;
+       if (pid) allowedPkgKeys[String(pid).trim()] = 1;
+     });
+
+     var priceRecords = priceRecordsAll.filter(function(r) {
+       var f = r && r.fields ? r.fields : {};
+       var pidRaw = f.PackageID;
+       var pid = (Array.isArray(pidRaw) && pidRaw.length > 0) ? pidRaw[0] : pidRaw;
+       pid = pid ? String(pid).trim() : '';
+       if (!pid) return pkgRecords.length === 1;
+       return !!allowedPkgKeys[pid];
+     });
 
      Logger.log('Updater: Found ' + pkgRecords.length + ' packages and ' + priceRecords.length + ' prices for Trip ' + tripId);
 
@@ -9526,7 +9555,7 @@ function publishPackagesSafe_Updater_(tripId, wpTripId, opts, tripFields) {
     var CATEGORY_ID_MAP = {
       'Adult': 11,
       'Child': 12,
-      'Children': 330,
+      'Children': 12,
       'Infant': 87,
       'Passengers': 88,
       'Student (with ID)': 264
