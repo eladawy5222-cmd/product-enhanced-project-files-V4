@@ -7,7 +7,9 @@
     "dev": "electron .",
     "start": "electron .",
     "smoke": "node scripts/smoke.js",
+    "prepack": "node -e \"const { execSync } = require('child_process'); execSync('npx playwright install chromium', { stdio: 'inherit', shell: true, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: '0' } });\"",
     "pack": "electron-builder --config electron-builder.yml --dir",
+    "predist": "node -e \"const { execSync } = require('child_process'); execSync('npx playwright install chromium', { stdio: 'inherit', shell: true, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: '0' } });\"",
     "dist": "electron-builder --config electron-builder.yml"
   },
   "keywords": [],

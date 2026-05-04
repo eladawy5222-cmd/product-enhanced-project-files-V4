@@ -3,6 +3,19 @@ const fs = require('fs')
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const { mergeSeoStatusFromImprovementRecords } = require('./src/core/trips-merge')
 
+function configurePlaywrightBrowsersPath() {
+  try {
+    if (!app || !app.isPackaged) return
+    const bundledPath = path.join(process.resourcesPath, 'playwright-browsers')
+    if (fs.existsSync(bundledPath)) {
+      process.env.PLAYWRIGHT_BROWSERS_PATH = bundledPath
+    }
+  } catch {
+  }
+}
+
+configurePlaywrightBrowsersPath()
+
 function ensureDir(dirPath) {
   if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
 }
