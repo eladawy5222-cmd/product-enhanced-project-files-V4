@@ -38,7 +38,8 @@ var UPDATER_AIRTABLE_TABLE_CACHE = {};
 var UPDATER_AIRTABLE_TABLE_CACHE_META = {};
 var UPDATER_AIRTABLE_QUERY_CACHE = {};
 var UPDATER_LINKED_LOOKUP_STATE = {};
-var UPDATER_AIRTABLE_PAGE_SIZE = 25;
+var UPDATER_AIRTABLE_PAGE_SIZE = 100;
+var UPDATER_AIRTABLE_MAX_PAGES = 50;
 var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
 var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
 var UPDATER_WP_STAGE_DELAY_MS = 1200;
@@ -69,7 +70,9 @@ function isQuotaLikeError_Updater_(err) {
   return lc.indexOf('bandwidth quota exceeded') !== -1 ||
          lc.indexOf('too many requests') !== -1 ||
          lc.indexOf('rate limit') !== -1 ||
-         lc.indexOf('quota exceeded') !== -1;
+         lc.indexOf('quota exceeded') !== -1 ||
+         lc.indexOf('http 429') !== -1 ||
+         lc.indexOf(' 429') !== -1;
 }
 
 function runNonCriticalStage_Updater_(label, fn, delayMs) {
@@ -263,7 +266,7 @@ function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
     offset = res ? res.offset : null;
     pages++;
     if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
-    if (pages >= 20) {
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
       Logger.log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
       meta.partial = true;
@@ -411,7 +414,7 @@ function getAllAirtableRecordsCached_Updater_(tableName) {
     offset = res ? res.offset : null;
     pages++;
     if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
-    if (pages >= 20) {
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
       Logger.log('Updater: Full-table cache capped for ' + t + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
       meta.partial = true;
@@ -2147,12 +2150,13 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId, targe
     return null;
   }
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: formula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: formula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = airtableGet_(tableName, params);
+      res = airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
@@ -2179,7 +2183,13 @@ function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId, targe
       }
     }
     offset = res ? res.offset : null;
-    if (offset) Utilities.sleep(50);
+    pages++;
+    if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
+      state.pageCapHit = true;
+      state.partial = true;
+      break;
+    }
   } while (offset);
 
   if (!shouldUseFullTableFallback_Updater_(tableName, linkFieldName)) {
@@ -2227,12 +2237,13 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
     return matches;
   }
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: formula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: formula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = airtableGet_(tableName, params);
+      res = airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
@@ -2258,7 +2269,13 @@ function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId, sort
       }
     }
     offset = res ? res.offset : null;
-    if (offset) Utilities.sleep(50);
+    pages++;
+    if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
+      state.pageCapHit = true;
+      state.partial = true;
+      break;
+    }
   } while (offset);
 
   if (matches.length === 0 && useFallback) {
@@ -2317,12 +2334,13 @@ function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId
     return matches;
   }
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: formula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: formula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = airtableGet_(tableName, params);
+      res = airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
@@ -2346,7 +2364,13 @@ function findRecordsByLinkedIdStrict_Updater_(tableName, linkFieldName, targetId
       }
     }
     offset = res ? res.offset : null;
-    if (offset) Utilities.sleep(50);
+    pages++;
+    if (offset) sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
+      state.pageCapHit = true;
+      state.partial = true;
+      break;
+    }
   } while (offset);
   if (sortField && matches.length > 0) {
     matches.sort(function(a, b) {

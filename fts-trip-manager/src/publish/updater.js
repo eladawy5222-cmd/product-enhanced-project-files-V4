@@ -337,7 +337,8 @@ var UPDATER_AIRTABLE_QUERY_CACHE = {};
 var UPDATER_LINKED_LOOKUP_STATE = {};
 var UPDATER_TRIP_PUBLIC_ID_BY_RECORD_ID = {};
 var UPDATER_TRIP_TITLE_BY_RECORD_ID = {};
-var UPDATER_AIRTABLE_PAGE_SIZE = 25;
+var UPDATER_AIRTABLE_PAGE_SIZE = 100;
+var UPDATER_AIRTABLE_MAX_PAGES = 50;
 var UPDATER_AIRTABLE_PAGE_DELAY_MS = 700;
 var UPDATER_AIRTABLE_QUERY_DELAY_MS = 350;
 var UPDATER_WP_STAGE_DELAY_MS = 1200;
@@ -369,7 +370,9 @@ function isQuotaLikeError_Updater_(err) {
   return lc.indexOf('bandwidth quota exceeded') !== -1 ||
          lc.indexOf('too many requests') !== -1 ||
          lc.indexOf('rate limit') !== -1 ||
-         lc.indexOf('quota exceeded') !== -1;
+         lc.indexOf('quota exceeded') !== -1 ||
+         lc.indexOf('http 429') !== -1 ||
+         lc.indexOf(' 429') !== -1;
 }
 
 async function sleep_Updater_(ms) {
@@ -451,10 +454,7 @@ function getLookupState_Updater_(tableName, linkFieldName, targetId, mode) {
 
 function isLookupStateIncomplete_Updater_(state) {
   if (!state) return false;
-  var c = Number(state.recordsCount || 0);
-  if (state.formulaQuotaHit || state.cacheQuotaHit) return true;
-  if ((state.pageCapHit || state.partial) && c === 0) return true;
-  return false;
+  return !!(state.partial || state.formulaQuotaHit || state.cacheQuotaHit || state.pageCapHit);
 }
 
 function describeLookupState_Updater_(state) {
@@ -529,7 +529,7 @@ async function airtableGetAllByFormula_Updater_(tableName, filterByFormula) {
     offset = res ? res.offset : null;
     pages++;
     if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
-    if (pages >= 20) {
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
       log('Updater: Pagination capped for table ' + tableName + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
       meta.partial = true;
@@ -677,7 +677,7 @@ async function getAllAirtableRecordsCached_Updater_(tableName) {
     offset = res ? res.offset : null;
     pages++;
     if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
-    if (pages >= 20) {
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
       log('Updater: Full-table cache capped for ' + t + ' after ' + pages + ' pages');
       meta.pageCapHit = true;
       meta.partial = true;
@@ -2383,12 +2383,13 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
     formula = "OR(" + formula + ", FIND('" + String(title).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
   }
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: formula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: formula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = await airtableGet_(tableName, params);
+      res = await airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
@@ -2423,7 +2424,13 @@ async function findRecordByLinkedId_Updater_(tableName, linkFieldName, targetId)
       }
     }
     offset = res ? res.offset : null;
-    if (offset) await sleep(50);
+    pages++;
+    if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
+      state.pageCapHit = true;
+      state.partial = true;
+      break;
+    }
   } while (offset);
 
   var cached = await getAllAirtableRecordsCached_Updater_(tableName);
@@ -2489,12 +2496,13 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
     formula = "OR(" + formula + ", FIND('" + String(title).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "})))";
   }
   var offset = null;
+  var pages = 0;
   do {
-    var params = { pageSize: 100, filterByFormula: formula };
+    var params = { pageSize: UPDATER_AIRTABLE_PAGE_SIZE, filterByFormula: formula };
     if (offset) params.offset = offset;
     var res = null;
     try {
-      res = await airtableGet_(tableName, params);
+      res = await airtableGetCached_Updater_(tableName, params);
     } catch (e) {
       var msg = e && e.message ? String(e.message) : String(e);
       if (msg.indexOf('INVALID_FILTER_BY_FORMULA') !== -1 && msg.toLowerCase().indexOf('unknown field') !== -1) {
@@ -2520,7 +2528,13 @@ async function findRecordsByLinkedId_Updater_(tableName, linkFieldName, targetId
       }
     }
     offset = res ? res.offset : null;
-    if (offset) await sleep(50);
+    pages++;
+    if (offset) await sleep_Updater_(UPDATER_AIRTABLE_PAGE_DELAY_MS);
+    if (pages >= UPDATER_AIRTABLE_MAX_PAGES) {
+      state.pageCapHit = true;
+      state.partial = true;
+      break;
+    }
   } while (offset);
 
   if (matches.length > 0 && matches.length < 8 && String(tableName || '') === String(UPDATER_FAQS_IMPROVEMENT_TABLE || '')) {
