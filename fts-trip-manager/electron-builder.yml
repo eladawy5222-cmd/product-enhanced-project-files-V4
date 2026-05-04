@@ -13,7 +13,7 @@ extraResources:
     to: data
     filter:
       - '**/*'
-  - from: node_modules/playwright/.local-browsers
+  - from: node_modules/playwright-core/.local-browsers
     to: playwright-browsers
     filter:
       - '**/*'
