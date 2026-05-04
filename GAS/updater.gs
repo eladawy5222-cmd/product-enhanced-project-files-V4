@@ -3,7 +3,9 @@
  * 
  * Pushes enhanced content back to WordPress.
  * Updates existing trips if TripID is a valid WP ID.
- * Requires the custom PHP endpoint: POST /wp-json/fts/v1/trips/{id}
+ * WordPress API contract:
+ * - create trip => POST /wp-json/fts/v1/trips
+ * - update trip  => POST /wp-json/fts/v1/trip/{id}
  * 
  * NOTE: Functions and variables are suffixed with _Updater to avoid
  * conflicts with publisher.gs in the global GAS scope.
@@ -3864,6 +3866,7 @@ function pushToWordPress_Updater_(wpId, payload) {
   var baseUrl = CONFIG.WP_API_BASE;
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
   if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6); // Remove '/trips' suffix
+  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
   
   var url = baseUrl + '/trip/' + wpId; // Construct singular endpoint: .../fts/v1/trip/{id}
   
@@ -3882,6 +3885,13 @@ function pushToWordPress_Updater_(wpId, payload) {
   var text = response.getContentText();
   
   if (code !== 200) {
+    if (code === 404) {
+      throw new Error(
+        'WP API Error (404 Not Found) for ' + url + ': ' + text +
+        ' | Expected: create POST /wp-json/fts/v1/trips ; update POST /wp-json/fts/v1/trip/{id}. ' +
+        'Check CONFIG.WP_API_BASE=' + String(CONFIG.WP_API_BASE || '')
+      );
+    }
     throw new Error('WP API Error (' + code + '): ' + text);
   }
   
@@ -3929,6 +3939,7 @@ function createNewTripOnWordPress_Updater_(payload) {
   var baseUrl = CONFIG.WP_API_BASE;
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
   if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6);
+  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
   
   // Use /trips endpoint (plural) for creating new trips
   var url = baseUrl + '/trips'; // Plural = create new
@@ -3978,6 +3989,13 @@ function createNewTripOnWordPress_Updater_(payload) {
   var text = response.getContentText();
   
   if (code !== 200 && code !== 201) {
+    if (code === 404) {
+      throw new Error(
+        'WP API Create Error (404 Not Found) for ' + url + ': ' + text +
+        ' | Expected: create POST /wp-json/fts/v1/trips. ' +
+        'Check CONFIG.WP_API_BASE=' + String(CONFIG.WP_API_BASE || '')
+      );
+    }
     throw new Error('WP API Create Error (' + code + '): ' + text);
   }
   

@@ -65,8 +65,26 @@ add_action('rest_api_init', function () {
         'permission_callback' => 'fts_trips_permission',
     ]);
 
+    // 🔹 Backward-compatible alias: /trips/{id} (legacy clients)
+    // Keep contract stable:
+    // - create => POST /fts/v1/trips
+    // - update => POST /fts/v1/trip/{id}
+    // This alias prevents 404s from older clients that used /trips/{id}.
+    register_rest_route('fts/v1', '/trips/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::EDITABLE, // POST, PUT, PATCH
+        'callback' => 'fts_update_trip',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
     // 🔹 DELETE trip (DELETE)
     register_rest_route('fts/v1', '/trip/(?P<id>\d+)', [
+        'methods'  => WP_REST_Server::DELETABLE, // DELETE
+        'callback' => 'fts_delete_trip',
+        'permission_callback' => 'fts_trips_permission',
+    ]);
+
+    // 🔹 Backward-compatible alias: DELETE /trips/{id}
+    register_rest_route('fts/v1', '/trips/(?P<id>\d+)', [
         'methods'  => WP_REST_Server::DELETABLE, // DELETE
         'callback' => 'fts_delete_trip',
         'permission_callback' => 'fts_trips_permission',

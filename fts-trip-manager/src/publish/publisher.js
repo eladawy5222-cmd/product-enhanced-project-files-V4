@@ -2,7 +2,9 @@
  * PUBLISHER: Airtable -> WordPress
  *
  * Pushes enhanced content back to WordPress.
- * Requires the custom PHP endpoint: POST /wp-json/fts/v1/trips/{id}
+ * WordPress API contract:
+ * - create trip => POST /wp-json/fts/v1/trips
+ * - update trip  => POST /wp-json/fts/v1/trip/{id}
  ************************************************************/
 
 const { sleep, base64Encode, getUuid, md5Base64 } = require('../core/runtime')
@@ -1858,6 +1860,7 @@ async function pushToWordPress_(wpId, payload) {
   let baseUrl = CONFIG.WP_API_BASE
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)
   if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6)
+  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5)
   
   const url = baseUrl + '/trip/' + wpId
   
@@ -1876,7 +1879,14 @@ async function pushToWordPress_(wpId, payload) {
   const text = response.getContentText()
   
   if (code !== 200) {
-    throw new Error('WP API Error (' + code + '): ' + text);
+    if (code === 404) {
+      throw new Error(
+        'WP API Error (404 Not Found) for ' + url + ': ' + text +
+        ' | Expected: create POST /wp-json/fts/v1/trips ; update POST /wp-json/fts/v1/trip/{id}. ' +
+        'Check CONFIG.WP_API_BASE=' + String(CONFIG.WP_API_BASE || '')
+      )
+    }
+    throw new Error('WP API Error (' + code + '): ' + text)
   }
   
   const json = JSON.parse(text)
@@ -1918,6 +1928,7 @@ async function createNewTripOnWordPress_(payload) {
   let baseUrl = CONFIG.WP_API_BASE
   if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)
   if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6)
+  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5)
   
   // Use /trips endpoint (plural) for creating new trips
   const url = baseUrl + '/trips'
@@ -1952,7 +1963,14 @@ async function createNewTripOnWordPress_(payload) {
   const text = response.getContentText()
   
   if (code !== 200 && code !== 201) {
-    throw new Error('WP API Create Error (' + code + '): ' + text);
+    if (code === 404) {
+      throw new Error(
+        'WP API Create Error (404 Not Found) for ' + url + ': ' + text +
+        ' | Expected: create POST /wp-json/fts/v1/trips. ' +
+        'Check CONFIG.WP_API_BASE=' + String(CONFIG.WP_API_BASE || '')
+      )
+    }
+    throw new Error('WP API Create Error (' + code + '): ' + text)
   }
   
   const json = JSON.parse(text)
