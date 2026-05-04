@@ -1431,11 +1431,8 @@ function pub_applySeoSnippetPolicy_(baseTitle, baseMeta, tripFields, seoFlags) {
 // ----------------------------------------------------------
 
 function pushToWordPress_(wpId, payload) {
-  // Handle base URL that might end in /trips (as seen in config.gs)
-  var baseUrl = CONFIG.WP_API_BASE;
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6); // Remove '/trips' suffix
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
+  // Handle base URL that might end in /trips
+  var baseUrl = normalizeWpApiBase_(CONFIG.WP_API_BASE);
   
   var url = baseUrl + '/trip/' + wpId; // Construct singular endpoint: .../fts/v1/trip/{id}
   
@@ -1500,10 +1497,7 @@ function pushToWordPress_(wpId, payload) {
  */
 function createNewTripOnWordPress_(payload) {
   // Handle base URL
-  var baseUrl = CONFIG.WP_API_BASE;
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6);
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
+  var baseUrl = normalizeWpApiBase_(CONFIG.WP_API_BASE);
   
   // Use /trips endpoint (plural) for creating new trips
   var url = baseUrl + '/trips'; // Plural = create new

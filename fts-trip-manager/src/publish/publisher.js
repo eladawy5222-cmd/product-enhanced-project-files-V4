@@ -8,7 +8,7 @@
  ************************************************************/
 
 const { sleep, base64Encode, getUuid, md5Base64 } = require('../core/runtime')
-const { createDestinationService } = require('./destination-utils')
+const { createDestinationService, normalizeWpApiBase } = require('./destination-utils')
 const { createContextUtils } = require('../ai/context-utils')
 const { createImprovementRepository } = require('../ai/enhancement-helpers')
 
@@ -1856,11 +1856,7 @@ function pub_applySeoSnippetPolicy_(baseTitle, baseMeta, tripFields, seoFlags) {
 // ----------------------------------------------------------
 
 async function pushToWordPress_(wpId, payload) {
-  // Handle base URL that might end in /trips (as seen in config.gs)
-  let baseUrl = CONFIG.WP_API_BASE
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6)
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5)
+  const baseUrl = normalizeWpApiBase(CONFIG.WP_API_BASE)
   
   const url = baseUrl + '/trip/' + wpId
   
@@ -1924,11 +1920,7 @@ async function pushToWordPress_(wpId, payload) {
  * @return {string} - WordPress Post ID of the created trip
  */
 async function createNewTripOnWordPress_(payload) {
-  // Handle base URL
-  let baseUrl = CONFIG.WP_API_BASE
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1)
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6)
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5)
+  const baseUrl = normalizeWpApiBase(CONFIG.WP_API_BASE)
   
   // Use /trips endpoint (plural) for creating new trips
   const url = baseUrl + '/trips'

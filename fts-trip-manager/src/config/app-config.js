@@ -17,7 +17,7 @@ function getAppConfig(options) {
   const rootDir = options && options.rootDir ? String(options.rootDir) : process.cwd()
   const dataDir = path.resolve(rootDir, 'data')
 
-  const WP_API_BASE = process.env.WP_API_BASE || 'https://ftstravels.com/wp-json/fts/v1/trips'
+  const WP_API_BASE = process.env.WP_API_BASE || 'https://ftstravels.com/wp-json/fts/v1'
   const WP_API_URL_SINGLE = process.env.WP_API_URL_SINGLE || 'https://ftstravels.com/wp-json/fts/v1/trip'
 
   return {

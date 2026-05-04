@@ -8,7 +8,7 @@ var CONFIG = {
   
   /********************* WORDPRESS API ************************/
   // TODO: ضع هنا الـ endpoint الفعلي اللي بيرجع رحلات WPTE JSON
-  WP_API_BASE: "https://ftstravels.com/wp-json/fts/v1/trips",   // مثال، عدّل حسب رابطك الصحيح
+  WP_API_BASE: "https://ftstravels.com/wp-json/fts/v1",   // مثال، عدّل حسب رابطك الصحيح
   WP_API_URL_SINGLE: "https://ftstravels.com/wp-json/fts/v1/trip", // Endpoint for single trip
   WP_API_USER: "",   // Script Properties: WP_API_USER
   WP_API_PASS: "",   // Script Properties: WP_API_PASS

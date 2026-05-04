@@ -177,3 +177,13 @@ function httpRequestJson(url, options, maxRetries, backoffMs) {
   // should not reach here
   throw new Error('httpRequestJson exhausted retries for ' + url);
 }
+
+function normalizeWpApiBase_(raw) {
+  var b = String(raw || '');
+  var qIndex = b.indexOf('?');
+  if (qIndex !== -1) b = b.substring(0, qIndex);
+  if (b.endsWith('/')) b = b.slice(0, -1);
+  if (b.endsWith('/trips')) b = b.slice(0, -6);
+  if (b.endsWith('/trip')) b = b.slice(0, -5);
+  return b;
+}

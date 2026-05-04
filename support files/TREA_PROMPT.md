@@ -190,7 +190,7 @@ npm install axios dotenv node-cron winston async-mutex electron-store
 2. Create `.env` file with these keys (user will fill values):
 ```env
 # WordPress API
-WP_API_BASE=https://ftstravels.com/wp-json/fts/v1/trips
+WP_API_BASE=https://ftstravels.com/wp-json/fts/v1
 WP_API_URL_SINGLE=https://ftstravels.com/wp-json/fts/v1/trip
 WP_API_USER=
 WP_API_PASS=

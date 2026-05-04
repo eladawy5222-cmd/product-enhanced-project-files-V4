@@ -14,7 +14,7 @@
 const { sleep, base64Encode, getUuid, md5Base64 } = require('../core/runtime')
 const { createContextUtils } = require('../ai/context-utils')
 const { createImprovementRepository } = require('../ai/enhancement-helpers')
-const { createDestinationService } = require('./destination-utils')
+const { createDestinationService, normalizeWpApiBase } = require('./destination-utils')
 
 let airtable
 let http
@@ -4018,11 +4018,7 @@ function upd_applyFinalSeoSafetyBelt_Updater_(payload, data, tripFields) {
 // ----------------------------------------------------------
 
 async function pushToWordPress_Updater_(wpId, payload) {
-  // Handle base URL that might end in /trips (as seen in config.gs)
-  var baseUrl = CONFIG.WP_API_BASE;
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6); // Remove '/trips' suffix
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
+  var baseUrl = normalizeWpApiBase(CONFIG.WP_API_BASE);
   
   var url = baseUrl + '/trip/' + wpId; // Construct singular endpoint: .../fts/v1/trip/{id}
   
@@ -4091,11 +4087,7 @@ function isWpNotFoundError_Updater_(e) {
  * @return {string} - WordPress Post ID of the created trip
  */
 async function createNewTripOnWordPress_Updater_(payload) {
-  // Handle base URL
-  var baseUrl = CONFIG.WP_API_BASE;
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6);
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
+  var baseUrl = normalizeWpApiBase(CONFIG.WP_API_BASE);
   
   // Use /trips endpoint (plural) for creating new trips
   var url = baseUrl + '/trips'; // Plural = create new
@@ -4178,10 +4170,7 @@ async function createNewTripOnWordPress_Updater_(payload) {
 // 🆕 HELPER: FETCH TRIP INFO (INCLUDING TRANSLATIONS)
 // ----------------------------------------------------------
 async function getTripInfoFromWp_(wpId) {
-  var baseUrl = CONFIG.WP_API_BASE;
-  if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-  if (baseUrl.endsWith('/trips')) baseUrl = baseUrl.slice(0, -6);
-  if (baseUrl.endsWith('/trip')) baseUrl = baseUrl.slice(0, -5);
+  var baseUrl = normalizeWpApiBase(CONFIG.WP_API_BASE);
   
   var url = baseUrl + '/trip/' + wpId;
   

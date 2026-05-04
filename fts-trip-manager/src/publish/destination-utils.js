@@ -4,6 +4,16 @@ function normalizeKey(value) {
   return String(value == null ? '' : value).trim().toLowerCase()
 }
 
+function normalizeWpApiBase(raw) {
+  let b = String(raw || '')
+  const qIndex = b.indexOf('?')
+  if (qIndex !== -1) b = b.substring(0, qIndex)
+  if (b.endsWith('/')) b = b.slice(0, -1)
+  if (b.endsWith('/trips')) b = b.slice(0, -6)
+  if (b.endsWith('/trip')) b = b.slice(0, -5)
+  return b
+}
+
 function slugify(value) {
   return normalizeKey(value)
     .replace(/[^a-z0-9\s-]/g, '')
@@ -203,5 +213,4 @@ function createDestinationService(options) {
   return { applyDestinationsToPayload }
 }
 
-module.exports = { createDestinationService }
-
+module.exports = { createDestinationService, normalizeWpApiBase }

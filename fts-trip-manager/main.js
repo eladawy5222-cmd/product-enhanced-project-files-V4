@@ -510,7 +510,14 @@ function setup() {
       const headers = {}
       const auth = buildBasicAuthHeader(cfg.WP_API_USER, cfg.WP_API_PASS)
       if (auth) headers.Authorization = auth
-      const resp = await http.getJson(cfg.WP_API_BASE, headers)
+      let base = String(cfg.WP_API_BASE || '')
+      const qIndex = base.indexOf('?')
+      if (qIndex !== -1) base = base.substring(0, qIndex)
+      if (base.endsWith('/')) base = base.slice(0, -1)
+      if (base.endsWith('/trips')) base = base.slice(0, -6)
+      if (base.endsWith('/trip')) base = base.slice(0, -5)
+      const url = base + '/trips'
+      const resp = await http.getJson(url, headers)
       return { ok: true, sample: resp }
     }
 

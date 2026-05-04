@@ -1,11 +1,17 @@
 const { base64Encode } = require('../core/runtime')
 
-function normalizeWpTripEndpoint(base) {
+function normalizeWpApiBase(base) {
   let b = String(base || '')
   const qIndex = b.indexOf('?')
   if (qIndex !== -1) b = b.substring(0, qIndex)
   if (b.endsWith('/')) b = b.slice(0, -1)
-  if (b.endsWith('/trips')) b = b.slice(0, -6) + '/trip'
+  if (b.endsWith('/trips')) b = b.slice(0, -6)
+  if (b.endsWith('/trip')) b = b.slice(0, -5)
+  return b
+}
+
+function normalizeWpTripEndpoint(base) {
+  let b = normalizeWpApiBase(base)
   if (!b.endsWith('/trip')) b = b + '/trip'
   return b
 }
@@ -32,7 +38,7 @@ function createWpClient(options) {
 
   async function fetchTripsPage(page) {
     const perPage = config.WP_PER_PAGE || 20
-    const base = String(config.WP_API_BASE || '')
+    const base = normalizeWpApiBase(config.WP_API_BASE) + '/trips'
     const sep = base.indexOf('?') === -1 ? '?' : '&'
     const url = `${base}${sep}page=${encodeURIComponent(String(page))}&per_page=${encodeURIComponent(String(perPage))}`
     return http.getJson(url, authHeaders())
@@ -42,4 +48,3 @@ function createWpClient(options) {
 }
 
 module.exports = { createWpClient }
-

@@ -229,7 +229,7 @@ Waiting → Pending → Processing → Done (or Error)
 
 ## WordPress (WP_API)
 - **Domain**: ftstravels.com
-- **Base URL**: `https://ftstravels.com/wp-json/fts/v1/trips`
+- **Base URL**: `https://ftstravels.com/wp-json/fts/v1`
 - **Single Trip**: `https://ftstravels.com/wp-json/fts/v1/trip/{id}`
 - **Auth**: Basic Auth (Application Password)
 - **Plugin**: WP Travel Engine + custom FTS Trip API plugin

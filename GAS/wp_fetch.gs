@@ -9,13 +9,7 @@ function fetchTripById_(tripId) {
     throw new Error("CONFIG.WP_API_BASE is not defined");
   }
 
-  base = String(base);
-  var qIndex = base.indexOf('?');
-  if (qIndex !== -1) base = base.substring(0, qIndex);
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  if (base.endsWith('/trips')) base = base.slice(0, -6) + '/trip';
-  if (!base.endsWith('/trip')) base = base + '/trip';
-
+  base = normalizeWpApiBase_(base) + '/trip';
   var url = base + '/' + encodeURIComponent(tripId);
 
   var headers = {};
