@@ -3,22 +3,58 @@ function fetchRecordsByTrip_(tableName, tripId, tripNumber, pageSize, tripName) 
   var recs = [];
   
   try {
-    var tripKey = String(tripNumber || '').trim();
-    if (!tripKey) {
-      tripKey = String(tripId || '').trim();
-    }
-    if (!tripKey) return [];
+    var maxOut = pageSize || 100;
+    var idNeedle = String(tripId || '').trim();
+    var numNeedle = String(tripNumber || '').trim();
+    var nameNeedle = String(tripName || '').trim();
 
-    var safeTripKey = tripKey.replace(/'/g, "\\'");
-    var formula = "FIND('" + safeTripKey + "', ARRAYJOIN({" + linkField + "}))";
-    
-    var params = {
-      filterByFormula: formula,
-      pageSize: pageSize || 100
-    };
-    
-    var res = airtableGet_(tableName, params);
-    recs = res && res.records ? res.records : [];
+    var conditions = [];
+    if (idNeedle) conditions.push("FIND('" + idNeedle.replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkField + "}))");
+    if (numNeedle) conditions.push("FIND('" + numNeedle.replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkField + "}))");
+    if (nameNeedle) conditions.push("FIND('" + nameNeedle.replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkField + "}))");
+
+    if (conditions.length) {
+      var formula = "OR(" + conditions.join(", ") + ")";
+      var offset = null;
+      do {
+        var params = { filterByFormula: formula, pageSize: 100 };
+        if (offset) params.offset = offset;
+        var res = airtableGet_(tableName, params);
+        var rr = res && res.records ? res.records : [];
+        for (var i = 0; i < rr.length; i++) {
+          recs.push(rr[i]);
+          if (recs.length >= maxOut) break;
+        }
+        if (recs.length >= maxOut) break;
+        offset = res && res.offset ? res.offset : null;
+      } while (offset);
+    }
+
+    if ((!recs || !recs.length) && idNeedle) {
+      var out = [];
+      var off2 = null;
+      do {
+        var params2 = { pageSize: 100 };
+        if (off2) params2.offset = off2;
+        var res2 = airtableGet_(tableName, params2);
+        var rr2 = res2 && res2.records ? res2.records : [];
+        for (var j = 0; j < rr2.length; j++) {
+          var r = rr2[j];
+          var f = r && r.fields ? r.fields : {};
+          var links = f[linkField];
+          var hit = false;
+          if (Array.isArray(links)) hit = links.indexOf(idNeedle) !== -1;
+          else hit = String(links || '') === idNeedle;
+          if (hit) {
+            out.push(r);
+            if (out.length >= maxOut) break;
+          }
+        }
+        if (out.length >= maxOut) break;
+        off2 = res2 && res2.offset ? res2.offset : null;
+      } while (off2);
+      recs = out;
+    }
     
   } catch (e) {
     Logger.log('fetchRecordsByTrip_ Error (' + tableName + '): ' + e.message);

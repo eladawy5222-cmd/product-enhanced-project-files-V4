@@ -17,7 +17,6 @@ function runConversionEnforcer(record) {
     if (!imp || !imp.id) return;
     var impFields = imp.fields || {};
     var nowIso = new Date().toISOString();
-    var tripLinkValue = String(tripNumber || tripId || '').trim();
     var rawCtx = convEnf_fetchRawContext_(tripId, tripNumber, tripFields);
     try {
       var externalInsights = convEnf_fetchExternalBenchmarkInsights_(tripFields, rawCtx);
@@ -44,12 +43,12 @@ function runConversionEnforcer(record) {
       }
     }
 
-    var existingHighlights = convEnf_fetchHighlights_(tripLinkValue);
-    var existingItinerary = convEnf_fetchItinerary_(tripLinkValue);
-    var existingIncludes = convEnf_fetchIncExc_(tripLinkValue, 'TripIncludes Improvement With AI', 'IncludeItem');
-    var existingExcludes = convEnf_fetchIncExc_(tripLinkValue, 'TripExcludes Improvement With AI', 'ExcludeItem');
-    var existingFaqs = convEnf_fetchFaqs_(tripLinkValue);
-    var existingPackages = convEnf_fetchPackages_(tripLinkValue);
+    var existingHighlights = convEnf_fetchHighlights_(tripId, tripNumber || '');
+    var existingItinerary = convEnf_fetchItinerary_(tripId, tripNumber || '');
+    var existingIncludes = convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripIncludes Improvement With AI', 'IncludeItem');
+    var existingExcludes = convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripExcludes Improvement With AI', 'ExcludeItem');
+    var existingFaqs = convEnf_fetchFaqs_(tripId, tripNumber || '');
+    var existingPackages = convEnf_fetchPackages_(tripId, tripNumber || '');
     try {
       Logger.log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0));
       Logger.log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0));
@@ -894,11 +893,8 @@ function convEnf_inferSalePrice10_(regularPrice, salePrice) {
 function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, intel, nowIso) {
   var pkgs = intel && intel.packages && intel.packages.length ? intel.packages : [];
   if (!pkgs.length) return;
-  var tripLink = String(tripNumber || tripId || '').trim();
-  if (!tripLink) return;
-
-  var resPkg = airtableGet_('Packages', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 });
-  var existingPkgs = resPkg && resPkg.records ? resPkg.records : [];
+  if (!tripId && !tripNumber) return;
+  var existingPkgs = fetchRecordsByTrip_('Packages', tripId || '', tripNumber || '', 10000, '') || [];
   var toDeletePkg = [];
   var pkgIdsToDelete = {};
   existingPkgs.forEach(function(r) {
@@ -912,8 +908,7 @@ function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, intel, 
     }
   });
 
-  var resPrice = airtableGet_('Prices', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 });
-  var existingPrices = resPrice && resPrice.records ? resPrice.records : [];
+  var existingPrices = fetchRecordsByTrip_('Prices', tripId || '', tripNumber || '', 10000, '') || [];
   var toDeletePrice = [];
   existingPrices.forEach(function(r) {
     var f = r && r.fields ? r.fields : {};
@@ -2531,21 +2526,12 @@ function convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber) {
     var byId = airtableGet_('Improvement With AI', { filterByFormula: "RECORD_ID() = '" + convEnf_escapeFormulaString_(directId) + "'", maxRecords: 1 });
     if (byId && byId.records && byId.records.length) return byId.records[0];
   }
-  var conditions = [];
-  conditions.push("FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))");
-  if (tripNumber) conditions.push("FIND('" + convEnf_escapeFormulaString_(String(tripNumber)) + "', ARRAYJOIN({Trip}))");
-  var formula = (conditions.length > 1) ? ("OR(" + conditions.join(', ') + ")") : conditions[0];
-  var res = airtableGet_('Improvement With AI', { filterByFormula: formula, maxRecords: 1 });
-  if (!res || !res.records || !res.records.length) return null;
-  return res.records[0];
+  var recs = fetchRecordsByTrip_('Improvement With AI', tripId || '', tripNumber || '', 1, '') || [];
+  return recs.length ? recs[0] : null;
 }
 
-function convEnf_fetchHighlights_(tripLinkValue) {
-  var res = airtableGet_('Highlights Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  });
-  var recs = res && res.records ? res.records : [];
+function convEnf_fetchHighlights_(tripId, tripNumber) {
+  var recs = fetchRecordsByTrip_('Highlights Improvement With AI', tripId || '', tripNumber || '', 1000, '') || [];
   recs.sort(function(a, b) {
     var ao = (a.fields || {}).Order;
     var bo = (b.fields || {}).Order;
@@ -2561,12 +2547,8 @@ function convEnf_fetchHighlights_(tripLinkValue) {
   return { records: recs, items: items };
 }
 
-function convEnf_fetchItinerary_(tripLinkValue) {
-  var res = airtableGet_('Itinerary Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  });
-  var recs = res && res.records ? res.records : [];
+function convEnf_fetchItinerary_(tripId, tripNumber) {
+  var recs = fetchRecordsByTrip_('Itinerary Improvement With AI', tripId || '', tripNumber || '', 1000, '') || [];
   recs.sort(function(a, b) {
     var ao = (a.fields || {}).StepOrder;
     var bo = (b.fields || {}).StepOrder;
@@ -2589,12 +2571,8 @@ function convEnf_fetchItinerary_(tripLinkValue) {
   return { records: recs, steps: steps };
 }
 
-function convEnf_fetchIncExc_(tripLinkValue, tableName, textField) {
-  var res = airtableGet_(tableName, {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
-    pageSize: 200
-  });
-  var recs = res && res.records ? res.records : [];
+function convEnf_fetchIncExc_(tripId, tripNumber, tableName, textField) {
+  var recs = fetchRecordsByTrip_(tableName, tripId || '', tripNumber || '', 200, '') || [];
   var items = [];
   recs.forEach(function(r) {
     var f = r.fields || {};
@@ -2604,12 +2582,8 @@ function convEnf_fetchIncExc_(tripLinkValue, tableName, textField) {
   return { records: recs, items: items };
 }
 
-function convEnf_fetchFaqs_(tripLinkValue) {
-  var res = airtableGet_('FAQs Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  });
-  var recs = res && res.records ? res.records : [];
+function convEnf_fetchFaqs_(tripId, tripNumber) {
+  var recs = fetchRecordsByTrip_('FAQs Improvement With AI', tripId || '', tripNumber || '', 1000, '') || [];
   var faqs = [];
   recs.forEach(function(r) {
     var f = r.fields || {};
@@ -2621,12 +2595,8 @@ function convEnf_fetchFaqs_(tripLinkValue) {
   return { records: recs, faqs: faqs };
 }
 
-function convEnf_fetchPackages_(tripLinkValue) {
-  var res = airtableGet_('Packages', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLinkValue) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  });
-  var recs = res && res.records ? res.records : [];
+function convEnf_fetchPackages_(tripId, tripNumber) {
+  var recs = fetchRecordsByTrip_('Packages', tripId || '', tripNumber || '', 1000, '') || [];
   var packages = [];
   recs.forEach(function(r) {
     var f = r.fields || {};

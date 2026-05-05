@@ -175,10 +175,7 @@ function runAiFaqsEnhancementBatch() {
 
           if (bestHours > 0) {
             var tripLinkValue0 = tripNumber0 || tripId;
-            var safeTripLinkValue0 = String(tripLinkValue0).replace(/'/g, "\\'");
-            var impParams2 = { filterByFormula: "FIND('" + safeTripLinkValue0 + "', ARRAYJOIN({Trip}))", pageSize: 100 };
-            var impRes2 = airtableGet_(IMPROVEMENT_TABLE, impParams2);
-            var impRecs2 = impRes2 && impRes2.records ? impRes2.records : [];
+            var impRecs2 = fetchRecordsByTrip_(IMPROVEMENT_TABLE, tripId, tripNumber0 || '', 100, '');
             if (impRecs2.length) {
               impRecs2.forEach(function(r) {
                 try { airtableUpdate_(IMPROVEMENT_TABLE, r.id, { Cancellation_Window_Hours: bestHours }); } catch (eU) {}
@@ -228,12 +225,9 @@ function buildFaqsContext_(tripFields, tripId) {
   
   // 1) Get improved trip data (Description + SEO)
   try {
-    var tripLinkValue = String(tripNumber || tripId || '').trim();
-    var safeTripLinkValue = tripLinkValue.replace(/'/g, "\\'");
-    var impParams = { filterByFormula: "FIND('" + safeTripLinkValue + "', ARRAYJOIN({Trip}))", maxRecords: 1 };
-    var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
-    if (impRes && impRes.records && impRes.records.length) {
-      var impFields = impRes.records[0].fields || {};
+    var impRecs = fetchRecordsByTrip_(IMPROVEMENT_TABLE, tripId || '', tripNumber || '', 1, '');
+    if (impRecs && impRecs.length) {
+      var impFields = impRecs[0].fields || {};
       ctx.tripDescription = impFields.AI_Trip_Description || '';
       ctx.tripOverview = impFields.AI_Trip_Overview || '';
       ctx.seoTitle = impFields.AI_SEO_Title || '';
@@ -1105,23 +1099,14 @@ function deleteOldFaqsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   Logger.log('AI FAQs: deleting old FAQs for Trip ' + tripId);
   try {
-    var recs = [];
-    if (tripNumber) {
-      var paramsA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
-      var resA = airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsA);
-      recs = resA && resA.records ? resA.records : [];
-    }
-    if (!recs.length) {
-      var paramsB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))", pageSize: 100 };
-      var resB = airtableGet_(FAQS_IMPROVEMENT_TABLE, paramsB);
-      recs = resB && resB.records ? resB.records : [];
-    }
+    var recs = fetchRecordsByTrip_(FAQS_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '');
     var toDelete = [];
-    for (var i = 0; i < recs.length; i++) {
-      toDelete.push(recs[i].id);
-    }
-    if (toDelete.length > 0) {
-      Logger.log('AI FAQs: deleting ' + toDelete.length + ' old FAQs for Trip ' + tripId);
+    for (var i = 0; i < recs.length; i++) if (recs[i] && recs[i].id) toDelete.push(recs[i].id);
+    if (!toDelete.length) return;
+    Logger.log('AI FAQs: deleting ' + toDelete.length + ' old FAQs for Trip ' + tripId);
+    if (typeof airtableBatchDelete_ === 'function') {
+      try { airtableBatchDelete_(FAQS_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
+    } else {
       toDelete.forEach(function(id) {
         try { airtableDelete_(FAQS_IMPROVEMENT_TABLE, id); } catch (e) { Logger.log('AI FAQs: failed to delete FAQ ' + id + ' — ' + e.message); }
       });
@@ -1151,20 +1136,59 @@ function ensureMinimumFaqs_(faqs, ctx) {
 }
 
 function fetchRecordsByTripLocal_(tableName, linkFieldName, tripId, tripNumber, pageSize) {
-  var records = [];
+  var t = String(tableName || '');
+  var lf = String(linkFieldName || 'Trip');
+  var maxOut = pageSize || 100;
+  var safeTripId = String(tripId || '').replace(/'/g, "\\'").trim();
+  var safeTripNumber = String(tripNumber || '').replace(/'/g, "\\'").trim();
+
+  var out = [];
   try {
-    if (tripNumber) {
-      var pA = { filterByFormula: "FIND('" + String(tripNumber).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))", pageSize: pageSize || 100 };
-      var rA = airtableGet_(tableName, pA);
-      records = rA && rA.records ? rA.records : [];
+    var parts = [];
+    if (safeTripId) parts.push("FIND('" + safeTripId + "', ARRAYJOIN({" + lf + "}))");
+    if (safeTripNumber) parts.push("FIND('" + safeTripNumber + "', ARRAYJOIN({" + lf + "}))");
+    var formula = parts.length === 1 ? parts[0] : (parts.length ? ("OR(" + parts.join(", ") + ")") : "");
+
+    if (formula) {
+      var offset = null;
+      do {
+        var p = { filterByFormula: formula, pageSize: 100 };
+        if (offset) p.offset = offset;
+        var r = airtableGet_(t, p);
+        var recs = r && r.records ? r.records : [];
+        for (var i = 0; i < recs.length; i++) {
+          out.push(recs[i]);
+          if (out.length >= maxOut) break;
+        }
+        if (out.length >= maxOut) break;
+        offset = r && r.offset ? r.offset : null;
+      } while (offset);
     }
-    if (!records.length) {
-      var pB = { filterByFormula: "FIND('" + String(tripId).replace(/'/g, "\\'") + "', ARRAYJOIN({" + linkFieldName + "}))", pageSize: pageSize || 100 };
-      var rB = airtableGet_(tableName, pB);
-      records = rB && rB.records ? rB.records : [];
+
+    if (!out.length && safeTripId) {
+      var offset2 = null;
+      do {
+        var p2 = { pageSize: 100 };
+        if (offset2) p2.offset = offset2;
+        var r2 = airtableGet_(t, p2);
+        var recs2 = r2 && r2.records ? r2.records : [];
+        for (var j = 0; j < recs2.length; j++) {
+          var rec2 = recs2[j];
+          var f2 = rec2 && rec2.fields ? rec2.fields : {};
+          var links = f2[lf];
+          var hit = false;
+          if (Array.isArray(links)) hit = links.indexOf(String(tripId)) !== -1;
+          else hit = String(links || '') === String(tripId);
+          if (!hit) continue;
+          out.push(rec2);
+          if (out.length >= maxOut) break;
+        }
+        if (out.length >= maxOut) break;
+        offset2 = r2 && r2.offset ? r2.offset : null;
+      } while (offset2);
     }
   } catch (e) {}
-  return records;
+  return out;
 }
 
 /**

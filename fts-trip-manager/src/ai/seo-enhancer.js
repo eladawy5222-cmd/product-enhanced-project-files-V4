@@ -70,17 +70,55 @@ async function callAi_(prompt) {
 async function fetchRecordsByTrip_(tableName, tripRecordId, tripPublicId, limit, tripName) {
   const t = String(tableName || '')
   const lf = (CONFIG && CONFIG.LINK_FIELDS && CONFIG.LINK_FIELDS[t]) ? String(CONFIG.LINK_FIELDS[t]) : (CONFIG && CONFIG.DEFAULT_TRIP_LINK_FIELD ? String(CONFIG.DEFAULT_TRIP_LINK_FIELD) : 'Trip')
+  const maxOut = Math.max(1, Number(limit || 100))
   const parts = []
-  if (tripRecordId) parts.push(`FIND('${String(tripRecordId)}', ARRAYJOIN({${lf}}))`)
-  if (tripPublicId) parts.push(`FIND('${String(tripPublicId)}', ARRAYJOIN({${lf}}))`)
+  if (tripRecordId) parts.push(`FIND('${String(tripRecordId).replace(/'/g, "\\'")}', ARRAYJOIN({${lf}}))`)
+  if (tripPublicId) parts.push(`FIND('${String(tripPublicId).replace(/'/g, "\\'")}', ARRAYJOIN({${lf}}))`)
   if (tripName) {
     const safeName = String(tripName).replace(/'/g, "\\'")
     parts.push(`FIND('${safeName}', ARRAYJOIN({${lf}}))`)
   }
-  if (!parts.length) return []
-  const formula = parts.length === 1 ? parts[0] : `OR(${parts.join(', ')})`
-  const res = await airtableGet_(t, { filterByFormula: formula, pageSize: Math.min(100, Number(limit || 100)) })
-  return res && res.records ? res.records : []
+  const formula = parts.length === 1 ? parts[0] : (parts.length ? `OR(${parts.join(', ')})` : '')
+
+  const out = []
+  if (formula) {
+    let offset = null
+    do {
+      const params = { filterByFormula: formula, pageSize: 100 }
+      if (offset) params.offset = offset
+      const res = await airtableGet_(t, params)
+      const recs = res && res.records ? res.records : []
+      for (const r of recs) {
+        out.push(r)
+        if (out.length >= maxOut) break
+      }
+      if (out.length >= maxOut) break
+      offset = res && res.offset ? res.offset : null
+    } while (offset)
+  }
+  if (out.length) return out
+
+  if (tripRecordId) {
+    let offset2 = null
+    do {
+      const params2 = { pageSize: 100 }
+      if (offset2) params2.offset = offset2
+      const res2 = await airtableGet_(t, params2)
+      const recs2 = res2 && res2.records ? res2.records : []
+      for (const r2 of recs2) {
+        const f2 = r2 && r2.fields ? r2.fields : {}
+        const links = f2[lf]
+        const hit = Array.isArray(links) ? links.indexOf(tripRecordId) !== -1 : String(links || '') === String(tripRecordId)
+        if (!hit) continue
+        out.push(r2)
+        if (out.length >= maxOut) break
+      }
+      if (out.length >= maxOut) break
+      offset2 = res2 && res2.offset ? res2.offset : null
+    } while (offset2)
+  }
+
+  return out
 }
 
 async function buildUnifiedTripContext_(tripId, tripFields) {

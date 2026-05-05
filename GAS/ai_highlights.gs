@@ -224,31 +224,21 @@ function updateTripAiStatus_(tripId, status) {
 
 function deleteAiHighlightsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
-
-  while (true) {
-    var params = tripNumber ? {
-      filterByFormula: "FIND('" + tripNumber + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    } : {
-      filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    };
-    var res = airtableGet_(HIGHLIGHTS_IMPROVEMENT_TABLE, params);
-    var recs = res && res.records ? res.records : [];
-    if (!recs.length) {
-      Logger.log('AI Highlights: no old AI highlights to delete for Trip ' + tripId);
-      break;
-    }
-    var toDelete = recs.map(function(r){ return r.id; });
-    Logger.log('AI Highlights: deleting ' + toDelete.length + ' old AI highlights for Trip ' + tripId);
-    if (typeof airtableBatchDelete_ === 'function') {
-      try { airtableBatchDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
-    } else {
-      for (var j = 0; j < toDelete.length; j++) {
-        var recId = toDelete[j];
-        try { airtableDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, recId); } catch (e) {
-          Logger.log('AI Highlights: failed to delete AI highlight record ' + recId + ' — ' + e.message);
-        }
+  var recs = fetchRecordsByTrip_(HIGHLIGHTS_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '');
+  if (!recs || !recs.length) {
+    Logger.log('AI Highlights: no old AI highlights to delete for Trip ' + tripId);
+    return;
+  }
+  var toDelete = recs.map(function(r){ return r.id; }).filter(function(x){ return !!x; });
+  if (!toDelete.length) return;
+  Logger.log('AI Highlights: deleting ' + toDelete.length + ' old AI highlights for Trip ' + tripId);
+  if (typeof airtableBatchDelete_ === 'function') {
+    try { airtableBatchDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
+  } else {
+    for (var j = 0; j < toDelete.length; j++) {
+      var recId = toDelete[j];
+      try { airtableDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, recId); } catch (e) {
+        Logger.log('AI Highlights: failed to delete AI highlight record ' + recId + ' — ' + e.message);
       }
     }
   }
@@ -594,7 +584,7 @@ function buildTripLevelContext_(tripId, tripFields) {
   var U = buildUnifiedTripContext_(tripId, tripFields);
 
   // 🆕 جلب البيانات المحسنة من جدول "Improvement With AI" (الوصف العام المحسن)
-  var mainAiRec = fetchMainAiImprovementForTrip_(tripFields.TripID || '');
+  var mainAiRec = fetchMainAiImprovementForTrip_(tripId, tripFields.TripID || '');
   if (mainAiRec) {
     var f = mainAiRec.fields || {};
     // لو فيه وصف محسن، نستخدمه بدل الوصف الخام أو نضيفه
@@ -630,18 +620,11 @@ function buildTripLevelContext_(tripId, tripFields) {
 /**
  * جلب سجل واحد من جدول Improvement With AI مرتبط بالرحلة
  */
-function fetchMainAiImprovementForTrip_(tripNumber) {
-  var tripKey = String(tripNumber || '').trim();
-  if (!tripKey) return null;
-  // نفترض أن اسم الجدول هو 'Improvement With AI' كما في ai_enhancer.gs
-  var tableName = 'Improvement With AI';
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    maxRecords: 1
-  };
-  var res = airtableGet_(tableName, params);
-  if (!res || !res.records || !res.records.length) return null;
-  return res.records[0];
+function fetchMainAiImprovementForTrip_(tripId, tripNumber) {
+  if (!tripId && !tripNumber) return null;
+  var recs = fetchRecordsByTrip_('Improvement With AI', tripId || '', tripNumber || '', 1, '');
+  if (!recs || !recs.length) return null;
+  return recs[0];
 }
 
 /************************************************************
@@ -824,17 +807,12 @@ function fetchImprovedAddOnsForTrip_(tripId) {
   if (!tripId) return '';
   
   var tableName = 'AddOns Improvement With AI';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 50
-  };
   
   try {
-    var res = airtableGet_(tableName, params);
-    if (!res || !res.records || !res.records.length) return '';
+    var recs = fetchRecordsByTrip_(tableName, tripId || '', '', 50, '');
+    if (!recs || !recs.length) return '';
     
-    var addOnsText = res.records.map(function(r) {
+    var addOnsText = recs.map(function(r) {
       var f = r.fields || {};
       var title = f.AddOnTitle || f.AI_AddOn_Title || '';
       var desc = f.AI_AddOn_Description || '';

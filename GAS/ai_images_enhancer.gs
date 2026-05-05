@@ -2699,13 +2699,8 @@ function getTripImprovementCached_AiImages_(tripId, tripFields) {
   var out = {};
   try {
     var tripNumber = tripFields && tripFields.TripID ? String(tripFields.TripID).trim() : '';
-    var tripKey = tripNumber || id;
-    var safeTripKey = String(tripKey || '').replace(/'/g, "\\'");
-    var impParams = {
-      filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))",
-      maxRecords: 1
-    };
-    var impRes = airtableGet_(IMPROVEMENT_TABLE, impParams);
+    var impRecs = fetchRecordsByTrip_(IMPROVEMENT_TABLE, id, tripNumber || '', 1, (tripFields && tripFields.Title) ? String(tripFields.Title) : '');
+    var impRes = { records: impRecs || [] };
 
     if ((!impRes || !impRes.records || !impRes.records.length) && tripFields && tripFields['Improvement With AI']) {
       var impLinked = tripFields['Improvement With AI'];
@@ -2741,24 +2736,21 @@ function deleteOldImprovedImagesForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   
   Logger.log('AI Images: deleting old improved records for Trip ' + tripId);
-  
-  while (true) {
-    var recs = fetchRecordsByTrip_(IMAGES_IMPROVEMENT_TABLE, tripId, tripNumber, 100) || [];
-    if (!recs.length) {
-      Logger.log('AI Images: no old records to delete for Trip ' + tripId);
-      break;
-    }
-    var toDelete = recs.map(function(r){ return r.id; });
-    Logger.log('AI Images: deleting ' + toDelete.length + ' old records for Trip ' + tripId);
-    
-    if (typeof airtableBatchDelete_ === 'function') {
-      try { airtableBatchDelete_(IMAGES_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
-    } else {
-      for (var j = 0; j < toDelete.length; j++) {
-        var recId = toDelete[j];
-        try { airtableDelete_(IMAGES_IMPROVEMENT_TABLE, recId); } catch (e) {
-          Logger.log('AI Images: failed to delete record ' + recId + ' — ' + e.message);
-        }
+  var recs = fetchRecordsByTrip_(IMAGES_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000) || [];
+  if (!recs.length) {
+    Logger.log('AI Images: no old records to delete for Trip ' + tripId);
+    return;
+  }
+  var toDelete = recs.map(function(r){ return r.id; }).filter(function(x){ return !!x; });
+  if (!toDelete.length) return;
+  Logger.log('AI Images: deleting ' + toDelete.length + ' old records for Trip ' + tripId);
+  if (typeof airtableBatchDelete_ === 'function') {
+    try { airtableBatchDelete_(IMAGES_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
+  } else {
+    for (var j = 0; j < toDelete.length; j++) {
+      var recId = toDelete[j];
+      try { airtableDelete_(IMAGES_IMPROVEMENT_TABLE, recId); } catch (e) {
+        Logger.log('AI Images: failed to delete record ' + recId + ' — ' + e.message);
       }
     }
   }

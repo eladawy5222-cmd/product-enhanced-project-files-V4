@@ -49,6 +49,12 @@ function log(msg) {
   logger.info(String(msg == null ? '' : msg))
 }
 
+function isDebugEnabled_() {
+  const v = process.env.DEBUG != null ? String(process.env.DEBUG) : (CONFIG && CONFIG.DEBUG != null ? String(CONFIG.DEBUG) : '')
+  const t = v.trim().toLowerCase()
+  return t === '1' || t === 'true' || t === 'yes'
+}
+
 async function airtableGet_(tableName, params) {
   return airtable.airtableGet(tableName, params || {})
 }
@@ -121,12 +127,10 @@ async function runAiEnhancementBatch() {
         // 1) علّم الرحلة إنها "Processing"
         await updateTripContentAiStatus_(tripRecordId, 'Processing')
 
+        const improvementId = await ensureImprovementRecordIdForTrip_(tripRecordId, fields)
+
         // 2) Fetch SEO Keywords from Improvement Record (Stage 1)
         // Use direct linked record ID if available (Best practice)
-        var linkedImp = fields['Improvement With AI'];
-        var improvementId = (linkedImp && linkedImp.length) ? linkedImp[0] : null;
-        if (!improvementId && fields.ImprovementRecordId) improvementId = String(fields.ImprovementRecordId);
-        
         const improvementRec = await ImprovementRepository.fetchImprovementRecordForTrip({
           tripRecordId: tripRecordId,
           tripPublicId: fields.TripID,
@@ -155,14 +159,14 @@ async function runAiEnhancementBatch() {
         // 3) بناء الـ Prompt اعتماداً على حقول الرحلة + SEO Keywords
         const U = await buildUnifiedTripContext_(tripRecordId, fields)
         
-        // --- DEBUG LOGGING START ---
-        log('AI Enhancer DEBUG: Itinerary Context Size = ' + (U.itineraryText ? U.itineraryText.length : 0));
-        if (U.itineraryText) {
-          log('AI Enhancer DEBUG: Sample Itinerary Text:\n' + U.itineraryText.substring(0, 500) + '...');
-        } else {
-          log('AI Enhancer DEBUG: ❌ No Itinerary Text found!');
+        if (isDebugEnabled_()) {
+          log('AI Enhancer DEBUG: Itinerary Context Size = ' + (U.itineraryText ? U.itineraryText.length : 0));
+          if (U.itineraryText) {
+            log('AI Enhancer DEBUG: Sample Itinerary Text:\n' + U.itineraryText.substring(0, 500) + '...');
+          } else {
+            log('AI Enhancer DEBUG: ❌ No Itinerary Text found!');
+          }
         }
-        // --- DEBUG LOGGING END ---
         
         const prompt = buildTripPrompt_(fields, tripRecordId, seoKeywords, seoKeywordsList, U)
 
@@ -179,7 +183,10 @@ async function runAiEnhancementBatch() {
         log('AI Enhancer: Using AI-determined duration: ' + aiResult.Duration_Hours + ' ' + aiResult.Duration_Unit);
 
         // 4) حذف كل سجلات التحسين القديمة + إنشاء سجل جديد واحد
-        await upsertImprovementRecordForTrip_(tripRecordId, aiResult, fields.TripID, improvementId)
+        const saved = await upsertImprovementRecordForTrip_(tripRecordId, aiResult, fields.TripID, improvementId)
+        if (!saved) {
+          throw new Error('Missing Improvement record id; cannot save AI content')
+        }
 
         // 5) تحديث حالة الرحلة في Trips
         await updateTripContentAiStatus_(tripRecordId, 'Done')
@@ -241,19 +248,21 @@ async function fetchTripsNeedingAi_(limit) {
 async function deleteImprovementsForTrip_(tripId) {
   if (!tripId) return;
 
-  const res  = await airtableGet_(AI_IMPROVEMENT_TABLE, { pageSize: 100 })
-  var recs = res && res.records ? res.records : [];
-  var toDelete = [];
-
-  for (var i = 0; i < recs.length; i++) {
-    var r     = recs[i];
-    var f     = r.fields || {};
-    var links = f.Trip; // حقل الـ Link إلى Trips (array of recordIds)
-
-    if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
-      toDelete.push(r.id);
+  var toDelete = []
+  let offset = null
+  do {
+    const params = { pageSize: 100 }
+    if (offset) params.offset = offset
+    const res = await airtableGet_(AI_IMPROVEMENT_TABLE, params)
+    const recs = res && res.records ? res.records : []
+    for (let i = 0; i < recs.length; i++) {
+      const r = recs[i]
+      const f = r && r.fields ? r.fields : {}
+      const links = f.Trip
+      if (Array.isArray(links) && links.indexOf(tripId) !== -1) toDelete.push(r.id)
     }
-  }
+    offset = res && res.offset ? res.offset : null
+  } while (offset)
 
   if (!toDelete.length) {
     log('AI Enhancer: no old improvement records to delete for Trip ' + tripId);
@@ -628,12 +637,12 @@ async function callAi_(prompt) {
  * Updates existing Improvement record instead of creating duplicates
  */
 async function upsertImprovementRecordForTrip_(tripRecordId, aiResult, tripPublicId, directRecordId) {
-  if (!tripRecordId) return;
+  if (!tripRecordId) return false;
 
   // لازم يكون في Linked record في حقل "Improvement With AI" داخل Trips
   if (!directRecordId) {
     log('AI Enhancer: ❌ No direct Improvement record ID linked to this Trip. Skipping UPDATE.');
-    return;
+    return false;
   }
 
   log('AI Enhancer: ✅ Updating Improvement record by DIRECT ID: ' + directRecordId);
@@ -676,6 +685,35 @@ async function upsertImprovementRecordForTrip_(tripRecordId, aiResult, tripPubli
   }
   
   log('AI Enhancer: ✅ Updated Improvement record ' + directRecordId + ' (no search, no create, no delete)');
+  return true
+}
+
+async function ensureImprovementRecordIdForTrip_(tripRecordId, tripFields) {
+  const f = tripFields || {}
+  let id = null
+  const linked = f['Improvement With AI']
+  if (Array.isArray(linked) && linked.length) id = String(linked[0] || '').trim() || null
+  if (!id && f.ImprovementRecordId) id = String(f.ImprovementRecordId || '').trim() || null
+  if (id && id === String(tripRecordId)) id = null
+  if (!id) {
+    const rec = await ImprovementRepository.getOrCreateActive({
+      tripRecordId: String(tripRecordId || ''),
+      tripFields: f,
+      tripPublicId: f.TripID ? String(f.TripID) : '',
+      tripName: f.Title ? String(f.Title) : '',
+      tableName: AI_IMPROVEMENT_TABLE,
+      tripLinkField: 'Trip',
+      initialFields: { AI_SEO_Status: 'Waiting' }
+    })
+    if (rec && rec.id) id = String(rec.id || '').trim() || null
+  }
+  if (id && (!Array.isArray(linked) || !linked.length)) {
+    try {
+      await airtableUpdate_(AI_TRIPS_TABLE, tripRecordId, { 'Improvement With AI': [id] })
+    } catch {
+    }
+  }
+  return id
 }
 
 /************************************************************
@@ -714,17 +752,55 @@ async function calculateDurationFromItinerary_(tripId, tripPublicId) {
 async function fetchRecordsByTrip_(tableName, tripRecordId, tripPublicId, limit, tripName) {
   const t = String(tableName || '')
   const lf = (CONFIG && CONFIG.LINK_FIELDS && CONFIG.LINK_FIELDS[t]) ? String(CONFIG.LINK_FIELDS[t]) : (CONFIG && CONFIG.DEFAULT_TRIP_LINK_FIELD ? String(CONFIG.DEFAULT_TRIP_LINK_FIELD) : 'Trip')
+  const maxOut = Math.max(1, Number(limit || 100))
   const parts = []
-  if (tripRecordId) parts.push(`FIND('${String(tripRecordId)}', ARRAYJOIN({${lf}}))`)
-  if (tripPublicId) parts.push(`FIND('${String(tripPublicId)}', ARRAYJOIN({${lf}}))`)
+  if (tripRecordId) parts.push(`FIND('${String(tripRecordId).replace(/'/g, "\\'")}', ARRAYJOIN({${lf}}))`)
+  if (tripPublicId) parts.push(`FIND('${String(tripPublicId).replace(/'/g, "\\'")}', ARRAYJOIN({${lf}}))`)
   if (tripName) {
     const safeName = String(tripName).replace(/'/g, "\\'")
     parts.push(`FIND('${safeName}', ARRAYJOIN({${lf}}))`)
   }
-  if (!parts.length) return []
-  const formula = parts.length === 1 ? parts[0] : `OR(${parts.join(', ')})`
-  const res = await airtableGet_(t, { filterByFormula: formula, pageSize: Math.min(100, Number(limit || 100)) })
-  return res && res.records ? res.records : []
+  const formula = parts.length === 1 ? parts[0] : (parts.length ? `OR(${parts.join(', ')})` : '')
+
+  const out = []
+  if (formula) {
+    let offset = null
+    do {
+      const params = { filterByFormula: formula, pageSize: 100 }
+      if (offset) params.offset = offset
+      const res = await airtableGet_(t, params)
+      const recs = res && res.records ? res.records : []
+      for (const r of recs) {
+        out.push(r)
+        if (out.length >= maxOut) break
+      }
+      if (out.length >= maxOut) break
+      offset = res && res.offset ? res.offset : null
+    } while (offset)
+  }
+  if (out.length) return out
+
+  if (tripRecordId) {
+    let offset2 = null
+    do {
+      const params2 = { pageSize: 100 }
+      if (offset2) params2.offset = offset2
+      const res2 = await airtableGet_(t, params2)
+      const recs2 = res2 && res2.records ? res2.records : []
+      for (const r2 of recs2) {
+        const f2 = r2 && r2.fields ? r2.fields : {}
+        const links = f2[lf]
+        const hit = Array.isArray(links) ? links.indexOf(tripRecordId) !== -1 : String(links || '') === String(tripRecordId)
+        if (!hit) continue
+        out.push(r2)
+        if (out.length >= maxOut) break
+      }
+      if (out.length >= maxOut) break
+      offset2 = res2 && res2.offset ? res2.offset : null
+    } while (offset2)
+  }
+
+  return out
 }
 
 async function buildUnifiedTripContext_(tripId, tripFields) {

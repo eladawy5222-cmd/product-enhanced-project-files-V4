@@ -515,45 +515,22 @@ function deleteOldTripFactsForTrip_(tripId, tripCode) {
   Logger.log('AI TripFacts: deleting old facts for Trip ' + tripId);
 
   try {
-    while (true) {
-      var tripKey = String(tripCode || '').trim();
-      if (!tripKey) tripKey = String(tripId || '').trim();
-      var safeTripKey = tripKey.replace(/'/g, "\\'");
-      var params = {
-        filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))",
-        pageSize: 100
-      };
-
-      var res = airtableGet_(TRIP_FACTS_IMPROVEMENT_TABLE, params);
-      var recs = res && res.records ? res.records : [];
-
-      if (!recs.length) {
-        break;
+    var recs = fetchRecordsByTrip_(TRIP_FACTS_IMPROVEMENT_TABLE, tripId, tripCode || '', 10000, '') || [];
+    if (!recs.length) return;
+    var toDelete = recs.map(function(r) { return r.id; }).filter(function(x){ return !!x; });
+    if (!toDelete.length) return;
+    Logger.log('AI TripFacts: deleting ' + toDelete.length + ' old facts for Trip ' + tripId);
+    if (typeof airtableBatchDelete_ === 'function') {
+      try {
+        airtableBatchDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, toDelete);
+      } catch (e) {
+        Logger.log('AI TripFacts: batch delete failed, falling back to single delete. ' + e.message);
+        toDelete.forEach(function(id) { try { airtableDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, id); } catch (e2) {} });
       }
-
-      var toDelete = recs.map(function(r) { return r.id; });
-      Logger.log('AI TripFacts: deleting ' + toDelete.length + ' old facts for Trip ' + tripId);
-
-      if (typeof airtableBatchDelete_ === 'function') {
-        try {
-          airtableBatchDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, toDelete);
-        } catch (e) {
-           Logger.log('AI TripFacts: batch delete failed, falling back to single delete. ' + e.message);
-           toDelete.forEach(function(id) {
-             try { airtableDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, id); } catch (e2) {}
-           });
-        }
-      } else {
-        toDelete.forEach(function(id) {
-          try {
-            airtableDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, id);
-          } catch (e) {
-            Logger.log('AI TripFacts: failed to delete fact ' + id + ' — ' + e.message);
-          }
-        });
-      }
-      
-      if (recs.length < 100) break;
+    } else {
+      toDelete.forEach(function(id) {
+        try { airtableDelete_(TRIP_FACTS_IMPROVEMENT_TABLE, id); } catch (e) { Logger.log('AI TripFacts: failed to delete fact ' + id + ' — ' + e.message); }
+      });
     }
   } catch (e) {
     Logger.log('AI TripFacts: error deleting old facts for Trip ' + tripId + ': ' + e.message);

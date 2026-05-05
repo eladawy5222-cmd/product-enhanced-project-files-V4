@@ -106,13 +106,12 @@ async function runConversionEnforcer(data) {
       console.log('⚠️ External benchmark skipped: ' + String(e && e.message ? e.message : e))
     }
 
-    const tripLinkValue = String(tripNumber || tripId || '').trim()
-    const existingHighlights = await convEnf_fetchHighlights_(tripLinkValue)
-    const existingItinerary = await convEnf_fetchItinerary_(tripLinkValue)
-    const existingIncludes = await convEnf_fetchIncExc_(tripLinkValue, 'TripIncludes Improvement With AI', 'IncludeItem')
-    const existingExcludes = await convEnf_fetchIncExc_(tripLinkValue, 'TripExcludes Improvement With AI', 'ExcludeItem')
-    const existingFaqs = await convEnf_fetchFaqs_(tripLinkValue)
-    const existingPackages = await convEnf_fetchPackages_(tripLinkValue)
+    const existingHighlights = await convEnf_fetchHighlights_(tripId, tripNumber || '')
+    const existingItinerary = await convEnf_fetchItinerary_(tripId, tripNumber || '')
+    const existingIncludes = await convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripIncludes Improvement With AI', 'IncludeItem')
+    const existingExcludes = await convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripExcludes Improvement With AI', 'ExcludeItem')
+    const existingFaqs = await convEnf_fetchFaqs_(tripId, tripNumber || '')
+    const existingPackages = await convEnf_fetchPackages_(tripId, tripNumber || '')
     console.log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
     console.log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
     console.log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
@@ -3965,6 +3964,58 @@ async function convEnf_normalizeTripRecord_(data) {
   return res.records[0]
 }
 
+async function convEnf_fetchRecordsByTrip_(tableName, linkFieldName, tripRecordId, tripPublicId, maxOut) {
+  const t = String(tableName || '')
+  const lf = String(linkFieldName || 'Trip')
+  const limit = Math.max(1, Number(maxOut || 100))
+
+  const out = []
+
+  const parts = []
+  if (tripRecordId) parts.push("FIND('" + convEnf_escapeFormulaString_(tripRecordId) + "', ARRAYJOIN({" + lf + "}))")
+  if (tripPublicId) parts.push("FIND('" + convEnf_escapeFormulaString_(tripPublicId) + "', ARRAYJOIN({" + lf + "}))")
+  const formula = parts.length === 1 ? parts[0] : (parts.length ? ("OR(" + parts.join(', ') + ")") : '')
+
+  if (formula) {
+    let offset = null
+    do {
+      const params = { filterByFormula: formula, pageSize: 100 }
+      if (offset) params.offset = offset
+      const res = await airtableGet_(t, params)
+      const recs = res && res.records ? res.records : []
+      for (const r of recs) {
+        out.push(r)
+        if (out.length >= limit) break
+      }
+      if (out.length >= limit) break
+      offset = res && res.offset ? res.offset : null
+    } while (offset)
+  }
+  if (out.length) return out
+
+  if (tripRecordId) {
+    let offset2 = null
+    do {
+      const params2 = { pageSize: 100 }
+      if (offset2) params2.offset = offset2
+      const res2 = await airtableGet_(t, params2)
+      const recs2 = res2 && res2.records ? res2.records : []
+      for (const r2 of recs2) {
+        const f2 = r2 && r2.fields ? r2.fields : {}
+        const links = f2[lf]
+        const hit = Array.isArray(links) ? links.indexOf(tripRecordId) !== -1 : String(links || '') === String(tripRecordId)
+        if (!hit) continue
+        out.push(r2)
+        if (out.length >= limit) break
+      }
+      if (out.length >= limit) break
+      offset2 = res2 && res2.offset ? res2.offset : null
+    } while (offset2)
+  }
+
+  return out
+}
+
 async function convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber) {
   const linked = tripFields ? tripFields['Improvement With AI'] : null
   const directId = (Array.isArray(linked) && linked.length) ? String(linked[0] || '').trim() : ''
@@ -3972,21 +4023,12 @@ async function convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumbe
     const byId = await airtableGet_('Improvement With AI', { filterByFormula: "RECORD_ID() = '" + convEnf_escapeFormulaString_(directId) + "'", maxRecords: 1 })
     if (byId && byId.records && byId.records.length) return byId.records[0]
   }
-  const conditions = []
-  conditions.push("FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))")
-  if (tripNumber) conditions.push("FIND('" + convEnf_escapeFormulaString_(String(tripNumber)) + "', ARRAYJOIN({Trip}))")
-  const formula = (conditions.length > 1) ? ("OR(" + conditions.join(', ') + ")") : conditions[0]
-  const res = await airtableGet_('Improvement With AI', { filterByFormula: formula, maxRecords: 1 })
-  if (!res || !res.records || !res.records.length) return null
-  return res.records[0]
+  const recs = await convEnf_fetchRecordsByTrip_('Improvement With AI', 'Trip', tripId, tripNumber || '', 1)
+  return recs && recs.length ? recs[0] : null
 }
 
-async function convEnf_fetchHighlights_(tripId) {
-  const res = await airtableGet_('Highlights Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  })
-  const recs = res && res.records ? res.records : []
+async function convEnf_fetchHighlights_(tripRecordId, tripPublicId) {
+  const recs = await convEnf_fetchRecordsByTrip_('Highlights Improvement With AI', 'Trip', tripRecordId, tripPublicId || '', 1000)
   recs.sort((a, b) => {
     let ao = (a.fields || {}).Order
     let bo = (b.fields || {}).Order
@@ -4002,12 +4044,8 @@ async function convEnf_fetchHighlights_(tripId) {
   return { records: recs, items }
 }
 
-async function convEnf_fetchItinerary_(tripId) {
-  const res = await airtableGet_('Itinerary Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  })
-  const recs = res && res.records ? res.records : []
+async function convEnf_fetchItinerary_(tripRecordId, tripPublicId) {
+  const recs = await convEnf_fetchRecordsByTrip_('Itinerary Improvement With AI', 'Trip', tripRecordId, tripPublicId || '', 1000)
   recs.sort((a, b) => {
     let ao = (a.fields || {}).StepOrder
     let bo = (b.fields || {}).StepOrder
@@ -4030,12 +4068,8 @@ async function convEnf_fetchItinerary_(tripId) {
   return { records: recs, steps }
 }
 
-async function convEnf_fetchIncExc_(tripId, tableName, textField) {
-  const res = await airtableGet_(tableName, {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  })
-  const recs = res && res.records ? res.records : []
+async function convEnf_fetchIncExc_(tripRecordId, tripPublicId, tableName, textField) {
+  const recs = await convEnf_fetchRecordsByTrip_(tableName, 'Trip', tripRecordId, tripPublicId || '', 1000)
   const items = []
   recs.forEach((r) => {
     const f = r.fields || {}
@@ -4045,12 +4079,8 @@ async function convEnf_fetchIncExc_(tripId, tableName, textField) {
   return { records: recs, items }
 }
 
-async function convEnf_fetchFaqs_(tripId) {
-  const res = await airtableGet_('FAQs Improvement With AI', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  })
-  const recs = res && res.records ? res.records : []
+async function convEnf_fetchFaqs_(tripRecordId, tripPublicId) {
+  const recs = await convEnf_fetchRecordsByTrip_('FAQs Improvement With AI', 'Trip', tripRecordId, tripPublicId || '', 1000)
   const faqs = []
   recs.forEach((r) => {
     const f = r.fields || {}
@@ -4062,12 +4092,8 @@ async function convEnf_fetchFaqs_(tripId) {
   return { records: recs, faqs }
 }
 
-async function convEnf_fetchPackages_(tripId) {
-  const res = await airtableGet_('Packages', {
-    filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripId) + "', ARRAYJOIN({Trip}))",
-    pageSize: 100
-  })
-  const recs = res && res.records ? res.records : []
+async function convEnf_fetchPackages_(tripRecordId, tripPublicId) {
+  const recs = await convEnf_fetchRecordsByTrip_('Packages', 'Trip', tripRecordId, tripPublicId || '', 1000)
   const packages = []
   recs.forEach((r) => {
     const f = r.fields || {}

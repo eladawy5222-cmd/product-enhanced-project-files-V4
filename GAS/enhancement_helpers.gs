@@ -80,6 +80,29 @@ function getTripFields_(tripId) {
 }
 
 var ImprovementRepository = (function() {
+  function scanImprovementRecordsByTripLink_(tableName, tripLinkField, tripRecordId) {
+    if (!tripRecordId) return [];
+    var out = [];
+    var offset = null;
+    do {
+      var params = { pageSize: 100 };
+      if (offset) params.offset = offset;
+      var res = airtableGet_(tableName, params);
+      var recs = (res && res.records) ? res.records : [];
+      for (var i = 0; i < recs.length; i++) {
+        var r = recs[i];
+        var f = r && r.fields ? r.fields : {};
+        var links = f[tripLinkField];
+        var hit = false;
+        if (Array.isArray(links)) hit = links.indexOf(tripRecordId) !== -1;
+        else hit = String(links || '') === String(tripRecordId);
+        if (hit) out.push(r);
+      }
+      offset = res && res.offset ? res.offset : null;
+    } while (offset);
+    return out;
+  }
+
   function fetchImprovementRecordForTrip(options) {
     options = options || {};
     var tripRecordId = options.tripRecordId || null;
@@ -137,7 +160,24 @@ var ImprovementRepository = (function() {
   }
 
   return {
-    fetchImprovementRecordForTrip: fetchImprovementRecordForTrip,
+    fetchImprovementRecordForTrip: function(options) {
+      var rec = fetchImprovementRecordForTrip(options);
+      if (rec && rec.id) return rec;
+      options = options || {};
+      var tripRecordId = options.tripRecordId || null;
+      var tableName = options.tableName || 'Improvement With AI';
+      var tripLinkField = options.tripLinkField || 'Trip';
+      if (!tripRecordId) return null;
+      var all = scanImprovementRecordsByTripLink_(tableName, tripLinkField, String(tripRecordId));
+      if (!all.length) return null;
+      var newest = all[0];
+      for (var j = 1; j < all.length; j++) {
+        var ct = all[j].createdTime || '';
+        var best = newest.createdTime || '';
+        if (ct > best) newest = all[j];
+      }
+      return newest;
+    },
     getOrCreateActive: function(options) {
       options = options || {};
       var tripRecordId = options.tripRecordId || null;
@@ -163,7 +203,7 @@ var ImprovementRepository = (function() {
 
       if (rec && rec.id) {
         if (!directId || String(directId) !== String(rec.id)) {
-          try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: rec.id }); } catch (e1) {}
+          try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: rec.id, 'Improvement With AI': [rec.id] }); } catch (e1) {}
         }
         return rec;
       }
@@ -180,12 +220,12 @@ var ImprovementRepository = (function() {
       var created = airtableCreate_(tableName, fields);
       if (created && created.records && created.records.length) {
         var createdId = created.records[0].id;
-        try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: createdId }); } catch (e2) {}
+        try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: createdId, 'Improvement With AI': [createdId] }); } catch (e2) {}
         return created.records[0];
       }
 
       if (created && created.id) {
-        try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: created.id }); } catch (e3) {}
+        try { airtableUpdate_('Trips', tripRecordId, { ImprovementRecordId: created.id, 'Improvement With AI': [created.id] }); } catch (e3) {}
         return created;
       }
 

@@ -73,12 +73,10 @@ function runAiEnhancementBatch() {
         // 1) علّم الرحلة إنها "Processing"
         updateTripContentAiStatus_(tripRecordId, 'Processing');
 
+        var improvementId = ensureImprovementRecordIdForTrip_(tripRecordId, fields);
+
         // 2) Fetch SEO Keywords from Improvement Record (Stage 1)
         // Use direct linked record ID if available (Best practice)
-        var linkedImp = fields['Improvement With AI'];
-        var improvementId = (linkedImp && linkedImp.length) ? linkedImp[0] : null;
-        if (!improvementId && fields.ImprovementRecordId) improvementId = String(fields.ImprovementRecordId);
-        
         var improvementRec = ImprovementRepository.fetchImprovementRecordForTrip({
           tripRecordId: tripRecordId,
           tripPublicId: fields.TripID,
@@ -107,14 +105,14 @@ function runAiEnhancementBatch() {
         // 3) بناء الـ Prompt اعتماداً على حقول الرحلة + SEO Keywords
         var U = buildUnifiedTripContext_(tripRecordId, fields);
         
-        // --- DEBUG LOGGING START ---
-        Logger.log('AI Enhancer DEBUG: Itinerary Context Size = ' + (U.itineraryText ? U.itineraryText.length : 0));
-        if (U.itineraryText) {
-          Logger.log('AI Enhancer DEBUG: Sample Itinerary Text:\n' + U.itineraryText.substring(0, 500) + '...');
-        } else {
-          Logger.log('AI Enhancer DEBUG: ❌ No Itinerary Text found!');
+        if (isDebugEnabled_()) {
+          Logger.log('AI Enhancer DEBUG: Itinerary Context Size = ' + (U.itineraryText ? U.itineraryText.length : 0));
+          if (U.itineraryText) {
+            Logger.log('AI Enhancer DEBUG: Sample Itinerary Text:\n' + U.itineraryText.substring(0, 500) + '...');
+          } else {
+            Logger.log('AI Enhancer DEBUG: ❌ No Itinerary Text found!');
+          }
         }
-        // --- DEBUG LOGGING END ---
         
         var prompt = buildTripPrompt_(fields, tripRecordId, seoKeywords, seoKeywordsList, U);
 
@@ -131,7 +129,10 @@ function runAiEnhancementBatch() {
         Logger.log('AI Enhancer: Using AI-determined duration: ' + aiResult.Duration_Hours + ' ' + aiResult.Duration_Unit);
 
         // 4) حذف كل سجلات التحسين القديمة + إنشاء سجل جديد واحد
-        upsertImprovementRecordForTrip_(tripRecordId, aiResult, fields.TripID, improvementId);
+        var saved = upsertImprovementRecordForTrip_(tripRecordId, aiResult, fields.TripID, improvementId);
+        if (!saved) {
+          throw new Error('Missing Improvement record id; cannot save AI content');
+        }
 
         // 5) تحديث حالة الرحلة في Trips
         updateTripContentAiStatus_(tripRecordId, 'Done');
@@ -193,19 +194,23 @@ function fetchTripsNeedingAi_(limit) {
 function deleteImprovementsForTrip_(tripId) {
   if (!tripId) return;
 
-  var res  = airtableGet_(AI_IMPROVEMENT_TABLE, { pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
   var toDelete = [];
-
-  for (var i = 0; i < recs.length; i++) {
-    var r     = recs[i];
-    var f     = r.fields || {};
-    var links = f.Trip; // حقل الـ Link إلى Trips (array of recordIds)
-
-    if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
-      toDelete.push(r.id);
+  var offset = null;
+  do {
+    var params = { pageSize: 100 };
+    if (offset) params.offset = offset;
+    var res  = airtableGet_(AI_IMPROVEMENT_TABLE, params);
+    var recs = res && res.records ? res.records : [];
+    for (var i = 0; i < recs.length; i++) {
+      var r     = recs[i];
+      var f     = r.fields || {};
+      var links = f.Trip; // حقل الـ Link إلى Trips (array of recordIds)
+      if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
+        toDelete.push(r.id);
+      }
     }
-  }
+    offset = res && res.offset ? res.offset : null;
+  } while (offset);
 
   if (!toDelete.length) {
     Logger.log('AI Enhancer: no old improvement records to delete for Trip ' + tripId);
@@ -673,12 +678,12 @@ function callDeepseek_(prompt) {
  * Updates existing Improvement record instead of creating duplicates
  */
 function upsertImprovementRecordForTrip_(tripRecordId, aiResult, tripPublicId, directRecordId) {
-  if (!tripRecordId) return;
+  if (!tripRecordId) return false;
 
   // لازم يكون في Linked record في حقل "Improvement With AI" داخل Trips
   if (!directRecordId) {
     Logger.log('AI Enhancer: ❌ No direct Improvement record ID linked to this Trip. Skipping UPDATE.');
-    return;
+    return false;
   }
 
   Logger.log('AI Enhancer: ✅ Updating Improvement record by DIRECT ID: ' + directRecordId);
@@ -721,6 +726,46 @@ function upsertImprovementRecordForTrip_(tripRecordId, aiResult, tripPublicId, d
   }
   
   Logger.log('AI Enhancer: ✅ Updated Improvement record ' + directRecordId + ' (no search, no create, no delete)');
+  return true;
+}
+
+function isDebugEnabled_() {
+  try {
+    if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.DEBUG) return true;
+  } catch (e) {}
+  return false;
+}
+
+function ensureImprovementRecordIdForTrip_(tripRecordId, tripFields) {
+  var f = tripFields || {};
+  var id = '';
+  var linked = f['Improvement With AI'];
+  if (Array.isArray(linked) && linked.length) id = String(linked[0] || '').trim();
+  if (!id && f.ImprovementRecordId) id = String(f.ImprovementRecordId || '').trim();
+  if (id && String(id) === String(tripRecordId)) id = '';
+
+  if (!id) {
+    var rec = null;
+    try {
+      rec = ImprovementRepository.getOrCreateActive({
+        tripRecordId: String(tripRecordId || ''),
+        tripFields: f,
+        tableName: AI_IMPROVEMENT_TABLE,
+        tripLinkField: 'Trip',
+        initialFields: { AI_SEO_Status: 'Waiting' }
+      });
+    } catch (e1) {
+      rec = null;
+    }
+    if (rec && rec.id) id = String(rec.id || '').trim();
+  }
+
+  if (id && (!Array.isArray(linked) || !linked.length)) {
+    try {
+      airtableUpdate_(AI_TRIPS_TABLE, tripRecordId, { 'Improvement With AI': [id] });
+    } catch (e2) {}
+  }
+  return id || null;
 }
 
 /************************************************************

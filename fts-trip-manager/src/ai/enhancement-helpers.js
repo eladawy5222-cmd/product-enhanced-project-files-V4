@@ -61,6 +61,47 @@ function createImprovementRepository(options) {
     return newest
   }
 
+  async function scanImprovementRecordsByTripLink_(tableName, tripLinkField, tripRecordId) {
+    if (!tripRecordId) return []
+    const out = []
+    let offset = null
+    do {
+      const params = { pageSize: 100 }
+      if (offset) params.offset = offset
+      const res = await airtable.airtableGet(tableName, params)
+      const recs = res && res.records ? res.records : []
+      for (const r of recs) {
+        const f = r && r.fields ? r.fields : {}
+        const links = f[tripLinkField]
+        if (Array.isArray(links) ? links.indexOf(tripRecordId) !== -1 : String(links || '') === String(tripRecordId)) {
+          out.push(r)
+        }
+      }
+      offset = res && res.offset ? res.offset : null
+    } while (offset)
+    return out
+  }
+
+  async function fetchImprovementRecordForTripRobust_(opts) {
+    const rec = await fetchImprovementRecordForTrip(opts)
+    if (rec && rec.id) return rec
+    const o = opts || {}
+    const tripRecordId = o.tripRecordId || null
+    const tableName = o.tableName || 'Improvement With AI'
+    const tripLinkField = o.tripLinkField || 'Trip'
+    if (!tripRecordId) return null
+
+    const all = await scanImprovementRecordsByTripLink_(tableName, tripLinkField, String(tripRecordId))
+    if (!all.length) return null
+    let newest = all[0]
+    for (let i = 1; i < all.length; i++) {
+      const ct = all[i].createdTime || ''
+      const best = newest.createdTime || ''
+      if (ct > best) newest = all[i]
+    }
+    return newest
+  }
+
   async function getOrCreateActive(opts) {
     const o = opts || {}
     const tripRecordId = o.tripRecordId || null
@@ -74,7 +115,7 @@ function createImprovementRepository(options) {
     if (!tripRecordId) return null
 
     const directId = tripFields && tripFields.ImprovementRecordId ? String(tripFields.ImprovementRecordId) : ''
-    const rec = await fetchImprovementRecordForTrip({
+    const rec = await fetchImprovementRecordForTripRobust_({
       tripRecordId,
       tripPublicId,
       tripName,
@@ -86,7 +127,7 @@ function createImprovementRepository(options) {
     if (rec && rec.id) {
       if (!directId) {
         try {
-          await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: rec.id })
+          await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: rec.id, 'Improvement With AI': [rec.id] })
         } catch {
         }
       }
@@ -103,7 +144,7 @@ function createImprovementRepository(options) {
     if (created && created.records && created.records.length) {
       const createdId = created.records[0].id
       try {
-        await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: createdId })
+        await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: createdId, 'Improvement With AI': [createdId] })
       } catch {
       }
       return created.records[0]
@@ -111,7 +152,7 @@ function createImprovementRepository(options) {
 
     if (created && created.id) {
       try {
-        await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: created.id })
+        await airtable.airtableUpdate('Trips', tripRecordId, { ImprovementRecordId: created.id, 'Improvement With AI': [created.id] })
       } catch {
       }
       return created
@@ -120,7 +161,7 @@ function createImprovementRepository(options) {
     return null
   }
 
-  return { fetchImprovementRecordForTrip, getOrCreateActive }
+  return { fetchImprovementRecordForTrip: fetchImprovementRecordForTripRobust_, getOrCreateActive }
 }
 
 function createEnhancementHelpers(options) {

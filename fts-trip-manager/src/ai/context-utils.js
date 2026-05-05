@@ -27,32 +27,62 @@ function createContextUtils(options) {
 
   async function fetchRecordsByTrip(tableName, tripId, tripNumber, pageSize, tripName) {
     const linkField = TABLE_LINK_FIELD_MAP[tableName] || (config.LINK_FIELDS && config.LINK_FIELDS[tableName]) || 'Trip'
-    let recs = []
+    const maxOut = Math.max(1, Number(pageSize || 100))
+    const safeId = String(tripId || '').replace(/'/g, "\\'").trim()
+    const safeNum = String(tripNumber || '').replace(/'/g, "\\'").trim()
+    const safeName = String(tripName || '').replace(/'/g, "\\'").trim()
 
+    const out = []
     try {
       const conditions = []
-      conditions.push(`FIND('${tripId}', ARRAYJOIN({${linkField}}))`)
-      if (tripNumber) conditions.push(`FIND('${tripNumber}', ARRAYJOIN({${linkField}}))`)
-      if (tripName) {
-        const safeName = String(tripName).replace(/'/g, "\\'")
-        conditions.push(`FIND('${safeName}', ARRAYJOIN({${linkField}}))`)
-      }
+      if (safeId) conditions.push(`FIND('${safeId}', ARRAYJOIN({${linkField}}))`)
+      if (safeNum) conditions.push(`FIND('${safeNum}', ARRAYJOIN({${linkField}}))`)
+      if (safeName) conditions.push(`FIND('${safeName}', ARRAYJOIN({${linkField}}))`)
       const tripIdField = TABLE_TRIPID_FALLBACK_MAP[tableName]
-      if (tripIdField && tripNumber) conditions.push(`{${tripIdField}} = '${tripNumber}'`)
+      if (tripIdField && safeNum) conditions.push(`{${tripIdField}} = '${safeNum}'`)
 
-      const formula = `OR(${conditions.join(', ')})`
-      const params = {
-        filterByFormula: formula,
-        pageSize: pageSize || 100
+      if (conditions.length) {
+        const formula = conditions.length === 1 ? conditions[0] : `OR(${conditions.join(', ')})`
+        let offset = null
+        do {
+          const params = { filterByFormula: formula, pageSize: 100 }
+          if (offset) params.offset = offset
+          const res = await airtable.airtableGet(tableName, params)
+          const recs = res && res.records ? res.records : []
+          for (const r of recs) {
+            out.push(r)
+            if (out.length >= maxOut) break
+          }
+          if (out.length >= maxOut) break
+          offset = res && res.offset ? res.offset : null
+        } while (offset)
       }
-      const res = await airtable.airtableGet(tableName, params)
-      recs = res && res.records ? res.records : []
+
+      if (!out.length && safeId) {
+        let offset2 = null
+        do {
+          const params2 = { pageSize: 100 }
+          if (offset2) params2.offset = offset2
+          const res2 = await airtable.airtableGet(tableName, params2)
+          const recs2 = res2 && res2.records ? res2.records : []
+          for (const r2 of recs2) {
+            const f2 = r2 && r2.fields ? r2.fields : {}
+            const links = f2[linkField]
+            const hit = Array.isArray(links) ? links.indexOf(safeId) !== -1 : String(links || '') === safeId
+            if (!hit) continue
+            out.push(r2)
+            if (out.length >= maxOut) break
+          }
+          if (out.length >= maxOut) break
+          offset2 = res2 && res2.offset ? res2.offset : null
+        } while (offset2)
+      }
     } catch (e) {
       logger.warn(`fetchRecordsByTrip Error (${tableName}): ${String(e && e.message ? e.message : e)}`)
-      recs = []
+      return []
     }
 
-    return recs
+    return out
   }
 
   function concatFieldsText(records, fieldNames) {
@@ -184,4 +214,3 @@ function createContextUtils(options) {
 }
 
 module.exports = { createContextUtils }
-

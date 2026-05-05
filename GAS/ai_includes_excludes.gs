@@ -501,22 +501,10 @@ function fetchRawTripIncludes_(tripId, tripNumber, tripFields) {
   var out = [];
  
   var tripName = (tripFields && (tripFields.Title || tripFields.Name)) ? String(tripFields.Title || tripFields.Name).trim() : '';
-  var conditions = [];
-  conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripId)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
-  if (tripNumber) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripNumber)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
-  if (tripName) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripName)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))");
-  var formula = (conditions.length === 1) ? conditions[0] : ("OR(" + conditions.join(", ") + ")");
-
-  var res = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
-
-  if (!recs.length) {
+  var recs = fetchRecordsByTrip_(TRIP_INCLUDES_BASE_TABLE, tripId, tripNumber || '', 100, tripName);
+  if (!recs || !recs.length) {
     var displayKey = computeTripDisplayKey_(tripFields);
-    if (displayKey) {
-      var fallbackFormula = "FIND('" + AirtableUtils.escapeFormulaValue(String(displayKey)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_INCLUDES + "}))";
-      var resF = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: fallbackFormula, pageSize: 100 });
-      recs = resF && resF.records ? resF.records : [];
-    }
+    if (displayKey) recs = fetchRecordsByTrip_(TRIP_INCLUDES_BASE_TABLE, tripId, String(displayKey), 100, tripName);
   }
 
   for (var i = 0; i < (recs || []).length; i++) {
@@ -532,22 +520,10 @@ function fetchRawTripExcludes_(tripId, tripNumber, tripFields) {
   var out = [];
   
   var tripName = (tripFields && (tripFields.Title || tripFields.Name)) ? String(tripFields.Title || tripFields.Name).trim() : '';
-  var conditions = [];
-  conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripId)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
-  if (tripNumber) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripNumber)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
-  if (tripName) conditions.push("FIND('" + AirtableUtils.escapeFormulaValue(String(tripName)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))");
-  var formula = (conditions.length === 1) ? conditions[0] : ("OR(" + conditions.join(", ") + ")");
-
-  var res = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
-
-  if (!recs.length) {
+  var recs = fetchRecordsByTrip_(TRIP_EXCLUDES_BASE_TABLE, tripId, tripNumber || '', 100, tripName);
+  if (!recs || !recs.length) {
     var displayKey = computeTripDisplayKey_(tripFields);
-    if (displayKey) {
-      var fallbackFormula = "FIND('" + AirtableUtils.escapeFormulaValue(String(displayKey)) + "', ARRAYJOIN({" + TRIP_LINK_FIELD_IN_EXCLUDES + "}))";
-      var resF = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: fallbackFormula, pageSize: 100 });
-      recs = resF && resF.records ? resF.records : [];
-    }
+    if (displayKey) recs = fetchRecordsByTrip_(TRIP_EXCLUDES_BASE_TABLE, tripId, String(displayKey), 100, tripName);
   }
 
   for (var i = 0; i < (recs || []).length; i++) {
@@ -566,33 +542,45 @@ function computeTripDisplayKey_(tripFields) {
 
 function fetchImprovementIncludes_(tripId) {
   if (!tripId) return [];
-  var res = airtableGet_(TRIP_INCLUDES_IMPROVEMENT_TABLE, { pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
   var out = [];
-  for (var i = 0; i < recs.length; i++) {
-    var f = recs[i].fields || {};
-    var links = f[TRIP_LINK_FIELD_IN_INCLUDES] || [];
-    if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
-      var t = (f[INCLUDE_TEXT_FIELD] || '').toString().trim();
-      if (t) out.push(t);
+  var offset = null;
+  do {
+    var p = { pageSize: 100 };
+    if (offset) p.offset = offset;
+    var res = airtableGet_(TRIP_INCLUDES_IMPROVEMENT_TABLE, p);
+    var recs = res && res.records ? res.records : [];
+    for (var i = 0; i < recs.length; i++) {
+      var f = recs[i].fields || {};
+      var links = f[TRIP_LINK_FIELD_IN_INCLUDES] || [];
+      if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
+        var t = (f[INCLUDE_TEXT_FIELD] || '').toString().trim();
+        if (t) out.push(t);
+      }
     }
-  }
+    offset = res && res.offset ? res.offset : null;
+  } while (offset);
   return out;
 }
 
 function fetchImprovementExcludes_(tripId) {
   if (!tripId) return [];
-  var res = airtableGet_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, { pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
   var out = [];
-  for (var i = 0; i < recs.length; i++) {
-    var f = recs[i].fields || {};
-    var links = f[TRIP_LINK_FIELD_IN_EXCLUDES] || [];
-    if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
-      var t = (f[EXCLUDE_TEXT_FIELD] || '').toString().trim();
-      if (t) out.push(t);
+  var offset = null;
+  do {
+    var p = { pageSize: 100 };
+    if (offset) p.offset = offset;
+    var res = airtableGet_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, p);
+    var recs = res && res.records ? res.records : [];
+    for (var i = 0; i < recs.length; i++) {
+      var f = recs[i].fields || {};
+      var links = f[TRIP_LINK_FIELD_IN_EXCLUDES] || [];
+      if (Array.isArray(links) && links.indexOf(tripId) !== -1) {
+        var t = (f[EXCLUDE_TEXT_FIELD] || '').toString().trim();
+        if (t) out.push(t);
+      }
     }
-  }
+    offset = res && res.offset ? res.offset : null;
+  } while (offset);
   return out;
 }
 
@@ -606,16 +594,22 @@ function normalizeText_(s) {
 
 function findImprovementRecordByText_(tableName, linkFieldName, textFieldName, tripId, text) {
   if (!tripId || !text) return null;
-  var res = airtableGet_(tableName, { pageSize: 100 });
-  var recs = res && res.records ? res.records : [];
   var norm = normalizeText_(text);
-  for (var i = 0; i < recs.length; i++) {
-    var f = recs[i].fields || {};
-    var links = f[linkFieldName] || [];
-    if (!Array.isArray(links) || links.indexOf(tripId) === -1) continue;
-    var t = (f[textFieldName] || '').toString();
-    if (normalizeText_(t) === norm) return recs[i].id;
-  }
+  var offset = null;
+  do {
+    var p = { pageSize: 100 };
+    if (offset) p.offset = offset;
+    var res = airtableGet_(tableName, p);
+    var recs = res && res.records ? res.records : [];
+    for (var i = 0; i < recs.length; i++) {
+      var f = recs[i].fields || {};
+      var links = f[linkFieldName] || [];
+      if (!Array.isArray(links) || links.indexOf(tripId) === -1) continue;
+      var t = (f[textFieldName] || '').toString();
+      if (normalizeText_(t) === norm) return recs[i].id;
+    }
+    offset = res && res.offset ? res.offset : null;
+  } while (offset);
   return null;
 }
 
@@ -658,12 +652,59 @@ function fetchLinkedContextText_(tripId, tripFields) {
   var tripKey = String((tripFields && tripFields.TripID) ? tripFields.TripID : '').trim();
   if (!tripKey) tripKey = String(tripId || '').trim();
   if (!tripKey) return out;
-  var safeTripKey = tripKey.replace(/'/g, "\\'");
+  var tripName = String((tripFields && (tripFields.Title || tripFields.Name)) ? (tripFields.Title || tripFields.Name) : '').trim();
+  var safeTripId = String(tripId || '').replace(/'/g, "\\'");
+  var safeTripKey = String(tripKey || '').replace(/'/g, "\\'");
+  var safeTripName = String(tripName || '').replace(/'/g, "\\'");
   for (var i = 0; i < tables.length; i++) {
     var tname = tables[i];
     var lf = (CONFIG.LINK_FIELDS[tname] || linkField);
-    var res1 = airtableGet_(tname, { filterByFormula: "FIND('" + safeTripKey + "', ARRAYJOIN({" + lf + "}))", pageSize: 100 });
-    var recs = res1 && res1.records ? res1.records : [];
+    var recs = [];
+    try {
+      var parts = [];
+      if (safeTripId) parts.push("FIND('" + safeTripId + "', ARRAYJOIN({" + lf + "}))");
+      if (safeTripKey) parts.push("FIND('" + safeTripKey + "', ARRAYJOIN({" + lf + "}))");
+      if (safeTripName) parts.push("FIND('" + safeTripName + "', ARRAYJOIN({" + lf + "}))");
+      var formula = parts.length === 1 ? parts[0] : (parts.length ? ("OR(" + parts.join(", ") + ")") : "");
+
+      if (formula) {
+        var offset = null;
+        do {
+          var p = { filterByFormula: formula, pageSize: 100 };
+          if (offset) p.offset = offset;
+          var res1 = airtableGet_(tname, p);
+          var rr = res1 && res1.records ? res1.records : [];
+          for (var rri = 0; rri < rr.length; rri++) recs.push(rr[rri]);
+          if (recs.length >= 100) break;
+          offset = res1 && res1.offset ? res1.offset : null;
+        } while (offset);
+      }
+
+      if (!recs.length && tripId) {
+        var offset2 = null;
+        do {
+          var p2 = { pageSize: 100 };
+          if (offset2) p2.offset = offset2;
+          var res2 = airtableGet_(tname, p2);
+          var rr2 = res2 && res2.records ? res2.records : [];
+          for (var rrj = 0; rrj < rr2.length; rrj++) {
+            var r2 = rr2[rrj];
+            var f2 = r2 && r2.fields ? r2.fields : {};
+            var links = f2[lf];
+            var hit = false;
+            if (Array.isArray(links)) hit = links.indexOf(tripId) !== -1;
+            else hit = String(links || '') === String(tripId);
+            if (!hit) continue;
+            recs.push(r2);
+            if (recs.length >= 100) break;
+          }
+          if (recs.length >= 100) break;
+          offset2 = res2 && res2.offset ? res2.offset : null;
+        } while (offset2);
+      }
+    } catch (e) {
+      recs = [];
+    }
     for (var j = 0; j < recs.length; j++) {
       var f = recs[j].fields || {};
       for (var fk in f) {
@@ -700,18 +741,13 @@ function fetchImprovedHighlightsForTrip_(tripId) {
   if (!tripId) return "";
   
   var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 20
-  };
   
   try {
-    var res = airtableGet_(HIGHLIGHTS_IMPROVEMENT_TABLE, params);
-    if (!res || !res.records || !res.records.length) return "";
+    var recs = fetchRecordsByTrip_(HIGHLIGHTS_IMPROVEMENT_TABLE, tripId || '', '', 20, '');
+    if (!recs || !recs.length) return "";
     
     var texts = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       var txt = f.AI_Highlight || "";
       if (txt) texts.push("- " + txt);
@@ -732,18 +768,13 @@ function fetchImprovedItineraryForTrip_(tripId) {
   if (!tripId) return "";
   
   var ITINERARY_IMPROVEMENT_TABLE = 'Itinerary Improvement With AI';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 20
-  };
   
   try {
-    var res = airtableGet_(ITINERARY_IMPROVEMENT_TABLE, params);
-    if (!res || !res.records || !res.records.length) return "";
+    var recs = fetchRecordsByTrip_(ITINERARY_IMPROVEMENT_TABLE, tripId || '', '', 20, '');
+    if (!recs || !recs.length) return "";
     
     var texts = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       var title = f.AI_Step_Title || "";
       var desc = f.AI_Step_Description || "";
@@ -776,21 +807,13 @@ function fetchImprovedAddOnsDataForTrip_(tripId, tripNumber, tripName) {
   var ADDONS_IMPROVEMENT_TABLE = 'AddOns Improvement With AI';
   var ADDONS_BASE_TABLE = 'AddOns';
 
-  var tripKey = String(tripNumber || tripId || '').trim();
-  var formula = "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))";
-  
-  var params = {
-    filterByFormula: formula,
-    pageSize: 20
-  };
-  
   try {
-    Logger.log('AI Inc/Exc: fetching Improved AddOns for Trip ' + tripId + ' (Formula: ' + formula + ')');
-    var res = airtableGet_(ADDONS_IMPROVEMENT_TABLE, params);
+    Logger.log('AI Inc/Exc: fetching Improved AddOns for Trip ' + tripId);
+    var recs = fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId || '', tripNumber || '', 20, tripName || '');
     var addOns = [];
-    if (res && res.records && res.records.length) {
-      Logger.log('AI Inc/Exc: Found ' + res.records.length + ' Improved AddOns.');
-      res.records.forEach(function(r) {
+    if (recs && recs.length) {
+      Logger.log('AI Inc/Exc: Found ' + recs.length + ' Improved AddOns.');
+      recs.forEach(function(r) {
         var f = r.fields || {};
         var title = f.AI_AddOn_Title || "";
         var price = f.AI_AddOn_Price || "";
@@ -808,10 +831,10 @@ function fetchImprovedAddOnsDataForTrip_(tripId, tripNumber, tripName) {
 
     if (!addOns.length) {
       try {
-        Logger.log('AI Inc/Exc: fetching Raw AddOns fallback for Trip ' + tripId + ' (Formula: ' + formula + ')');
-        var resRaw = airtableGet_(ADDONS_BASE_TABLE, params);
-        if (resRaw && resRaw.records && resRaw.records.length) {
-          resRaw.records.forEach(function(r) {
+        Logger.log('AI Inc/Exc: fetching Raw AddOns fallback for Trip ' + tripId);
+        var recsRaw = fetchRecordsByTrip_(ADDONS_BASE_TABLE, tripId || '', tripNumber || '', 20, tripName || '');
+        if (recsRaw && recsRaw.length) {
+          recsRaw.forEach(function(r) {
             var f = r.fields || {};
             var title = f.AddOnTitle || f.AddOn_Name || f.Name || f.Title || "";
             if (!title) return;
@@ -1148,18 +1171,13 @@ function fetchImprovedAddOnsForTrip_(tripId) {
   if (!tripId) return "";
   
   var ADDONS_IMPROVEMENT_TABLE = 'AddOns Improvement With AI';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 20
-  };
   
   try {
-    var res = airtableGet_(ADDONS_IMPROVEMENT_TABLE, params);
-    if (!res || !res.records || !res.records.length) return "";
+    var recs = fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId || '', '', 20, '');
+    if (!recs || !recs.length) return "";
     
     var texts = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       var title = f.AI_AddOn_Title || "";
       var desc = f.AI_AddOn_Description || "";
@@ -1259,62 +1277,35 @@ function deleteOldIncludesExcludesForTrip_(tripId, tripNumber) {
   if (!tripId) return;
   
   Logger.log('🔍 AI Inc/Exc: Starting deletion of old records for Trip ' + tripId + ' (TripID: ' + tripNumber + ')');
-  var tripKey = String(tripNumber || '').trim();
-  if (!tripKey) tripKey = String(tripId || '').trim();
-  var safeTripKey = tripKey.replace(/'/g, "\\'");
   
   var deletedIncludes = 0;
   var deletedExcludes = 0;
   
   try {
-    var includesFormula = "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))";
-    Logger.log('🔍 Includes Filter Formula (TripKey): ' + includesFormula);
-    
-    var includesParams = {
-      filterByFormula: includesFormula,
-      pageSize: 100
-    };
-    var includesRes = airtableGet_(TRIP_INCLUDES_IMPROVEMENT_TABLE, includesParams);
-    var includesRecs = includesRes && includesRes.records ? includesRes.records : [];
-    
-    Logger.log('🔍 Found ' + includesRecs.length + ' includes records with TripKey');
-    
-    if (includesRecs.length > 0) {
-      Logger.log('AI Inc/Exc: found ' + includesRecs.length + ' old includes to delete for Trip ' + tripId);
-      includesRecs.forEach(function(r) {
-        try {
-          Logger.log('🗑️ Deleting include record: ' + r.id);
-          airtableDelete_(TRIP_INCLUDES_IMPROVEMENT_TABLE, r.id);
-          deletedIncludes++;
-        } catch (e) {
-          Logger.log('❌ AI Inc/Exc: failed to delete include record ' + r.id + ' — ' + e.message);
-        }
-      });
+    var includesRecs = fetchRecordsByTrip_(TRIP_INCLUDES_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '');
+    var includesIds = [];
+    for (var i = 0; i < includesRecs.length; i++) if (includesRecs[i] && includesRecs[i].id) includesIds.push(includesRecs[i].id);
+    if (includesIds.length) {
+      Logger.log('AI Inc/Exc: deleting ' + includesIds.length + ' old includes for Trip ' + tripId);
+      if (typeof airtableBatchDelete_ === 'function') {
+        try { airtableBatchDelete_(TRIP_INCLUDES_IMPROVEMENT_TABLE, includesIds); } catch (e) {}
+      } else {
+        includesIds.forEach(function(id) { try { airtableDelete_(TRIP_INCLUDES_IMPROVEMENT_TABLE, id); } catch (e) {} });
+      }
+      deletedIncludes = includesIds.length;
     }
-    
-    var excludesFormula = "FIND('" + safeTripKey + "', ARRAYJOIN({Trip}))";
-    Logger.log('🔍 Excludes Filter Formula (TripKey): ' + excludesFormula);
-    
-    var excludesParams = {
-      filterByFormula: excludesFormula,
-      pageSize: 100
-    };
-    var excludesRes = airtableGet_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, excludesParams);
-    var excludesRecs = excludesRes && excludesRes.records ? excludesRes.records : [];
-    
-    Logger.log('🔍 Found ' + excludesRecs.length + ' excludes records with TripKey');
-    
-    if (excludesRecs.length > 0) {
-      Logger.log('AI Inc/Exc: found ' + excludesRecs.length + ' old excludes to delete for Trip ' + tripId);
-      excludesRecs.forEach(function(r) {
-        try {
-          Logger.log('🗑️ Deleting exclude record: ' + r.id);
-          airtableDelete_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, r.id);
-          deletedExcludes++;
-        } catch (e) {
-          Logger.log('❌ AI Inc/Exc: failed to delete exclude record ' + r.id + ' — ' + e.message);
-        }
-      });
+
+    var excludesRecs = fetchRecordsByTrip_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '');
+    var excludesIds = [];
+    for (var j = 0; j < excludesRecs.length; j++) if (excludesRecs[j] && excludesRecs[j].id) excludesIds.push(excludesRecs[j].id);
+    if (excludesIds.length) {
+      Logger.log('AI Inc/Exc: deleting ' + excludesIds.length + ' old excludes for Trip ' + tripId);
+      if (typeof airtableBatchDelete_ === 'function') {
+        try { airtableBatchDelete_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, excludesIds); } catch (e) {}
+      } else {
+        excludesIds.forEach(function(id) { try { airtableDelete_(TRIP_EXCLUDES_IMPROVEMENT_TABLE, id); } catch (e) {} });
+      }
+      deletedExcludes = excludesIds.length;
     }
     
     if (deletedIncludes === 0 && deletedExcludes === 0) {
@@ -1735,22 +1726,7 @@ function fetchRawIncludesForTrip_(tripId, tripNumber, tripName) {
   var items = [];
   try {
     Logger.log('AI Inc/Exc: fetching raw Includes for Trip ' + tripId + ' (TripID: ' + tripNumber + ', Name: ' + tripName + ')');
-    var conditions = [];
-    if (tripName) {
-      var safeName = tripName.replace(/'/g, "\\'");
-      conditions.push("FIND('" + safeName + "', ARRAYJOIN({Trip}))");
-    }
-    if (tripNumber) {
-      conditions.push("FIND('" + tripNumber + "', ARRAYJOIN({Trip}))");
-    }
-    if (tripId) {
-      conditions.push("FIND('" + tripId + "', ARRAYJOIN({Trip}))");
-    }
-    var formula = "OR(" + conditions.join(", ") + ")";
-    
-    Logger.log('AI Inc/Exc: Includes filter formula: ' + formula);
-    var res = airtableGet_(TRIP_INCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
-    var records = res && res.records ? res.records : [];
+    var records = fetchRecordsByTrip_(TRIP_INCLUDES_BASE_TABLE, tripId || '', tripNumber || '', 100, tripName || '');
     
     Logger.log('AI Inc/Exc: found ' + records.length + ' raw Includes records');
     records.forEach(function(rec) {
@@ -1772,22 +1748,7 @@ function fetchRawExcludesForTrip_(tripId, tripNumber, tripName) {
   var items = [];
   try {
     Logger.log('AI Inc/Exc: fetching raw Excludes for Trip ' + tripId + ' (TripID: ' + tripNumber + ', Name: ' + tripName + ')');
-    var conditions = [];
-    if (tripName) {
-      var safeName = tripName.replace(/'/g, "\\'");
-      conditions.push("FIND('" + safeName + "', ARRAYJOIN({Trip}))");
-    }
-    if (tripNumber) {
-      conditions.push("FIND('" + tripNumber + "', ARRAYJOIN({Trip}))");
-    }
-    if (tripId) {
-      conditions.push("FIND('" + tripId + "', ARRAYJOIN({Trip}))");
-    }
-    var formula = "OR(" + conditions.join(", ") + ")";
-    
-    Logger.log('AI Inc/Exc: Excludes filter formula: ' + formula);
-    var res = airtableGet_(TRIP_EXCLUDES_BASE_TABLE, { filterByFormula: formula, pageSize: 100 });
-    var records = res && res.records ? res.records : [];
+    var records = fetchRecordsByTrip_(TRIP_EXCLUDES_BASE_TABLE, tripId || '', tripNumber || '', 100, tripName || '');
     
     Logger.log('AI Inc/Exc: found ' + records.length + ' raw Excludes records');
     records.forEach(function(rec) {

@@ -44,7 +44,7 @@ function runAiItineraryBatch() {
       try {
         deleteItineraryImprovementForTrip_(tripId, tripFields.TripID || '');
 
-        var impRecord = findImprovementRecordForTrip_(tripFields.TripID || '');
+        var impRecord = findImprovementRecordForTrip_(tripId, tripFields.TripID || '');
 
         generateItineraryStepsForTripWithContext_(tripRec, impRecord);
 
@@ -76,7 +76,7 @@ function testGenerateItineraryForSingleTrip() {
 
   Logger.log("Found Trip record: " + tripRecord.id);
 
-  var impRecord = findImprovementRecordForTrip_(tripIdValue);
+  var impRecord = findImprovementRecordForTrip_(tripRecord.id, tripIdValue);
 
   deleteItineraryImprovementForTrip_(tripRecord.id);
   generateItineraryStepsForTripWithContext_(tripRecord, impRecord);
@@ -116,50 +116,33 @@ function findTripRecordByTripID_(tripIdValue) {
  ************************************************************/
 function deleteItineraryImprovementForTrip_(tripId, tripNumber) {
   if (!tripId) return;
-
-  while (true) {
-    var params = tripNumber ? {
-      filterByFormula: "FIND('" + tripNumber + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    } : {
-      filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    };
-    
-    var res = airtableGet_(ITINERARY_IMPROVEMENT_TABLE, params);
-    var recs = res && res.records ? res.records : [];
-    
-    if (!recs.length) {
-      Logger.log('AI Itinerary Generator: no old itinerary records to delete for Trip ' + tripId);
-      break;
-    }
-    
-    var toDelete = recs.map(function(r){ return r.id; });
-    Logger.log('AI Itinerary Generator: deleting ' + toDelete.length + ' old itinerary records for Trip ' + tripId);
-    
-    if (typeof airtableBatchDelete_ === 'function') {
-      try { airtableBatchDelete_(ITINERARY_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
-    } else {
-      toDelete.forEach(function(id) {
-        try { airtableDelete_(ITINERARY_IMPROVEMENT_TABLE, id); } catch (e) {
-          Logger.log('AI Itinerary Generator: failed to delete record ' + id + ' — ' + e.message);
-        }
-      });
-    }
+  var recs = fetchRecordsByTrip_(ITINERARY_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '');
+  if (!recs || !recs.length) {
+    Logger.log('AI Itinerary Generator: no old itinerary records to delete for Trip ' + tripId);
+    return;
+  }
+  var toDelete = recs.map(function(r){ return r.id; }).filter(function(x){ return !!x; });
+  if (!toDelete.length) return;
+  Logger.log('AI Itinerary Generator: deleting ' + toDelete.length + ' old itinerary records for Trip ' + tripId);
+  if (typeof airtableBatchDelete_ === 'function') {
+    try { airtableBatchDelete_(ITINERARY_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
+  } else {
+    toDelete.forEach(function(id) {
+      try { airtableDelete_(ITINERARY_IMPROVEMENT_TABLE, id); } catch (e) {
+        Logger.log('AI Itinerary Generator: failed to delete record ' + id + ' — ' + e.message);
+      }
+    });
   }
 }
 
 /************************************************************
  * IMPROVEMENT WITH AI — LINKED RECORD
  ************************************************************/
-function findImprovementRecordForTrip_(tripNumber) {
-  var tripKey = String(tripNumber || '').trim();
-  if (!tripKey) return null;
-  var formula = "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))";
-  var params  = { filterByFormula: formula, maxRecords: 1 };
-  var res     = airtableGet_(IMPROVEMENTS_TABLE, params);
-  if (!res || !res.records || !res.records.length) return null;
-  return res.records[0];
+function findImprovementRecordForTrip_(tripId, tripNumber) {
+  if (!tripId && !tripNumber) return null;
+  var recs = fetchRecordsByTrip_(IMPROVEMENTS_TABLE, tripId || '', tripNumber || '', 1, '');
+  if (!recs || !recs.length) return null;
+  return recs[0];
 }
 
 /************************************************************
@@ -608,18 +591,13 @@ function fetchImprovedHighlightsForTrip_(tripId) {
   if (!tripId) return "";
   
   var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 20
-  };
   
   try {
-    var res = airtableGet_(HIGHLIGHTS_IMPROVEMENT_TABLE, params);
-    if (!res || !res.records || !res.records.length) return "";
+    var recs = fetchRecordsByTrip_(HIGHLIGHTS_IMPROVEMENT_TABLE, tripId || '', '', 20, '');
+    if (!recs || !recs.length) return "";
     
     var texts = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       var txt = f.AI_Highlight || "";
       if (txt) texts.push("- " + txt);
@@ -639,18 +617,13 @@ function fetchRawItineraryStepsForTrip_(tripId) {
   if (!tripId) return "";
   
   var ITINERARY_STEPS_TABLE = 'ItinerarySteps';
-  var tripKey = String(tripId || '').trim();
-  var params = {
-    filterByFormula: "FIND('" + tripKey.replace(/'/g, "\\'") + "', ARRAYJOIN({Trip}))",
-    pageSize: 50
-  };
   
   try {
-    var res = airtableGet_(ITINERARY_STEPS_TABLE, params);
-    if (!res || !res.records || !res.records.length) return "";
+    var recs = fetchRecordsByTrip_(ITINERARY_STEPS_TABLE, tripId || '', '', 50, '');
+    if (!recs || !recs.length) return "";
     
     var steps = [];
-    res.records.forEach(function(r) {
+    recs.forEach(function(r) {
       var f = r.fields || {};
       steps.push({
         order: f.StepOrder || 999,
