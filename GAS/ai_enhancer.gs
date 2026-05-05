@@ -168,47 +168,15 @@ function runAiEnhancementBatch() {
  * يستخدم airtableGet_ لجلب رحلات تحتاج تحسين.
  */
 function fetchTripsNeedingAi_(limit) {
-  // 1) نجيب سجلات Improvement With AI اللي AI_Status فيها = "Pending"
-  var impRes = airtableGet_(AI_IMPROVEMENT_TABLE, {
+  var tripRes = airtableGet_(AI_TRIPS_TABLE, {
     filterByFormula: "{AI_Status} = 'Pending'",
     maxRecords:      limit || AI_BATCH_SIZE
   });
 
-  if (!impRes || !impRes.records || !impRes.records.length) {
-    Logger.log('AI Enhancer: no improvement records with AI_Status = "Pending"');
+  if (!tripRes || !tripRes.records || !tripRes.records.length) {
+    Logger.log('AI Enhancer: no trips with AI_Status = "Pending"');
     return [];
   }
-
-  // 2) نجمع IDs بتاعة الرحلات المرتبطة
-  var tripIds = [];
-  impRes.records.forEach(function (impRec) {
-    var f     = impRec.fields || {};
-    var links = f.Trip; // حقل الـ Link إلى Trips (array of recordIds)
-
-    if (Array.isArray(links) && links.length) {
-      var tripId = links[0];
-      if (tripIds.indexOf(tripId) === -1) {
-        tripIds.push(tripId);
-      }
-    }
-  });
-
-  if (!tripIds.length) {
-    Logger.log('AI Enhancer: no linked Trips found for pending Improvement records');
-    return [];
-  }
-
-  // 3) نجيب الرحلات المقابلة من جدول Trips باستخدام OR على RECORD_ID()
-  var filterFormula = "OR(" + tripIds.map(function (id) {
-    return "RECORD_ID() = '" + id + "'";
-  }).join(",") + ")";
-
-  var tripRes = airtableGet_(AI_TRIPS_TABLE, {
-    filterByFormula: filterFormula,
-    maxRecords:      tripIds.length
-  });
-
-  if (!tripRes || !tripRes.records) return [];
 
   return tripRes.records;
 }
