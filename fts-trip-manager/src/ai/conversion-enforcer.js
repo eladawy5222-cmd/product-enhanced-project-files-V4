@@ -2357,6 +2357,33 @@ function convEnf_similarityScore_(seedTokens, candidateText) {
   return inter / denom
 }
 
+function convEnf_similarityBoost_(seedTokens, candidateText) {
+  const seed = Array.isArray(seedTokens) ? seedTokens : []
+  if (!seed.length) return 0
+  const t = String(candidateText || '').toLowerCase()
+  if (!t.trim()) return 0
+
+  const strong = seed.filter((tok) => {
+    const s = String(tok || '').trim().toLowerCase()
+    if (!s) return false
+    if (/^\d+$/.test(s)) return false
+    return s.length >= 5
+  })
+  if (!strong.length) return 0
+
+  let hits = 0
+  for (const tok of strong) if (t.includes(tok)) hits++
+  const ratio = hits / strong.length
+  let bonus = ratio * 0.15
+
+  if (seed.includes('civilization')) {
+    if (t.includes('civilization') || t.includes('nmec')) bonus += 0.08
+    if (t.includes('egyptian-museum') || t.includes('egyptian museum')) bonus -= 0.06
+  }
+
+  return bonus
+}
+
 async function convEnf_pickBestGygResultBySimilarity_(picked, seedText, apiKey) {
   const rs = Array.isArray(picked) ? picked : []
   const seed = String(seedText || '').trim()
@@ -2380,8 +2407,10 @@ async function convEnf_pickBestGygResultBySimilarity_(picked, seedText, apiKey) 
       u,
       scrText ? scrText.slice(0, 20000) : ''
     ].join('\n')
-    const score = convEnf_similarityScore_(seedTokens, candText)
-    scored.push({ url: u, title: r.title || '', snippet: r.snippet || '', score })
+    const baseScore = convEnf_similarityScore_(seedTokens, candText)
+    const boost = convEnf_similarityBoost_(seedTokens, candText)
+    const score = baseScore + boost
+    scored.push({ url: u, title: r.title || '', snippet: r.snippet || '', score, score_base: baseScore, score_boost: boost })
   }
 
   scored.sort((a, b) => (b.score || 0) - (a.score || 0))
