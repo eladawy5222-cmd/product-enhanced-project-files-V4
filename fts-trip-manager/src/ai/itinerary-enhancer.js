@@ -352,37 +352,25 @@ async function findTripRecordByTripID_(tripIdValue) {
  ************************************************************/
 async function deleteItineraryImprovementForTrip_(tripId, tripNumber) {
   if (!tripId) return;
+  var recs = await fetchRecordsByTrip_(ITINERARY_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '')
+  if (!recs || !recs.length) {
+    log('AI Itinerary Generator: no old itinerary records to delete for Trip ' + tripId)
+    return
+  }
 
-  while (true) {
-    var params = tripNumber ? {
-      filterByFormula: "FIND('" + tripNumber + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    } : {
-      filterByFormula: "FIND('" + tripId + "', ARRAYJOIN({Trip}))",
-      pageSize: 100
-    };
-    
-    var res = await airtableGet_(ITINERARY_IMPROVEMENT_TABLE, params)
-    var recs = res && res.records ? res.records : [];
-    
-    if (!recs.length) {
-      log('AI Itinerary Generator: no old itinerary records to delete for Trip ' + tripId);
-      break;
-    }
-    
-    var toDelete = recs.map(function(r){ return r.id; });
-    log('AI Itinerary Generator: deleting ' + toDelete.length + ' old itinerary records for Trip ' + tripId);
-    
-    try {
-      await airtableBatchDelete_(ITINERARY_IMPROVEMENT_TABLE, toDelete)
-    } catch (e) {
-      for (var j = 0; j < toDelete.length; j++) {
-        var id = toDelete[j];
-        try {
-          await airtableDelete_(ITINERARY_IMPROVEMENT_TABLE, id)
-        } catch (inner) {
-          log('AI Itinerary Generator: failed to delete record ' + id + ' — ' + inner.message)
-        }
+  var toDelete = recs.map(function(r){ return r && r.id ? r.id : '' }).filter(Boolean)
+  if (!toDelete.length) return
+
+  log('AI Itinerary Generator: deleting ' + toDelete.length + ' old itinerary records for Trip ' + tripId)
+  try {
+    await airtableBatchDelete_(ITINERARY_IMPROVEMENT_TABLE, toDelete)
+  } catch (e) {
+    for (var j = 0; j < toDelete.length; j++) {
+      var id = toDelete[j]
+      try {
+        await airtableDelete_(ITINERARY_IMPROVEMENT_TABLE, id)
+      } catch (inner) {
+        log('AI Itinerary Generator: failed to delete record ' + id + ' — ' + inner.message)
       }
     }
   }

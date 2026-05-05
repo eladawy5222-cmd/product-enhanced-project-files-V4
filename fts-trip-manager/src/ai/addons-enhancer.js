@@ -553,38 +553,24 @@ async function createAddOnRecords_(addOns, tripId) {
 
 async function deleteOldAddOnsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
+  var recs = await fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '')
+  if (!recs || !recs.length) {
+    log('AI AddOns: no old records to delete for Trip ' + tripId)
+    return
+  }
+  var toDelete = recs.map(function(r){ return r && r.id ? r.id : '' }).filter(Boolean)
+  if (!toDelete.length) return
 
-  while (true) {
-    // Build a robust formula: Find by TripNumber OR TripID (Record ID)
-    var formula = "OR(";
-    if (tripNumber) {
-      formula += "FIND('" + tripNumber + "', ARRAYJOIN({Trip})), ";
-    }
-    formula += "FIND('" + tripId + "', ARRAYJOIN({Trip})))";
-
-    var params = {
-      filterByFormula: formula,
-      pageSize: 100
-    };
-    var res = await airtableGet_(ADDONS_IMPROVEMENT_TABLE, params)
-    var recs = res && res.records ? res.records : [];
-    if (!recs.length) {
-      log('AI AddOns: no old records to delete for Trip ' + tripId);
-      break;
-    }
-    var toDelete = recs.map(function(r){ return r.id; });
-    log('AI AddOns: deleting ' + toDelete.length + ' old records for Trip ' + tripId);
-    
-    try {
-      await airtableBatchDelete_(ADDONS_IMPROVEMENT_TABLE, toDelete)
-    } catch (e) {
-      for (var j = 0; j < toDelete.length; j++) {
-        var recId = toDelete[j];
-        try {
-          await airtableDelete_(ADDONS_IMPROVEMENT_TABLE, recId)
-        } catch (inner) {
-          log('AI AddOns: failed to delete record ' + recId + ' — ' + inner.message)
-        }
+  log('AI AddOns: deleting ' + toDelete.length + ' old records for Trip ' + tripId)
+  try {
+    await airtableBatchDelete_(ADDONS_IMPROVEMENT_TABLE, toDelete)
+  } catch (e) {
+    for (var j = 0; j < toDelete.length; j++) {
+      var recId = toDelete[j]
+      try {
+        await airtableDelete_(ADDONS_IMPROVEMENT_TABLE, recId)
+      } catch (inner) {
+        log('AI AddOns: failed to delete record ' + recId + ' — ' + inner.message)
       }
     }
   }

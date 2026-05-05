@@ -317,24 +317,21 @@ function createAddOnRecords_(addOns, tripId) {
 
 function deleteOldAddOnsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
-
-  while (true) {
-    var recs = fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId, tripNumber, 100) || [];
-    if (!recs.length) {
-      Logger.log('AI AddOns: no old records to delete for Trip ' + tripId);
-      break;
-    }
-    var toDelete = recs.map(function(r){ return r.id; });
-    Logger.log('AI AddOns: deleting ' + toDelete.length + ' old records for Trip ' + tripId);
-    
-    if (typeof airtableBatchDelete_ === 'function') {
-      try { airtableBatchDelete_(ADDONS_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
-    } else {
-      for (var j = 0; j < toDelete.length; j++) {
-        var recId = toDelete[j];
-        try { airtableDelete_(ADDONS_IMPROVEMENT_TABLE, recId); } catch (e) {
-          Logger.log('AI AddOns: failed to delete record ' + recId + ' — ' + e.message);
-        }
+  var recs = fetchRecordsByTrip_(ADDONS_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000, '') || [];
+  if (!recs.length) {
+    Logger.log('AI AddOns: no old records to delete for Trip ' + tripId);
+    return;
+  }
+  var toDelete = recs.map(function(r){ return r && r.id ? r.id : ''; }).filter(function(x){ return !!x; });
+  if (!toDelete.length) return;
+  Logger.log('AI AddOns: deleting ' + toDelete.length + ' old records for Trip ' + tripId);
+  if (typeof airtableBatchDelete_ === 'function') {
+    try { airtableBatchDelete_(ADDONS_IMPROVEMENT_TABLE, toDelete); } catch (e) {}
+  } else {
+    for (var j = 0; j < toDelete.length; j++) {
+      var recId = toDelete[j];
+      try { airtableDelete_(ADDONS_IMPROVEMENT_TABLE, recId); } catch (e) {
+        Logger.log('AI AddOns: failed to delete record ' + recId + ' — ' + e.message);
       }
     }
   }

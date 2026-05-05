@@ -455,25 +455,24 @@ async function updateTripAiStatus_(tripId, status) {
 
 async function deleteAiHighlightsForTrip_(tripId, tripNumber) {
   if (!tripId) return;
+  var recs = await fetchRecordsByTrip_(HIGHLIGHTS_IMPROVEMENT_TABLE, tripId, tripNumber || '', 10000)
+  if (!recs || !recs.length) {
+    log('AI Highlights: no old AI highlights to delete for Trip ' + tripId)
+    return
+  }
+  var toDelete = recs.map(function(r){ return r && r.id ? r.id : '' }).filter(Boolean)
+  if (!toDelete.length) return
 
-  while (true) {
-    var recs = await fetchRecordsByTrip_(HIGHLIGHTS_IMPROVEMENT_TABLE, tripId, tripNumber, 100)
-    if (!recs.length) {
-      log('AI Highlights: no old AI highlights to delete for Trip ' + tripId);
-      break;
-    }
-    var toDelete = recs.map(function(r){ return r.id; });
-    log('AI Highlights: deleting ' + toDelete.length + ' old AI highlights for Trip ' + tripId);
-    try {
-      await airtableBatchDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, toDelete)
-    } catch (e) {
-      for (var j = 0; j < toDelete.length; j++) {
-        var recId = toDelete[j];
-        try {
-          await airtableDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, recId)
-        } catch (inner) {
-          log('AI Highlights: failed to delete AI highlight record ' + recId + ' — ' + inner.message)
-        }
+  log('AI Highlights: deleting ' + toDelete.length + ' old AI highlights for Trip ' + tripId)
+  try {
+    await airtableBatchDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, toDelete)
+  } catch (e) {
+    for (var j = 0; j < toDelete.length; j++) {
+      var recId = toDelete[j]
+      try {
+        await airtableDelete_(HIGHLIGHTS_IMPROVEMENT_TABLE, recId)
+      } catch (inner) {
+        log('AI Highlights: failed to delete AI highlight record ' + recId + ' — ' + inner.message)
       }
     }
   }
