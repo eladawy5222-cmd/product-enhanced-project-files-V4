@@ -3699,16 +3699,24 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
 
   const resPkg = await airtableGet_('Packages', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 })
   const existingPkgs = resPkg && resPkg.records ? resPkg.records : []
+  const toDeleteOldGygDraftPkg = []
   const toDraftPkg = []
-  const pkgIdsToUnlinkPrices = new Set()
+  const pkgIdsToDeletePrices = new Set()
   existingPkgs.forEach((r) => {
     const f = r && r.fields ? r.fields : {}
     const st = String(f.Status || '').toLowerCase().trim()
+    const pid = String(f.PackageID || '').trim()
+    const isGyg = pid ? convEnf_isGygDerivedPackageId_(pid) : false
+    if (st === 'draft' && isGyg) {
+      toDeleteOldGygDraftPkg.push(r.id)
+      if (pid) pkgIdsToDeletePrices.add(pid)
+      pkgIdsToDeletePrices.add(r.id)
+      return
+    }
     if (st === 'reference' || st === 'competitor' || st === 'draft' || st === 'proposed') return
     toDraftPkg.push(r.id)
-    const pid = String(f.PackageID || '').trim()
-    if (pid) pkgIdsToUnlinkPrices.add(pid)
-    pkgIdsToUnlinkPrices.add(r.id)
+    if (pid) pkgIdsToDeletePrices.add(pid)
+    pkgIdsToDeletePrices.add(r.id)
   })
 
   const resPrice = await airtableGet_('Prices', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 })
@@ -3718,10 +3726,11 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
     const f = r && r.fields ? r.fields : {}
     const pidRaw = f.PackageID
     const pid = (Array.isArray(pidRaw) && pidRaw.length) ? String(pidRaw[0] || '').trim() : String(pidRaw || '').trim()
-    if (pid && pkgIdsToUnlinkPrices.has(pid)) toDeletePrice.push(r.id)
+    if (pid && pkgIdsToDeletePrices.has(pid)) toDeletePrice.push(r.id)
   })
 
   if (toDeletePrice.length) await airtableBatchDelete_('Prices', toDeletePrice)
+  if (toDeleteOldGygDraftPkg.length) await airtableBatchDelete_('Packages', toDeleteOldGygDraftPkg)
   if (toDraftPkg.length) {
     for (const id of toDraftPkg) {
       try {
@@ -3729,7 +3738,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
       } catch {
       }
     }
-    log('✅ Demoted old Packages to Draft to avoid publishing: Packages=' + String(toDraftPkg.length) + ' PricesDeleted=' + String(toDeletePrice.length))
+    log('✅ Demoted old Packages to Draft to avoid publishing: Packages=' + String(toDraftPkg.length) + ' PricesDeleted=' + String(toDeletePrice.length) + ' OldGygDraftDeleted=' + String(toDeleteOldGygDraftPkg.length))
   }
 
   const pkgFieldsArray = []
