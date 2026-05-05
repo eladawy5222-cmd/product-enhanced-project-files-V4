@@ -1331,3 +1331,26 @@ function fts_wte_thankyou_booking_currency() {
         printf( '<script>window.ftsBookingCurrency=%s;</script>', wp_json_encode( $currency ) );
     }
 }
+/* Change Rank Math Breadcrumb Schema: Trips to Tours */
+add_filter( 'rank_math/json_ld', function( $data, $jsonld ) {
+    foreach ( $data as &$entity ) {
+        if (
+            isset( $entity['@type'] )
+            && $entity['@type'] === 'BreadcrumbList'
+            && isset( $entity['itemListElement'] )
+            && is_array( $entity['itemListElement'] )
+        ) {
+            foreach ( $entity['itemListElement'] as &$item ) {
+                if (
+                    isset( $item['item']['name'], $item['item']['@id'] )
+                    && $item['item']['name'] === 'Trips'
+                    && strpos( $item['item']['@id'], '/tours/' ) !== false
+                ) {
+                    $item['item']['name'] = 'Tours';
+                }
+            }
+        }
+    }
+
+    return $data;
+}, 99, 2 );
