@@ -3097,8 +3097,11 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
     async function tryClickAvailabilityOnce_() {
       const locs = [
         page.getByRole('button', { name: /check availability/i }),
+        page.getByRole('button', { name: /see availability/i }),
+        page.getByRole('button', { name: /check availability to see starting times/i }),
         page.locator('button:has-text("Check availability")'),
         page.locator('a:has-text("Check availability")'),
+        page.locator('button[data-testid*="availability" i]'),
         page.locator('text=/check availability/i')
       ]
       for (const loc of locs) {
@@ -3108,6 +3111,34 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
           try { await el.scrollIntoViewIfNeeded({ timeout: 1500 }) } catch {
           }
           await el.click({ timeout: 6000 })
+          return true
+        } catch {
+        }
+      }
+      return false
+    }
+
+    async function tryAdvanceAvailabilityFlow_() {
+      const locs = [
+        page.getByRole('button', { name: /select|choose|continue|next|apply|done/i }),
+        page.locator('button:has-text("Select")'),
+        page.locator('button:has-text("Continue")'),
+        page.locator('button:has-text("Next")'),
+        page.locator('button:has-text("Apply")'),
+        page.locator('button[data-testid*="select" i], button[data-testid*="continue" i], button[data-testid*="next" i]'),
+        page.locator('[role="gridcell"] button[aria-disabled="false"]'),
+        page.locator('button[role="gridcell"][aria-disabled="false"]')
+      ]
+      for (const loc of locs) {
+        try {
+          const el = loc.first()
+          if (!(await el.isVisible({ timeout: 800 }))) continue
+          try { await el.scrollIntoViewIfNeeded({ timeout: 1500 }) } catch {
+          }
+          await el.click({ timeout: 6000 })
+          try { await page.waitForLoadState('networkidle', { timeout: 12_000 }) } catch {
+          }
+          await page.waitForTimeout(1200)
           return true
         } catch {
         }
@@ -3128,6 +3159,13 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
       }
     }
     if (clickedAvailability) {
+      try {
+        for (let i = 0; i < 3; i++) {
+          const ok = await tryAdvanceAvailabilityFlow_()
+          if (!ok) break
+        }
+      } catch {
+      }
       try { await page.waitForLoadState('networkidle', { timeout: 15_000 }) } catch {
       }
       await page.waitForTimeout(10_000)
