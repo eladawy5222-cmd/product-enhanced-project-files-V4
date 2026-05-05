@@ -64,13 +64,13 @@ async function runConversionEnforcer(data) {
   const _logTripId = (data && typeof data === 'object' && data.id) ? data.id : String(data || '')
   let _success = false
   try {
-    console.log('🚀 Conversion Enforcer START for Trip: ' + _logTripId)
+    log('🚀 Conversion Enforcer START for Trip: ' + _logTripId)
     const trip = await convEnf_normalizeTripRecord_(data)
     if (!trip || !trip.id) return
     const tripId = trip.id
     const tripFields = trip.fields || {}
-    console.log('📥 Input Data:')
-    console.log(JSON.stringify(tripFields, null, 2))
+    log('📥 Input Data:')
+    log(JSON.stringify(tripFields, null, 2))
     const tripNumber = tripFields.TripID || ''
     const imp = await convEnf_fetchMainImprovementRecord_(tripId, tripFields, tripNumber)
     if (!imp || !imp.id) return
@@ -85,8 +85,8 @@ async function runConversionEnforcer(data) {
     if (wantGygOptionsIntel || wantWriteGygRef || wantWriteGygDraft) {
       const intel = await convEnf_fetchGygOptionsIntel_(tripFields)
       if (intel && intel.summary) {
-        console.log('🧾 GYG options intel:')
-        console.log(intel.summary)
+        log('🧾 GYG options intel:')
+        log(intel.summary)
       }
       if (wantWriteGygRef && intel && intel.packages && intel.packages.length) {
         await convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber || '', intel, nowIso)
@@ -103,7 +103,7 @@ async function runConversionEnforcer(data) {
       const externalBench = await convEnf_fetchExternalBenchmarkInsights_(tripFields, rawCtx)
       if (externalBench) benchmarkInsights = benchmarkInsights ? (benchmarkInsights + '\n\n' + externalBench) : externalBench
     } catch (e) {
-      console.log('⚠️ External benchmark skipped: ' + String(e && e.message ? e.message : e))
+      log('⚠️ External benchmark skipped: ' + String(e && e.message ? e.message : e))
     }
 
     const existingHighlights = await convEnf_fetchHighlights_(tripId, tripNumber || '')
@@ -112,26 +112,26 @@ async function runConversionEnforcer(data) {
     const existingExcludes = await convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripExcludes Improvement With AI', 'ExcludeItem')
     const existingFaqs = await convEnf_fetchFaqs_(tripId, tripNumber || '')
     const existingPackages = await convEnf_fetchPackages_(tripId, tripNumber || '')
-    console.log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
-    console.log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
-    console.log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
-    console.log('Fetched FAQs count: ' + (existingFaqs && existingFaqs.faqs ? existingFaqs.faqs.length : 0))
-    console.log('Fetched Packages count: ' + (existingPackages && existingPackages.packages ? existingPackages.packages.length : 0))
-    if (!existingHighlights.items.length) console.log('⚠️ No Highlights found using TripID filter')
-    if (!existingItinerary.steps.length) console.log('⚠️ No Itinerary found using TripID filter')
-    if (!existingIncludes.items.length) console.log('⚠️ No Includes found using TripID filter')
-    if (!existingFaqs.faqs.length) console.log('⚠️ No FAQs found using TripID filter')
-    if (!existingPackages.packages.length) console.log('⚠️ No Packages found using TripID filter')
-    console.log('🔹 Processing Highlights...')
-    console.log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
-    console.log('🔹 Processing Itinerary...')
-    console.log('Original Steps: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
-    console.log('🔹 Processing Includes...')
-    console.log('Original Includes: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
-    console.log('🔹 Processing FAQs...')
-    console.log('Original FAQs: ' + (existingFaqs && existingFaqs.faqs ? existingFaqs.faqs.length : 0))
-    console.log('🔹 Processing Packages...')
-    console.log('Original Packages: ' + (existingPackages && existingPackages.packages ? existingPackages.packages.length : 0))
+    log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
+    log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
+    log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
+    log('Fetched FAQs count: ' + (existingFaqs && existingFaqs.faqs ? existingFaqs.faqs.length : 0))
+    log('Fetched Packages count: ' + (existingPackages && existingPackages.packages ? existingPackages.packages.length : 0))
+    if (!existingHighlights.items.length) log('⚠️ No Highlights found using TripID filter')
+    if (!existingItinerary.steps.length) log('⚠️ No Itinerary found using TripID filter')
+    if (!existingIncludes.items.length) log('⚠️ No Includes found using TripID filter')
+    if (!existingFaqs.faqs.length) log('⚠️ No FAQs found using TripID filter')
+    if (!existingPackages.packages.length) log('⚠️ No Packages found using TripID filter')
+    log('🔹 Processing Highlights...')
+    log('Original Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
+    log('🔹 Processing Itinerary...')
+    log('Original Steps: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
+    log('🔹 Processing Includes...')
+    log('Original Includes: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
+    log('🔹 Processing FAQs...')
+    log('Original FAQs: ' + (existingFaqs && existingFaqs.faqs ? existingFaqs.faqs.length : 0))
+    log('🔹 Processing Packages...')
+    log('Original Packages: ' + (existingPackages && existingPackages.packages ? existingPackages.packages.length : 0))
 
     const payload = {
       trip: {
@@ -176,15 +176,15 @@ async function runConversionEnforcer(data) {
       standardContext = standardContext || {}
       standardContext.benchmark_insights = benchmarkInsights
     }
-    console.log('🧭 Standard Context:')
-    console.log(JSON.stringify(standardContext, null, 2))
+    log('🧭 Standard Context:')
+    log(JSON.stringify(standardContext, null, 2))
 
     const prompt = convEnf_buildPrompt_(payload, standardContext)
     let ai = null
     try {
       ai = await callAi_(prompt)
     } catch (e) {
-      console.log('⚠️ AI call skipped: ' + String(e && e.message ? e.message : e))
+      log('⚠️ AI call skipped: ' + String(e && e.message ? e.message : e))
       return
     }
     if (!ai || typeof ai !== 'object') return
@@ -244,7 +244,7 @@ async function runConversionEnforcer(data) {
       const hasAnyAtAGlance = Object.keys(atAGlance).some((k) => Boolean(atAGlance[k]))
       if (hasAnyAtAGlance) updateMain.AI_At_A_Glance = JSON.stringify(atAGlance)
     }
-    console.log('📤 Writing updates to Airtable...')
+    log('📤 Writing updates to Airtable...')
     if (Object.keys(updateMain).length) {
       updateMain.AI_LastUpdated = nowIso
       convEnf_logAirtableFields_('UPDATE', 'Improvement With AI', imp.id, updateMain)
@@ -257,8 +257,8 @@ async function runConversionEnforcer(data) {
     newHighlights = convEnf_applyEntranceFeesTruthToHighlights_(newHighlights, entranceTruth)
     newHighlights = convEnf_applyGuideTruthToHighlights_(newHighlights, guideTruth)
     if (newHighlights && newHighlights.length >= 3) {
-      console.log('✅ Improved Highlights:')
-      console.log(JSON.stringify(newHighlights, null, 2))
+      log('✅ Improved Highlights:')
+      log(JSON.stringify(newHighlights, null, 2))
       await convEnf_replaceHighlights_(tripId, existingHighlights.records, newHighlights, nowIso)
     }
 
@@ -268,8 +268,8 @@ async function runConversionEnforcer(data) {
     newItinerary = convEnf_sanitizeItineraryByFlags_(newItinerary, flags, evidence)
     if (newItinerary && rawCtx && rawCtx.truth) newItinerary = convEnf_applyTruthToItinerary_(newItinerary, rawCtx.truth)
     if (newItinerary && newItinerary.length >= 2) {
-      console.log('✅ Improved Itinerary:')
-      console.log(JSON.stringify(newItinerary, null, 2))
+      log('✅ Improved Itinerary:')
+      log(JSON.stringify(newItinerary, null, 2))
       await convEnf_replaceItinerary_(tripId, existingItinerary.records, newItinerary, nowIso)
     }
 
@@ -296,8 +296,8 @@ async function runConversionEnforcer(data) {
     }
 
     if (newIncluded && newIncluded.length >= 3) {
-      console.log('✅ Improved Includes:')
-      console.log(JSON.stringify(newIncluded, null, 2))
+      log('✅ Improved Includes:')
+      log(JSON.stringify(newIncluded, null, 2))
       await convEnf_replaceIncExc_(tripId, existingIncludes.records, 'TripIncludes Improvement With AI', 'IncludeItem', newIncluded, nowIso)
     }
     if (newExcluded && newExcluded.length >= 2) {
@@ -307,8 +307,8 @@ async function runConversionEnforcer(data) {
     newFaqs = convEnf_sanitizeFaqItems_(newFaqs, { max: 15 }, { included: newIncluded, excluded: newExcluded, flags, truth: rawCtx ? rawCtx.truth : null })
     newFaqs = convEnf_sortFaqItems_(newFaqs)
     if (newFaqs && newFaqs.length >= 3) {
-      console.log('✅ Improved FAQs:')
-      console.log(JSON.stringify(newFaqs, null, 2))
+      log('✅ Improved FAQs:')
+      log(JSON.stringify(newFaqs, null, 2))
       await convEnf_replaceFaqs_(tripId, existingFaqs.records, newFaqs, nowIso)
     }
     let packageCopyItems = convEnf_getArray_(ai, ['packages', 'items'])
@@ -318,12 +318,12 @@ async function runConversionEnforcer(data) {
     }
     _success = true
   } catch (e) {
-    console.log('❌ Conversion Enforcer ERROR:')
-    console.log(e && e.message ? e.message : String(e))
-    console.log(e && e.stack ? e.stack : '')
+    log('❌ Conversion Enforcer ERROR:')
+    log(e && e.message ? e.message : String(e))
+    log(e && e.stack ? e.stack : '')
   } finally {
-    if (_success) console.log('✅ Airtable update SUCCESS for Trip: ' + _logTripId)
-    console.log('🏁 Conversion Enforcer FINISHED for Trip: ' + _logTripId)
+    if (_success) log('✅ Airtable update SUCCESS for Trip: ' + _logTripId)
+    log('🏁 Conversion Enforcer FINISHED for Trip: ' + _logTripId)
   }
 }
 
@@ -1092,12 +1092,12 @@ function convEnf_logFieldChange_(action, tableName, recordId, fieldName, value) 
     const key = String(fieldName || '')
     const prefix = '🧾 ' + act + ' ' + tbl + rid + ' :: ' + key
 
-    if (value === null) { console.log(prefix + ' = null'); return }
-    if (value === undefined) { console.log(prefix + ' = undefined'); return }
-    if (typeof value === 'number' || typeof value === 'boolean') { console.log(prefix + ' = ' + String(value)); return }
+    if (value === null) { log(prefix + ' = null'); return }
+    if (value === undefined) { log(prefix + ' = undefined'); return }
+    if (typeof value === 'number' || typeof value === 'boolean') { log(prefix + ' = ' + String(value)); return }
 
     if (Array.isArray(value)) {
-      console.log(prefix + ' (array items=' + String(value.length) + '):')
+      log(prefix + ' (array items=' + String(value.length) + '):')
       for (let i = 0; i < value.length; i++) {
         const item = value[i]
         let line = ''
@@ -1113,13 +1113,13 @@ function convEnf_logFieldChange_(action, tableName, recordId, fieldName, value) 
     if (typeof value === 'object') {
       let js = ''
       try { js = JSON.stringify(value) } catch { js = '[object]' }
-      console.log(prefix + ' (json len=' + String(js.length) + '):')
+      log(prefix + ' (json len=' + String(js.length) + '):')
       convEnf_logChunks_(prefix + ' = ', js)
       return
     }
 
     const s = String(value)
-    console.log(prefix + ' (len=' + String(s.length) + '):')
+    log(prefix + ' (len=' + String(s.length) + '):')
     convEnf_logChunks_(prefix + ' = ', s)
   } catch {}
 }
@@ -1129,9 +1129,9 @@ function convEnf_logChunks_(linePrefix, text) {
     const p = String(linePrefix || '')
     const s = String(text || '')
     const chunkSize = 900
-    if (!s) { console.log(p + '""'); return }
+    if (!s) { log(p + '""'); return }
     for (let i = 0; i < s.length; i += chunkSize) {
-      console.log(p + s.slice(i, i + chunkSize))
+      log(p + s.slice(i, i + chunkSize))
     }
   } catch {}
 }
@@ -1269,19 +1269,19 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
       const looksLikeLanguage = (/\b(language|languages|english|french|german|spanish|italian|arabic)\b/.test(aLc))
       if (looksLikeLanguage && !looksLikeGroupSize) {
         a = "Group size depends on the option selected and availability. You'll receive the exact details after booking."
-        console.log('✅ Fixed FAQ: group size question had language answer')
+        log('✅ Fixed FAQ: group size question had language answer')
       } else if (!looksLikeGroupSize && !hasGroupEvidence) {
         a = "Group size depends on the option selected and availability. You'll receive the exact details after booking."
-        console.log('✅ Fixed FAQ: normalized group size answer')
+        log('✅ Fixed FAQ: normalized group size answer')
       }
       if (a.toLowerCase().includes('private') && !hasPrivateEvidence) {
         a = "Group size depends on the option selected and availability. You'll receive the exact details after booking."
-        console.log('✅ Fixed FAQ: removed unsupported private claim')
+        log('✅ Fixed FAQ: removed unsupported private claim')
       }
     }
     if (/languages?\b/.test(qLc) && !hasLanguageEvidence) {
       a = "Language availability is confirmed at booking."
-      console.log('✅ Fixed FAQ: normalized language answer')
+      log('✅ Fixed FAQ: normalized language answer')
     }
     a = convEnf_fixOptionalExtrasAnswer_(q, a)
     if (truth) {
@@ -1770,7 +1770,7 @@ async function convEnf_fetchRawContext_(tripId, tripNumber, tripFields) {
       entrance_excluded: /\b(entrance|admission|ticket|tickets)\b/.test(excLc) || (/\b(entrance|admission|ticket|tickets)\b/.test(incLc) && (/\bnot included\b/.test(incLc) || /\bexcluded\b/.test(incLc)))
     }
   } catch (e) {
-    console.log('convEnf_fetchRawContext_ error: ' + String(e && e.message ? e.message : e))
+    log('convEnf_fetchRawContext_ error: ' + String(e && e.message ? e.message : e))
   }
 
   return out
@@ -3271,7 +3271,7 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
       const hasPrivate = domOptions.some((x) => String(x && x.option_title ? x.option_title : '').toLowerCase().startsWith('private '))
       if (domOptions.length && (hasShared || hasPrivate)) {
         if (debug) {
-          console.log('GYG PW debug: dom_options=' + JSON.stringify(domOptions.map((x) => ({ t: x.option_title, rp: x.regular_price, sp: x.sale_price, cats: (x.categories || []).length }))))
+          log('GYG PW debug: dom_options=' + JSON.stringify(domOptions.map((x) => ({ t: x.option_title, rp: x.regular_price, sp: x.sale_price, cats: (x.categories || []).length }))))
         }
         return domOptions.slice(0, 6)
       }
@@ -3341,7 +3341,7 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
           domOpts.push({ option_id: '', option_title: line, categories: cats })
         }
         if (domOpts.length) {
-          if (debug) console.log('GYG PW debug: dom_options=' + JSON.stringify(domOpts.map((x) => x.option_title)))
+          if (debug) log('GYG PW debug: dom_options=' + JSON.stringify(domOpts.map((x) => x.option_title)))
           return domOpts
         }
       } catch {
@@ -3363,7 +3363,7 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
         if ((key.startsWith('shared') || key.startsWith('private')) && key.includes('entry') && key.includes('ticket')) dedupTitles.push(t)
         if (dedupTitles.length >= 6) break
       }
-      if (debug) console.log('GYG PW debug: option_titles_fallback=' + JSON.stringify(dedupTitles))
+      if (debug) log('GYG PW debug: option_titles_fallback=' + JSON.stringify(dedupTitles))
       if (!dedupTitles.length) return []
       const catsFromSidebar = []
       if (sidebarMs && (sidebarMs.regular != null || sidebarMs.sale != null)) {
@@ -3387,10 +3387,10 @@ async function convEnf_playwrightExtractGygOptions_(pageUrl) {
     }
 
     if (debug) {
-      console.log('GYG PW debug: clicked_check_availability=' + String(clickedAvailability))
-      console.log('GYG PW debug: json_responses=' + String(collected.length) + ' meta=' + JSON.stringify(collectedMeta))
-      if (debugBlocksSnippet) console.log('GYG PW debug: blocks_snippet=' + debugBlocksSnippet)
-      console.log('GYG PW debug: options_found=' + String(out.length))
+      log('GYG PW debug: clicked_check_availability=' + String(clickedAvailability))
+      log('GYG PW debug: json_responses=' + String(collected.length) + ' meta=' + JSON.stringify(collectedMeta))
+      if (debugBlocksSnippet) log('GYG PW debug: blocks_snippet=' + debugBlocksSnippet)
+      log('GYG PW debug: options_found=' + String(out.length))
     }
 
     const dedup = []
@@ -3689,7 +3689,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
     await airtableUpdate_('Trips', tripId, { Packages_Status: 'Pending', Prices_Status: 'Pending' })
   } catch {
   }
-  console.log('✅ Wrote GYG reference options to Airtable: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length)
+  log('✅ Wrote GYG reference options to Airtable: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length)
 }
 
 function convEnf_normOptionTitle_(s) {
@@ -3829,7 +3829,7 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
   }
 
   if (!pkgFieldsArray.length) {
-    console.log('ℹ️ No missing GYG options detected to create as Draft packages')
+    log('ℹ️ No missing GYG options detected to create as Draft packages')
     return
   }
 
@@ -3840,7 +3840,7 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
     await airtableUpdate_('Trips', tripId, { Packages_Status: 'Pending', Prices_Status: 'Pending' })
   } catch {
   }
-  console.log('✅ Created Draft packages from GYG: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length + ' (review in Airtable before publishing)')
+  log('✅ Created Draft packages from GYG: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length + ' (review in Airtable before publishing)')
 }
 
 async function convEnf_playwrightScrape_(pageUrl) {
@@ -4117,7 +4117,7 @@ async function convEnf_replaceHighlights_(tripId, existingRecords, items, nowIso
   const recs = Array.isArray(existingRecords) ? existingRecords : []
   const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
   if (ids.length) await airtableBatchDelete_('Highlights Improvement With AI', ids)
-  console.log('Deleted old records: ' + ids.length)
+  log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < items.length; i++) {
     const t = String(items[i] || '').replace(/\s+/g, ' ').trim()
@@ -4132,14 +4132,14 @@ async function convEnf_replaceHighlights_(tripId, existingRecords, items, nowIso
   }
   for (let i = 0; i < fieldsArray.length; i++) convEnf_logAirtableFields_('CREATE', 'Highlights Improvement With AI', '', fieldsArray[i])
   await airtableBatchCreate_('Highlights Improvement With AI', fieldsArray)
-  console.log('Created new records: ' + fieldsArray.length)
+  log('Created new records: ' + fieldsArray.length)
 }
 
 async function convEnf_replaceItinerary_(tripId, existingRecords, steps, nowIso) {
   const recs = Array.isArray(existingRecords) ? existingRecords : []
   const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
   if (ids.length) await airtableBatchDelete_('Itinerary Improvement With AI', ids)
-  console.log('Deleted old records: ' + ids.length)
+  log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < steps.length; i++) {
     const st = steps[i] || {}
@@ -4168,14 +4168,14 @@ async function convEnf_replaceItinerary_(tripId, existingRecords, steps, nowIso)
   }
   for (let i = 0; i < fieldsArray.length; i++) convEnf_logAirtableFields_('CREATE', 'Itinerary Improvement With AI', '', fieldsArray[i])
   await airtableBatchCreate_('Itinerary Improvement With AI', fieldsArray)
-  console.log('Created new records: ' + fieldsArray.length)
+  log('Created new records: ' + fieldsArray.length)
 }
 
 async function convEnf_replaceIncExc_(tripId, existingRecords, tableName, textField, items, nowIso) {
   const recs = Array.isArray(existingRecords) ? existingRecords : []
   const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
   if (ids.length) await airtableBatchDelete_(tableName, ids)
-  console.log('Deleted old records: ' + ids.length)
+  log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < items.length; i++) {
     const t = String(items[i] || '').replace(/\s+/g, ' ').trim()
@@ -4186,14 +4186,14 @@ async function convEnf_replaceIncExc_(tripId, existingRecords, tableName, textFi
   }
   for (let i = 0; i < fieldsArray.length; i++) convEnf_logAirtableFields_('CREATE', tableName, '', fieldsArray[i])
   await airtableBatchCreate_(tableName, fieldsArray)
-  console.log('Created new records: ' + fieldsArray.length)
+  log('Created new records: ' + fieldsArray.length)
 }
 
 async function convEnf_replaceFaqs_(tripId, existingRecords, faqs, nowIso) {
   const recs = Array.isArray(existingRecords) ? existingRecords : []
   const ids = recs.map((r) => (r && r.id ? r.id : '')).filter(Boolean)
   if (ids.length) await airtableBatchDelete_('FAQs Improvement With AI', ids)
-  console.log('Deleted old records: ' + ids.length)
+  log('Deleted old records: ' + ids.length)
   const fieldsArray = []
   for (let i = 0; i < faqs.length; i++) {
     const f0 = faqs[i] || {}
@@ -4210,7 +4210,7 @@ async function convEnf_replaceFaqs_(tripId, existingRecords, faqs, nowIso) {
   }
   for (let i = 0; i < fieldsArray.length; i++) convEnf_logAirtableFields_('CREATE', 'FAQs Improvement With AI', '', fieldsArray[i])
   await airtableBatchCreate_('FAQs Improvement With AI', fieldsArray)
-  console.log('Created new records: ' + fieldsArray.length)
+  log('Created new records: ' + fieldsArray.length)
 }
 
 async function convEnf_deleteLinked_(tripId, tableName, linkField) {
