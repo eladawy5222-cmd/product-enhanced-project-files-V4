@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const { mergeSeoStatusFromImprovementRecords } = require('./src/core/trips-merge')
+const { createImprovementRepository } = require('./src/ai/enhancement-helpers')
 
 function configurePlaywrightBrowsersPath() {
   try {
@@ -182,6 +183,7 @@ async function createServices(rootDir, existing) {
     taskFns,
     onTaskEvent: existing && existing.onTaskEvent ? existing.onTaskEvent : null
   })
+  const improvementRepo = createImprovementRepository({ airtable, http })
 
   async function resetTripStage(tripRecordId, stageName) {
     const key = String(stageName || '').toLowerCase().replace(/[^a-z]/g, '')
@@ -193,11 +195,29 @@ async function createServices(rootDir, existing) {
       return true
     }
 
-    const formula = `FIND('${String(tripRecordId)}', ARRAYJOIN({Trip}))`
-    const res = await airtable.airtableGet('Improvement With AI', { filterByFormula: formula, maxRecords: 1 })
-    const recs = res && res.records ? res.records : []
-    if (!recs.length) throw new Error('Improvement record not found')
-    await airtable.airtableUpdate('Improvement With AI', recs[0].id, { [m.field]: 'Pending' })
+    const tripRes = await airtable.airtableGet('Trips', {
+      filterByFormula: `RECORD_ID() = '${String(tripRecordId).replace(/'/g, "\\'")}'`,
+      maxRecords: 1
+    })
+    const tripRecs = tripRes && tripRes.records ? tripRes.records : []
+    if (!tripRecs.length) throw new Error('Trip record not found')
+
+    const tripFields = tripRecs[0].fields || {}
+    let directRecordId = tripFields.ImprovementRecordId ? String(tripFields.ImprovementRecordId) : null
+    const linkedImp = tripFields['Improvement With AI']
+    if (Array.isArray(linkedImp) && linkedImp.length) directRecordId = String(linkedImp[0] || '').trim() || directRecordId
+
+    const improvementRec = await improvementRepo.fetchImprovementRecordForTrip({
+      tripRecordId: String(tripRecordId || ''),
+      tripPublicId: tripFields.TripID ? String(tripFields.TripID) : '',
+      tripName: tripFields.Title ? String(tripFields.Title) : '',
+      directRecordId: directRecordId,
+      tableName: 'Improvement With AI',
+      tripLinkField: 'Trip'
+    })
+    if (!improvementRec || !improvementRec.id) throw new Error('Improvement record not found')
+
+    await airtable.airtableUpdate('Improvement With AI', improvementRec.id, { [m.field]: 'Pending' })
     await airtable.airtableUpdate('Trips', tripRecordId, { Pipeline_Status: 'In Progress' })
     return true
   }
