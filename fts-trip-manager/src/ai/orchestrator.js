@@ -367,9 +367,13 @@ async function progressTripPipeline_(tripId, f) {
     f.AI_Images_Status === 'Done';
 
   if (allStagesDone) {
+    log('🧩 Trip ' + tripId + ': All stages done. Invoking Conversion Enforcer...')
     try {
       await ConversionEnforcer.runConversionEnforcer({ id: tripId, fields: f })
-    } catch {
+      log('✅ Trip ' + tripId + ': Conversion Enforcer finished')
+    } catch (e) {
+      log('❌ Trip ' + tripId + ': Conversion Enforcer failed: ' + String(e && e.message ? e.message : e))
+      if (e && e.stack) log(String(e.stack))
     }
     await airtableUpdate_('Trips', tripId, {
       Pipeline_Status: 'Completed',
