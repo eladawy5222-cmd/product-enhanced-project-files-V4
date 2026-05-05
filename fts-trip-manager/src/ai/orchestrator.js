@@ -114,7 +114,7 @@ async function initializeEnhancementPipeline_(tripRecordId) {
     
     // Pipeline tracking
     Pipeline_Status: 'Initialized',  // ← Orchestrator will detect this
-    Publish_Status: 'Not Started'     // ← Will be set to 'Waiting' when pipeline completes
+    Publish_Status: 'Not Started'     // ← Will be set to 'Pending' when pipeline completes
   };
   
   try {
@@ -486,13 +486,6 @@ async function findImprovementRecordForTrip_(tripId, tripNumber, tripName) {
   }
 }
 
-function getStatusFieldForStageName_(stageName) {
-  const s = String(stageName || '').trim()
-  if (s === 'Content') return 'AI_Status'
-  if (s === 'Images') return 'AI_Images_Status'
-  return ''
-}
-
 function getStageOrderIndex_(stageName) {
   const s = String(stageName || '').trim()
   if (s === 'Content') return 1
@@ -571,47 +564,6 @@ async function clearStageLeaseIfRecoverableForRequestedStage_(tripRecordId, requ
   const f = recs[0].fields || {}
   const ok = await isRecoverableStaleStageLease_(f, requestedStage, tripRecordId)
   if (!ok) return false
-  try {
-    await airtableUpdate_('Trips', tripRecordId, { Stage_Name: '', Stage_Owner: '', Stage_RunId: '', Stage_LeaseUntil: '' })
-    return true
-  } catch {
-    return false
-  }
-}
-
-function isRecoverableStaleStageLease_(tripFields, requestedStage, nowMs) {
-  const f = tripFields || {}
-  const now = Number(nowMs || Date.now())
-  const leaseRaw = f.Stage_LeaseUntil
-  let leaseMs = 0
-  if (leaseRaw) {
-    const d = new Date(leaseRaw)
-    if (!Number.isNaN(d.getTime())) leaseMs = d.getTime()
-  }
-  if (!leaseMs || leaseMs <= now) return false
-  const currentStage = String(f.Stage_Name || '').trim()
-  const req = String(requestedStage || '').trim()
-  if (!currentStage || !req) return false
-  if (currentStage === req) return false
-  const statusField = getStatusFieldForStageName_(currentStage)
-  if (!statusField) return false
-  const st = String(f[statusField] || '')
-  if (!(st === 'Done' || st === 'Error')) return false
-  return true
-}
-
-async function clearStageLeaseIfRecoverableForRequestedStage_(tripRecordId, requestedStage) {
-  let res = null
-  try {
-    res = await airtableGet_('Trips', { filterByFormula: `RECORD_ID() = '${String(tripRecordId)}'`, maxRecords: 1 })
-  } catch {
-    return false
-  }
-  const recs = res && res.records ? res.records : []
-  if (!recs.length) return false
-  const f = recs[0].fields || {}
-  const now = Date.now()
-  if (!isRecoverableStaleStageLease_(f, requestedStage, now)) return false
   try {
     await airtableUpdate_('Trips', tripRecordId, { Stage_Name: '', Stage_Owner: '', Stage_RunId: '', Stage_LeaseUntil: '' })
     return true
