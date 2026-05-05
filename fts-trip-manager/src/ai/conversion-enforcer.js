@@ -3699,18 +3699,16 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
 
   const resPkg = await airtableGet_('Packages', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 })
   const existingPkgs = resPkg && resPkg.records ? resPkg.records : []
-  const toDeletePkg = []
-  const pkgIdsToDelete = new Set()
+  const toDraftPkg = []
+  const pkgIdsToUnlinkPrices = new Set()
   existingPkgs.forEach((r) => {
     const f = r && r.fields ? r.fields : {}
     const st = String(f.Status || '').toLowerCase().trim()
-    const link = String(f.PackageLink || '').toLowerCase()
+    if (st === 'reference' || st === 'competitor' || st === 'draft' || st === 'proposed') return
+    toDraftPkg.push(r.id)
     const pid = String(f.PackageID || '').trim()
-    if ((st === 'reference' || st === 'publish') && (link.includes('getyourguide.com') || /^(FTS-GYG-|FTS-GYGOPT-|GYG-|GYGOPT-)/i.test(pid))) {
-      toDeletePkg.push(r.id)
-      if (pid) pkgIdsToDelete.add(pid)
-      pkgIdsToDelete.add(r.id)
-    }
+    if (pid) pkgIdsToUnlinkPrices.add(pid)
+    pkgIdsToUnlinkPrices.add(r.id)
   })
 
   const resPrice = await airtableGet_('Prices', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 })
@@ -3720,11 +3718,19 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
     const f = r && r.fields ? r.fields : {}
     const pidRaw = f.PackageID
     const pid = (Array.isArray(pidRaw) && pidRaw.length) ? String(pidRaw[0] || '').trim() : String(pidRaw || '').trim()
-    if (pid && pkgIdsToDelete.has(pid)) toDeletePrice.push(r.id)
+    if (pid && pkgIdsToUnlinkPrices.has(pid)) toDeletePrice.push(r.id)
   })
 
   if (toDeletePrice.length) await airtableBatchDelete_('Prices', toDeletePrice)
-  if (toDeletePkg.length) await airtableBatchDelete_('Packages', toDeletePkg)
+  if (toDraftPkg.length) {
+    for (const id of toDraftPkg) {
+      try {
+        await airtableUpdate_('Packages', id, { Status: 'Draft' })
+      } catch {
+      }
+    }
+    log('✅ Demoted old Packages to Draft to avoid publishing: Packages=' + String(toDraftPkg.length) + ' PricesDeleted=' + String(toDeletePrice.length))
+  }
 
   const pkgFieldsArray = []
   const priceFieldsArray = []
