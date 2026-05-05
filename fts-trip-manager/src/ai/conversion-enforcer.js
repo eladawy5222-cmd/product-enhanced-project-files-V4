@@ -3685,10 +3685,6 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
   if (pkgFieldsArray.length) await airtableBatchCreate_('Packages', pkgFieldsArray)
   if (priceFieldsArray.length) await airtableBatchCreate_('Prices', priceFieldsArray)
 
-  try {
-    await airtableUpdate_('Trips', tripId, { Packages_Status: 'Pending', Prices_Status: 'Pending' })
-  } catch {
-  }
   log('✅ Wrote GYG reference options to Airtable: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length)
 }
 
@@ -3836,10 +3832,6 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
   if (pkgFieldsArray.length) await airtableBatchCreate_('Packages', pkgFieldsArray)
   if (priceFieldsArray.length) await airtableBatchCreate_('Prices', priceFieldsArray)
 
-  try {
-    await airtableUpdate_('Trips', tripId, { Packages_Status: 'Pending', Prices_Status: 'Pending' })
-  } catch {
-  }
   log('✅ Created Draft packages from GYG: Packages=' + pkgFieldsArray.length + ' Prices=' + priceFieldsArray.length + ' (review in Airtable before publishing)')
 }
 
