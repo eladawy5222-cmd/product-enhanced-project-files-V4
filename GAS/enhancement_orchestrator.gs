@@ -71,7 +71,7 @@ function initializeEnhancementPipeline_(tripRecordId) {
     
     // Pipeline tracking
     Pipeline_Status: 'Initialized',  // ← Orchestrator will detect this
-    Publish_Status: 'Not Started'     // ← Will be set to 'Waiting' when pipeline completes
+    Publish_Status: 'Not Started'     // ← Will be set to 'Pending' when pipeline completes
   };
   
   try {

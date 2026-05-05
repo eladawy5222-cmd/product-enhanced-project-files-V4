@@ -64,14 +64,14 @@ WordPress (WPTE) ←→ GAS Scripts ←→ Airtable ←→ AI (DeepSeek/OpenAI)
 ### 3. AI Enhancement Pipeline (9 مراحل)
 | المرحلة | الملف | الجدول المستهدف | الوظيفة |
 |---------|-------|----------------|---------|
-| 1 | `ai_seo_enhancer.gs` | Improvement With AI | SEO Title, Meta Desc, Permalink, Keywords, Excerpt |
-| 2 | `ai_enhancer.gs` | Improvement With AI | Content: Overview, Description, Itinerary Desc, Tab Content, Duration |
-| 3 | `ai_addons_enhancer.gs` | AddOns Improvement With AI | تحسين Add-ons + 3 fixed items |
-| 4 | `ai_highlights.gs` | Highlights Improvement With AI | 5-10 highlights محسّنة |
-| 5 | `ai_itinerary_enhancer.gs` | Itinerary Improvement With AI | 5-30 خطوة itinerary محسّنة |
-| 6 | `ai_includes_excludes.gs` | TripIncludes/Excludes Improvement With AI | 4-16 includes, 4-6 excludes |
-| 7 | `ai_trip_facts.gs` | TripFacts Improvement With AI | 6 trip facts بالظبط |
-| 8 | `ai_faqs_enhancer.gs` | FAQs Improvement With AI | 8-12 FAQ |
+| 1 | `ai_enhancer.gs` | Improvement With AI | Content: Overview, Description, Itinerary Desc, Tab Content, Duration |
+| 2 | `ai_addons_enhancer.gs` | AddOns Improvement With AI | تحسين Add-ons + 3 fixed items |
+| 3 | `ai_highlights.gs` | Highlights Improvement With AI | 5-10 highlights محسّنة |
+| 4 | `ai_itinerary_enhancer.gs` | Itinerary Improvement With AI | 5-30 خطوة itinerary محسّنة |
+| 5 | `ai_includes_excludes.gs` | TripIncludes/Excludes Improvement With AI | 4-16 includes, 4-6 excludes |
+| 6 | `ai_trip_facts.gs` | TripFacts Improvement With AI | 6 trip facts بالظبط |
+| 7 | `ai_faqs_enhancer.gs` | FAQs Improvement With AI | 8-12 FAQ |
+| 8 | `ai_seo_enhancer.gs` | Improvement With AI | SEO Title, Meta Desc, Permalink, Keywords, Excerpt |
 | 9 | `ai_images_enhancer.gs` | Images Improvement With AI | Image SEO (Title, Caption, Alt) via OpenAI |
 
 ### 4. Pipeline Orchestration (التنسيق)
@@ -147,15 +147,13 @@ WordPress (WPTE) ←→ GAS Scripts ←→ Airtable ←→ AI (DeepSeek/OpenAI)
      ↓
 3. ORCHESTRATE: checkAndProgressPipeline() [every 5 min trigger]
      ↓
-   Stage 1: SEO (Pending → Processing → Done)
+  Stage 1: Content (Pending → Processing → Done)
      ↓
-   Stage 2: Content Enhancement (Pending → Processing → Done)
+  Stage 2: AddOns → Stage 3: Highlights → Stage 4: Itinerary
      ↓
-   Stage 3: AddOns → Stage 4: Highlights → Stage 5: Itinerary
+  Stage 5: Inc/Exc → Stage 6: Trip Facts → Stage 7: FAQs → Stage 8: SEO → Stage 9: Images
      ↓
-   Stage 6: Inc/Exc → Stage 7: Trip Facts → Stage 8: FAQs → Stage 9: Images
-     ↓
-4. COMPLETE: Pipeline_Status = "Completed", Publish_Status = "Waiting"
+4. COMPLETE: Pipeline_Status = "Completed", Publish_Status = "Pending"
      ↓
 5. PUBLISH: publisher.gs / updater.gs → WordPress API (POST)
 ```
@@ -203,14 +201,14 @@ Waiting → Pending → Processing → Done (or Error)
 | `runImportStepSafe` | كل 10 دقائق | استيراد رحلات من WP |
 | `checkAndProgressPipeline` | كل 5 دقائق | تقدم الـ AI pipeline |
 | `detectStuckProcesses` | كل 30 دقيقة | كشف العمليات المعلقة |
-| `runAiSeoEnhancementBatch` | كل 15 دقيقة | Stage 1: SEO |
-| `runAiEnhancementBatch` | كل 10-15 دقيقة | Stage 2: Content |
-| `runAiAddOnsEnhancementBatch` | trigger | Stage 3: AddOns |
-| `runAiHighlightsEnhancementBatch` | trigger | Stage 4: Highlights |
-| `runAiItineraryBatch` | trigger | Stage 5: Itinerary |
-| `runAiIncludesExcludesBatch` | trigger | Stage 6: Inc/Exc |
-| `runAiTripFactsBatch` | trigger | Stage 7: Trip Facts |
-| `runAiFaqsBatch` | trigger | Stage 8: FAQs |
+| `runAiEnhancementBatch` | كل 10-15 دقيقة | Stage 1: Content |
+| `runAiAddOnsEnhancementBatch` | trigger | Stage 2: AddOns |
+| `runAiHighlightsEnhancementBatch` | trigger | Stage 3: Highlights |
+| `runAiItineraryBatch` | trigger | Stage 4: Itinerary |
+| `runAiIncludesExcludesBatch` | trigger | Stage 5: Inc/Exc |
+| `runAiTripFactsBatch` | trigger | Stage 6: Trip Facts |
+| `runAiFaqsBatch` | trigger | Stage 7: FAQs |
+| `runAiSeoEnhancementBatch` | كل 15 دقيقة | Stage 8: SEO |
 | `runAiImagesEnhancementBatch` | trigger | Stage 9: Images |
 | `runPublisherBatch` | trigger | نشر المحتوى |
 

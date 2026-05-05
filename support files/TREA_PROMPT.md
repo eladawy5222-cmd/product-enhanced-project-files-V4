@@ -37,14 +37,14 @@ Import Pipeline (WordPress → Airtable):
 - `upsert.gs` — Write data to Airtable (create/update + replace children)
 
 AI Enhancement Pipeline (9 sequential stages):
-- `ai_seo_enhancer.gs` — Stage 1: SEO (Title, Meta, Permalink, Keywords, Excerpt)
-- `ai_enhancer.gs` — Stage 2: Content (Overview, Description, Itinerary Desc, Tab Content, Duration)
-- `ai_addons_enhancer.gs` — Stage 3: Enhanced Add-ons + 3 fixed items
-- `ai_highlights.gs` — Stage 4: 5-10 trip highlights
-- `ai_itinerary_enhancer.gs` — Stage 5: 5-30 itinerary steps
-- `ai_includes_excludes.gs` — Stage 6: 4-16 includes, 4-6 excludes
-- `ai_trip_facts.gs` — Stage 7: Exactly 6 trip facts
-- `ai_faqs_enhancer.gs` — Stage 8: 8-12 FAQs
+- `ai_enhancer.gs` — Stage 1: Content (Overview, Description, Itinerary Desc, Tab Content, Duration)
+- `ai_addons_enhancer.gs` — Stage 2: Enhanced Add-ons + 3 fixed items
+- `ai_highlights.gs` — Stage 3: 5-10 trip highlights
+- `ai_itinerary_enhancer.gs` — Stage 4: 5-30 itinerary steps
+- `ai_includes_excludes.gs` — Stage 5: 4-16 includes, 4-6 excludes
+- `ai_trip_facts.gs` — Stage 6: Exactly 6 trip facts
+- `ai_faqs_enhancer.gs` — Stage 7: 8-12 FAQs
+- `ai_seo_enhancer.gs` — Stage 8: SEO (Title, Meta, Permalink, Keywords, Excerpt)
 - `ai_images_enhancer.gs` — Stage 9: Image SEO (Title, Caption, Alt) via OpenAI
 
 Pipeline Orchestration:
@@ -292,9 +292,9 @@ WORKER_ID=desktop-app
 - Convert `progressTripPipeline_()` to async
 - Keep ALL stage transition logic exactly:
   ```
-  Stage 1 (SEO) → Stage 2 (Content) → Stage 3 (AddOns) → Stage 4 (Highlights)
-  → Stage 5 (Itinerary) → Stage 6 (Inc/Exc) → Stage 7 (Trip Facts)
-  → Stage 8 (FAQs) → Stage 9 (Images) → Pipeline Complete
+  Stage 1 (Content) → Stage 2 (AddOns) → Stage 3 (Highlights) → Stage 4 (Itinerary)
+  → Stage 5 (Inc/Exc) → Stage 6 (Trip Facts) → Stage 7 (FAQs)
+  → Stage 8 (SEO) → Stage 9 (Images) → Pipeline Complete
   ```
 - Keep `detectStuckProcesses()` logic
 - Replace `LockService` with async-mutex
@@ -385,7 +385,7 @@ Each schedule must be:
 - Toggle: Enable/Disable publisher workflow
 - Button: "Run Publisher Batch"
 - Button: "Run Updater Batch"
-- Table of trips with Publish_Status = Waiting/Publishing/Done/Error
+- Table of trips with Publish_Status = Pending/Publishing/Done/Error
 - Per-trip: "Publish Now" / "Update Now" buttons
 
 #### 5. Migration Page
@@ -492,7 +492,7 @@ nsis:
 1. **DO NOT modify any AI prompt text** — copy them exactly as-is from the GAS files
 2. **DO NOT change any Airtable field names** — they must match the existing schema exactly
 3. **DO NOT change any API endpoint URLs** — keep WordPress and Airtable URLs identical
-4. **DO NOT change the pipeline stage order** — it must remain: SEO → Content → AddOns → Highlights → Itinerary → Inc/Exc → Trip Facts → FAQs → Images
+4. **DO NOT change the pipeline stage order** — it must remain: Content → AddOns → Highlights → Itinerary → Inc/Exc → Trip Facts → FAQs → SEO → Images
 5. **DO NOT change status values** — keep: Waiting, Pending, Processing, Done, Error, Initialized, In Progress, Completed
 6. **DO NOT change table names** — all Airtable table names must match exactly (e.g., "Improvement With AI", "Highlights Improvement With AI", etc.)
 7. **PRESERVE ALL business rules** — museum distinction logic, conditional visit rules, realism rules, batch sizes, daily limits

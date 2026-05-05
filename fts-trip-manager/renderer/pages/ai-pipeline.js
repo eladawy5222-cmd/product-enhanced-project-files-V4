@@ -20,14 +20,14 @@ function el(tag, attrs, ...children) {
 }
 
 const STAGES = [
-  { key: 'seo', label: 'Stage 1: SEO', field: 'AI_SEO_Status' },
-  { key: 'content', label: 'Stage 2: Content', field: 'AI_Status' },
-  { key: 'addons', label: 'Stage 3: AddOns', field: 'AI_AddOns_Status' },
-  { key: 'highlights', label: 'Stage 4: Highlights', field: 'AI_Highlights_Status' },
-  { key: 'itinerary', label: 'Stage 5: Itinerary', field: 'AI_Itinerary_Status' },
-  { key: 'incexc', label: 'Stage 6: Includes/Excludes', field: 'AI_IncExc_Status' },
-  { key: 'tripfacts', label: 'Stage 7: Trip Facts', field: 'AI_TripFacts_Status' },
-  { key: 'faqs', label: 'Stage 8: FAQs', field: 'AI_FAQs_Status' },
+  { key: 'content', label: 'Stage 1: Content', field: 'AI_Status' },
+  { key: 'addons', label: 'Stage 2: AddOns', field: 'AI_AddOns_Status' },
+  { key: 'highlights', label: 'Stage 3: Highlights', field: 'AI_Highlights_Status' },
+  { key: 'itinerary', label: 'Stage 4: Itinerary', field: 'AI_Itinerary_Status' },
+  { key: 'incexc', label: 'Stage 5: Includes/Excludes', field: 'AI_IncExc_Status' },
+  { key: 'tripfacts', label: 'Stage 6: Trip Facts', field: 'AI_TripFacts_Status' },
+  { key: 'faqs', label: 'Stage 7: FAQs', field: 'AI_FAQs_Status' },
+  { key: 'seo', label: 'Stage 8: SEO', field: 'AI_SEO_Status' },
   { key: 'images', label: 'Stage 9: Images', field: 'AI_Images_Status' }
 ]
 

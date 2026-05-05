@@ -28,7 +28,7 @@ It must preserve 100% of the current business logic and all AI prompt text exact
 
 * Airtable schema: table names, field names, and status values must match the existing base exactly.
 
-* Stage order remains: SEO → Content → AddOns → Highlights → Itinerary → Inc/Exc → Trip Facts → FAQs → Images.
+* Stage order remains: Content → AddOns → Highlights → Itinerary → Inc/Exc → Trip Facts → FAQs → SEO → Images.
 
 * Status values remain: Waiting, Pending, Processing, Done, Error, Initialized, In Progress, Completed.
 
@@ -105,7 +105,7 @@ Each page is a separate route and a separate file in `renderer/pages/`.
 
 * Must separate the two workflows:
 
-  * Publisher: creates NEW trips in WordPress; handles trips with `Publish_Status = "Waiting"` and no WP Post ID.
+  * Publisher: creates NEW trips in WordPress; handles trips with `Publish_Status = "Pending"` and no WP Post ID.
 
   * Updater: updates EXISTING trips; handles trips with an existing WP Post ID and applies preservation rules.
 
@@ -218,4 +218,3 @@ The user must be able to run any single stage on any trip without requiring the 
 * Scheduler can start/stop jobs at runtime and persists configuration.
 
 * Logs stream into the UI and can be filtered and exported.
-
