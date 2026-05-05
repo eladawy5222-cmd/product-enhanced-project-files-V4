@@ -3531,9 +3531,33 @@ async function convEnf_fetchGygOptionsIntel_(tripFields) {
   const picked = convEnf_pickCompetitorResults_(results, 4)
   if (!picked.length) return null
 
+  function pad2_(n) {
+    const x = String(n == null ? '' : n)
+    return x.length >= 2 ? x : ('0' + x)
+  }
+
+  function formatYmdLocal_(d) {
+    const dt = d instanceof Date ? d : new Date(d)
+    if (!(dt instanceof Date) || !isFinite(dt.getTime())) return ''
+    return `${dt.getFullYear()}-${pad2_(dt.getMonth() + 1)}-${pad2_(dt.getDate())}`
+  }
+
+  function resolveGygDateFrom_() {
+    const raw = String(process.env.GYG_DATE_FROM || '').trim()
+    if (!raw) return ''
+    const lc = raw.toLowerCase()
+    if (lc === 'tomorrow' || lc === '+1') {
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      return formatYmdLocal_(d)
+    }
+    if (lc === 'today' || lc === 'now' || lc === '0' || lc === '+0') return formatYmdLocal_(new Date())
+    return raw
+  }
+
   const packages = []
   const sources = []
-  const dateFrom = String(process.env.GYG_DATE_FROM || '').trim()
+  const dateFrom = resolveGygDateFrom_()
   const pcs = convEnf_parseGygPcEnv_()
   const wantPwOptions =
     String(process.env.GYG_OPTIONS_PLAYWRIGHT || '').trim() === '1' ||
