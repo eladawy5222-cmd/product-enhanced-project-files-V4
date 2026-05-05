@@ -384,7 +384,7 @@ async function progressTripPipeline_(tripId, f) {
     var allStatuses = [
       f.AI_Status, f.AI_AddOns_Status, f.AI_Highlights_Status,
       f.AI_Itinerary_Status, f.AI_IncExc_Status, f.AI_TripFacts_Status,
-      f.AI_FAQs_Status, f.AI_SEO_Status, f.AI_Images_Status
+      f.AI_FAQs_Status, seoStatus, f.AI_Images_Status
     ];
     
     var hasProcessing = allStatuses.indexOf('Processing') !== -1;
@@ -410,7 +410,7 @@ async function detectStuckProcesses() {
   var statusFields = [
     'AI_Status', 'AI_AddOns_Status', 'AI_Highlights_Status',
     'AI_Itinerary_Status', 'AI_IncExc_Status', 'AI_TripFacts_Status',
-    'AI_FAQs_Status', 'AI_SEO_Status', 'AI_Images_Status'
+    'AI_FAQs_Status', 'AI_Images_Status'
   ];
   
   try {
@@ -429,6 +429,19 @@ async function detectStuckProcesses() {
       const trip = trips[i]
       const tripId = trip.id
       const f = trip.fields
+      try {
+        const improvementRec = await resolveImprovementRecordForTripRobust_(tripId, f, '', '', false)
+        const seoStatus = improvementRec && improvementRec.fields
+          ? (improvementRec.fields.AI_SEO_Status || 'Waiting')
+          : 'Waiting'
+
+        if (seoStatus === 'Processing') {
+          log('⚠️ STUCK PROCESS DETECTED: Trip ' + tripId + ', Field: AI_SEO_Status')
+          log('   SEO status has been "Processing" in Improvement With AI - may need manual review')
+          stuckCount++
+        }
+      } catch {
+      }
       for (let j = 0; j < statusFields.length; j++) {
         const statusField = statusFields[j]
         if (f[statusField] === 'Processing') {
