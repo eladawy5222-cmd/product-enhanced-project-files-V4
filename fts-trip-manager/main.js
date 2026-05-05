@@ -115,7 +115,7 @@ async function createServices(rootDir, existing) {
   const state = createStateService({ store })
   const aiProvider = createAiProvider({ http, logger, config })
 
-  const orchestrator = createOrchestrator({ airtable, http, config, logger, lock, store })
+  const orchestrator = createOrchestrator({ airtable, http, config, logger, lock, store, aiProvider })
   const wp = createWpClient({ http, config })
   const upsert = createUpsertService({ airtable, config, logger, fetchTripById: wp.fetchTripById })
   const syncRunner = createSyncRunner({
