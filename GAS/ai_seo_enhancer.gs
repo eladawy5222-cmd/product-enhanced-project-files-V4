@@ -467,7 +467,14 @@ function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
 }
 
 function normalizeSlugEn_(slug) {
-  var s = String(slug || '').toLowerCase().trim();
+  var raw = String(slug || '').trim();
+  raw = raw.replace(/\\/g, '/');
+  raw = raw.split('#')[0].split('?')[0];
+  if (raw.indexOf('/') !== -1) {
+    var parts = raw.split('/').filter(function(x) { return !!x; });
+    if (parts.length) raw = parts[parts.length - 1];
+  }
+  var s = raw.toLowerCase().trim();
   s = s.replace(/\s+/g, '-');
   s = s.replace(/[^a-z0-9\-]/g, '');
   s = s.replace(/-+/g, '-');
