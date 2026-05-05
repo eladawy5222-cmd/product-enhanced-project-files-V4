@@ -174,7 +174,7 @@ function progressTripPipeline_(tripId, f) {
       tripFields: f,
       tableName: 'Improvement With AI',
       tripLinkField: 'Trip',
-      initialFields: { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' }
+      initialFields: { AI_SEO_Status: 'Waiting' }
     });
 
     if (imp && imp.id) {
@@ -186,9 +186,9 @@ function progressTripPipeline_(tripId, f) {
       if (!impId) {
         Logger.log('❌ Failed to resolve Improvement record id for Trip ' + tripId);
       } else {
-        airtableUpdate_('Improvement With AI', impId, { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' });
+        airtableUpdate_('Improvement With AI', impId, { AI_SEO_Status: 'Waiting' });
       }
-      Logger.log('✅ Ensured Improvement record with Content = Pending (SEO = Waiting)');
+      Logger.log('✅ Ensured Improvement record with SEO = Waiting');
       airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress', AI_Status: 'Pending' });
       Logger.log('✅ Trip ' + tripId + ': Pipeline moved to In Progress');
     } else {

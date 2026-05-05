@@ -230,12 +230,12 @@ async function progressTripPipeline_(tripId, f) {
       tripName: f.Title || '',
       tableName: 'Improvement With AI',
       tripLinkField: 'Trip',
-      initialFields: { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' }
+      initialFields: { AI_SEO_Status: 'Waiting' }
     });
 
     if (imp && imp.id) {
-      await airtableUpdate_('Improvement With AI', imp.id, { AI_SEO_Status: 'Waiting', AI_Status: 'Pending' })
-      log('✅ Ensured Improvement record with Content = Pending (SEO = Waiting)');
+      await airtableUpdate_('Improvement With AI', imp.id, { AI_SEO_Status: 'Waiting' })
+      log('✅ Ensured Improvement record with SEO = Waiting');
       await airtableUpdate_('Trips', tripId, { Pipeline_Status: 'In Progress', AI_Status: 'Pending' })
       log('✅ Trip ' + tripId + ': Pipeline moved to In Progress');
     } else {
