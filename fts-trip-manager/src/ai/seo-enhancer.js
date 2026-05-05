@@ -680,11 +680,11 @@ function buildFallbackSeoMetaDescriptionEn_(focusKeyword, tripTitle) {
   var title = String(tripTitle || '').trim()
   var base = ''
   if (kw) {
-    base = 'Explore ' + kw + '. See top highlights with a local guide. Book now.'
+    base = 'Explore ' + kw + '. See top highlights with a local guide. Easy online booking.'
   } else if (title) {
-    base = 'Explore ' + title + '. See top highlights with a local guide. Book now.'
+    base = 'Explore ' + title + '. See top highlights with a local guide. Easy online booking.'
   } else {
-    base = 'Explore this guided tour. See top highlights with a local guide. Book now.'
+    base = 'Explore this guided tour. See top highlights with a local guide. Easy online booking.'
   }
   var res = finalizeSeoMetaDescriptionEn_Result_(base, AI_SEO_META_MAX_LEN_)
   return res && res.text ? res.text : ''
