@@ -466,6 +466,21 @@ function finalizeSeoMetaDescriptionEn_Result_(text, maxLen) {
   return { text: s, repaired: repaired, danglingDetected: danglingDetected, weakCtaRemoved: weakCtaRemoved, trimmedToSentence: trimmedToSentence, fallbackUsed: fallbackUsed };
 }
 
+function buildFallbackSeoMetaDescriptionEn_(focusKeyword, tripTitle) {
+  var kw = String(focusKeyword || '').trim();
+  var title = String(tripTitle || '').trim();
+  var base = '';
+  if (kw) {
+    base = 'Explore ' + kw + '. See top highlights with a local guide. Book now.';
+  } else if (title) {
+    base = 'Explore ' + title + '. See top highlights with a local guide. Book now.';
+  } else {
+    base = 'Explore this guided tour. See top highlights with a local guide. Book now.';
+  }
+  var res = finalizeSeoMetaDescriptionEn_Result_(base, AI_SEO_META_MAX_LEN_);
+  return res && res.text ? res.text : '';
+}
+
 function normalizeSlugEn_(slug) {
   var raw = String(slug || '').trim();
   raw = raw.replace(/\\/g, '/');
@@ -1060,6 +1075,7 @@ function runAiSeoEnhancementBatch() {
 
         var slugNowForSeo = String(combinedFields.Slug || combinedFields.slug || aiResult.AI_SEO_Permalink || combinedFields.Permalink || '').trim();
         var civCtxSeo = isCivilizationMuseumContextSeoEn_(combinedFields.Title || '', slugNowForSeo, (aiResult.AI_SEO_Meta_Description || '') + ' ' + (aiResult.AI_SEO_Title || ''));
+        var originalMetaDesc = String(combinedFields.SEO_Meta_Description || '').trim();
 
         if (aiResult.AI_SEO_Title) {
           var beforeTitle = String(aiResult.AI_SEO_Title || '').trim();
@@ -1078,6 +1094,23 @@ function runAiSeoEnhancementBatch() {
           if (metaRes.trimmedToSentence) Logger.log('AI SEO Enhancer: SEO description trimmed to last complete sentence');
           if (metaRes.fallbackUsed) Logger.log('AI SEO Enhancer: SEO description fallback complete sentence used');
           if (beforeMeta !== aiResult.AI_SEO_Meta_Description) Logger.log('AI SEO Enhancer: SEO meta description cleaned');
+        }
+        if (!aiResult.AI_SEO_Meta_Description) {
+          var fb = '';
+          if (originalMetaDesc) {
+            var fbRes = finalizeSeoMetaDescriptionEn_Result_(originalMetaDesc, AI_SEO_META_MAX_LEN_);
+            fb = fbRes && fbRes.text ? fbRes.text : '';
+            if (fb) {
+              var fbNorm = normalizeCivilizationMuseumPhraseSeoEn_(fb, civCtxSeo);
+              if (fbNorm !== fb) {
+                var fbRes2 = finalizeSeoMetaDescriptionEn_Result_(fbNorm, AI_SEO_META_MAX_LEN_);
+                fb = fbRes2 && fbRes2.text ? fbRes2.text : fb;
+              }
+            }
+          }
+          if (!fb) fb = buildFallbackSeoMetaDescriptionEn_(aiResult.AI_SEO_FocusKeywords, combinedFields.Title || '');
+          aiResult.AI_SEO_Meta_Description = fb;
+          if (fb) Logger.log('AI SEO Enhancer: meta description fallback applied');
         }
         if (aiResult.AI_SEO_Permalink) {
           var beforeSlug = String(aiResult.AI_SEO_Permalink || '').trim();
