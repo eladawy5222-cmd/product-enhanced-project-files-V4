@@ -36,6 +36,9 @@ function getAppConfig(options) {
     DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
     DEEPSEEK_ENDPOINT: process.env.DEEPSEEK_ENDPOINT || 'https://api.deepseek.com/chat/completions',
     DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    DEEPSEEK_MODEL_CONVERSION: process.env.DEEPSEEK_MODEL_CONVERSION || '',
+    DEEPSEEK_MAX_TOKENS: parseIntSafe(process.env.DEEPSEEK_MAX_TOKENS, 0),
+    DEEPSEEK_MAX_TOKENS_CONVERSION: parseIntSafe(process.env.DEEPSEEK_MAX_TOKENS_CONVERSION, 0),
 
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 

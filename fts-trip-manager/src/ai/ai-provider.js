@@ -34,6 +34,7 @@ async function callChatJson(options) {
   const model = String(options.model || '')
   const prompt = String(options.prompt || '')
   const temperature = options.temperature == null ? 0.2 : Number(options.temperature)
+  const maxTokens = options.maxTokens == null ? 0 : Number(options.maxTokens)
   const maxRetries = options.maxRetries == null ? 3 : Number(options.maxRetries)
 
   if (!endpoint) throw new Error('AI endpoint is missing')
@@ -61,6 +62,7 @@ async function callChatJson(options) {
     messages: [{ role: 'user', content: safePrompt }],
     temperature
   }
+  if (maxTokens && isFinite(maxTokens) && maxTokens > 0) body.max_tokens = Math.floor(maxTokens)
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -102,6 +104,7 @@ async function callOpenAiChatJsonWithMessages(options) {
   const model = String(options.model || '')
   const messages = Array.isArray(options.messages) ? options.messages : []
   const temperature = options.temperature == null ? 0.2 : Number(options.temperature)
+  const maxTokens = options.maxTokens == null ? 0 : Number(options.maxTokens)
   const maxRetries = options.maxRetries == null ? 3 : Number(options.maxRetries)
 
   if (!apiKey) throw new Error('AI apiKey is missing')
@@ -137,6 +140,7 @@ async function callOpenAiChatJsonWithMessages(options) {
 
   const endpoint = 'https://api.openai.com/v1/chat/completions'
   const body = { model, messages: safeMessages, temperature }
+  if (maxTokens && isFinite(maxTokens) && maxTokens > 0) body.max_tokens = Math.floor(maxTokens)
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -176,21 +180,25 @@ function createAiProvider(options) {
   const logger = options.logger
   const config = options.config
 
-  async function callDeepSeekJson(prompt) {
+  async function callDeepSeekJson(prompt, overrides) {
+    const ov = overrides && typeof overrides === 'object' ? overrides : {}
+    const model = String(ov.model || config.DEEPSEEK_MODEL || '').trim()
+    const maxTokens = ov.maxTokens == null ? Number(config.DEEPSEEK_MAX_TOKENS || 0) : Number(ov.maxTokens)
     return callChatJson({
       http,
       logger,
       endpoint: config.DEEPSEEK_ENDPOINT,
       apiKey: config.DEEPSEEK_API_KEY,
-      model: config.DEEPSEEK_MODEL,
+      model,
       prompt,
       temperature: 0.2,
+      maxTokens,
       maxRetries: 3
     })
   }
 
-  async function callDeepseek(prompt) {
-    return callDeepSeekJson(prompt)
+  async function callDeepseek(prompt, overrides) {
+    return callDeepSeekJson(prompt, overrides)
   }
 
   async function callOpenAiJson(prompt) {

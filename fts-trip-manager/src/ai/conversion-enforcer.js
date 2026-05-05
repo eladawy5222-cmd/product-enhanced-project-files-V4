@@ -57,7 +57,12 @@ async function airtableBatchDelete_(tableName, ids) {
 }
 
 async function callAi_(prompt) {
-  return aiProvider.callDeepseek(String(prompt || ''))
+  const model = (config && config.DEEPSEEK_MODEL_CONVERSION) ? String(config.DEEPSEEK_MODEL_CONVERSION || '').trim() : ''
+  const maxTokens = (config && config.DEEPSEEK_MAX_TOKENS_CONVERSION != null) ? Number(config.DEEPSEEK_MAX_TOKENS_CONVERSION) : 0
+  return aiProvider.callDeepseek(String(prompt || ''), {
+    model: model || ((config && config.DEEPSEEK_MODEL) ? String(config.DEEPSEEK_MODEL || '').trim() : ''),
+    maxTokens: (maxTokens && isFinite(maxTokens) && maxTokens > 0) ? Math.floor(maxTokens) : 0
+  })
 }
 
 async function runConversionEnforcer(data) {
@@ -104,6 +109,13 @@ async function runConversionEnforcer(data) {
       if (externalBench) benchmarkInsights = benchmarkInsights ? (benchmarkInsights + '\n\n' + externalBench) : externalBench
     } catch (e) {
       log('⚠️ External benchmark skipped: ' + String(e && e.message ? e.message : e))
+    }
+    try {
+      const lim = Number(process.env.CONV_ENF_BENCHMARK_MAX_CHARS || 8000)
+      if (benchmarkInsights && isFinite(lim) && lim > 0 && benchmarkInsights.length > lim) {
+        benchmarkInsights = benchmarkInsights.slice(0, Math.floor(lim))
+      }
+    } catch {
     }
 
     const existingHighlights = await convEnf_fetchHighlights_(tripId, tripNumber || '')
@@ -170,7 +182,13 @@ async function runConversionEnforcer(data) {
 
     let standardContext = convEnf_buildStandardContext_(payload)
     if (rawCtx && rawCtx.evidence_text) {
-      standardContext = convEnf_enrichStandardContextWithRawEvidence_(standardContext, rawCtx.evidence_text)
+      let ev = String(rawCtx.evidence_text || '')
+      try {
+        const lim = Number(process.env.CONV_ENF_EVIDENCE_MAX_CHARS || 8000)
+        if (isFinite(lim) && lim > 0 && ev.length > lim) ev = ev.slice(0, Math.floor(lim))
+      } catch {
+      }
+      standardContext = convEnf_enrichStandardContextWithRawEvidence_(standardContext, ev)
     }
     if (benchmarkInsights) {
       standardContext = standardContext || {}
