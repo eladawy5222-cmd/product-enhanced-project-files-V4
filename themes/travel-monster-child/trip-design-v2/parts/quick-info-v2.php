@@ -10,7 +10,14 @@ $dest_names_list = ( ! empty( $destination_terms ) && ! is_wp_error( $destinatio
     : array();
 $trending_location = ! empty( $dest_names_list ) ? implode( ', ', array_slice( $dest_names_list, 0, 2 ) ) : '';
 $at_items = array();
-if ( is_array( $at_a_glance ) ) {
+if ( ! empty( $has_trip_facts ) && ! empty( $trip_facts_items ) && is_array( $trip_facts_items ) ) {
+    foreach ( $trip_facts_items as $tf ) {
+        $lbl = isset( $tf['label'] ) ? trim( (string) $tf['label'] ) : '';
+        $val = isset( $tf['value'] ) ? trim( (string) $tf['value'] ) : '';
+        if ( $lbl === '' || $val === '' ) continue;
+        $at_items[] = array( 'label' => $lbl, 'value' => $val, 'icon' => $tf['icon'] ?? 'fa-info-circle' );
+    }
+} elseif ( is_array( $at_a_glance ) ) {
     $duration_val = '';
     if ( isset( $duration_text ) && is_string( $duration_text ) ) {
         $duration_val = trim( $duration_text );
@@ -22,10 +29,11 @@ if ( is_array( $at_a_glance ) ) {
     $meeting_val = isset( $at_a_glance['meeting_point'] ) ? trim( (string) $at_a_glance['meeting_point'] ) : '';
     $group_val   = isset( $at_a_glance['group_size'] ) ? trim( (string) $at_a_glance['group_size'] ) : '';
 
-    if ( $duration_val !== '' ) $at_items[] = array( 'label' => __( 'Duration', 'fts' ), 'value' => $duration_val );
-    if ( $meeting_val !== '' ) $at_items[]  = array( 'label' => __( 'Meeting point', 'fts' ), 'value' => $meeting_val );
-    if ( $group_val !== '' ) $at_items[]    = array( 'label' => __( 'Group size', 'fts' ), 'value' => $group_val );
+    if ( $duration_val !== '' ) $at_items[] = array( 'label' => __( 'Duration', 'fts' ), 'value' => $duration_val, 'icon' => 'fa-clock-o' );
+    if ( $meeting_val !== '' ) $at_items[]  = array( 'label' => __( 'Meeting point', 'fts' ), 'value' => $meeting_val, 'icon' => 'fa-map-marker' );
+    if ( $group_val !== '' ) $at_items[]    = array( 'label' => __( 'Group size', 'fts' ), 'value' => $group_val, 'icon' => 'fa-users' );
 }
+$at_items = array_slice( $at_items, 0, 4 );
 ?>
 
 <!-- Quick Price + Hook -->
@@ -35,9 +43,20 @@ if ( is_array( $at_a_glance ) ) {
             <div class="fts-v2-quick-text">
                 <p class="fts-v2-hook-text"><?php echo esc_html( $overview_excerpt ); ?></p>
                 <?php if ( ! empty( $at_items ) ) : ?>
-                <ul class="fts-v2-at-a-glance">
-                    <?php foreach ( $at_items as $it ) : ?>
-                        <li><strong><?php echo esc_html( $it['label'] ); ?>:</strong> <?php echo esc_html( $it['value'] ); ?></li>
+                <ul class="fts-v2-facts-list">
+                    <?php foreach ( $at_items as $it ) :
+                        $lbl = isset( $it['label'] ) ? trim( (string) $it['label'] ) : '';
+                        $val = isset( $it['value'] ) ? trim( (string) $it['value'] ) : '';
+                        if ( $lbl === '' || $val === '' ) continue;
+                        $icon = isset( $it['icon'] ) ? trim( (string) $it['icon'] ) : 'fa-info-circle';
+                    ?>
+                        <li class="fts-v2-fact">
+                            <span class="fts-v2-fact-icon"><i class="fa <?php echo esc_attr( $icon ); ?>"></i></span>
+                            <span class="fts-v2-fact-text">
+                                <span class="fts-v2-fact-label"><?php echo esc_html( $lbl ); ?></span>
+                                <span class="fts-v2-fact-value"><?php echo esc_html( $val ); ?></span>
+                            </span>
+                        </li>
                     <?php endforeach; ?>
                 </ul>
                 <?php endif; ?>

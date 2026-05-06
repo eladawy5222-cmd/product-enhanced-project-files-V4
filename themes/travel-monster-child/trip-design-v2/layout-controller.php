@@ -505,6 +505,52 @@ class FTS_Trip_Redesign_V2 {
         $faq_titles  = $faq_data['faq_title'] ?? array();
         $faq_content = $faq_data['faq_content'] ?? array();
 
+        // ── Trip Facts ──
+        $trip_facts_title = $settings['trip_facts_title'] ?? '';
+        if ( $trip_facts_title === '' ) $trip_facts_title = esc_html__( 'Trip Facts', 'ftstravels' );
+        $trip_facts_items = array();
+        $trip_facts_raw = $settings['trip_facts'] ?? array();
+        if ( is_array( $trip_facts_raw ) ) {
+            $field_ids = ( isset( $trip_facts_raw['field_id'] ) && is_array( $trip_facts_raw['field_id'] ) ) ? $trip_facts_raw['field_id'] : array();
+            foreach ( $field_ids as $fid => $label ) {
+                $fid = (string) $fid;
+                $label = is_string( $label ) ? trim( $label ) : '';
+                if ( $fid === '' || $label === '' ) continue;
+                $val = '';
+                if ( isset( $trip_facts_raw[ $fid ] ) && is_array( $trip_facts_raw[ $fid ] ) ) {
+                    if ( isset( $trip_facts_raw[ $fid ][ $fid ] ) ) {
+                        $vv = $trip_facts_raw[ $fid ][ $fid ];
+                        if ( is_string( $vv ) || is_numeric( $vv ) ) $val = trim( (string) $vv );
+                    }
+                    if ( $val === '' ) {
+                        foreach ( $trip_facts_raw[ $fid ] as $vv2 ) {
+                            if ( is_string( $vv2 ) || is_numeric( $vv2 ) ) { $val = trim( (string) $vv2 ); break; }
+                        }
+                    }
+                }
+                if ( $val === '' ) continue;
+                $icon = 'fa-info-circle';
+                $l = strtolower( $label );
+                if ( strpos( $l, 'duration' ) !== false || strpos( $l, 'time' ) !== false || strpos( $l, 'length' ) !== false || strpos( $l, 'مدة' ) !== false ) {
+                    $icon = 'fa-clock-o';
+                } elseif ( strpos( $l, 'pickup' ) !== false || strpos( $l, 'meeting' ) !== false || strpos( $l, 'start' ) !== false || strpos( $l, 'meet' ) !== false || strpos( $l, 'استلام' ) !== false || strpos( $l, 'نقطة' ) !== false || strpos( $l, 'التقاء' ) !== false ) {
+                    $icon = 'fa-map-marker';
+                } elseif ( strpos( $l, 'language' ) !== false || strpos( $l, 'languages' ) !== false || strpos( $l, 'لغة' ) !== false ) {
+                    $icon = 'fa-language';
+                } elseif ( strpos( $l, 'cancel' ) !== false || strpos( $l, 'cancellation' ) !== false || strpos( $l, 'refund' ) !== false || strpos( $l, 'إلغاء' ) !== false || strpos( $l, 'استرداد' ) !== false ) {
+                    $icon = 'fa-undo';
+                } elseif ( strpos( $l, 'wheelchair' ) !== false || strpos( $l, 'access' ) !== false || strpos( $l, 'accessible' ) !== false || strpos( $l, 'كرسي' ) !== false ) {
+                    $icon = 'fa-wheelchair';
+                } elseif ( strpos( $l, 'group' ) !== false || strpos( $l, 'pax' ) !== false || strpos( $l, 'people' ) !== false || strpos( $l, 'max' ) !== false || strpos( $l, 'min' ) !== false || strpos( $l, 'مجموعة' ) !== false || strpos( $l, 'أشخاص' ) !== false ) {
+                    $icon = 'fa-users';
+                } elseif ( strpos( $l, 'ticket' ) !== false || strpos( $l, 'entry' ) !== false || strpos( $l, 'admission' ) !== false || strpos( $l, 'تذكرة' ) !== false || strpos( $l, 'دخول' ) !== false ) {
+                    $icon = 'fa-ticket';
+                }
+                $trip_facts_items[] = array( 'label' => $label, 'value' => $val, 'icon' => $icon );
+            }
+        }
+        $has_trip_facts = ! empty( $trip_facts_items );
+
         // ── Tab Sections ──
         $has_overview_text = ! empty( trim( strip_tags( $overview_content ) ) );
         $has_highlights    = ! empty( $highlights );
@@ -521,6 +567,7 @@ class FTS_Trip_Redesign_V2 {
         if ( $has_highlights )   $tab_sections['highlights']  = $highlights_title;
         $tab_sections['itinerary'] = ! empty( $settings['trip_itinerary_title'] ) ? $settings['trip_itinerary_title'] : esc_html__( 'Itinerary', 'ftstravels' );
         $tab_sections['includes']  = ! empty( $cost_data['includes_title'] ) ? $cost_data['includes_title'] : esc_html__( 'Includes', 'ftstravels' );
+        if ( $has_trip_facts )  $tab_sections['facts']       = $trip_facts_title;
         if ( $has_why_love )     $tab_sections['why-love']    = ! empty( $why_love_tab_title ) ? $why_love_tab_title : esc_html__( 'Why People Love This Trip', 'ftstravels' );
         $tab_sections['pricing']   = ! empty( $cost_data['cost_section_title'] ) ? $cost_data['cost_section_title'] : esc_html__( 'Pricing', 'ftstravels' );
         $tab_sections['gallery']   = esc_html__( 'Gallery', 'ftstravels' );
@@ -904,6 +951,7 @@ class FTS_Trip_Redesign_V2 {
             'itin_titles', 'itin_content', 'itin_days_label',
             'cost_includes', 'cost_excludes',
             'faq_titles', 'faq_content',
+            'trip_facts_title', 'trip_facts_items', 'has_trip_facts',
             'tab_sections',
             'has_overview', 'has_why_love', 'why_love_content', 'why_love_tab_title', 'has_itinerary', 'has_cost', 'has_gallery', 'has_reviews', 'has_faq',
             'extra_services', 'has_extra_services',

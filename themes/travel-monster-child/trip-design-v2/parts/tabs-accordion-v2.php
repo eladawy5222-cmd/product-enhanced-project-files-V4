@@ -161,6 +161,29 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     </section>
     <?php endif; ?>
 
+    <!-- ==================== TRIP FACTS ==================== -->
+    <?php if ( ! empty( $has_trip_facts ) && ! empty( $trip_facts_items ) ) : ?>
+    <section id="fts-v2-sec-facts" class="fts-v2-section">
+        <h2 class="fts-v2-section-title"><?php echo esc_html( ! empty( $trip_facts_title ) ? $trip_facts_title : __( 'Trip Facts', 'ftstravels' ) ); ?></h2>
+        <div class="fts-v2-facts-grid">
+            <?php foreach ( $trip_facts_items as $tf ) :
+                $lbl = isset( $tf['label'] ) ? trim( (string) $tf['label'] ) : '';
+                $val = isset( $tf['value'] ) ? trim( (string) $tf['value'] ) : '';
+                if ( $lbl === '' || $val === '' ) continue;
+                $icon = isset( $tf['icon'] ) ? trim( (string) $tf['icon'] ) : 'fa-info-circle';
+            ?>
+                <div class="fts-v2-fact-card">
+                    <div class="fts-v2-fact-card-icon"><i class="fa <?php echo esc_attr( $icon ); ?>"></i></div>
+                    <div class="fts-v2-fact-card-body">
+                        <div class="fts-v2-fact-card-label"><?php echo esc_html( $lbl ); ?></div>
+                        <div class="fts-v2-fact-card-value"><?php echo esc_html( $val ); ?></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- ==================== WHY PEOPLE LOVE THIS TRIP (Custom Tab) ==================== -->
     <?php if ( $has_why_love ) : ?>
     <section id="fts-v2-sec-why-love" class="fts-v2-section">

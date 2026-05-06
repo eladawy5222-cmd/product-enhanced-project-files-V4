@@ -1,152 +1,2117 @@
-
-Execution log
-2:14:53 AM	Notice	Execution started
-2:14:55 AM	Info	Updater: Starting batch...
-2:14:55 AM	Info	VERBOSE LOGGING DISABLED
-2:14:55 AM	Info	SUPPORTED LANGUAGES MAP UPDATED
-2:14:55 AM	Info	Updater: Processing Trip recUDehvj1S32179Q (TripID: 23024, Type: WORDPRESS)
-2:14:56 AM	Info	LANGUAGE RESOLVED: English -> en
-2:14:56 AM	Info	TRANSLATION LANGUAGES LIST: ["en"]
-2:14:57 AM	Info	Updater: Fetching General Improvement using Client-Side ID Check: recUDehvj1S32179Q
-2:14:57 AM	Info	Updater: Found General Improvement record: recK4GDXe9yy5Fat9
-2:14:58 AM	Info	Updater: Found TripDetails record: recDRsiZFDSTqxWaq
-2:15:04 AM	Info	Updater: Starting AI classification for Activities...
-2:15:04 AM	Info	AI: prompt placeholder leakage prevented
-2:15:05 AM	Info	Updater: AI suggested activities: ["City Tours","Pyramids & History","Boat Cruises"]
-2:15:05 AM	Info	Updater: Starting AI classification for Trip Types...
-2:15:05 AM	Info	AI: prompt placeholder leakage prevented
-2:15:06 AM	Info	Updater: AI suggested trip types: ["Day Trips","Guided Tours"]
-2:15:06 AM	Info	Updater: Direct Mapping - dUnit: hours, dHours: 8, dMinutes: 0, tourType: single, Title: Cairo Day Tour: NMEC, Citadel & Old Cairo – 5,000 Years in O
-2:15:06 AM	Info	Updater: Language set to: en
-2:15:06 AM	Info	Updater: Found 3 AI Activities. Mapping to payload...
-2:15:06 AM	Info	Updater: Payload.activities set to: [400,399,390]
-2:15:06 AM	Info	Updater: Found 2 AI Trip Types. Mapping to payload...
-2:15:06 AM	Info	Updater: Payload.trip_types set to: [407,408]
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
-2:15:06 AM	Info	Updater: Adding new fact "Tour Location" (97941245) to template
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
-2:15:06 AM	Info	Updater: Adding new fact "Duration" (97932390) to template
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
-2:15:06 AM	Info	Updater: Adding new fact "Meals" (69801669) to template
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97952084 for "Tour Type"
-2:15:06 AM	Info	Updater: Adding new fact "Tour Type" (97952084) to template
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
-2:15:06 AM	Info	Updater: Adding new fact "Language" (12647846) to template
-2:15:06 AM	Info	Updater: Using AI_Fact_ID from Airtable: 97943192 for "Tour Availability"
-2:15:06 AM	Info	Updater: Adding new fact "Tour Availability" (97943192) to template
-2:15:06 AM	Info	Updater: Trip Facts structure ready with 8 fields
-2:15:06 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=core.title desc=AI_Short_Summary
-2:15:06 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)
-2:15:06 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage meta): title=rank_math_title desc=rank_math_description
-2:15:06 AM	Info	Updater: PRESERVING existing slug for primary trip: cairo-egyptian-civilization-museum-citadel
-2:15:06 AM	Info	Updater: Updating existing WordPress trip 23024
-2:15:16 AM	Info	Updater: Throttling before publish packages for 2200 ms
-2:15:19 AM	Info	Updater: Found 1 packages and 5 prices for Trip recUDehvj1S32179Q
-2:15:19 AM	Info	Updater: Single package detected. Linking ALL 5 prices to it.
-2:15:19 AM	Info	Updater: Skipping category Passengers because price is 0 and no valid group pricing
-2:15:19 AM	Info	Updater: Skipping category Infant because price is 0 and no valid group pricing
-2:15:19 AM	Info	Updater: Skipping dummy group pricing for Child (Regular: 60)
-2:15:19 AM	Info	Updater: Skipping dummy group pricing for Student (with ID) (Regular: 75)
-2:15:19 AM	Info	CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33442
-2:15:19 AM	Info	Updater: Sending package "Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour" to WP...
-2:15:19 AM	Info	Updater: Package copy -> excerpt_chars=131, content_html_chars=453
-2:15:21 AM	Info	Updater: Updated Package 33442
-2:15:21 AM	Info	EXISTING OBJECT REUSED AND REFRESHED (package ): 33442
-2:15:21 AM	Info	EXISTING TRANSLATED CONTENT REFRESHED (package airtable record recO7Jc1TQ4LD9Qrk)
-2:15:21 AM	Info	Updater: Updating 5 prices with new PackageID 33442...
-2:15:21 AM	Info	Updater: Price recLRZEcxeFxiw7Ob already has correct PackageID
-2:15:21 AM	Info	Updater: Price recVJZdcSYIIulNtq already has correct PackageID
-2:15:21 AM	Info	Updater: Price recmYP4FRdiMQCUX6 already has correct PackageID
-2:15:21 AM	Info	Updater: Price recrT0nfPuy7qdjI3 already has correct PackageID
-2:15:21 AM	Info	Updater: Price recte9m1unCknrysK already has correct PackageID
-2:15:33 AM	Info	Updater: Linked packages 33442 to Trip 23024
-2:15:33 AM	Info	Updater: Throttling before publish images for 2200 ms
-2:15:36 AM	Info	IMAGES LOOKUP FIELD USED: SourceTrip
-2:15:37 AM	Info	Updater: Image record rec14USvp5y8bjb4x Type raw value: "Gallery", wpMediaId: 30657
-2:15:37 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:15:37 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:15:37 AM	Info	Updater: Throttling before update media 30657 for 900 ms
-2:15:38 AM	Info	Updater: Media 30657 update payload: {"title":"Artifacts at the National Museum of Egyptian Civilization","caption":"Display of ancient artifacts in a modern museum setting.","alt_text":"Interior view of the National Museum of Egyptian Civilization with artifacts.","description":"The image showcases various artifacts housed in glass cases within the National Museum of Egyptian Civilization The spacious interior features a minimalist design highlighting the intricate details of the displayed items."}
-2:15:39 AM	Info	Updater: Updated Media 30657 metadata (Title: Yes, Alt: Yes)
-2:15:40 AM	Info	Updater: Throttling before ensure filename 30657 for 1400 ms
-2:15:52 AM	Info	Updater: Filename ensured for Media 30657
-2:15:53 AM	Info	Updater: Image record rec274epvMaKJUeAS Type raw value: "Gallery", wpMediaId: 30661
-2:15:53 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:15:53 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:15:53 AM	Info	Updater: Throttling before update media 30661 for 900 ms
-2:15:54 AM	Info	Updater: Media 30661 update payload: {"title":"National Museum of Egyptian Civilization Entrance","caption":"The entrance of the National Museum of Egyptian Civilization in Cairo.","alt_text":"Entrance to the National Museum of Egyptian Civilization with plants.","description":"This image showcases the entrance of the National Museum of Egyptian Civilization featuring its prominent signage Surrounding the building are well-maintained plants and a clear blue sky creating a welcoming atmosphere."}
-2:15:55 AM	Info	Updater: Updated Media 30661 metadata (Title: Yes, Alt: Yes)
-2:15:56 AM	Info	Updater: Throttling before ensure filename 30661 for 1400 ms
-2:15:58 AM	Info	Updater: Filename ensured for Media 30661
-2:15:59 AM	Info	Updater: Image record rec3aLuBZB1c5y9L2 Type raw value: "Gallery", wpMediaId: 30664
-2:15:59 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:15:59 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:15:59 AM	Info	Updater: Throttling before update media 30664 for 900 ms
-2:16:00 AM	Info	Updater: Media 30664 update payload: {"title":"Ancient Artifacts Displayed at the Museum","caption":"A collection of intricately designed ancient Egyptian artifacts.","alt_text":"Display of ancient Egyptian artifacts including a chair and sarcophagi.","description":"This display features a beautifully crafted chair alongside several colorful sarcophagi and decorative boxes Each piece showcases detailed hieroglyphics and vibrant illustrations reflecting the artistry of ancient Egyptian civilization."}
-2:16:01 AM	Info	Updater: Updated Media 30664 metadata (Title: Yes, Alt: Yes)
-2:16:02 AM	Info	Updater: Throttling before ensure filename 30664 for 1400 ms
-2:16:08 AM	Info	Updater: Filename ensured for Media 30664
-2:16:09 AM	Info	Updater: Image record rec5EFNNLTV6VrUcs Type raw value: "Gallery", wpMediaId: 30660
-2:16:09 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:09 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:09 AM	Info	Updater: Throttling before update media 30660 for 900 ms
-2:16:10 AM	Info	Updater: Media 30660 update payload: {"title":"Statues Inside the National Museum of Egyptian Civilization","caption":"A collection of ancient Egyptian statues on display.","alt_text":"Ancient Egyptian statues displayed in a museum setting.","description":"The image showcases several ancient Egyptian statues within the Prominently featured is a large seated figure surrounded by smaller sculptures all set against a modern museum backdrop."}
-2:16:11 AM	Info	Updater: Updated Media 30660 metadata (Title: Yes, Alt: Yes)
-2:16:12 AM	Info	Updater: Throttling before ensure filename 30660 for 1400 ms
-2:16:18 AM	Info	Updater: Filename ensured for Media 30660
-2:16:19 AM	Info	Updater: Image record rec8tJGevKl2cf0hl Type raw value: "Gallery", wpMediaId: 30659
-2:16:19 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:19 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:19 AM	Info	Updater: Throttling before update media 30659 for 900 ms
-2:16:20 AM	Info	Updater: Media 30659 update payload: {"title":"Artifacts at National Museum of Egyptian Civilization","caption":"A collection of ancient artifacts showcased in the museum.","alt_text":"Ancient artifacts including pottery tools and sculptures.","description":"This display features a variety of ancient artifacts including decorative boxes pottery and carved figures Each piece reflects the rich history and craftsmanship of ancient Egyptian civilization."}
-2:16:21 AM	Info	Updater: Updated Media 30659 metadata (Title: Yes, Alt: Yes)
-2:16:22 AM	Info	Updater: Throttling before ensure filename 30659 for 1400 ms
-2:16:28 AM	Info	Updater: Filename ensured for Media 30659
-2:16:29 AM	Info	Updater: Image record recA2o6u1LN7DRvl8 Type raw value: "Gallery", wpMediaId: 30656
-2:16:29 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:29 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:29 AM	Info	Updater: Throttling before update media 30656 for 900 ms
-2:16:30 AM	Info	Updater: Media 30656 update payload: {"title":"National Museum of Egyptian Civilization at Night","caption":"The National Museum of Egyptian Civilization illuminated at night.","alt_text":"Illuminated National Museum of Egyptian Civilization with palm trees and water.","description":"The National Museum of Egyptian Civilization stands majestically lit warmly against the night sky Palm trees line the foreground reflecting in the calm waters nearby."}
-2:16:32 AM	Info	Updater: Updated Media 30656 metadata (Title: Yes, Alt: Yes)
-2:16:32 AM	Info	Updater: Throttling before ensure filename 30656 for 1400 ms
-2:16:35 AM	Info	Updater: Filename ensured for Media 30656
-2:16:36 AM	Info	Updater: Image record recTuDwFoLSPxVrIr Type raw value: "Gallery", wpMediaId: 30658
-2:16:36 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:36 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:36 AM	Info	Updater: Throttling before update media 30658 for 900 ms
-2:16:37 AM	Info	Updater: Media 30658 update payload: {"title":"Sunset View Over Cairo's Historic Skyline","caption":"A stunning sunset casts vibrant colors over Cairo's skyline.","alt_text":"Panoramic view of Cairo at sunset with mosque silhouettes.","description":"The image captures a panoramic view of Cairo during sunset highlighting the intricate architecture of mosques and buildings The warm hues of the sky contrast beautifully with the cityscape creating a serene atmosphere."}
-2:16:38 AM	Info	Updater: Updated Media 30658 metadata (Title: Yes, Alt: Yes)
-2:16:39 AM	Info	Updater: Throttling before ensure filename 30658 for 1400 ms
-2:16:45 AM	Info	Updater: Filename ensured for Media 30658
-2:16:46 AM	Info	Updater: Image record reci0bgGezxnq9jbK Type raw value: "Gallery", wpMediaId: 30662
-2:16:46 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:46 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:46 AM	Info	Updater: Throttling before update media 30662 for 900 ms
-2:16:47 AM	Info	Updater: Media 30662 update payload: {"title":"Citadel of Saladin at Sunset","caption":"The Citadel of Saladin glows under a golden sunset.","alt_text":"Silhouette of the Citadel of Saladin during sunset","description":"The Citadel of Saladin stands majestically against a stunning sunset backdrop Its towering minarets and domes are illuminated by warm hues creating a captivating atmosphere."}
-2:16:48 AM	Info	Updater: Updated Media 30662 metadata (Title: Yes, Alt: Yes)
-2:16:49 AM	Info	Updater: Throttling before ensure filename 30662 for 1400 ms
-2:16:51 AM	Info	Updater: Filename ensured for Media 30662
-2:16:52 AM	Info	Updater: Image record recw8ulRGDGiVvpYC Type raw value: "Featured", wpMediaId: 30663
-2:16:52 AM	Info	ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2:16:52 AM	Info	ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2:16:52 AM	Info	Updater: Throttling before update media 30663 for 900 ms
-2:16:53 AM	Info	Updater: Media 30663 update payload: {"title":"Ancient Egyptian Statue at the Museum","caption":"A detailed statue of an ancient Egyptian figure.","alt_text":"Statue of an ancient Egyptian figure holding a scepter.","description":"This striking statue carved from dark stone depicts an ancient Egyptian figure holding a scepter The intricate details showcase the craftsmanship of the period set against a softly lit museum background."}
-2:16:54 AM	Info	Updater: Updated Media 30663 metadata (Title: Yes, Alt: Yes)
-2:16:55 AM	Info	Updater: Throttling before ensure filename 30663 for 1400 ms
-2:17:06 AM	Info	Updater: Filename ensured for Media 30663
-2:17:16 AM	Info	Updater: Published Images for Trip 23024 (Featured: 30663, Gallery: 8)
-2:17:16 AM	Info	Updater: Throttling before generate primary schema for 900 ms
-2:17:17 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-2:17:18 AM	Info	SCHEMA SOURCE RESOLVED (en, TouristTrip): title=AI_SEO_Title desc=AI_SEO_Meta_Description
-2:17:18 AM	Info	SCHEMA PRICES SOURCE RESOLVED (en, TouristTrip): source=Prices offers=AggregateOffer count=5
-2:17:18 AM	Info	SCHEMA BYPASSED PACKAGES FALLBACK (en, TouristTrip): used Prices
-2:17:18 AM	Info	SCHEMA SOURCE RESOLVED (en, FAQPage): title=rank_math_title desc=rank_math_description
-2:17:18 AM	Info	SCHEMA BYPASSED STALE FALLBACK (en, FAQPage): used rank_math_description
-2:17:28 AM	Info	TRIP SCHEMA GENERATED (en)
-2:17:28 AM	Info	Updater: Throttling before store SEO validation for 900 ms
-2:17:29 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-2:17:29 AM	Info	CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=civilization source=wp_core
-2:17:30 AM	Info	Updater: Throttling before store translation url map for 900 ms
-2:17:31 AM	Info	REUSING CACHED WORDPRESS TRIP INFO
-2:17:41 AM	Info	Updater: Successfully published Trip recUDehvj1S32179Q
-2:17:41 AM	Notice	Execution completed
+2026-05-06T00:10:20.078Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:10:28.754Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:10:36.469Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:10:39.010Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:10:39.011Z
+INFO
+🔍 Checking pipeline progress...
+2026-05-06T00:10:39.770Z
+INFO
+Found 1 trip(s) with active pipelines
+2026-05-06T00:10:40.092Z
+INFO
+🧩 Trip recUDehvj1S32179Q: All stages done. Invoking Conversion Enforcer...
+2026-05-06T00:10:40.093Z
+INFO
+🚀 Conversion Enforcer START for Trip: recUDehvj1S32179Q
+2026-05-06T00:10:40.931Z
+INFO
+📥 Input Data:
+2026-05-06T00:10:40.931Z
+INFO
+{
+  "TripID": "23024",
+  "Title": "Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour",
+  "Slug": "cairo-day-tour-nmec-citadel-old-cairo",
+  "StatusWorkflow": "publish",
+  "Permalink": "https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel-old-cairo-tour/",
+  "TripCode": "FTS-7274",
+  "Duration_Hours": 8,
+  "Duration_Unit": "hours",
+  "Price_From": "135",
+  "Currency": "EUR",
+  "Packages": [
+    "recO7Jc1TQ4LD9Qrk",
+    "rec9sb8mTtmHwtTsO",
+    "recJJI6zMfCluX4ZT",
+    "recBZxBgpXsf5JBB0",
+    "recA6anfhjdLl7lWh"
+  ],
+  "FeaturedImage": [
+    {
+      "id": "att5XOnH7dL2wUZRy",
+      "width": 1024,
+      "height": 683,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/29ex5K2lS8pqVh36PJ0LlA/yo4tr8l3rMP8Qq8eNYx28jylfJtB9r3GLQJ3ZpXSxo1BsneL6tQwqqMLEHlA6VtnPgBE_Bdg6zKL9SSAtGsUPS_9HHa-c-60zZJ2BaHoqY5ECJGuCdUcso6tIZMDhkOPoG5ED6GeQ6cRda2cQC1Ei0qaXfChx93uijO9bvcST6k/Ou7qYHkWSMpXehyy25XkhYBdrrkLg3XwrqA7Slw2e_0",
+      "filename": "mummy.webp",
+      "size": 146818,
+      "type": "image/webp",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Ap5Lnr7gli57TXSINrHSTQ/RSkyAuTUrqZe153PhP_x7N26U0ugZggw3L3OhBTve3rK18DBw-l66QPbhhy4EzInnio1_g_2h4Pwn19KdBaTVYCQPUt5MylLNmwQCkDj7SdyJQyB5JJhxgrlhGxxOBSQwi2re1WW5JpaKx0o_nmRCA/Mal9aD24NVTznxkAjeEf-7ZmkhfHWBgXdpdxpOb8VyQ",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/EzNRqG13-mvpu-IzsgA4qw/Sg3GZZNZMygDjIdH5EIMVknS59dHkiDvvgrveYDmEuavgI-pYakYtYZT_44LHpRIvWopded-vlZ6qUJ3IbvaIrGvTIT3qvjQwYW3HMw9Si_sOIoEqnRCbNA1cytm7CiDTT_xugTAbKZQ0PzrXMLhbQ/66lTUPPEE6Htxr3aUeHXL7IE8GFSuyEbDrHpXK-mSnI",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/RiwKk4mqwry3XJAG_GvoAg/q8LUrMS2kXvOxYCuwv09-VBGBK3dFd5uVWgGQQC2thsFVGUhlemJfiUDrt-RiSpnGcsF1nGz4cMeTuNl0Ok7N5iH8fyQ3CaONi_AEk5uTL-CK3xmxdv6ZVGXf0U34QGeGAd_XC3ztXhaXxGSlD9Epg/wG2zjxQUVBMr682Kr0d4VwctsnSaHqEMqYGph651cQ4",
+          "width": 1024,
+          "height": 683
+        }
+      }
+    }
+  ],
+  "Gallery": [
+    {
+      "id": "attas3Hj0PCWALxdr",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/tyIKtxpPuf6CSlTpwOpy1w/iNt1Hjy9qvMRx-ASLRPOSsFh_WZ1jS9HVs4p6Hj8lHp_vAfFMRwh8vGdyiumG5lYoASbwoMZz3uPyCO9rpE3XPPJ7HMYjFKFlrylhF653CWDfb6HmRn6-PPjP1njobWTmq3TqVPA19yYmQsDq2vqTg/9hsUF_jRSY5z8SEwQwbjGgje7eG_OOAMy_Ks6YMwnCg",
+      "filename": "Image00001-65.jpg",
+      "size": 169772,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Z2lHTGxThzvzfgfxq7760w/2kCLszaJ5rAuJQBGmcZqIS5EWSXOPHOQXv30DXw_zwSwAan3X15u-3AnGlVcbHU3_PwJHvdoguDDUkWbgarpJPUOx47yIZyp0ZjI3rcii7o7KaHUoqiZVg-guTrT1BcHJblN5A617fssqMWlx5sSLw/4IwX6O3PkXHa-yDUcc-ABvBIzEBquvcIGi4O046rVb4",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/7upGSvCnK0tKF2Gopm898g/Y58NRNHcX2SX5l9bP5bo6JZvKbOUO42j_4OQ2R4aJgXYvLNjnU9xRjwC_9YnyYMzBJ1kp717d2B7HCDz6yvld4XpPZsMyPk32m4kyru1wFjbQkQP6GiBmojVeGoFRyAMAwaLiFm-k8QE7IiQoaIR8w/5RNhS8ArZS-5aaPEZWlzJGA5wIqdgC8mPusU2bhv_6g",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/0EhyTtcuiX_YvvhPclitaw/Ba6BwwOAucvpaSYePLiJcrwQ6CGY2VBZqgzjZxTq-mELihnS3PCX4WO6ehqPZSK2HQIkq9OSpeOQs4n5VQjW5aQauqgGgUaSAmlfR7vcQcM3n562uR7EelwxOUVP00bUK2LgzC_9tMbjIzuqzePAfQ/ry-pQWHudHBY2bHfqN6hcB-isFfmNzEMB6aSY_hgwGY",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attuG2oYUC3Ze7xQr",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/4r7U3CwaHn5zGI4rd3apfA/oRt9TIYsqlVZoLKmH6FJYvMt9MjHrON-HoYWbEzwYj-AMYTbA-Uxl8Vvqy0p6Eu8wKibMnfhzS2-kvGJakKc8ZR_KoS3o_LSz240a_yj_7w4vt00hoBWankJ81Onr_1ixQpNUFlCne1O5jxjkeoLpQ/JPpDjWPaTOKjh_Y6v9ef4dJ5deupyhCXtgb7ctVh7V4",
+      "filename": "Image00003-65.jpg",
+      "size": 217308,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/flYA-APDbsvNkBO2g0JdnA/X_8gDx4ELe9UzwzdDZ8WQE7zi6EHhgE5b1GLb-JUxAegfrNIqLP0ksoSnNGCBL8aRqXr50_Q0q0hftzIab_tnK5fhO_lqGn1BcZQ72FLWAqeD9iuqEQf34qUNknnthsFPUyQNcuc0pOyhKqEQnM5Dw/lBBLjsp8147OR7PhcG8e4-HD6wxNjAcob54y36IbkO8",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/ywbD0L3dMyniuQvdWQQcZA/2EgZWXXsZv5XDD8TB2yVCq-U8NEiB5ntVJEtuk6txvqokGKhilDXx0GcvUdkmeG59iFHy3BPvsx4DEOlsMaiC2w30keTbjL2365UnUEzhlJQ-69NCPtJJIQwNLnLIvlLCIFEFGbjueTzSbmfY8THWw/jakNUqWG8LSn4uxwjFkGpKzv98r72KFLOLl2DeZJ7tE",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/DVZDITKLJXtsgd4lyucDKQ/DLNrXZYUJhy4nlee5EAht31RpLJ1yID6EHKKa38c9vAfMiliPM1LT-ly2EwNA5X2SZWAqLyLXbCooC1KxNTzbephfDj7arNVvMABcNLWkxBUa7IDuY1ZwyJ6ea98QZhPXEvaR9gPJAFPA7Rs0OQrJA/4L2psRw2IbdTK9igcLs5B_7HVAleAiPLajo6nGnXOzo",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attHAnaf11S3ui19F",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/yLKtIU8DK0ALGQIhJu1lWg/go5jZF13igBHi1SR8K0UB5kNivMJBuxrDT2Vvl66uoysJt2ROu6Q_hLjcztaxyuPZDdVhSFcMagG6UhUO5wiHlVJOpSTSCgGpYWo2zVBKTo5RocU5mBH9TbL9hfz5T_csaRyUJruFv25gDxlcXc_CQ/Kuo-iV__FnpCPMVrdrTejZ3_CiUNCyKtvGLgSZ8jz5U",
+      "filename": "Image00004-65.jpg",
+      "size": 183756,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/3qvD14NeeGNP8D8j714_4A/vK3dfj8y3006_6-rMNl4bVG2lcILW9dP1Y2um3SzCl5tiBPYKAft_3N0KgCQs-cisBYlHk5CGSUi3RofwploRRbALNdyEIKZepbl9DssIO182vgOWnBlm-_hqiyWhpP3yPTV-VlYg19qcXZQdeC3qg/Nr2T8W8M-9wZJrTA31aEfq7hss9sCIHwqwGbGRvrwP8",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Lgs6QTiHunWFy12RcBh5Qw/JK8JvFI-5r4MtrP2of89WNndDiCoFLCofaAk-3NF5DsVBeucFJ2jcvdbt8P6Jys4jQLCoG_8DYiFf40R9taplIWPhn1D5TwphoJvXg1VNxi5F06msdJf6CkpByuxFlD66nKn5EAq3l3oiewK-VB-5A/bzWDIaI1sMNSCNhEgR0_whqNCZ4dSjnDryxPHelMyEE",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/z1gL5VFupmDsQ6Wb0V62kw/pyVVBT6yi0gXHMC9-mAmVMioSin8w3GKu3nRcf9Tgeu9N5Ratfa4v52s9F9Tf0Tkn2yH0fa-ST105HWdQp30s4kUUs2GK5iVM2ENuPh7xiBy3Zf9T_1z0_w_Ffa1FNGuKLN8YS-DJ2iXMhEuzFL6_A/Qbnv-YiEMXcecvz1V8O3o8PB1GscrrQVvE-uutGEa1Y",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attd89xTWA5zmeJH1",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/2-DpqaA50SbAkfo-3xWWbw/BPRN-ALy3gxByF3YsKdkcld5LntLpcTR4632boPqL-toCgv6TWDRJPHlGsDAs9InfkT53-SPInnPGXMye39QASSNOIX8S56kzIP5S6JZF0n5U7QksIkyTsxpzsUOmC2ZwUTZhteHdGdKBcgUeeOWYQ/fN2_WdAboOLxqttyOz3FPoY62fCKgkEBH9QYBK0kny4",
+      "filename": "Image00005-65.jpg",
+      "size": 181431,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Ud1zfK6XuJJ1zbQc0AuECA/2UVt302ga-4y1bAChmz_vTkNlyDhCykv9tekycQ7O0Cy_JeKANIWz-3VF1BPNekE2i49nmLjkNtZwcpezyC-l4PcjS3YCNOpr3CX3dWPQTXQ0NWmmJKGhiOahQne-2lYwTMHB1Ia8VD4G5OkiJS8TA/tVtCuO_qXDapHueRGc4RoboxMw1TlZL3bjtw6-fAEtM",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/V20ZSM_S2RY1SnR1DeUtPg/f8wPXX1TCxcfzfR4Ulb5PnH9ykJzM1fBxyESJXFJS_408LvfS76FhQa8IH7k-R1rItzOv6GYJ63b_TnDeCAGEj84Q8AjAIazw9dF-5leaQ5Pn6qVpQXA0jX-GWjQE_-q8crjavlYzi8w9IwN9aRQlw/tm8mf7M_1nKHUbbQWPXFvQ5vmzBgJRd06KV4avaY2YE",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/hLvKYFIdacJhBNXaELhlcA/9clYDG6ROT4ToCCK79viQxuA4F5sOluGUal3-4NSJt4c3aFo15F7HfdqMoZ3rBUvrbDV-kXOonkry2Yrdri4Nyn4ETGUziWMZDFYZBPxvSM-TqbGFDiO5yCx_8d2AL78VjhTkFVrQkXRUzRYsCnIbg/Q1Hg1tSup-wt_vb7AgfAiXOWHdqQyy97MGQlSdhE9QQ",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "att8vONGepQ4Wdx71",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/WUbLZYWyyccgOTdH13AqaQ/hrGa8xEQKV2BHMCr3CIxuwXaPn4BsdKqGXxiBXpXk5jknuwwYHkyUAL0ouvwb5OHxc7KnGHlAjWBW7Ex1ORV308aHboOR5XsHIs-DdBU4baGYWD9YapHmzc_xFsIFYDp5g-wCuWawTjVASvKs4kjbQ/dPHLbmPX0tWG0hq7JfnylhsSl1Ce0kP9-59XpHEPaZ0",
+      "filename": "Image00006-65.jpg",
+      "size": 265869,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/ah1dW5Jm2Wopj0sksiOElw/JRpPQBhIPi9iE4EVD2EFev8PYpii2fqz2rhrIF92Nfi-J-NZqT094FQdoY7KTUwWsre1q6xXAnmGP8waUH7WBbQjDRi2Sqtkvr5ErUwbfr-2ZHYMjrLf7gRDZwfwaMhWDnsvA4LVVjmUTQjCkIw-wQ/bAXCOVu0qaQ-r3codmbGDo_Buo-oljbZtXRPX8JJMX8",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/TsyrEoRKZkWVfJ4BN2jR1A/-L46x0MVy87EhB1b50DX8wnW0mhtuwMvedV_zAAgDfZW9tJ8WHCkKpvH2gO1olmA-GBPoeJk0mHD0EHE6ne1WyIMXvDnvCwg8Yhf-fSxa4O5LQeiuaEHL0ajao0yj11-JXpiHgmKHzlBy4C5TAmWIg/piq6N3wdyH_u422vNSURkQYhlLymV6Z0fJhzAtqBZf8",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/lPtppET6znAnzxS3XsJhNg/VinRATPsMj44vF2hIcH9-9xXFcRcvgefF6f6lojjFb85tQ8JPiIAyAH8dTmtm3fPSIf80B08mSCIBqw4hojt6gGpX0lC6Pzb2pCWOVd1FmVm1uqdG7zVzvKqywViAbdqdROirFZSfb5cWBOF8Yb8ag/5JaiBM2ewIhBwg-o1d26o2C12FLIJXWs9EIYRLE1uJo",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attlX6WQSewb3gHrM",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/3H999y3FeepNSL1n2QCIow/NyY5JVakKz4CCUDAgbRShkZNg0YqPrq8iFgiuIYEqf7TJd2pYIVB3Ge-gF8e9-HJLnfea9dW-o2JmF30yp4uzcSAsZpGo3ddzs59kRQrhNdDNYcjzFD29ZA_ogmWCk1NEmHdpT2GlssjNpaFf6yBMA/IuU9OsjRXag37BlDRU0n27VXFvCrLP4q-XrCBoyH5ew",
+      "filename": "Image00007-62.jpg",
+      "size": 125375,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/F3V3hTgKaYilzN6dZykkIg/soVwr1O0whljtF6lKpg506IwGoS7AG6aSnwgduJ7fX8NZgoBBGWS5ebpr6lVe6tcRwgT4z3S1xxlceaVj0QByMLk_3Mx5TqTnHj_AaViwWnwmqtaF0vll9oH46olF0SMm2rq10w7TBLMeGMMyiccCA/NPIrP1XzJwhmZtLfk-A_c89tapofE_VmgoCeDUvMLYA",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/k_9WVlWXYfsKOFMvmC-ZKw/CQ_tYiN10CinKQMZykkbIEsA3W8Djk8CGSnxm2jfLaiBAdijfqHWKdTSOj14iUpL-iPzY7fT-fEpqFcYOaob6ehY_7QH9fJcL8j3P4ma_Rs4JHIpjnIWxLWyimD6Aj2BjMcfu13e-1EWCW3pwJm95Q/HIpA0S6-4SvXC9V9eTnd1FK_5A0HjPEB8WH9gQbMzGA",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Q4uUgkKthH0Vl9u7NtLNqA/RRV68pTR-De9BMWwfo7UlLFLWWGDnWK25d_yepFJP3lYKPE5MUBlZw25U-0kT3qZUHzW9BQXAycySTgEcltNQ9FGaXXCVb6Bim9Tz42dxOdFY0HWlVntR9mDR2dLCsRe0tMGvpEcfLZzkYt4aYBysQ/DfoksCjAY-_9aVbKMacc3k6kjIH8_Lxzfuo7ZT24MvQ",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attUYX1ByFemPwOgu",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/wvwF2kNqPkVxlCl2wMh6Hw/X6usjd5-GrC2j7INNmUrtC7uKW8Z_706qdTfvPpEEpWoDarwkRjVZ9nSyIld4a7-6wa54YfqpDM8netXYCngFJv48eff52lKrt6lY3Zq9gYkwIzECSNzqZNJyjikyTj-kHUjyiu6Mxf0lOofCn7JdQ/NMuEGsoMFJZuh3Ijc9OJzIh8qT0nYWJcelZMcLaegEk",
+      "filename": "Image00008-14.jpg",
+      "size": 233841,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/DRaxTYkYyO41uZaOrCCDXQ/V6ttqlIAHJp1OTC7R91oXqc9pPRgWqJ4XjBobTu6sAxqJxfpjAnFSKEpq_68mYiJWn-oG7FXNOjQhSSjA_gJ-_xLXsrySqXchmdMuQJcOJAKnyNbb4LltzxZJ2vJjUIfgJ8KBxYq1zuwevMyv2c9yg/4cZg0z3fCA3VYTRTSWRqQtnSMN5Gs2iDWv6U8VinyQ4",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/woxt9Tv_JJYLFJ4hkgxzWg/szywIQ6_0jZbwCM6Uuw70PzNVmGB6MzbRQfnKu3fQL5azfRC9MplMyJarwbqGyTn027YP2DDL3aUuMZwkCpCVROJMd5ynWXGhBOReN6jxEmowiamNWxuC5b79fux4FwR6zeMdMqcY2qimqOVbvLzAw/rcVOLlaRgLViEc8ntZqIyuITF284u8JIGk8Mh4c5yi8",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/Ei1zNe5NyhmUF-yOkb2Y8A/cwJz9_Et6lhBA-my9QysEfFKHjhp43qd1tonRBbpFDsyYSGWEffLN_WOG-CpPYb4GI_TeIHCve9qhqvctmfnq9AfPA5QGFz0rotyNFlNR4ynGLicm9SjWndNMLYdJFtY_kIpJfeNH-n5e02v1wAMBw/st3WoziXwY1J6Q2nX-h1khGdjhf2tZ3XoMdNQkn2IuA",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    },
+    {
+      "id": "attQyGsSsaQ4WVxNG",
+      "width": 1200,
+      "height": 800,
+      "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/8qwZDsh39_EBoAoMpV4iHA/LwXOzB1aL5Ta3G1T3-DUciuv7FHtInQSB0GNhoSCNhrzxgGdX_kAvnWpwCKhMvq51wKGTVLXU7250dN27UkIXFLA74OQvTAH6_ZKdSRtfQJyVBk6Q5MMCuetYOrbkEpyKGes8cMxPdPx-3rsywScpw/js21WCXjCTj3dwjn2gKusi22aV8WPwg_CPrSXFN7gKs",
+      "filename": "Image00009-4.jpg",
+      "size": 209666,
+      "type": "image/jpeg",
+      "thumbnails": {
+        "small": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/cA199LLDS329tGGcOOLLFg/oH1XzYAyeJH6YvXQ_PGVFJYavlnWdUpG50W9eMLfEll0qGGG16gpSJVs-j4PEEXh7anSSzReiA7c0Oeg3dZEERkbs_HR4JH1riunbkainhrUMC4c1lqFZ2fQlg_Yy_7j2sdGd7HuoANODkyirUmZLA/Td5Sh9_MQPOzRC8uPf6QYM09Jud0SslMmha38MIyd-s",
+          "width": 54,
+          "height": 36
+        },
+        "large": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/oF3DGhPGF70Mbz6MZrHjAw/51_Dcge1WuL2nI4ToI3pThtFQiTXyulEOJ-EMuvL-KDQdTchZNaTx5OE6iUSsigINgjUjkciACVly8amQza0YeLBfRsmUpbXGni_ijZ1-RuYxJqadKnbAc8P9FGmjsYlWDlIbTTlnZz_znLgA-4POA/nWpq75wgx0dCUyxuSaty6uWIBw-rrR2DRi4VDAgSDxM",
+          "width": 768,
+          "height": 512
+        },
+        "full": {
+          "url": "https://v5.airtableusercontent.com/v3/u/53/53/1778040000000/kIHJy7n9sv1z-3-GQgUKOw/OO4L8l2KldYjH566HQWHTO6Tor-0tJkParkpJEmpWGabK5LfdbWk4FzBiN3c-sYYyJKbgKAQKwa1eMGIZbGwSuyRf0gRSpvq4G7u2zE8Sj7R5_nOoXDoxWlhoKupOR-2cCBJHGx-Uz_1iIhh4BWyNg/2Crmhz2NAw4spYay0msjyNZwX9lgrW6Ndkdp_od_nRs",
+          "width": 1200,
+          "height": 800
+        }
+      }
+    }
+  ],
+  "SEO_Title": "Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour",
+  "RankMathScore": 8,
+  "LastSynced": "2026-01-13",
+  "Images": [
+    "rec1UrHKLAbxYQv8X",
+    "recvPTJAPOfVytPqe",
+    "recOAi9O9ugKQCpbU",
+    "recFQYPJcZYSA6q32",
+    "recLih75C4aHZVb3a",
+    "recjqMwwBroGm72RT",
+    "recUOoK1uTjStcxx0",
+    "recwzfCM51cLPf09i",
+    "recRtDta7kGjGDIso"
+  ],
+  "Prices": [
+    "recNXXoUCHwy1vuN4",
+    "recFstWxh2iwgv0Pd",
+    "rec3EVE76S0F8aIdo",
+    "reciS1btmwbGjnjk4",
+    "recDryribMHf3iggD",
+    "recKrUvmRxVNuqCyu"
+  ],
+  "SEO_FocusKeywords": "day tours cairo",
+  "SEO_FocusKeywords_List": [
+    "Cairo day tour",
+    "pyramids cairo tour",
+    "Egyptian Civilization Museum Cairo",
+    "things to do in cairo",
+    "cairo museum",
+    "el khalili cairo",
+    "cairo sightseeing",
+    "Kairo Ausflug",
+    "ägyptisches museum kairo",
+    "kairo pyramiden",
+    "kairo sehenswürdigkeiten",
+    "neues ägyptisches museum kairo",
+    "zitadelle kairo",
+    "kairo altstadt",
+    "excursion Le Caire",
+    "excursion hurghada le caire",
+    "excursion le caire depuis hurghada",
+    "excursion pyramide le caire",
+    "visiter le caire",
+    "le caire tourisme",
+    "musée égyptien du caire",
+    "excursion el cairo",
+    "que ver en el cairo",
+    "visitar el cairo",
+    "piramides de giza",
+    "museo egipcio el cairo",
+    "ciudadela de saladino",
+    "barrio copto el cairo",
+    "экскурсия Каир",
+    "каир достопримечательности",
+    "каир пирамиды",
+    "египетский музей каир",
+    "цитадель саладина каир",
+    "старый каир",
+    "что посмотреть в каире",
+    "kahire turu",
+    "kahire turları",
+    "mısır kahire turu",
+    "kahire müzesi",
+    "kahire piramit turu",
+    "kahire gezilecek yerler",
+    "kahire kalesi",
+    "excursie cairo",
+    "excursii cairo",
+    "vizita cairo",
+    "piramidele din giza",
+    "muzeul de egiptologie cairo",
+    "citadela lui saladin",
+    "cairo vechi",
+    "开罗 旅游",
+    "埃及 旅游",
+    "开罗 景点",
+    "吉萨 金字塔",
+    "埃及 博物馆",
+    "萨拉丁 城堡",
+    "开罗 老城",
+    "екскурсія Каїр",
+    "каїр пам'ятки",
+    "піраміди гізи",
+    "єгипетський музей каїр",
+    "цитадель саладіна",
+    "старий каїр",
+    "що подивитися в каїрі",
+    "excursão Cairo",
+    "o que fazer no cairo",
+    "pirâmides de gizé",
+    "museu do cairo",
+    "cidadela de saladino",
+    "cairo antigo",
+    "pontos turísticos cairo",
+    "wycieczka Kair",
+    "co warto zobaczyć w kairze",
+    "piramidy w gizie",
+    "muzeum egipskie w kairze",
+    "cytadela saladyna",
+    "stary kair",
+    "kair zwiedzanie",
+    "excursie Cairo",
+    "wat te doen in cairo",
+    "piramides van gizeh",
+    "egyptisch museum cairo",
+    "citadel van saladin",
+    "oud cairo",
+    "bezienswaardigheden cairo",
+    "카이로 투어",
+    "카이로 시내 투어",
+    "기자 피라미드 투어",
+    "이집트 박물관",
+    "살라딘 성채",
+    "올드 카이로",
+    "카이로 가볼만한곳",
+    "カイロ 観光",
+    "カイロ ツアー",
+    "ギザのピラミッド",
+    "エジプト考古学博物館",
+    "シタデル カイロ",
+    "オールド カイロ",
+    "カイロ おすすめ 観光",
+    "escursioni Cairo",
+    "cosa vedere al cairo",
+    "piramidi di giza",
+    "museo egizio cairo",
+    "cittadella di saladino",
+    "vecchio cairo",
+    "cairo cosa visitare",
+    "Kairó kirándulás",
+    "Kairó látnivalók",
+    "Gízai piramisok",
+    "Egyiptomi Múzeum Kairó",
+    "Szaladin citadella",
+    "Ókairó",
+    "Kairó városnézés",
+    "výlet Káhira",
+    "co vidět v káhiře",
+    "pyramidy v gíze",
+    "egyptské muzeum káhira",
+    "citadela saladin",
+    "stará káhira",
+    "káhira památky"
+  ],
+  "TripHighlights": [
+    "recZa9PyV9ObNun82",
+    "recUat7njgUq4mJtT",
+    "recBuQ34zkxnKhO3O",
+    "reclLuBoXvv2nXlCz",
+    "rec4pfUCPqFN9r8Db"
+  ],
+  "ItinerarySteps": [
+    "recvkgIuD3LbVkrRG",
+    "recAiPgtbA0zA5rij",
+    "recP8x1g3i4zGDFN6",
+    "rec9v60cxbUpglNbZ",
+    "rec23CM2Y5YVzHnVo",
+    "recm6kVt90IKjHZfD",
+    "recIACjiIDFTQJOGS",
+    "recpRzimEB1BWR446",
+    "recletPFNZoe2oZfj",
+    "recETGVtbq3EdTGl4"
+  ],
+  "TripFAQs": [
+    "recHLOezYXPGJRV5s",
+    "recHsK2ayNHpnCPuI"
+  ],
+  "TripIncludes": [
+    "recE0rrESEABF6AtP",
+    "reclhG7w5l6nwYRag",
+    "recT2sk1NxrTvyseC",
+    "rec6NM73Ncmf739pZ",
+    "recTJmy6vlaUhei5o",
+    "recRsZU4YMTPzWmFe",
+    "recxlXQqWauRH56i9",
+    "rec4eBT0QyGv4QQcl",
+    "recL8Dw38fDGlfSHu",
+    "recz6LYaKlXZnU4R3",
+    "recaaQkqdK3VO9wyc"
+  ],
+  "TripExcludes": [
+    "recZJgeksXBGrC7R8"
+  ],
+  "TripDetails": [
+    "recDRsiZFDSTqxWaq"
+  ],
+  "Overview_Section_Title": "About this tour",
+  "Trip_Description": "<!-- wp:paragraph -->\n<p>Embark on a historical journey through Cairo’s most iconic landmarks. Explore the Egyptian Civilization Museum, the Citadel, and Old Cairo, uncovering the grandeur of Ancient Egypt through fascinating stories, rich heritage, and timeless wonders.</p>\n<!-- /wp:paragraph -->",
+  "Itinerary_Section_Title": "Itinerary",
+  "FAQ_Section_Title": "Frequently asked questions",
+  "Cost_Section_Title": "Included",
+  "Cost_Includes_Title": "Cost Includes",
+  "AI_Highlights_Status": "Done",
+  "AI_IncExc_Status": "Done",
+  "Highlights Improvement With AI": [
+    "recTC3058NvbQi5fo",
+    "reczNi4Vyip3xwKPj",
+    "rec6ClNnDe0LYvowE",
+    "reczvACW2p1KAs42M",
+    "recQhHAOQ2rXI4eWo"
+  ],
+  "Itinerary Improvement With AI": [
+    "recwJlFWkVoW7dnEq",
+    "recqcJD6KnF5i6VLp",
+    "recg8YJIaPBkJiEvI",
+    "reca5KRBukvfxXw69",
+    "rec1YoqAJooXNDVTF",
+    "recm1IvbqMeWgfV6Y",
+    "recdIyK0fYkASteqh",
+    "recrNowjpT8unDZDl",
+    "rec05N76vLGxg6ceF"
+  ],
+  "AI_Itinerary_Status": "Done",
+  "Trip_Highlights_Section_Title": "Highlights",
+  "AI_Status": "Done",
+  "TripExcludes Improvement With AI": [
+    "recoLdavNLYY2hBY3",
+    "recweZk5UIwXxLFIT",
+    "recTd37K8e07Vi2tP"
+  ],
+  "TripIncludes Improvement With AI": [
+    "recgQzxkfbSQ0Jwlj",
+    "recHNVmchoWfeIqDq",
+    "recqK8oCskSG5iWU7",
+    "recMIDOVrH5iaa9GP",
+    "recNbe5udWLrXZKU5"
+  ],
+  "TripFacts Improvement With AI": [
+    "rec2CB4Cy6QUnnPig",
+    "recHoOVuK7NJqM75u",
+    "recZhMzEM4PN2euN1",
+    "reck5iHNPxiTzTOZI",
+    "reco9eTOrQcx3FkxU",
+    "recPsMFuiI9lo8AQz"
+  ],
+  "AI_TripFacts_Status": "Done",
+  "AI_Images_Status": "Done",
+  "Images Improvement With AI": [
+    "rec2wxKB5Yv1Qj3nX",
+    "recWaxKsTaRQN2cra",
+    "rec13Cw66ivm82IsG",
+    "recN9pLfqJj5Yd2oJ",
+    "recvEqbg6yq8tkpuE",
+    "recnM4buw0XoNyxq9",
+    "recKeMiuRdnuHRUMG",
+    "recczwOfgtJNn2huV",
+    "recSatmqOiGB1c5Dr"
+  ],
+  "FAQs Improvement With AI": [
+    "recRIelu6Nzp2Q9uY",
+    "reccGOiyAhid6zcMl",
+    "rec8zLmUa2kvBKZuG",
+    "rec99fnEwzHb9knzX",
+    "recMecjHx6Lu6Nt4X",
+    "rec2z6yZswI67wFrP",
+    "recpUoGWdUNgKVGL9",
+    "recKcep02vfzSmNH1",
+    "recBhIX3Xkk6jHzBl"
+  ],
+  "AI_FAQs_Status": "Done",
+  "AddOns Improvement With AI": [
+    "rec8i3xCecCvSUhPZ",
+    "rec47d5ycpOHjvv0C",
+    "receLBH9xZCIYoRnn"
+  ],
+  "AI_AddOns_Status": "Done",
+  "Pipeline_Status": "In Progress",
+  "Publish_Status": "Pending",
+  "Improvement With AI": [
+    "recK4GDXe9yy5Fat9"
+  ],
+  "Translation_Status": "Pending",
+  "ImprovementRecordId": "recK4GDXe9yy5Fat9",
+  "Stage_Name": "SEO",
+  "Stage_Owner": "desktop-app",
+  "Stage_RunId": "48b9d465-1a99-4998-82a8-75594f0126f8",
+  "Stage_LeaseUntil": "2026-05-05T14:57:25.861Z",
+  "SEO_Validation_Status": "PASS",
+  "SEO_Validation_Score": 100,
+  "SEO_Validation_Flags": "[]",
+  "Publish_Readiness_Status": "READY",
+  "SEO_Validation_By_Language": "{\"en\":{\"status\":\"PASS\",\"score\":100,\"flags\":[],\"publish\":\"READY\"}}",
+  "Translation_URL_Map": "{\"en\":{\"post_id\":23024,\"url\":\"https://ftstravels.com/tours/cairo-egyptian-civilization-museum-citadel/\",\"last_synced_at\":\"2026-05-05T13:21:16.380Z\"},\"fr\":{\"post_id\":33452,\"url\":\"https://ftstravels.com/fr/tours/excursion-le-caire-musee-de-la-civilisation-egyptienne-citadelle-et-vieux/\",\"last_synced_at\":\"2026-04-20T22:16:46.050Z\"},\"es\":{\"post_id\":33464,\"url\":\"https://ftstravels.com/es/tours/excursion-el-cairo-museo-civilizacion-egipcia/\",\"last_synced_at\":\"2026-04-20T22:21:32.673Z\"},\"de\":{\"post_id\":33476,\"url\":\"https://ftstravels.com/de/tours/kairo-ausflug-aegyptisches-zivilisationsmuseum-zitadelle-alt/\",\"last_synced_at\":\"2026-04-20T22:26:33.299Z\"},\"zh-hans\":{\"post_id\":33488,\"url\":\"https://ftstravels.com/zh-hans/tours/cairo-egyptian-citadel-old-exploration/\",\"last_synced_at\":\"2026-04-20T22:31:13.078Z\"}}"
+}
+2026-05-06T00:10:49.441Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=9704
+2026-05-06T00:10:50.081Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:10:51.728Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/cairo-l92/cairo-egyptian-museum-citadel-and-old-cairo-guided-tour-t429993/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=3054
+2026-05-06T00:10:53.465Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/en-gb/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=9707
+2026-05-06T00:10:54.853Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/cairo-l92/full-day-tour-in-cairo-citadel-old-cairo-khan-el-khalili-t12969/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=9927
+2026-05-06T00:10:59.376Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:11:15.954Z
+INFO
+GYG PW debug: dom_options=[{"t":"Shared Tour in English with Entry Tickets","rp":85,"sp":68,"cats":3},{"t":"Private Tour with Entry Tickets","rp":85,"sp":68,"cats":3}]
+2026-05-06T00:11:16.019Z
+INFO
+🧾 GYG options intel:
+2026-05-06T00:11:16.019Z
+INFO
+seed: Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour
+candidates (score):
+- 0.2677 https://www.getyourguide.com/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/
+- 0.2676 https://www.getyourguide.com/en-gb/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/
+- 0.1900 https://www.getyourguide.com/cairo-l92/full-day-tour-in-cairo-citadel-old-cairo-khan-el-khalili-t12969/
+- 0.1822 https://www.getyourguide.com/cairo-l92/cairo-egyptian-museum-citadel-and-old-cairo-guided-tour-t429993/
+selected:
+- https://www.getyourguide.com/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/?date_from=2026-05-07&_pc=1%2C1&_pc=2%2C1&_pc=3%2C1&_pc=4%2C1&currency=EUR
+options:
+- Shared Tour in English with Entry Tickets (from EUR 85) | Adult EUR 102.621 | Child EUR 52.681 | Infant EUR 0
+- Private Tour with Entry Tickets (from EUR 85) | Adult EUR 136.831 | Child EUR 73.551 | Infant EUR 0
+2026-05-06T00:11:20.374Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:11:20.531Z
+INFO
+✅ Wrote GYG reference options to Airtable: Packages=2 Prices=6
+2026-05-06T00:11:24.099Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=9651
+2026-05-06T00:11:25.441Z
+INFO
+Serper scrape debug: endpoint=https://scrape.serper.dev payload={"url":"https://www.getyourguide.com/cairo-l92/cairo-egyptian-museum-citadel-and-old-cairo-guided-tour-t429993/","includeMarkdown":true} type=object keys=text,markdown,metadata,jsonld,credits lens=direct=3054
+2026-05-06T00:11:25.443Z
+WARN
+AI: prompt placeholder leakage prevented
+2026-05-06T00:11:29.377Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:11:49.792Z
+INFO
+Fetched Highlights count: 5
+2026-05-06T00:11:49.792Z
+INFO
+Fetched Itinerary count: 9
+2026-05-06T00:11:49.792Z
+INFO
+Fetched Includes count: 5
+2026-05-06T00:11:49.792Z
+INFO
+Fetched FAQs count: 9
+2026-05-06T00:11:49.792Z
+INFO
+Fetched Packages count: 3
+2026-05-06T00:11:49.792Z
+INFO
+🔹 Processing Highlights...
+2026-05-06T00:11:49.793Z
+INFO
+Original Highlights count: 5
+2026-05-06T00:11:49.793Z
+INFO
+🔹 Processing Itinerary...
+2026-05-06T00:11:49.793Z
+INFO
+Original Steps: 9
+2026-05-06T00:11:49.793Z
+INFO
+🔹 Processing Includes...
+2026-05-06T00:11:49.793Z
+INFO
+Original Includes: 5
+2026-05-06T00:11:49.793Z
+INFO
+🔹 Processing FAQs...
+2026-05-06T00:11:49.793Z
+INFO
+Original FAQs: 9
+2026-05-06T00:11:49.793Z
+INFO
+🔹 Processing Packages...
+2026-05-06T00:11:49.793Z
+INFO
+Original Packages: 3
+2026-05-06T00:11:49.797Z
+INFO
+🧭 Standard Context:
+2026-05-06T00:11:49.797Z
+INFO
+{
+  "trip": {
+    "id": "recUDehvj1S32179Q",
+    "title": "Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour",
+    "tour_type": "",
+    "slug": "cairo-day-tour-nmec-citadel-old-cairo",
+    "duration_hours": "8",
+    "duration_minutes": "",
+    "duration_unit": "hours"
+  },
+  "seo": {
+    "title": "Cairo Day Tour: NMEC, Citadel & Old Cairo – All-Inclusive",
+    "meta_description": "Experience Cairo's highlights in one all-inclusive day: NMEC mummies, Saladin's Citadel views, Old Cairo's Hanging Church, and Khan El-Khalili bazaar.",
+    "excerpt": "All-inclusive Cairo day tour covering NMEC, Saladin's Citadel, Old Cairo, and Khan El-Khalili. Expert Egyptologist guide, lunch, and hotel transfers included.",
+    "focus_keywords": "Cairo day tour",
+    "permalink": "cairo-day-tour-nmec-citadel-old-cairo"
+  },
+  "evidence": {
+    "description": "Step into 5,000 years of Cairo's story in a single, seamless day. Start at the National Museum of Egyptian Civilization, where the Royal Mummies Hall brings pharaohs face-to-face with you—an unforgettable encounter with ancient rulers. Then ascend Saladin's Citadel for panoramic views that stretch from medieval ramparts to the Pyramids on the horizon. Wander the narrow lanes of Old Cairo, step inside the Hanging Church suspended above a Roman fortress, and lose yourself in the spice-scented alleys of Khan El-Khalili Bazaar. Throughout, your expert Egyptologist guide connects each site with stories that make history come alive. This tour is perfect for first-time visitors who want a comprehensive, well-paced introduction to Cairo's layered heritage—from pharaonic and Coptic to Islamic eras. It may not suit travelers seeking deep dives into a single site or those with very limited mobility, as there is moderate walking at the Citadel and through Old Cairo's streets. Expect a comfortable, air-conditioned vehicle for all transfers, a relaxed pace with time for photos and shopping, and a traditional Egyptian lunch to refuel. Bring comfortable walking shoes, a hat, sunscreen, and cash for personal purchases or tips.",
+    "why_people_love": "Expert Storytelling — Your Egyptologist guide reveals the stories behind royal mummies, fortress walls, and Coptic icons, turning every stop into a vivid story. Seamless Logistics — Hotel pickup and drop-off in a guided air-conditioned vehicle eliminate traffic stress, so you focus on the sights, not the commute. All-Inclusive Value — Entrance fees, lunch, and bottled water are all covered—no surprise costs, just a full day of discovery. Unique Blend of Eras — See pharaonic, medieval Islamic, and Coptic Christian heritage in one tour, a combination most Cairo tours miss. Perfect for First-Timers — Covers the must-see sights (NMEC, Citadel, Old Cairo, Khan El-Khalili) at a comfortable pace, ideal for history buffs, families, and solo travelers. Memorable Views — Standing atop the Citadel with the Pyramids on the horizon or gazing at royal mummies creates lasting emotional payoffs you'll talk about for years.",
+    "highlights": "Stand atop Saladin's 850-year-old Citadel for panoramic Cairo views and a strategic history lesson. | Trace 5,000 years of civilization at NMEC—from pharaonic mummies to Coptic icons—all in one museum. | Step inside the Hanging Church's wooden nave, suspended above a Roman fortress in Old Cairo. | Savor a traditional Egyptian lunch with authentic flavors that connect you to Cairo's culinary heritage. | Haggle for treasures at Khan El-Khalili Bazaar, a 14th-century market alive with spices, lanterns, and jewelry.",
+    "itinerary": "Morning (30 minutes) – Hotel Pickup & Transfer to NMEC: Your guide picks you up from your Cairo or Giza hotel in an air-conditioned vehicle and briefs you on the day ahead. This stress-free start ensures you arrive ready to explore. (Approx. 30 minutes) | Morning (2 hours) – National Museum of Egyptian Civilization: Explore NMEC's 50,000 artifacts, including the Royal Mummies Hall, where you'll see the preserved faces of pharaohs. Seeing these ancient rulers up close makes this the most memorable museum stop in Cairo. (Approx. 2 hours) | Late Morning (30 minutes) – Transfer to Saladin's Citadel: Drive through Cairo's vibrant streets as your guide shares stories of the city's evolution from ancient times to the medieval era. The short ride builds anticipation for the panoramic views ahead. (Approx. 30 minutes) | Late Morning (1 hour) – Saladin's Citadel & City Views: Explore the 850-year-old fortress that once protected Cairo from crusaders, then soak in 360-degree views with the Pyramids on the horizon. This stop offers a perfect blend of history and photography opportunities. (Approx. 1 hours) | Lunch (1 hour) – Traditional Egyptian Meal: Savor a delicious traditional Egyptian lunch at a local restaurant, featuring dishes like koshari, grilled meats, and fresh salads. This midday break recharges you for the afternoon's discoveries. (Approx. 1 hours) | Afternoon (30 minutes) – Transfer to Old Cairo: Enjoy a scenic drive through Cairo's historic quarters as your guide shares insights, setting the stage for an intimate encounter with Coptic heritage. (Approx. 30 minutes) | Afternoon (1 hour) – Old Cairo & The Hanging Church: Wander through ancient streets and visit the Hanging Church, one of the oldest Coptic Christian sites in Egypt, with its wooden roof suspended over a Roman fortress. This serene stop reveals a side of Cairo that many visitors miss. (Approx. 1 hours) | Late Afternoon (1 hour) – Khan El-Khalili Bazaar: Lose yourself in the labyrinthine alleys of Cairo's most famous bazaar since the 14th century, browsing stalls of spices, lanterns, jewelry, and handcrafted souvenirs. This is the perfect place to haggle for unique treasures and soak in the lively atmosphere. (Approx. 1 hours) | Late Afternoon (30 minutes) – Return Transfer to Hotel: Your tour concludes with a comfortable drop-off at your hotel, giving you time to relax and reflect on a day filled with ancient mummies, medieval fortresses, and bustling markets. You'll return with a deeper understanding of Cairo's layered history. (Approx. 30 minutes)",
+    "included": "Expert Egyptologist guide who brings history to life at every stop. | Complimentary bottled water throughout the day to keep you refreshed. | Attraction entrance fees are included as listed in What's Included. | Hotel pickup and drop-off in Cairo or Giza – a stress-free start and end. | Traditional Egyptian lunch at a local restaurant, refueling with authentic flavors.",
+    "excluded": "Personal expenses and shopping | Travel insurance (recommended but not included) | Gratuities and tips (optional, at your discretion)",
+    "faqs": "Where does the tour start and end? — Your day begins with hotel pickup from your Cairo or Giza accommodation and ends with drop-off at the same location. Exact pickup time is confirmed after booking. | What languages are available for the guided tour? — Language availability is confirmed at booking. | Is this tour suitable for children or elderly travelers? — Yes, the tour is generally suitable for all ages. Moderate walking is required at Saladin's Citadel and through Old Cairo's streets. NMEC is wheelchair-accessible. Please inform us about mobility needs at booking. | What are the main stops on this tour? — The tour covers NMEC with the Royal Mummies Hall, Saladin's Citadel, Old Cairo's Hanging Church, and Khan El-Khalili Bazaar. Lunch is also included. | Which museum does this tour visit? — This tour visits the National Museum of Egyptian Civilization (NMEC) in Fustat, not the older Egyptian Museum in Tahrir. NMEC houses over 50,000 artifacts including the Royal Mummies Hall. | Is lunch included, and can you accommodate dietary restrictions? — Yes. Lunch is included as listed in What's Included. | What is your cancellation policy? — Cancel at least 24 hours before the scheduled trip for a full refund. Use your booking confirmation to cancel or reschedule. | What should I bring for this day tour? — Comfortable walking shoes, a hat, sunscreen, camera, and cash in Egyptian pounds for personal purchases or tips are recommended. | What is included in the tour price? — All entrance fees, expert guide, lunch, bottled water, and hotel transfers are included for the selected package. Refer to the 'What's Included' section for full details.",
+    "packages": "Shared Tour in English with Entry Tickets | Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour — Experience 5,000 years of Cairo's history in one perfect day. Includes expert guide, all entrance fees, lunch, and hotel transfers. — Your all-inclusive Cairo day tour includes: Expert Egyptologist guide bringing history to life with captivating storytelling All attraction entrance fees for seamless access to every site Comfortable air-conditioned transportation with hotel pickup and drop-off Traditional Egyptian lunch at a local restaurant with authentic cuisine Bottled water throughout to keep you refreshed | Private Tour with Entry Tickets",
+    "combined": "Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour | Cairo Day Tour: NMEC, Citadel & Old Cairo – All-Inclusive | Experience Cairo's highlights in one all-inclusive day: NMEC mummies, Saladin's Citadel views, Old Cairo's Hanging Church, and Khan El-Khalili bazaar. | All-inclusive Cairo day tour covering NMEC, Saladin's Citadel, Old Cairo, and Khan El-Khalili. Expert Egyptologist guide, lunch, and hotel transfers included. | Step into 5,000 years of Cairo's story in a single, seamless day. Start at the National Museum of Egyptian Civilization, where the Royal Mummies Hall brings pharaohs face-to-face with you—an unforgettable encounter with ancient rulers. Then ascend Saladin's Citadel for panoramic views that stretch from medieval ramparts to the Pyramids on the horizon. Wander the narrow lanes of Old Cairo, step inside the Hanging Church suspended above a Roman fortress, and lose yourself in the spice-scented alleys of Khan El-Khalili Bazaar. Throughout, your expert Egyptologist guide connects each site with stories that make history come alive. This tour is perfect for first-time visitors who want a comprehensive, well-paced introduction to Cairo's layered heritage—from pharaonic and Coptic to Islamic eras. It may not suit travelers seeking deep dives into a single site or those with very limited mobility, as there is moderate walking at the Citadel and through Old Cairo's streets. Expect a comfortable, air-conditioned vehicle for all transfers, a relaxed pace with time for photos and shopping, and a traditional Egyptian lunch to refuel. Bring comfortable walking shoes, a hat, sunscreen, and cash for personal purchases or tips. | Expert Storytelling — Your Egyptologist guide reveals the stories behind royal mummies, fortress walls, and Coptic icons, turning every stop into a vivid story. Seamless Logistics — Hotel pickup and drop-off in a guided air-conditioned vehicle eliminate traffic stress, so you focus on the sights, not the commute. All-Inclusive Value — Entrance fees, lunch, and bottled water are all covered—no surprise costs, just a full day of discovery. Unique Blend of Eras — See pharaonic, medieval Islamic, and Coptic Christian heritage in one tour, a combination most Cairo tours miss. Perfect for First-Timers — Covers the must-see sights (NMEC, Citadel, Old Cairo, Khan El-Khalili) at a comfortable pace, ideal for history buffs, families, and solo travelers. Memorable Views — Standing atop the Citadel with the Pyramids on the horizon or gazing at royal mummies creates lasting emotional payoffs you'll talk about for years. | Stand atop Saladin's 850-year-old Citadel for panoramic Cairo views and a strategic history lesson. | Trace 5,000 years of civilization at NMEC—from pharaonic mummies to Coptic icons—all in one museum. | Step inside the Hanging Church's wooden nave, suspended above a Roman fortress in Old Cairo. | Savor a traditional Egyptian lunch with authentic flavors that connect you to Cairo's culinary heritage. | Haggle for treasures at Khan El-Khalili Bazaar, a 14th-century market alive with spices, lanterns, and jewelry. | Morning (30 minutes) – Hotel Pickup & Transfer to NMEC: Your guide picks you up from your Cairo or Giza hotel in an air-conditioned vehicle and briefs you on the day ahead. This stress-free start ensures you arrive ready to explore. (Approx. 30 minutes) | Morning (2 hours) – National Museum of Egyptian Civilization: Explore NMEC's 50,000 artifacts, including the Royal Mummies Hall, where you'll see the preserved faces of pharaohs. Seeing these ancient rulers up close makes this the most memorable museum stop in Cairo. (Approx. 2 hours) | Late Morning (30 minutes) – Transfer to Saladin's Citadel: Drive through Cairo's vibrant streets as your guide shares stories of the city's evolution from ancient times to the medieval era. The short ride builds anticipation for the panoramic views ahead. (Approx. 30 minutes) | Late Morning (1 hour) – Saladin's Citadel & City Views: Explore the 850-year-old fortress that once protected Cairo from crusaders, then soak in 360-degree views with the Pyramids on the horizon. This stop offers a perfect blend of history and photography opportunities. (Approx. 1 hours) | Lunch (1 hour) – Traditional Egyptian Meal: Savor a delicious traditional Egyptian lunch at a local restaurant, featuring dishes like koshari, grilled meats, and fresh salads. This midday break recharges you for the afternoon's discoveries. (Approx. 1 hours) | Afternoon (30 minutes) – Transfer to Old Cairo: Enjoy a scenic drive through Cairo's historic quarters as your guide shares insights, setting the stage for an intimate encounter with Coptic heritage. (Approx. 30 minutes) | Afternoon (1 hour) – Old Cairo & The Hanging Church: Wander through ancient streets and visit the Hanging Church, one of the oldest Coptic Christian sites in Egypt, with its wooden roof suspended over a Roman fortress. This serene stop reveals a side of Cairo that many visitors miss. (Approx. 1 hours) | Late Afternoon (1 hour) – Khan El-Khalili Bazaar: Lose yourself in the labyrinthine alleys of Cairo's most famous bazaar since the 14th century, browsing stalls of spices, lanterns, jewelry, and handcrafted souvenirs. This is the perfect place to haggle for unique treasures and soak in the lively atmosphere. (Approx. 1 hours) | Late Afternoon (30 minutes) – Return Transfer to Hotel: Your tour concludes with a comfortable drop-off at your hotel, giving you time to relax and reflect on a day filled with ancient mummies, medieval fortresses, and bustling markets. You'll return with a deeper understanding of Cairo's layered history. (Approx. 30 minutes) | Expert Egyptologist guide who brings history to life at every stop. | Complimentary bottled water throughout the day to keep you refreshed. | Attraction entrance fees are included as listed in What's Included. | Hotel pickup and drop-off in Cairo or Giza – a stress-free start and end. | Traditional Egyptian lunch at a local restaurant, refueling with authentic flavors. | Personal expenses and shopping | Travel insurance (recommended but not included) | Gratuities and tips (optional, at your discretion) | Where does the tour start and end? — Your day begins with hotel pickup from your Cairo or Giza accommodation and ends with drop-off at the same location. Exact pickup time is confirmed after booking. | What languages are available for the guided tour? — Language availability is confirmed at booking. | Is this tour suitable for children or elderly travelers? — Yes, the tour is generally suitable for all ages. Moderate walking is required at Saladin's Citadel and through Old Cairo's streets. NMEC is wheelchair-accessible. Please inform us about mobility needs at booking. | What are the main stops on this tour? — The tour covers NMEC with the Royal Mummies Hall, Saladin's Citadel, Old Cairo's Hanging Church, and Khan El-Khalili Bazaar. Lunch is also included. | Which museum does this tour visit? — This tour visits the National Museum of Egyptian Civilization (NMEC) in Fustat, not the older Egyptian Museum in Tahrir. NMEC houses over 50,000 artifacts including the Royal Mummies Hall. | Is lunch included, and can you accommodate dietary restrictions? — Yes. Lunch is included as listed in What's Included. | What is your cancellation policy? — Cancel at least 24 hours before the scheduled trip for a full refund. Use your booking confirmation to cancel or reschedule. | What should I bring for this day tour? — Comfortable walking shoes, a hat, sunscreen, camera, and cash in Egyptian pounds for personal purchases or tips are recommended. | What is included in the tour price? — All entrance fees, expert guide, lunch, bottled water, and hotel transfers are included for the selected package. Refer to the 'What's Included' section for full details. | Shared Tour in English with Entry Tickets | Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour — Experience 5,000 years of Cairo's histo",
+    "strict_combined": "Cairo: Egyptian Civilization Museum, Citadel &amp; Old Cairo Tour | Step into 5,000 years of Cairo's story in a single, seamless day. Start at the National Museum of Egyptian Civilization, where the Royal Mummies Hall brings pharaohs face-to-face with you—an unforgettable encounter with ancient rulers. Then ascend Saladin's Citadel for panoramic views that stretch from medieval ramparts to the Pyramids on the horizon. Wander the narrow lanes of Old Cairo, step inside the Hanging Church suspended above a Roman fortress, and lose yourself in the spice-scented alleys of Khan El-Khalili Bazaar. Throughout, your expert Egyptologist guide connects each site with stories that make history come alive. This tour is perfect for first-time visitors who want a comprehensive, well-paced introduction to Cairo's layered heritage—from pharaonic and Coptic to Islamic eras. It may not suit travelers seeking deep dives into a single site or those with very limited mobility, as there is moderate walking at the Citadel and through Old Cairo's streets. Expect a comfortable, air-conditioned vehicle for all transfers, a relaxed pace with time for photos and shopping, and a traditional Egyptian lunch to refuel. Bring comfortable walking shoes, a hat, sunscreen, and cash for personal purchases or tips. | Stand atop Saladin's 850-year-old Citadel for panoramic Cairo views and a strategic history lesson. | Trace 5,000 years of civilization at NMEC—from pharaonic mummies to Coptic icons—all in one museum. | Step inside the Hanging Church's wooden nave, suspended above a Roman fortress in Old Cairo. | Savor a traditional Egyptian lunch with authentic flavors that connect you to Cairo's culinary heritage. | Haggle for treasures at Khan El-Khalili Bazaar, a 14th-century market alive with spices, lanterns, and jewelry. | Morning (30 minutes) – Hotel Pickup & Transfer to NMEC: Your guide picks you up from your Cairo or Giza hotel in an air-conditioned vehicle and briefs you on the day ahead. This stress-free start ensures you arrive ready to explore. (Approx. 30 minutes) | Morning (2 hours) – National Museum of Egyptian Civilization: Explore NMEC's 50,000 artifacts, including the Royal Mummies Hall, where you'll see the preserved faces of pharaohs. Seeing these ancient rulers up close makes this the most memorable museum stop in Cairo. (Approx. 2 hours) | Late Morning (30 minutes) – Transfer to Saladin's Citadel: Drive through Cairo's vibrant streets as your guide shares stories of the city's evolution from ancient times to the medieval era. The short ride builds anticipation for the panoramic views ahead. (Approx. 30 minutes) | Late Morning (1 hour) – Saladin's Citadel & City Views: Explore the 850-year-old fortress that once protected Cairo from crusaders, then soak in 360-degree views with the Pyramids on the horizon. This stop offers a perfect blend of history and photography opportunities. (Approx. 1 hours) | Lunch (1 hour) – Traditional Egyptian Meal: Savor a delicious traditional Egyptian lunch at a local restaurant, featuring dishes like koshari, grilled meats, and fresh salads. This midday break recharges you for the afternoon's discoveries. (Approx. 1 hours) | Afternoon (30 minutes) – Transfer to Old Cairo: Enjoy a scenic drive through Cairo's historic quarters as your guide shares insights, setting the stage for an intimate encounter with Coptic heritage. (Approx. 30 minutes) | Afternoon (1 hour) – Old Cairo & The Hanging Church: Wander through ancient streets and visit the Hanging Church, one of the oldest Coptic Christian sites in Egypt, with its wooden roof suspended over a Roman fortress. This serene stop reveals a side of Cairo that many visitors miss. (Approx. 1 hours) | Late Afternoon (1 hour) – Khan El-Khalili Bazaar: Lose yourself in the labyrinthine alleys of Cairo's most famous bazaar since the 14th century, browsing stalls of spices, lanterns, jewelry, and handcrafted souvenirs. This is the perfect place to haggle for unique treasures and soak in the lively atmosphere. (Approx. 1 hours) | Late Afternoon (30 minutes) – Return Transfer to Hotel: Your tour concludes with a comfortable drop-off at your hotel, giving you time to relax and reflect on a day filled with ancient mummies, medieval fortresses, and bustling markets. You'll return with a deeper understanding of Cairo's layered history. (Approx. 30 minutes) | Personal expenses and shopping | Travel insurance (recommended but not included) | Gratuities and tips (optional, at your discretion) | Shared Tour in English with Entry Tickets | Egyptian Civilization Museum, Citadel &#038; Old Cairo Tour — Experience 5,000 years of Cairo's history in one perfect day. Includes expert guide, all entrance fees, lunch, and hotel transfers. — Your all-inclusive Cairo day tour includes: Expert Egyptologist guide bringing history to life with captivating storytelling All attraction entrance fees for seamless access to every site Comfortable air-conditioned transportation with hotel pickup and drop-off Traditional Egyptian lunch at a local restaurant with authentic cuisine Bottled water throughout to keep you refreshed | Private Tour with Entry Tickets | Delicious lunch at a local restaurant | Bottled water to keep you refreshed throughout the tour | Hotel pickup and drop-off for a seamless experience | Scenic Nile boat ride for a unique perspective of Cairo | Optional Add-ons (if selected): | Expert Egyptologist tour guide to provide fascinating insights | Taxes and service charges included | Professional photographer to capture unforgettable moments | Comfortable transportation in an air-conditioned vehicle | Attraction entrance fees for a full exploration experience | Cultural Egyptian scarves by FTS for an authentic touch | Entrance fees to any of the attractions | The Nile Visit, Sailing | Local restaurant Lunch | Van | drop-off locations | Cairo Citadel Photo stop, Visit, Guided tour, Free time, Sightseeing | Egyptian Museum of Antiquities Photo stop, Visit"
+  },
+  "flags": {
+    "has_nile": true,
+    "has_felucca": false,
+    "has_boat": true,
+    "has_cruise": false,
+    "has_flights": false,
+    "has_snorkel": false,
+    "has_safari": false,
+    "has_private": true,
+    "has_tickets": true,
+    "has_lunch": true,
+    "has_pickup": true,
+    "has_egyptian_museum": true,
+    "has_civ_museum": true,
+    "civ_context_slug": true,
+    "has_languages": true,
+    "has_group_size": false
+  },
+  "benchmark_insights": "Internal benchmark reference trips (do not copy text):\n- 8 Days Christmas Egypt Adventure – Cairo, Nile Cruise &amp; Red Sea Escape (egypt-christmas-tour-8-days-cairo-nile)\n- Amazing Private Tours in Cairo Egypt: 40-Minute Aerial Adventure (cairo-private-aerial-sightseeing-tour)\n- Cairo day tour: Cairo: Customized Full-Day Tour With Free Camel… (pyramids-cairo-tour-private-full-day-museum)\nStyle signals to emulate (without copying): clear pickup/logistics, quantified time blocks, strong 'who it's for' paragraph, consistent Included/Excluded language.\n\nExternal benchmark insights (research only; do not copy text):\n- https://www.getyourguide.com/cairo-l92/museum-of-egyptian-civilization-citadel-old-cairo-tour-t391261/\n- https://www.getyourguide.com/cairo-l92/cairo-egyptian-museum-citadel-and-old-cairo-guided-tour-t429993/\nAngles:\n- Flexibility in tour combinations and add-ons (shared, private, VIP)\n- Expert guided experience with deep historical context\n- Comprehensive coverage of Cairo's key landmarks in one day\n- Convenience with pickup and drop-off, free cancellation, and pay-later option\n- Social proof through high ratings and verified traveler reviews\n\nStructure:\n- Hero title with duration and key highlights\n- Activity description focusing on experience and value\n- Itinerary breakdown with time allocations for each stop\n- Inclusions and exclusions list (entry fees, lunch, tips, etc.)\n- Logistics: pickup, languages, wheelchair access, what to bring\n- Pricing with discount and booking flexibility (free cancel, pay later)\n- Review summary with rating breakdown by topic\n- Traveler testimonials highlighting guide knowledge and smooth logistics\n\nTrust builders:\n- Verified traveler reviews with names, dates, and country of origin\n- High overall rating (4.7/5) and detailed topic ratings (guide, transport, value)\n- Free cancellation up to 24 hours and reserve now/pay later option\n- Live guide with multiple language options\n- Pickup and drop-off included from hotels\n- Mention of expert Egyptologist guide credentials\n- Clear listing of what is included vs. what is optional\n\nObjections to cover:\n- Total duration includes travel time (not just sightseeing)\n- Pickup service details and long-range pickup add-on\n- Wheelchair accessibility and what to bring (sun hat, camera, comfortable clothes)\n- Pets, smoking, and large luggage not allowed\n- Tips not mandatory but appreciated\n- Shared vs. private tour differences (language, lunch, flexibility)\n- Sales pressure at shopping stops (addressed indirectly via traveler feedback)\n\nWording guidelines:\nDo:\n- Use specific numbers (e.g., 50,000 artifacts, 7 hours, 561 reviews) to build credibility\n- Highlight guide expertise and personalized experience\n- Emphasize inclusions like lunch and Nile boat ride as differentiators\n- Incorporate traveler quotes that praise organization and knowledge (paraphrase only)\n- Stress free cancellation and pay-later for risk reduction\n- Mention variety of language options to attract international travelers\nAvoid:\n- Copying competitor phrasing about 'flexible options' without own spin\n- Reinforcing negative feedback about shopping pressure or rushed itineraries\n- Overpromising pickup locations without clear boundaries\n- Using vague terms like 'great experience' without supporting details\n- Quoting competitor text verbatim beyond six words"
+}
+2026-05-06T00:11:49.798Z
+WARN
+AI: prompt placeholder leakage prevented
+2026-05-06T00:11:50.384Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:11:58.793Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:12:20.085Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:12:28.794Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:12:50.390Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:12:59.379Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T00:13:00.963Z
+INFO
+📤 Writing updates to Airtable...
+2026-05-06T00:13:00.963Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_At_A_Glance (len=227):
+2026-05-06T00:13:00.963Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_At_A_Glance = {"duration":"8 hours","meeting_point":"Hotel pickup in Cairo or Giza","group_size":"","includes":"Expert guide, entrance fees, lunch, bottled water, hotel transfers","excludes":"Personal expenses, travel insurance, gratuities"}
+2026-05-06T00:13:00.963Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Bold_Promise (len=150):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Bold_Promise = Enjoy Cairo's pharaonic, Coptic, and Islamic heritage in one seamless day without worrying about logistics, even if you only have one day in the city.
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Excerpt (len=158):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Excerpt = All-inclusive Cairo day tour covering NMEC, Saladin's Citadel, Old Cairo, and Khan El-Khalili. Expert Egyptologist guide, lunch, and hotel transfers included.
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_LastUpdated (len=24):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_SEO_Meta_Description (len=150):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_SEO_Meta_Description = Experience Cairo's highlights in one all-inclusive day: NMEC mummies, Saladin's Citadel views, Old Cairo's Hanging Church, and Khan El-Khalili bazaar.
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_SEO_Title (len=57):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_SEO_Title = Cairo Day Tour: NMEC, Citadel & Old Cairo – All-Inclusive
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Short_Summary (len=182):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Short_Summary = This all-inclusive Cairo day tour takes you to the National Museum of Egyptian Civilization, Saladin's Citadel, and Old Cairo's Coptic sites, with lunch and hotel transfers included.
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Tab_Content (len=1059):
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Tab_Content = <p><strong>Expert Storytelling</strong> — Your Egyptologist guide reveals the stories behind royal mummies, fortress walls, and Coptic icons, turning every stop into a vivid story.</p><p><strong>Seamless Logistics</strong> — Hotel pickup and drop-off in a guided air-conditioned vehicle eliminate traffic stress, so you focus on the sights, not the commute.</p><p><strong>All-Inclusive Value</strong> — Entrance fees, lunch, and bottled water are all covered—no surprise costs, just a full day of discovery.</p><p><strong>Unique Blend of Eras</strong> — See pharaonic, medieval Islamic, and Coptic Christian heritage in one tour, a combination most Cairo tours miss.</p><p><strong>Perfect for First-Timers</strong> — Covers the must-see sights (NMEC, Citadel, Old Cairo, Khan El-Khalili) at a comfortable pace, ideal for history buffs, families, and solo travelers.</p><p><strong>Memorable Views</str
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Tab_Content = ong> — Standing atop the Citadel with the Pyramids on the horizon or gazing at royal mummies creates lasting emotional payoffs you'll talk about for years.</p>
+2026-05-06T00:13:00.964Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Titel_H1 (len=77):
+2026-05-06T00:13:00.965Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Titel_H1 = Cairo Day Tour: NMEC, Saladin's Citadel & Old Cairo with Lunch & Hotel Pickup
+2026-05-06T00:13:00.965Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Trip_Description (len=1248):
+2026-05-06T00:13:00.965Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Trip_Description = <p>Step into 5,000 years of Cairo's story in a single, seamless day. Start at the National Museum of Egyptian Civilization, where the Royal Mummies Hall brings pharaohs face-to-face with you—an unforgettable encounter with ancient rulers. Then ascend Saladin's Citadel for panoramic views that stretch from medieval ramparts to the Pyramids on the horizon. Wander the narrow lanes of Old Cairo, step inside the Hanging Church suspended above a Roman fortress, and lose yourself in the spice-scented alleys of Khan El-Khalili Bazaar. Throughout, your expert Egyptologist guide connects each site with stories that make history come alive.</p><p>This tour is perfect for first-time visitors who want a comprehensive, well-paced introduction to Cairo's layered heritage—from pharaonic and Coptic to Islamic eras. It may not suit travelers seeking deep dives into a single site or those with very limited
+2026-05-06T00:13:00.965Z
+INFO
+🧾 UPDATE Improvement With AI [recK4GDXe9yy5Fat9] :: AI_Trip_Description =  mobility, as there is moderate walking at the Citadel and through Old Cairo's streets.</p><p>Expect a comfortable, air-conditioned vehicle for all transfers, a relaxed pace with time for photos and shopping, and a traditional Egyptian lunch to refuel. Bring comfortable walking shoes, a hat, sunscreen, and cash for personal purchases or tips.</p>
+2026-05-06T00:13:02.079Z
+INFO
+✅ Improved Highlights:
+2026-05-06T00:13:02.079Z
+INFO
+[
+  "Stand atop Saladin's 850-year-old Citadel for panoramic Cairo views and a strategic history lesson.",
+  "Trace 5,000 years of civilization at NMEC—from pharaonic mummies to Coptic icons—all in one museum.",
+  "Step inside the Hanging Church's wooden nave, suspended above a Roman fortress in Old Cairo.",
+  "Savor a traditional Egyptian lunch with authentic flavors that connect you to Cairo's culinary heritage.",
+  "Haggle for treasures at Khan El-Khalili Bazaar, a 14th-century market alive with spices, lanterns, and jewelry."
+]
+2026-05-06T00:13:02.898Z
+INFO
+Deleted old records: 5
+2026-05-06T00:13:02.898Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight (len=99):
+2026-05-06T00:13:02.898Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight = Stand atop Saladin's 850-year-old Citadel for panoramic Cairo views and a strategic history lesson.
+2026-05-06T00:13:02.898Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Order = 1
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight (len=99):
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight = Trace 5,000 years of civilization at NMEC—from pharaonic mummies to Coptic icons—all in one museum.
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:02.899Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Order = 2
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight (len=92):
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight = Step inside the Hanging Church's wooden nave, suspended above a Roman fortress in Old Cairo.
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:02.900Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Order = 3
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight (len=104):
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight = Savor a traditional Egyptian lunch with authentic flavors that connect you to Cairo's culinary heritage.
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:02.901Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Order = 4
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight (len=111):
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Highlight = Haggle for treasures at Khan El-Khalili Bazaar, a 14th-century market alive with spices, lanterns, and jewelry.
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:02.902Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Order = 5
+2026-05-06T00:13:02.903Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:02.903Z
+INFO
+🧾 CREATE Highlights Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.025Z
+INFO
+Created new records: 5
+2026-05-06T00:13:04.028Z
+INFO
+✅ Improved Itinerary:
+2026-05-06T00:13:04.028Z
+INFO
+[
+  {
+    "step_title": "Morning (30 minutes) – Hotel Pickup & Transfer to NMEC",
+    "step_description": "Your guide picks you up from your Cairo or Giza hotel in an air-conditioned vehicle and briefs you on the day ahead. This stress-free start ensures you arrive ready to explore. (Approx. 30 minutes)",
+    "step_label": "Morning",
+    "duration_value": 30,
+    "duration_unit": "minutes",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Morning (2 hours) – National Museum of Egyptian Civilization",
+    "step_description": "Explore NMEC's 50,000 artifacts, including the Royal Mummies Hall, where you'll see the preserved faces of pharaohs. Seeing these ancient rulers up close makes this the most memorable museum stop in Cairo. (Approx. 2 hours)",
+    "step_label": "Morning",
+    "duration_value": 2,
+    "duration_unit": "hours",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Late Morning (30 minutes) – Transfer to Saladin's Citadel",
+    "step_description": "Drive through Cairo's vibrant streets as your guide shares stories of the city's evolution from ancient times to the medieval era. The short ride builds anticipation for the panoramic views ahead. (Approx. 30 minutes)",
+    "step_label": "Late Morning",
+    "duration_value": 30,
+    "duration_unit": "minutes",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Late Morning (1 hour) – Saladin's Citadel & City Views",
+    "step_description": "Explore the 850-year-old fortress that once protected Cairo from crusaders, then soak in 360-degree views with the Pyramids on the horizon. This stop offers a perfect blend of history and photography opportunities. (Approx. 1 hours)",
+    "step_label": "Late Morning",
+    "duration_value": 1,
+    "duration_unit": "hours",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Lunch (1 hour) – Traditional Egyptian Meal",
+    "step_description": "Savor a delicious traditional Egyptian lunch at a local restaurant, featuring dishes like koshari, grilled meats, and fresh salads. This midday break recharges you for the afternoon's discoveries. (Approx. 1 hours)",
+    "step_label": "Lunch",
+    "duration_value": 1,
+    "duration_unit": "hours",
+    "meals_included": "Lunch"
+  },
+  {
+    "step_title": "Afternoon (30 minutes) – Transfer to Old Cairo",
+    "step_description": "Enjoy a scenic drive through Cairo's historic quarters as your guide shares insights, setting the stage for an intimate encounter with Coptic heritage. (Approx. 30 minutes)",
+    "step_label": "Afternoon",
+    "duration_value": 30,
+    "duration_unit": "minutes",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Afternoon (1 hour) – Old Cairo & The Hanging Church",
+    "step_description": "Wander through ancient streets and visit the Hanging Church, one of the oldest Coptic Christian sites in Egypt, with its wooden roof suspended over a Roman fortress. This serene stop reveals a side of Cairo that many visitors miss. (Approx. 1 hours)",
+    "step_label": "Afternoon",
+    "duration_value": 1,
+    "duration_unit": "hours",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Late Afternoon (1 hour) – Khan El-Khalili Bazaar",
+    "step_description": "Lose yourself in the labyrinthine alleys of Cairo's most famous bazaar since the 14th century, browsing stalls of spices, lanterns, jewelry, and handcrafted souvenirs. This is the perfect place to haggle for unique treasures and soak in the lively atmosphere. (Approx. 1 hours)",
+    "step_label": "Late Afternoon",
+    "duration_value": 1,
+    "duration_unit": "hours",
+    "meals_included": "None"
+  },
+  {
+    "step_title": "Late Afternoon (30 minutes) – Return Transfer to Hotel",
+    "step_description": "Your tour concludes with a comfortable drop-off at your hotel, giving you time to relax and reflect on a day filled with ancient mummies, medieval fortresses, and bustling markets. You'll return with a deeper understanding of Cairo's layered history. (Approx. 30 minutes)",
+    "step_label": "Late Afternoon",
+    "duration_value": 30,
+    "duration_unit": "minutes",
+    "meals_included": "None"
+  }
+]
+2026-05-06T00:13:04.453Z
+INFO
+Deleted old records: 9
+2026-05-06T00:13:04.453Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=7):
+2026-05-06T00:13:04.453Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = minutes
+2026-05-06T00:13:04.453Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 30
+2026-05-06T00:13:04.453Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=197):
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Your guide picks you up from your Cairo or Giza hotel in an air-conditioned vehicle and briefs you on the day ahead. This stress-free start ensures you arrive ready to explore. (Approx. 30 minutes)
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=7):
+2026-05-06T00:13:04.454Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Morning
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=54):
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Morning (30 minutes) – Hotel Pickup & Transfer to NMEC
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 1
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=5):
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = hours
+2026-05-06T00:13:04.455Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 2
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=223):
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Explore NMEC's 50,000 artifacts, including the Royal Mummies Hall, where you'll see the preserved faces of pharaohs. Seeing these ancient rulers up close makes this the most memorable museum stop in Cairo. (Approx. 2 hours)
+2026-05-06T00:13:04.456Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=7):
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Morning
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=60):
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Morning (2 hours) – National Museum of Egyptian Civilization
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 2
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=7):
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = minutes
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 30
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.457Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=217):
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Drive through Cairo's vibrant streets as your guide shares stories of the city's evolution from ancient times to the medieval era. The short ride builds anticipation for the panoramic views ahead. (Approx. 30 minutes)
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=12):
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Late Morning
+2026-05-06T00:13:04.458Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=57):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Late Morning (30 minutes) – Transfer to Saladin's Citadel
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 3
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=5):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = hours
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 1
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=232):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Explore the 850-year-old fortress that once protected Cairo from crusaders, then soak in 360-degree views with the Pyramids on the horizon. This stop offers a perfect blend of history and photography opportunities. (Approx. 1 hours)
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=12):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Late Morning
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=54):
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Late Morning (1 hour) – Saladin's Citadel & City Views
+2026-05-06T00:13:04.459Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 4
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=5):
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = hours
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 1
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=5):
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = Lunch
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.460Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=214):
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Savor a delicious traditional Egyptian lunch at a local restaurant, featuring dishes like koshari, grilled meats, and fresh salads. This midday break recharges you for the afternoon's discoveries. (Approx. 1 hours)
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=5):
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Lunch
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=42):
+2026-05-06T00:13:04.461Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Lunch (1 hour) – Traditional Egyptian Meal
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 5
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=7):
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = minutes
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 30
+2026-05-06T00:13:04.462Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=172):
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Enjoy a scenic drive through Cairo's historic quarters as your guide shares insights, setting the stage for an intimate encounter with Coptic heritage. (Approx. 30 minutes)
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=9):
+2026-05-06T00:13:04.463Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Afternoon
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=46):
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Afternoon (30 minutes) – Transfer to Old Cairo
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 6
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=5):
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = hours
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 1
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.464Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=249):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Wander through ancient streets and visit the Hanging Church, one of the oldest Coptic Christian sites in Egypt, with its wooden roof suspended over a Roman fortress. This serene stop reveals a side of Cairo that many visitors miss. (Approx. 1 hours)
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=9):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Afternoon
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=51):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Afternoon (1 hour) – Old Cairo & The Hanging Church
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 7
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=5):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = hours
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 1
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=277):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Lose yourself in the labyrinthine alleys of Cairo's most famous bazaar since the 14th century, browsing stalls of spices, lanterns, jewelry, and handcrafted souvenirs. This is the perfect place to haggle for unique treasures and soak in the lively atmosphere. (Approx. 1 hours)
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=14):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Late Afternoon
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=48):
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Late Afternoon (1 hour) – Khan El-Khalili Bazaar
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 8
+2026-05-06T00:13:04.465Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit (len=7):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Unit = minutes
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Duration_Value = 30
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included (len=4):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Meals_Included = None
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description (len=271):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Description = Your tour concludes with a comfortable drop-off at your hotel, giving you time to relax and reflect on a day filled with ancient mummies, medieval fortresses, and bustling markets. You'll return with a deeper understanding of Cairo's layered history. (Approx. 30 minutes)
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label (len=14):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Label = Late Afternoon
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title (len=54):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: AI_Step_Title = Late Afternoon (30 minutes) – Return Transfer to Hotel
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: StepOrder = 9
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:04.466Z
+INFO
+🧾 CREATE Itinerary Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:05.335Z
+INFO
+Created new records: 9
+2026-05-06T00:13:05.338Z
+INFO
+✅ Improved Includes:
+2026-05-06T00:13:05.339Z
+INFO
+[
+  "Hotel pickup and drop-off in Cairo or Giza – a stress-free start and end.",
+  "Expert Egyptologist guide who brings history to life at every stop.",
+  "Traditional Egyptian lunch at a local restaurant, refueling with authentic flavors.",
+  "Complimentary bottled water throughout the day to keep you refreshed.",
+  "Attraction entrance fees are included as listed in What's Included."
+]
+2026-05-06T00:13:05.937Z
+INFO
+Deleted old records: 5
+2026-05-06T00:13:05.937Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem (len=73):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem = Hotel pickup and drop-off in Cairo or Giza – a stress-free start and end.
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem (len=67):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem = Expert Egyptologist guide who brings history to life at every stop.
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem (len=83):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem = Traditional Egyptian lunch at a local restaurant, refueling with authentic flavors.
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:05.938Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem (len=69):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem = Complimentary bottled water throughout the day to keep you refreshed.
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem (len=67):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: IncludeItem = Attraction entrance fees are included as listed in What's Included.
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:05.939Z
+INFO
+🧾 CREATE TripIncludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:06.858Z
+INFO
+Created new records: 5
+2026-05-06T00:13:07.701Z
+INFO
+Deleted old records: 3
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem (len=30):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem = Personal expenses and shopping
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem (len=47):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem = Travel insurance (recommended but not included)
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem (len=50):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: ExcludeItem = Gratuities and tips (optional, at your discretion)
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:07.702Z
+INFO
+🧾 CREATE TripExcludes Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:08.449Z
+INFO
+Created new records: 3
+2026-05-06T00:13:08.452Z
+INFO
+✅ Fixed FAQ: normalized language answer
+2026-05-06T00:13:08.455Z
+INFO
+✅ Improved FAQs:
+2026-05-06T00:13:08.455Z
+INFO
+[
+  {
+    "question": "What is your cancellation policy?",
+    "answer": "Cancel at least 24 hours before the scheduled trip for a full refund. Use your booking confirmation to cancel or reschedule."
+  },
+  {
+    "question": "What should I bring for this day tour?",
+    "answer": "Comfortable walking shoes, a hat, sunscreen, camera, and cash in Egyptian pounds for personal purchases or tips are recommended."
+  },
+  {
+    "question": "What languages are available for the guided tour?",
+    "answer": "Language availability is confirmed at booking."
+  },
+  {
+    "question": "Is this tour suitable for children or elderly travelers?",
+    "answer": "Yes, the tour is generally suitable for all ages. Moderate walking is required at Saladin's Citadel and through Old Cairo's streets. NMEC is wheelchair-accessible. Please inform us about mobility needs at booking."
+  },
+  {
+    "question": "Where does the tour start and end?",
+    "answer": "Your day begins with hotel pickup from your Cairo or Giza accommodation and ends with drop-off at the same location. Exact pickup time is confirmed after booking."
+  },
+  {
+    "question": "What are the main stops on this tour?",
+    "answer": "The tour covers NMEC with the Royal Mummies Hall, Saladin's Citadel, Old Cairo's Hanging Church, and Khan El-Khalili Bazaar. Lunch is also included."
+  },
+  {
+    "question": "Which museum does this tour visit?",
+    "answer": "This tour visits the National Museum of Egyptian Civilization (NMEC) in Fustat, not the older Egyptian Museum in Tahrir. NMEC houses over 50,000 artifacts including the Royal Mummies Hall."
+  },
+  {
+    "question": "Is lunch included, and can you accommodate dietary restrictions?",
+    "answer": "Yes. Lunch is included as listed in What's Included."
+  },
+  {
+    "question": "What is included in the tour price?",
+    "answer": "All entrance fees, expert guide, lunch, bottled water, and hotel transfers are included for the selected package. Refer to the 'What's Included' section for full details."
+  }
+]
+2026-05-06T00:13:09.109Z
+INFO
+Deleted old records: 9
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=124):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Cancel at least 24 hours before the scheduled trip for a full refund. Use your booking confirmation to cancel or reschedule.
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=33):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = What is your cancellation policy?
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=128):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Comfortable walking shoes, a hat, sunscreen, camera, and cash in Egyptian pounds for personal purchases or tips are recommended.
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=38):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = What should I bring for this day tour?
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.109Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=46):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Language availability is confirmed at booking.
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=49):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = What languages are available for the guided tour?
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=213):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Yes, the tour is generally suitable for all ages. Moderate walking is required at Saladin's Citadel and through Old Cairo's streets. NMEC is wheelchair-accessible. Please inform us about mobility needs at booking.
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=56):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = Is this tour suitable for children or elderly travelers?
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=162):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Your day begins with hotel pickup from your Cairo or Giza accommodation and ends with drop-off at the same location. Exact pickup time is confirmed after booking.
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=34):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = Where does the tour start and end?
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.110Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=148):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = The tour covers NMEC with the Royal Mummies Hall, Saladin's Citadel, Old Cairo's Hanging Church, and Khan El-Khalili Bazaar. Lunch is also included.
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=37):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = What are the main stops on this tour?
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=188):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = This tour visits the National Museum of Egyptian Civilization (NMEC) in Fustat, not the older Egyptian Museum in Tahrir. NMEC houses over 50,000 artifacts including the Royal Mummies Hall.
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=34):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = Which museum does this tour visit?
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=52):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = Yes. Lunch is included as listed in What's Included.
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=64):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = Is lunch included, and can you accommodate dietary restrictions?
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer (len=170):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Answer = All entrance fees, expert guide, lunch, bottled water, and hotel transfers are included for the selected package. Refer to the 'What's Included' section for full details.
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated (len=24):
+2026-05-06T00:13:09.111Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_LastUpdated = 2026-05-06T00:10:41.570Z
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question (len=35):
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Question = What is included in the tour price?
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status (len=4):
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: AI_Status = Done
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip (array items=1):
+2026-05-06T00:13:09.112Z
+INFO
+🧾 CREATE FAQs Improvement With AI :: Trip [0] = recUDehvj1S32179Q
+2026-05-06T00:13:09.911Z
+INFO
+Created new records: 9
+2026-05-06T00:13:09.912Z
+INFO
+🧾 UPDATE Packages [rec0bXKJa4Ka9NS5k] :: content_html (len=379):
+2026-05-06T00:13:09.912Z
+INFO
+🧾 UPDATE Packages [rec0bXKJa4Ka9NS5k] :: content_html = <p><strong>Your shared Cairo day tour includes:</strong></p><ul><li>Expert Egyptologist guide bringing history to life</li><li>All attraction entrance fees for seamless access</li><li>Comfortable air-conditioned transportation with hotel pickup and drop-off</li><li>Traditional Egyptian lunch at a local restaurant</li><li>Bottled water throughout to keep you refreshed</li></ul>
+2026-05-06T00:13:09.912Z
+INFO
+🧾 UPDATE Packages [rec0bXKJa4Ka9NS5k] :: excerpt (len=109):
+2026-05-06T00:13:09.912Z
+INFO
+🧾 UPDATE Packages [rec0bXKJa4Ka9NS5k] :: excerpt = Join a shared tour with an expert Egyptologist guide. All entrance fees, lunch, and hotel transfers included.
+2026-05-06T00:13:10.540Z
+INFO
+🧾 UPDATE Packages [recPHRFy9qy0hqQn3] :: content_html (len=380):
+2026-05-06T00:13:10.540Z
+INFO
+🧾 UPDATE Packages [recPHRFy9qy0hqQn3] :: content_html = <p><strong>Your private Cairo day tour includes:</strong></p><ul><li>Expert Egyptologist guide bringing history to life</li><li>All attraction entrance fees for seamless access</li><li>Comfortable air-conditioned transportation with hotel pickup and drop-off</li><li>Traditional Egyptian lunch at a local restaurant</li><li>Bottled water throughout to keep you refreshed</li></ul>
+2026-05-06T00:13:10.540Z
+INFO
+🧾 UPDATE Packages [recPHRFy9qy0hqQn3] :: excerpt (len=110):
+2026-05-06T00:13:10.540Z
+INFO
+🧾 UPDATE Packages [recPHRFy9qy0hqQn3] :: excerpt = Enjoy a private tour with your own Egyptologist guide. All entrance fees, lunch, and hotel transfers included.
+2026-05-06T00:13:11.367Z
+INFO
+✅ Airtable update SUCCESS for Trip: recUDehvj1S32179Q
+2026-05-06T00:13:11.367Z
+INFO
+🏁 Conversion Enforcer FINISHED for Trip: recUDehvj1S32179Q
+2026-05-06T00:13:11.367Z
+INFO
+✅ Trip recUDehvj1S32179Q: Conversion Enforcer finished
+2026-05-06T00:13:12.262Z
+INFO
+🎉 Pipeline COMPLETED for Trip recUDehvj1S32179Q - Ready for publishing
+2026-05-06T00:13:12.262Z
+INFO
+✅ Pipeline check complete
+2026-05-06T00:13:25.683Z
+INFO
+Updater: Cleared in-memory caches
