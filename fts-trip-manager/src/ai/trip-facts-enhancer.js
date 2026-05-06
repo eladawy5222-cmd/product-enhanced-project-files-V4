@@ -169,6 +169,8 @@ var TRIP_FACTS_BASE_TABLE = 'TripFacts';            // قاموس الفاكتس
 var IMPROVEMENT_TABLE = 'Improvement With AI';
 var HIGHLIGHTS_IMPROVEMENT_TABLE = 'Highlights Improvement With AI';
 var ITINERARY_IMPROVEMENT_TABLE = 'Itinerary Improvement With AI';
+var INCLUDES_IMPROVEMENT_TABLE = 'TripIncludes Improvement With AI';
+var EXCLUDES_IMPROVEMENT_TABLE = 'TripExcludes Improvement With AI';
 
 var TRIP_FACTS_STATUS_FIELD = 'AI_TripFacts_Status';
 var FACTS_PER_TRIP = 6; // Exactly 6 facts per trip
@@ -303,7 +305,9 @@ async function runAiTripFactsEnhancementBatch() {
       facts = normalizeFactKeysArray_(facts, tripId);
 
       // Sanitize values - replace "Not specified" with defaults
-      facts = sanitizeFactValues_(facts, tripId);
+      facts = sanitizeFactValues_(facts, tripId, ctx);
+
+      facts = enforceRequiredFacts_(facts, tripId, ctx);
 
       // 6) Create records (with FactId matching from dictionary)
       var createdCount = 0;
@@ -316,7 +320,7 @@ async function runAiTripFactsEnhancementBatch() {
         var key = normalizeFactKey_(keyRaw); // ensure canonical
         var value = (fact.value || '').toString().trim();
 
-        if (!label || !key || !value) return;
+        if (!label || !key || !value) continue;
 
         // Try to find matching FactId from dictionary
         var factId = matchFactId_(rawFacts, label, key);
@@ -328,11 +332,11 @@ async function runAiTripFactsEnhancementBatch() {
           if ((fidStr === '90730383' && createdFactIds.indexOf('97952084') !== -1) ||
               (fidStr === '97952084' && createdFactIds.indexOf('90730383') !== -1)) {
             log('AI TripFacts: Skipping FactId ' + fidStr + ' to avoid conflict with already created pair.');
-            return;
+            continue;
           }
           // 2. Check for exact duplicates
           if (createdFactIds.indexOf(fidStr) !== -1) {
-             return;
+             continue;
           }
         }
         // ---------------------------------------------
@@ -436,6 +440,11 @@ async function buildTripFactsContext_(fields, tripId, improvedFields) {
   ctx.aiHighlights = (U && U.highlightsText) ? U.highlightsText : (improved.highlights || '');
   ctx.aiItinerary = (U && U.itineraryText) ? U.itineraryText : (improved.itinerary || '');
   ctx.focusKeyword = improved.focusKeyword || '';
+  ctx.includeItems = Array.isArray(improved.includeItems) ? improved.includeItems : [];
+  ctx.excludeItems = Array.isArray(improved.excludeItems) ? improved.excludeItems : [];
+  ctx.itineraryMeals = Array.isArray(improved.itineraryMeals) ? improved.itineraryMeals : [];
+  ctx.inferred_meals = inferMealsFactValue_(ctx);
+  ctx.inferred_pickup = inferPickupFactValue_(ctx);
 
   return ctx;
 }
@@ -450,14 +459,14 @@ function buildTripFactsPrompt_(ctx) {
     "AVAILABLE FACT TYPES (FactLabel → FactKey):\n" +
     "- Duration → duration (e.g., '8 hours', '3 days')\n" +
     "- Tour Location → tour_location (e.g., 'Cairo, Giza')\n" +
-    "- Meals → meals (e.g., 'Lunch included', 'Breakfast and dinner', 'As per itinerary')\n" +
+    "- Meals → meals (e.g., 'Lunch included', 'Meals not included')\n" +
     "- Tour Type → tour_type (e.g., 'Cultural Tour', 'Adventure')\n" +
     "- Language → language (e.g., 'English, Spanish', 'English')\n" +
     "- Best season → best_season (e.g., 'October to April', 'Year-round')\n" +
     "- Group Size → group_size (e.g., 'Small group (max 15)', 'Private tour available')\n" +
     "- Accomodation → accomodation (e.g., '4-star hotels', 'As per itinerary')\n" +
     "- Tour Availability → tour_availability (e.g., 'Daily', 'Everyday')\n" +
-    "- Pickup & Drop Off → pickup__drop_off (e.g., 'Hotel pickup included', 'Available')\n" +
+    "- Pickup & Drop Off → pickup__drop_off (e.g., 'Hotel pickup (Cairo & Giza)', 'Meeting point')\n" +
     "- Transportation → transportation (e.g., 'Air-conditioned vehicle', 'As per itinerary')\n" +
     "- Fitness level → fitness_level (e.g., 'Easy', 'Moderate', 'All levels')\n" +
     "- Permits → permits (e.g., 'Included', 'Not required')\n" +
@@ -481,6 +490,8 @@ function buildTripFactsPrompt_(ctx) {
     "Description: " + (ctx.aiDescription || 'N/A') + "\n" +
     "Highlights: " + (ctx.aiHighlights || 'N/A') + "\n" +
     "Itinerary: " + (ctx.aiItinerary || 'N/A') + "\n" +
+    "Included: " + ((ctx.includeItems && ctx.includeItems.length) ? ctx.includeItems.join('; ') : 'N/A') + "\n" +
+    "Excluded: " + ((ctx.excludeItems && ctx.excludeItems.length) ? ctx.excludeItems.join('; ') : 'N/A') + "\n" +
     "Focus Keyword: " + (ctx.focusKeyword || 'N/A') + "\n\n" +
 
     "🎯 CRITICAL RULES:\n" +
@@ -488,11 +499,11 @@ function buildTripFactsPrompt_(ctx) {
     "2. RANDOMIZE fact selection - DO NOT use the same 6 facts for every trip\n" +
     "3. Select facts based on AVAILABLE DATA in trip context\n" +
     "4. NEVER use 'Not specified' - use sensible defaults:\n" +
-    "   - If Meals unknown → 'As per itinerary'\n" +
-    "   - If Language selected → 'English, French, German, Spanish, Italian'\n" +
+    "   - If Meals unknown → 'Meals not included'\n" +
+    "   - If Language unknown → 'English'\n" +
     "   - If Best season unknown → 'Year-round'\n" +
     "   - If Accomodation unknown → 'As per itinerary'\n" +
-    "   - If Pickup & Drop Off unknown → 'Available'\n" +
+    "   - If Pickup & Drop Off unknown → 'Meeting point'\n" +
     "   - If Fitness level unknown → 'All levels'\n" +
     "   - If Permits unknown → 'Not required'\n" +
     "5. Prefer facts with SPECIFIC data from context over generic defaults\n" +
@@ -501,6 +512,7 @@ function buildTripFactsPrompt_(ctx) {
     "8. Do NOT invent specific details\n" +
     "9. AVOID repeating 'Fitness level: All levels' if possible - use other facts\n" +
     "10. The 'key' field in the JSON MUST always be one of the allowed FactKeys listed above.\n" +
+    "12. For meals and pickup__drop_off: NEVER output 'As per itinerary' or 'Available'.\n" +
     "11. MUSEUM DISTINCTION & LOGIC (CRITICAL):\n" +
     "    - The Egyptian Museum (Tahrir): Old museum, statues.\n" +
     "    - The Grand Egyptian Museum (GEM): New museum, Giza (Tutankhamun & Mummies as per user rule).\n" +
@@ -526,12 +538,12 @@ function buildTripFactsPrompt_(ctx) {
     "    {\n" +
     "      \"label\": \"Meals\",\n" +
     "      \"key\": \"meals\",\n" +
-    "      \"value\": \"As per itinerary\"\n" +
+    "      \"value\": \"Meals not included\"\n" +
     "    },\n" +
     "    {\n" +
     "      \"label\": \"Language\",\n" +
     "      \"key\": \"language\",\n" +
-    "      \"value\": \"English, French, German, Spanish, Italian\"\n" +
+    "      \"value\": \"English\"\n" +
     "    },\n" +
     "    {\n" +
     "      \"label\": \"Fitness level\",\n" +
@@ -602,20 +614,25 @@ function normalizeFactKeysArray_(facts, tripId) {
 /**
  * Sanitize fact values - replace "Not specified" with sensible defaults
  */
-function sanitizeFactValues_(facts, tripId) {
+function sanitizeFactValues_(facts, tripId, ctx) {
   if (!Array.isArray(facts)) return facts;
 
+  var inferredMeals = (ctx && ctx.inferred_meals) ? String(ctx.inferred_meals || '').trim() : '';
+  var inferredPickup = (ctx && ctx.inferred_pickup) ? String(ctx.inferred_pickup || '').trim() : '';
+  var ctxLanguages = (ctx && ctx.languages) ? String(ctx.languages || '').trim() : '';
+  var ctxGroupSize = inferGroupSizeFactValue_(ctx);
+
   var DEFAULT_VALUES = {
-    'meals': 'As per itinerary',
-    'language': 'English, French, German, Spanish, Italian',
+    'meals': inferredMeals || 'Meals not included',
+    'language': ctxLanguages || 'English',
     'best_season': 'Year-round',
     'accomodation': 'As per itinerary',
-    'pickup__drop_off': 'Available',
+    'pickup__drop_off': inferredPickup || 'Meeting point',
     'fitness_level': 'All levels',
     'permits': 'Not required',
     'tour_availability': 'Daily',
     'transportation': 'As per itinerary',
-    'group_size': 'Available'
+    'group_size': ctxGroupSize || 'Available'
   };
 
   var sanitizedCount = 0;
@@ -623,14 +640,14 @@ function sanitizeFactValues_(facts, tripId) {
   facts.forEach(function(fact, idx) {
     var value = (fact.value || '').toString().trim();
     var key = normalizeFactKey_(fact.key || '');
+    var valueLc = value.toLowerCase();
 
-    // FORCE Language to always include the fixed list
-    if (key === 'language') {
-       facts[idx].value = 'English, French, German, Spanish, Italian';
+    if (key === 'language' && ctxLanguages) {
+      facts[idx].value = ctxLanguages;
     }
 
-    if (value.toLowerCase().indexOf('not specified') !== -1 ||
-        value.toLowerCase().indexOf('not available') !== -1 ||
+    if (valueLc.indexOf('not specified') !== -1 ||
+        valueLc.indexOf('not available') !== -1 ||
         value === 'N/A' || value === '') {
 
       var defaultValue = DEFAULT_VALUES[key];
@@ -647,6 +664,16 @@ function sanitizeFactValues_(facts, tripId) {
       }
     }
 
+    if (key === 'meals' && (valueLc === 'as per itinerary' || valueLc.indexOf('as per itinerary') !== -1)) {
+      facts[idx].value = DEFAULT_VALUES.meals;
+      sanitizedCount++;
+    }
+
+    if (key === 'pickup__drop_off' && (valueLc === 'available' || valueLc.indexOf('available') !== -1)) {
+      facts[idx].value = DEFAULT_VALUES.pickup__drop_off;
+      sanitizedCount++;
+    }
+
     // Ensure key is canonical in the fact object
     facts[idx].key = key;
   });
@@ -656,6 +683,154 @@ function sanitizeFactValues_(facts, tripId) {
   }
 
   return facts;
+}
+
+function enforceRequiredFacts_(facts, tripId, ctx) {
+  if (!Array.isArray(facts)) return facts;
+  var required = ['meals', 'pickup__drop_off'];
+  var present = {};
+
+  facts.forEach(function(f) {
+    var k = normalizeFactKey_(f && f.key ? f.key : '');
+    if (k) present[k] = true;
+  });
+
+  function isWeak_(f) {
+    var k = normalizeFactKey_(f && f.key ? f.key : '');
+    var v = String((f && f.value) ? f.value : '').trim().toLowerCase();
+    if (!k) return true;
+    if (k === 'duration' || k === 'tour_location') return false;
+    if (!v) return true;
+    if (v === 'available') return true;
+    if (v.indexOf('as per itinerary') !== -1) return true;
+    if (v === 'year-round' || v === 'daily' || v === 'all levels') return true;
+    return false;
+  }
+
+  function replaceWith_(idx, key, label, value) {
+    facts[idx] = { label: label, key: key, value: value };
+    log('✅ TripFacts enforce [Trip ' + tripId + ']: ensured ' + key + ' = ' + value);
+  }
+
+  var inferredMeals = (ctx && ctx.inferred_meals) ? String(ctx.inferred_meals || '').trim() : '';
+  var inferredPickup = (ctx && ctx.inferred_pickup) ? String(ctx.inferred_pickup || '').trim() : '';
+  var desiredMeals = inferredMeals || 'Meals not included';
+  var desiredPickup = inferredPickup || 'Meeting point';
+
+  required.forEach(function(k) {
+    if (present[k]) return;
+    var idx = -1;
+    for (var i = 0; i < facts.length; i++) {
+      if (isWeak_(facts[i])) { idx = i; break; }
+    }
+    if (idx === -1 && facts.length) idx = facts.length - 1;
+    if (idx === -1) return;
+    if (k === 'meals') replaceWith_(idx, 'meals', FACT_TYPES.meals || 'Meals', desiredMeals);
+    if (k === 'pickup__drop_off') replaceWith_(idx, 'pickup__drop_off', FACT_TYPES.pickup__drop_off || 'Pickup & Drop Off', desiredPickup);
+    present[k] = true;
+  });
+
+  return facts;
+}
+
+function inferGroupSizeFactValue_(ctx) {
+  var min = (ctx && ctx.minGroupSize != null) ? String(ctx.minGroupSize).trim() : '';
+  var max = (ctx && ctx.maxGroupSize != null) ? String(ctx.maxGroupSize).trim() : '';
+  var minN = min !== '' && isFinite(Number(min)) ? Number(min) : null;
+  var maxN = max !== '' && isFinite(Number(max)) ? Number(max) : null;
+
+  if (maxN != null && maxN > 0) {
+    if (minN != null && minN > 0 && minN !== maxN) return 'Group: ' + minN + '-' + maxN;
+    return 'Up to ' + maxN + ' people';
+  }
+  if (minN != null && minN > 0) return 'From ' + minN + ' people';
+  return '';
+}
+
+function inferMealsFactValue_(ctx) {
+  var includeItems = (ctx && ctx.includeItems && ctx.includeItems.length) ? ctx.includeItems : [];
+  var excludeItems = (ctx && ctx.excludeItems && ctx.excludeItems.length) ? ctx.excludeItems : [];
+  var itineraryMeals = (ctx && ctx.itineraryMeals && ctx.itineraryMeals.length) ? ctx.itineraryMeals : [];
+
+  function lc_(s) { return String(s || '').toLowerCase(); }
+  function hasAny_(arr, re) {
+    for (var i = 0; i < arr.length; i++) {
+      if (re.test(lc_(arr[i]))) return true;
+    }
+    return false;
+  }
+  function mealTokens_(arr) {
+    var out = {};
+    for (var i = 0; i < arr.length; i++) {
+      var m = String(arr[i] || '').trim();
+      if (!m) continue;
+      out[m.toLowerCase()] = true;
+    }
+    return out;
+  }
+
+  var exclMeal = hasAny_(excludeItems, /\b(breakfast|lunch|dinner|meal|meals|food|beverage|drinks?)\b/);
+  var inclMeal = hasAny_(includeItems, /\b(breakfast|lunch|dinner|meal|meals|food|beverage|drinks?)\b/);
+
+  if (inclMeal && !exclMeal) {
+    var tok = mealTokens_(itineraryMeals);
+    if (tok['full board']) return 'Full board';
+    if (tok['breakfast & lunch'] || (tok['breakfast'] && tok['lunch'])) return 'Breakfast & lunch included';
+    if (tok['lunch & dinner'] || (tok['lunch'] && tok['dinner'])) return 'Lunch & dinner included';
+    if (tok['breakfast']) return 'Breakfast included';
+    if (tok['lunch']) return 'Lunch included';
+    if (tok['dinner']) return 'Dinner included';
+    return 'Meals included';
+  }
+
+  if (exclMeal && !inclMeal) {
+    if (hasAny_(excludeItems, /\blunch\b/)) return 'Lunch not included';
+    return 'Meals not included';
+  }
+
+  var tok2 = mealTokens_(itineraryMeals);
+  if (tok2['full board']) return 'Full board';
+  if (tok2['breakfast & lunch'] || (tok2['breakfast'] && tok2['lunch'])) return 'Breakfast & lunch included';
+  if (tok2['lunch & dinner'] || (tok2['lunch'] && tok2['dinner'])) return 'Lunch & dinner included';
+  if (tok2['breakfast']) return 'Breakfast included';
+  if (tok2['lunch']) return 'Lunch included';
+  if (tok2['dinner']) return 'Dinner included';
+
+  return '';
+}
+
+function inferPickupFactValue_(ctx) {
+  var includeItems = (ctx && ctx.includeItems && ctx.includeItems.length) ? ctx.includeItems : [];
+  var excludeItems = (ctx && ctx.excludeItems && ctx.excludeItems.length) ? ctx.excludeItems : [];
+  var cities = String((ctx && ctx.cities) ? ctx.cities : '').trim();
+
+  function lc_(s) { return String(s || '').toLowerCase(); }
+  function hasAny_(arr, re) {
+    for (var i = 0; i < arr.length; i++) {
+      if (re.test(lc_(arr[i]))) return true;
+    }
+    return false;
+  }
+
+  var inclPickup = hasAny_(includeItems, /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup|transfer)\b/);
+  var exclPickup = hasAny_(excludeItems, /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup|transfer)\b/);
+
+  var hasCairo = /\bcairo\b/i.test(cities);
+  var hasGiza = /\bgiza\b/i.test(cities);
+
+  if (inclPickup && !exclPickup) {
+    if (hasCairo && hasGiza) return 'Hotel pickup (Cairo & Giza)';
+    if (hasCairo) return 'Hotel pickup (Cairo)';
+    if (hasGiza) return 'Hotel pickup (Giza)';
+    return 'Hotel pickup';
+  }
+
+  if (exclPickup && !inclPickup) return 'Meeting point';
+
+  if (hasCairo && hasGiza) return 'Hotel pickup (Cairo & Giza)';
+  if (hasCairo) return 'Hotel pickup (Cairo)';
+  if (hasGiza) return 'Hotel pickup (Giza)';
+  return '';
 }
 
 async function updateTripFactsStatus_(tripId, status) {
@@ -781,7 +956,10 @@ async function fetchImprovedDataForTrip_(tripId, tripNumber, tripName) {
     overview: '',
     highlights: '',
     itinerary: '',
-    focusKeyword: ''
+    focusKeyword: '',
+    includeItems: [],
+    excludeItems: [],
+    itineraryMeals: []
   };
 
   if (!tripId) return result;
@@ -811,18 +989,43 @@ async function fetchImprovedDataForTrip_(tripId, tripNumber, tripName) {
       result.highlights = highlights.join('; ');
     }
 
-    // Fetch itinerary (only meals info at the moment)
+    // Fetch itinerary (meals summary + tokens)
     var itinRes = await fetchRecordsByTrip_(ITINERARY_IMPROVEMENT_TABLE, tripId, tripNumber, 100)
     if (itinRes && itinRes.length) {
       var steps = [];
+      var mealsSet = {};
       itinRes.forEach(function(r) {
         var f = r.fields || {};
         var meals = f.AI_Meals_Included || '';
         if (meals && meals !== 'None') {
           steps.push('Meals: ' + meals);
+          mealsSet[String(meals).trim().toLowerCase()] = true;
         }
       });
       result.itinerary = steps.join('; ');
+      result.itineraryMeals = Object.keys(mealsSet).map(function(k){ return k.replace(/\b\w/g, function(ch){ return ch.toUpperCase(); }); });
+    }
+
+    var incRes = await fetchRecordsByTrip_(INCLUDES_IMPROVEMENT_TABLE, tripId, tripNumber, 200, tripName)
+    if (incRes && incRes.length) {
+      var items = [];
+      incRes.forEach(function(r) {
+        var f = r.fields || {};
+        var t = String(f.IncludeItem || '').trim();
+        if (t) items.push(t);
+      });
+      result.includeItems = items;
+    }
+
+    var excRes = await fetchRecordsByTrip_(EXCLUDES_IMPROVEMENT_TABLE, tripId, tripNumber, 200, tripName)
+    if (excRes && excRes.length) {
+      var items2 = [];
+      excRes.forEach(function(r) {
+        var f = r.fields || {};
+        var t = String(f.ExcludeItem || '').trim();
+        if (t) items2.push(t);
+      });
+      result.excludeItems = items2;
     }
 
   } catch (e) {

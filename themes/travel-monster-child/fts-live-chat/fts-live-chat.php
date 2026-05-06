@@ -250,6 +250,9 @@ class FTS_Live_Chat {
     }
 
     public function render_trigger() {
+        $whatsapp_number = apply_filters( 'fts_whatsapp_number', '201000479285' );
+        $wa_number = preg_replace( '/[^0-9]/', '', (string) $whatsapp_number );
+        $wa_href = $wa_number !== '' ? ( 'https://wa.me/' . $wa_number ) : '';
         ?>
         <!-- Modern Floating Chat Hub -->
         <div class="fts-modern-chat-hub" id="ftsChatHub">
@@ -257,10 +260,12 @@ class FTS_Live_Chat {
             <!-- Expanded Options -->
             <div class="fts-chat-options">
                 <!-- WhatsApp Option -->
-                <a href="https://wa.me/201000479285" target="_blank" class="fts-chat-option whatsapp">
+                <?php if ( $wa_href ) : ?>
+                <a href="<?php echo esc_url( $wa_href ); ?>" target="_blank" rel="noopener" class="fts-chat-option whatsapp">
                     <i class="fab fa-whatsapp"></i>
                     <span class="fts-tooltip">WhatsApp</span>
                 </a>
+                <?php endif; ?>
 
                 <!-- Live Chat Option -->
                 <div class="fts-chat-option live-chat" onclick="ftsToggleTawk()">

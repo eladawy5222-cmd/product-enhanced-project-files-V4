@@ -112,6 +112,7 @@ async function runConversionEnforcer(data) {
     const existingExcludes = await convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripExcludes Improvement With AI', 'ExcludeItem')
     const existingFaqs = await convEnf_fetchFaqs_(tripId, tripNumber || '')
     const existingPackages = await convEnf_fetchPackages_(tripId, tripNumber || '')
+    await convEnf_enforceTripFactsCore_(tripId, tripNumber || '', tripFields, existingIncludes, existingExcludes, existingItinerary)
     log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
     log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
     log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
@@ -2498,6 +2499,12 @@ function convEnf_categoryIdFromLabel_(label) {
   return null
 }
 
+function convEnf_shouldSetPaxRange_(label, categoryId) {
+  const t = String(label || '').replace(/\s+/g, ' ').trim().toLowerCase()
+  if (categoryId != null && Number(categoryId) === 11) return true
+  return t === 'adult' || t === 'adults'
+}
+
 function convEnf_inferSalePrice10_(regularPrice, salePrice) {
   const s = salePrice != null ? Number(salePrice) : null
   if (s != null && isFinite(s)) return s
@@ -3772,7 +3779,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
       const rp = (c && c.regular_price != null && isFinite(Number(c.regular_price))) ? Number(c.regular_price) : null
       const spRaw = (c && c.sale_price != null && isFinite(Number(c.sale_price))) ? Number(c.sale_price) : null
       const sp = convEnf_inferSalePrice10_(rp, spRaw)
-      priceFieldsArray.push({
+      const priceRec = {
         Trip: [tripId],
         PackageID: pid,
         CategoryID: catId,
@@ -3780,11 +3787,14 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
         RegularPrice: rp,
         SalePrice: sp,
         Currency: String(c && c.currency ? c.currency : currency).trim(),
-        MinPax: 1,
-        MaxPax: 100,
         PricingType: 'per-person',
         GroupPricing: ''
-      })
+      }
+      if (convEnf_shouldSetPaxRange_(label, catId)) {
+        priceRec.MinPax = 1
+        priceRec.MaxPax = 100
+      }
+      priceFieldsArray.push(priceRec)
     })
   }
 
@@ -3898,7 +3908,7 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
         const rp = (c && c.regular_price != null && isFinite(Number(c.regular_price))) ? Number(c.regular_price) : null
         const sp = (c && c.sale_price != null && isFinite(Number(c.sale_price))) ? Number(c.sale_price) : null
         const catId = convEnf_categoryIdFromLabel_(label)
-        priceFieldsArray.push({
+        const priceRec = {
           Trip: [tripId],
           PackageID: pid,
           CategoryID: catId,
@@ -3906,11 +3916,14 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
           RegularPrice: rp,
           SalePrice: convEnf_inferSalePrice10_(rp, sp),
           Currency: cur2,
-          MinPax: 1,
-          MaxPax: 100,
           PricingType: 'per-person',
           GroupPricing: ''
-        })
+        }
+        if (convEnf_shouldSetPaxRange_(label, catId)) {
+          priceRec.MinPax = 1
+          priceRec.MaxPax = 100
+        }
+        priceFieldsArray.push(priceRec)
       })
     } else if (minPrice != null) {
       const catId = convEnf_categoryIdFromLabel_('Adult')
@@ -4209,6 +4222,136 @@ async function convEnf_fetchPackages_(tripRecordId, tripPublicId) {
     })
   })
   return { records: recs, packages }
+}
+
+function convEnf_normFactKey_(rawKey) {
+  if (!rawKey) return ''
+  let k = String(rawKey || '').trim().toLowerCase()
+  k = k.replace(/[\s\-]+/g, '_')
+  if (k === 'accommodation') k = 'accomodation'
+  if (k === 'pickup_dropoff' || k === 'pickup_drop_off' || k === 'pickup___drop_off') k = 'pickup__drop_off'
+  return k
+}
+
+function convEnf_inferMealsFactValue_(includedItems, excludedItems, itinerarySteps) {
+  const inc = Array.isArray(includedItems) ? includedItems : []
+  const exc = Array.isArray(excludedItems) ? excludedItems : []
+  const steps = Array.isArray(itinerarySteps) ? itinerarySteps : []
+
+  function lc_(s) { return String(s || '').toLowerCase() }
+  function hasAny_(arr, re) {
+    for (let i = 0; i < arr.length; i++) if (re.test(lc_(arr[i]))) return true
+    return false
+  }
+
+  const exclMeal = hasAny_(exc, /\b(breakfast|lunch|dinner|meal|meals|food|beverage|drinks?)\b/)
+  const inclMeal = hasAny_(inc, /\b(breakfast|lunch|dinner|meal|meals|food|beverage|drinks?)\b/)
+
+  const tokens = {}
+  for (let i = 0; i < steps.length; i++) {
+    const m = String((steps[i] || {}).meals_included || '').trim()
+    if (!m || m.toLowerCase() === 'none') continue
+    tokens[m.toLowerCase()] = true
+  }
+
+  if (inclMeal && !exclMeal) {
+    if (tokens['full board']) return 'Full board'
+    if (tokens['breakfast & lunch'] || (tokens['breakfast'] && tokens['lunch'])) return 'Breakfast & lunch included'
+    if (tokens['lunch & dinner'] || (tokens['lunch'] && tokens['dinner'])) return 'Lunch & dinner included'
+    if (tokens['breakfast']) return 'Breakfast included'
+    if (tokens['lunch']) return 'Lunch included'
+    if (tokens['dinner']) return 'Dinner included'
+    return 'Meals included'
+  }
+
+  if (exclMeal && !inclMeal) {
+    if (hasAny_(exc, /\blunch\b/)) return 'Lunch not included'
+    return 'Meals not included'
+  }
+
+  if (tokens['full board']) return 'Full board'
+  if (tokens['breakfast & lunch'] || (tokens['breakfast'] && tokens['lunch'])) return 'Breakfast & lunch included'
+  if (tokens['lunch & dinner'] || (tokens['lunch'] && tokens['dinner'])) return 'Lunch & dinner included'
+  if (tokens['breakfast']) return 'Breakfast included'
+  if (tokens['lunch']) return 'Lunch included'
+  if (tokens['dinner']) return 'Dinner included'
+
+  return 'Meals not included'
+}
+
+function convEnf_inferPickupFactValue_(includedItems, excludedItems, tripFields) {
+  const inc = Array.isArray(includedItems) ? includedItems : []
+  const exc = Array.isArray(excludedItems) ? excludedItems : []
+  const cities = Array.isArray(tripFields && tripFields.Cities) ? tripFields.Cities.join(', ') : String((tripFields && tripFields.Cities) ? tripFields.Cities : '')
+
+  function lc_(s) { return String(s || '').toLowerCase() }
+  function hasAny_(arr, re) {
+    for (let i = 0; i < arr.length; i++) if (re.test(lc_(arr[i]))) return true
+    return false
+  }
+
+  const inclPickup = hasAny_(inc, /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup|transfer)\b/)
+  const exclPickup = hasAny_(exc, /\b(pick\s*-?\s*up|hotel\s+pick\s*-?\s*up|pickup|transfer)\b/)
+
+  const hasCairo = /\bcairo\b/i.test(cities)
+  const hasGiza = /\bgiza\b/i.test(cities)
+
+  if (inclPickup && !exclPickup) {
+    if (hasCairo && hasGiza) return 'Hotel pickup (Cairo & Giza)'
+    if (hasCairo) return 'Hotel pickup (Cairo)'
+    if (hasGiza) return 'Hotel pickup (Giza)'
+    return 'Hotel pickup'
+  }
+
+  if (exclPickup && !inclPickup) return 'Meeting point'
+
+  if (hasCairo && hasGiza) return 'Hotel pickup (Cairo & Giza)'
+  if (hasCairo) return 'Hotel pickup (Cairo)'
+  if (hasGiza) return 'Hotel pickup (Giza)'
+  return 'Meeting point'
+}
+
+async function convEnf_enforceTripFactsCore_(tripId, tripNumber, tripFields, existingIncludes, existingExcludes, existingItinerary) {
+  try {
+    const recs = await convEnf_fetchRecordsByTrip_('TripFacts Improvement With AI', 'Trip', tripId, tripNumber || '', 50)
+    if (!recs || !recs.length) return
+
+    const included = (existingIncludes && Array.isArray(existingIncludes.items)) ? existingIncludes.items : []
+    const excluded = (existingExcludes && Array.isArray(existingExcludes.items)) ? existingExcludes.items : []
+    const steps = (existingItinerary && Array.isArray(existingItinerary.steps)) ? existingItinerary.steps : []
+
+    const desiredMeals = convEnf_inferMealsFactValue_(included, excluded, steps)
+    const desiredPickup = convEnf_inferPickupFactValue_(included, excluded, tripFields)
+
+    const nowIso = new Date().toISOString()
+    let updated = 0
+
+    for (let i = 0; i < recs.length; i++) {
+      const r = recs[i]
+      const f = r && r.fields ? r.fields : {}
+      const key = convEnf_normFactKey_(f.FactKey || f.AI_Fact_Key || '')
+      const value = String(f.AI_Fact_Value || '').trim()
+      const valueLc = value.toLowerCase()
+
+      if (key === 'meals') {
+        if (!value || valueLc.indexOf('not specified') !== -1 || valueLc.indexOf('as per itinerary') !== -1 || valueLc === 'n/a') {
+          await airtableUpdate_('TripFacts Improvement With AI', r.id, { AI_Fact_Value: desiredMeals, AI_Status: 'Done', AI_LastUpdated: nowIso })
+          updated++
+        }
+      }
+
+      if (key === 'pickup__drop_off') {
+        if (!value || valueLc.indexOf('not specified') !== -1 || valueLc.indexOf('available') !== -1 || valueLc === 'n/a') {
+          await airtableUpdate_('TripFacts Improvement With AI', r.id, { AI_Fact_Value: desiredPickup, AI_Status: 'Done', AI_LastUpdated: nowIso })
+          updated++
+        }
+      }
+    }
+
+    if (updated) log('✅ TripFacts core enforced: updated ' + updated + ' record(s)')
+  } catch (e) {
+    log('⚠️ TripFacts core enforcement skipped: ' + String(e && e.message ? e.message : e))
+  }
 }
 
 async function convEnf_replaceHighlights_(tripId, existingRecords, items, nowIso) {

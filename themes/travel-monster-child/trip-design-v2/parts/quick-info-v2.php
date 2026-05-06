@@ -5,6 +5,20 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+$trip_title = get_the_title( $trip_id );
+$whatsapp_link = '';
+if ( ! empty( $whatsapp_number ) ) {
+    $wa_number = preg_replace( '/[^0-9]/', '', (string) $whatsapp_number );
+    if ( $wa_number !== '' ) {
+        $wa_msg = fts_v2_safe_sprintf(
+            __( 'Hi, I have a question about: %s', 'fts' ),
+            array( $trip_title ),
+            'Hi, I have a question about: ' . $trip_title
+        );
+        $whatsapp_link = 'https://wa.me/' . rawurlencode( $wa_number ) . '?text=' . rawurlencode( $wa_msg );
+    }
+}
+
 $dest_names_list = ( ! empty( $destination_terms ) && ! is_wp_error( $destination_terms ) )
     ? wp_list_pluck( $destination_terms, 'name' )
     : array();
@@ -74,7 +88,14 @@ $at_items = array_slice( $at_items, 0, 4 );
                         <span class="fts-v2-discount-badge">-<?php echo intval( $discount_pct ); ?>%</span>
                     <?php endif; ?>
                 </div>
-                <a href="#" class="fts-v2-book-now-btn fts-bm-trigger"><?php echo esc_html__( 'Book Now', 'fts' ); ?></a>
+                <div class="fts-v2-quick-cta-buttons">
+                    <a href="#" class="fts-v2-book-now-btn fts-bm-trigger"><?php echo esc_html__( 'Check Availability', 'fts' ); ?></a>
+                    <?php if ( $whatsapp_link ) : ?>
+                        <a href="<?php echo esc_url( $whatsapp_link ); ?>" target="_blank" rel="noopener" class="fts-v2-quick-whatsapp-btn">
+                            <i class="fa fa-whatsapp"></i> <?php echo esc_html__( 'WhatsApp', 'fts' ); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>

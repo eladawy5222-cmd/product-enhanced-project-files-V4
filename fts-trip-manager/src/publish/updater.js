@@ -9915,6 +9915,85 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
       return l;
     }
 
+    // -------------------------
+    // PRICING / PAX RULES (NEW)
+    // -------------------------
+    // Goal:
+    // - Send min/max ONLY for Adult category (avoid forcing 1..100 on Child/Infant/etc).
+    // - Ensure option-level (package) Regular/Sale prices are sent from Airtable Packages table
+    //   so UI can show "before discount" and "after discount" clearly.
+    // - Keep category prices exactly as stored in Airtable Prices table (no inference).
+    function isAdultCategory_Updater_(label, categoryId) {
+      var t = String(label || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (categoryId !== undefined && categoryId !== null && Number(categoryId) === 11) return true;
+      return (t === 'adult' || t === 'adults');
+    }
+
+    function numOrZero_Updater_(v) {
+      var n = Number(v);
+      return isFinite(n) ? n : 0;
+    }
+
+    function resolveOptionHeadlinePrices_Updater_(pkgFields, linkedPrices) {
+      // Prefer explicit package-level prices from Airtable Packages table.
+      // If missing, fallback to Adult category price (if present) to avoid picking Child/Infant as the trip "From" price.
+      // As last resort, use the minimum non-zero price among all categories.
+      var out = { regular: 0, sale: 0, source: '' };
+      var pkgRegular = numOrZero_Updater_(pkgFields && pkgFields.RegularPrice);
+      var pkgSale = numOrZero_Updater_(pkgFields && pkgFields.SalePrice);
+      if (pkgRegular > 0 || pkgSale > 0) {
+        out.regular = pkgRegular;
+        out.sale = pkgSale;
+        out.source = 'Packages';
+        return out;
+      }
+
+      var prices = Array.isArray(linkedPrices) ? linkedPrices : [];
+      if (!prices.length) return out;
+
+      function pickFromPr_(pr) {
+        var r = numOrZero_Updater_(pr && pr.RegularPrice);
+        var s = numOrZero_Updater_(pr && pr.SalePrice);
+        return { regular: r, sale: s, effective: (s > 0 ? s : r) };
+      }
+
+      var adultPick = null;
+      for (var i = 0; i < prices.length; i++) {
+        var pf = prices[i] && prices[i].fields ? prices[i].fields : {};
+        var lbl = pf.Label || pf.Title || '';
+        var isAdult = isAdultCategory_Updater_(lbl, pf.CategoryID);
+        if (!isAdult) continue;
+        var prPick = pickFromPr_(pf);
+        if (prPick.effective > 0) { adultPick = prPick; break; }
+      }
+      if (adultPick) {
+        out.regular = adultPick.regular;
+        out.sale = adultPick.sale;
+        out.source = 'Prices:Adult';
+        return out;
+      }
+
+      var minEff = 0;
+      var minRegular = 0;
+      var minSale = 0;
+      for (var j = 0; j < prices.length; j++) {
+        var pf2 = prices[j] && prices[j].fields ? prices[j].fields : {};
+        var prPick2 = pickFromPr_(pf2);
+        if (prPick2.effective <= 0) continue;
+        if (minEff === 0 || prPick2.effective < minEff) {
+          minEff = prPick2.effective;
+          minRegular = prPick2.regular;
+          minSale = prPick2.sale;
+        }
+      }
+      if (minEff > 0) {
+        out.regular = minRegular;
+        out.sale = minSale;
+        out.source = 'Prices:Min';
+      }
+      return out;
+    }
+
     function processPackage(pkgFields, linkedPrices) {
        var payload = {
          trip_id: wpTripId,
@@ -9922,6 +10001,13 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
          status: 'publish', 
          pricing_categories: [] 
        };
+
+       // NEW: Send option-level Regular/Sale prices from Airtable (Packages table).
+       // This allows the package card/header to show both "before discount" and "after discount".
+       var headPrices = resolveOptionHeadlinePrices_Updater_(pkgFields, linkedPrices);
+       if (headPrices.regular > 0) payload.regular_price = headPrices.regular;
+       if (headPrices.sale > 0) payload.sale_price = headPrices.sale;
+       if (headPrices.source) logVerbose_Updater_('Updater: Package headline price source=' + headPrices.source);
 
        var excerpt = (pkgFields && (pkgFields.excerpt || pkgFields.Excerpt || pkgFields.EXCERPT));
        var contentHtml = (pkgFields && (pkgFields.content_html || pkgFields.Content_HTML || pkgFields.CONTENT_HTML || pkgFields.Content_html));
@@ -9935,7 +10021,18 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
        }
        
        if (linkedPrices && linkedPrices.length > 0) {
-          linkedPrices.forEach(function(prRecord) {
+          // NEW: Stable ordering so Adult is first (improves "From price" behavior in some themes/plugins).
+          var pricesSorted = linkedPrices.slice(0).sort(function(a, b) {
+            var af = a && a.fields ? a.fields : {};
+            var bf = b && b.fields ? b.fields : {};
+            var al = af.Label || af.Title || '';
+            var bl = bf.Label || bf.Title || '';
+            var ai = isAdultCategory_Updater_(al, af.CategoryID) ? 1 : 0;
+            var bi = isAdultCategory_Updater_(bl, bf.CategoryID) ? 1 : 0;
+            return bi - ai;
+          });
+
+          pricesSorted.forEach(function(prRecord) {
              var pr = prRecord.fields; // Access fields here
              
              // Normalize Pricing Type
@@ -9951,10 +10048,13 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
                 label: catLabelDisplay,
                 regular_price: (Number(pr.RegularPrice) || 0) === 0 ? "" : Number(pr.RegularPrice),
                 sale_price: (Number(pr.SalePrice) || 0) === 0 ? "" : Number(pr.SalePrice),
-                min_pax: (pr.MinPax !== undefined && pr.MinPax !== null && pr.MinPax !== "") ? Number(pr.MinPax) : 1,
-                max_pax: Number(pr.MaxPax) || 100,
                 pricing_type: pType
              };
+             // NEW: min/max pax ONLY for Adult (do not force 1..100 on other categories).
+             if (isAdultCategory_Updater_(catLabel, pr.CategoryID)) {
+               cat.min_pax = (pr.MinPax !== undefined && pr.MinPax !== null && pr.MinPax !== "") ? Number(pr.MinPax) : 1;
+               cat.max_pax = (pr.MaxPax !== undefined && pr.MaxPax !== null && pr.MaxPax !== "") ? Number(pr.MaxPax) : 100;
+             }
              
              // Inject ID if mapped
              if (CATEGORY_ID_MAP[catLabel]) {
@@ -10007,10 +10107,10 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
              label: localizePackageLabel_(pkgFields.PackageTitle || 'Standard Package', targetLang),
              regular_price: Number(pkgFields.RegularPrice) || 0,
              sale_price: Number(pkgFields.SalePrice) || 0,
-             min_pax: (pkgFields.MinPax !== undefined && pkgFields.MinPax !== null && pkgFields.MinPax !== "") ? Number(pkgFields.MinPax) : 1,
-             max_pax: Number(pkgFields.MaxPax) || 100,
              pricing_type: 'per-person' 
           };
+          // NEW: Do not force min/max pax defaults when no Prices categories exist.
+          // If the API/UI needs pax constraints, it should be derived from an Adult category record.
           if (pkgFields.GroupPricing) {
              try { 
                 var gpData = JSON.parse(pkgFields.GroupPricing);
@@ -10048,6 +10148,57 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
        
       logVerbose_Updater_('Updater: Built Package Payload: ' + JSON.stringify(payload));
        return payload;
+    }
+
+    // -------------------------
+    // SELF-TEST (NEW)
+    // -------------------------
+    // Run with: UPDATER_SELFTEST=1 node -e "require('./src/publish/updater.js')"
+    // This validates:
+    // - min/max only for Adult
+    // - option-level regular/sale prices are present
+    // - category prices remain unchanged
+    function selfTestPackagePricing_Updater_() {
+      try {
+        function mkPrice_(label, regular, sale, minPax, maxPax) {
+          return {
+            id: 'rec_' + label,
+            fields: {
+              Label: label,
+              RegularPrice: regular,
+              SalePrice: sale,
+              MinPax: minPax,
+              MaxPax: maxPax,
+              PricingType: 'per-person'
+            }
+          };
+        }
+
+        var pkg1 = { PackageTitle: 'Option A', RegularPrice: 200, SalePrice: 180 };
+        var p1 = processPackage(pkg1, [mkPrice_('Child', 120, 0, 1, 100), mkPrice_('Adult', 150, 140, '', '')]);
+        var adult1 = (p1.pricing_categories || []).find(function(c) { return String(c.label || '').toLowerCase().indexOf('adult') !== -1; });
+        var child1 = (p1.pricing_categories || []).find(function(c) { return String(c.label || '').toLowerCase().indexOf('child') !== -1; });
+        if (!adult1 || adult1.min_pax !== 1 || adult1.max_pax !== 100) throw new Error('Self-test failed: Adult min/max not set');
+        if (child1 && (child1.min_pax !== undefined || child1.max_pax !== undefined)) throw new Error('Self-test failed: Child min/max should be omitted');
+        if (p1.regular_price !== 200 || p1.sale_price !== 180) throw new Error('Self-test failed: option-level regular/sale not taken from Packages');
+
+        var pkg2 = { PackageTitle: 'Option B', RegularPrice: '', SalePrice: '' };
+        var p2 = processPackage(pkg2, [mkPrice_('Child', 90, 0, '', ''), mkPrice_('Adult', 160, 0, null, null)]);
+        if (p2.regular_price !== 160) throw new Error('Self-test failed: option-level price should fallback to Adult category');
+
+        var pkg3 = { PackageTitle: 'Option C', RegularPrice: 220, SalePrice: 0 };
+        var p3 = processPackage(pkg3, []);
+        var mainCat = (p3.pricing_categories || [])[0] || {};
+        if (mainCat.min_pax !== undefined || mainCat.max_pax !== undefined) throw new Error('Self-test failed: fallback main category should not force min/max');
+
+        log('Updater SELF-TEST: OK (pricing rules)');
+      } catch (e) {
+        log('Updater SELF-TEST: FAILED (pricing rules): ' + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    if (typeof process !== 'undefined' && process && process.env && String(process.env.UPDATER_SELFTEST || '').trim() === '1') {
+      selfTestPackagePricing_Updater_();
     }
 
     // 2. Process Existing Packages
@@ -12024,6 +12175,108 @@ function createUpdater(deps) {
       return runUpdaterBatch();
     }
   }
+}
+
+// ----------------------------------------------------------
+// UPDATER SELF-TEST (NEW)
+// ----------------------------------------------------------
+// This is a lightweight logic test you can run locally without Airtable/WP credentials.
+// Run:
+//   UPDATER_SELFTEST=1 node -e "require('./src/publish/updater.js')"
+// Validates:
+// - min/max pax only for Adult
+// - option-level regular/sale prices resolve from Packages (or Adult category fallback)
+// - category prices are not modified
+function updaterSelfTestPricingRules_() {
+  function isAdult_(label, categoryId) {
+    var t = String(label || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if (categoryId !== undefined && categoryId !== null && Number(categoryId) === 11) return true;
+    return (t === 'adult' || t === 'adults');
+  }
+
+  function num_(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function resolveHeadline_(pkgFields, linkedPrices) {
+    var out = { regular: 0, sale: 0, source: '' };
+    var pkgRegular = num_(pkgFields && pkgFields.RegularPrice);
+    var pkgSale = num_(pkgFields && pkgFields.SalePrice);
+    if (pkgRegular > 0 || pkgSale > 0) return { regular: pkgRegular, sale: pkgSale, source: 'Packages' };
+
+    var prices = Array.isArray(linkedPrices) ? linkedPrices : [];
+    if (!prices.length) return out;
+
+    function pick_(pr) {
+      var r = num_(pr && pr.RegularPrice);
+      var s = num_(pr && pr.SalePrice);
+      return { regular: r, sale: s, effective: (s > 0 ? s : r) };
+    }
+
+    for (var i = 0; i < prices.length; i++) {
+      var pf = prices[i] && prices[i].fields ? prices[i].fields : {};
+      if (!isAdult_(pf.Label || pf.Title || '', pf.CategoryID)) continue;
+      var pp = pick_(pf);
+      if (pp.effective > 0) return { regular: pp.regular, sale: pp.sale, source: 'Prices:Adult' };
+    }
+
+    var min = 0, mr = 0, ms = 0;
+    for (var j = 0; j < prices.length; j++) {
+      var pf2 = prices[j] && prices[j].fields ? prices[j].fields : {};
+      var pp2 = pick_(pf2);
+      if (pp2.effective <= 0) continue;
+      if (min === 0 || pp2.effective < min) { min = pp2.effective; mr = pp2.regular; ms = pp2.sale; }
+    }
+    if (min > 0) return { regular: mr, sale: ms, source: 'Prices:Min' };
+    return out;
+  }
+
+  function buildCat_(pr) {
+    var cat = {
+      label: pr.Label,
+      regular_price: (Number(pr.RegularPrice) || 0) === 0 ? "" : Number(pr.RegularPrice),
+      sale_price: (Number(pr.SalePrice) || 0) === 0 ? "" : Number(pr.SalePrice),
+      pricing_type: 'per-person'
+    };
+    if (isAdult_(pr.Label, pr.CategoryID)) {
+      cat.min_pax = (pr.MinPax !== undefined && pr.MinPax !== null && pr.MinPax !== "") ? Number(pr.MinPax) : 1;
+      cat.max_pax = (pr.MaxPax !== undefined && pr.MaxPax !== null && pr.MaxPax !== "") ? Number(pr.MaxPax) : 100;
+    }
+    return cat;
+  }
+
+  function assert_(cond, msg) { if (!cond) throw new Error(msg); }
+
+  var pkg1 = { RegularPrice: 200, SalePrice: 180 };
+  var prices1 = [
+    { fields: { Label: 'Child', RegularPrice: 120, SalePrice: 0, CategoryID: 12, MinPax: 1, MaxPax: 100 } },
+    { fields: { Label: 'Adult', RegularPrice: 150, SalePrice: 140, CategoryID: 11, MinPax: '', MaxPax: '' } }
+  ];
+  var hp1 = resolveHeadline_(pkg1, prices1);
+  assert_(hp1.regular === 200 && hp1.sale === 180 && hp1.source === 'Packages', 'headline should prefer Packages Regular/Sale');
+  var adultCat1 = buildCat_(prices1[1].fields);
+  var childCat1 = buildCat_(prices1[0].fields);
+  assert_(adultCat1.min_pax === 1 && adultCat1.max_pax === 100, 'Adult min/max should be defaulted');
+  assert_(childCat1.min_pax === undefined && childCat1.max_pax === undefined, 'Non-Adult min/max should be omitted');
+
+  var pkg2 = { RegularPrice: '', SalePrice: '' };
+  var prices2 = [
+    { fields: { Label: 'Child', RegularPrice: 90, SalePrice: 0, CategoryID: 12 } },
+    { fields: { Label: 'Adult', RegularPrice: 160, SalePrice: 0, CategoryID: 11 } }
+  ];
+  var hp2 = resolveHeadline_(pkg2, prices2);
+  assert_(hp2.regular === 160 && hp2.source === 'Prices:Adult', 'headline should fallback to Adult price');
+
+  console.log('Updater SELF-TEST: OK (pricing rules)');
+}
+
+try {
+  if (typeof process !== 'undefined' && process && process.env && String(process.env.UPDATER_SELFTEST || '').trim() === '1') {
+    updaterSelfTestPricingRules_();
+  }
+} catch (e) {
+  console.log('Updater SELF-TEST: FAILED (pricing rules): ' + (e && e.message ? e.message : String(e)));
 }
 
 module.exports = { createUpdater }

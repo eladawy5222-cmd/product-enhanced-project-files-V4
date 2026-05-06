@@ -549,6 +549,47 @@ class FTS_Trip_Redesign_V2 {
                 $trip_facts_items[] = array( 'label' => $label, 'value' => $val, 'icon' => $icon );
             }
         }
+        if ( ! empty( $trip_facts_items ) ) {
+            foreach ( $trip_facts_items as $i => $it ) {
+                $lbl = isset( $it['label'] ) ? strtolower( trim( (string) $it['label'] ) ) : '';
+                $prio = 90;
+                if ( $lbl !== '' ) {
+                    if ( strpos( $lbl, 'duration' ) !== false || strpos( $lbl, 'time' ) !== false || strpos( $lbl, 'length' ) !== false || strpos( $lbl, 'مدة' ) !== false ) {
+                        $prio = 10;
+                    } elseif ( strpos( $lbl, 'pickup' ) !== false || strpos( $lbl, 'meeting' ) !== false || strpos( $lbl, 'start' ) !== false || strpos( $lbl, 'meet' ) !== false || strpos( $lbl, 'استلام' ) !== false || strpos( $lbl, 'نقطة' ) !== false || strpos( $lbl, 'التقاء' ) !== false ) {
+                        $prio = 20;
+                    } elseif ( strpos( $lbl, 'meal' ) !== false || strpos( $lbl, 'meals' ) !== false || strpos( $lbl, 'lunch' ) !== false || strpos( $lbl, 'breakfast' ) !== false || strpos( $lbl, 'dinner' ) !== false || strpos( $lbl, 'وجبة' ) !== false || strpos( $lbl, 'وجبات' ) !== false ) {
+                        $prio = 30;
+                    } elseif ( strpos( $lbl, 'language' ) !== false || strpos( $lbl, 'languages' ) !== false || strpos( $lbl, 'لغة' ) !== false ) {
+                        $prio = 40;
+                    } elseif ( strpos( $lbl, 'location' ) !== false || strpos( $lbl, 'city' ) !== false || strpos( $lbl, 'place' ) !== false || strpos( $lbl, 'المكان' ) !== false || strpos( $lbl, 'المدينة' ) !== false ) {
+                        $prio = 50;
+                    } elseif ( strpos( $lbl, 'group' ) !== false || strpos( $lbl, 'pax' ) !== false || strpos( $lbl, 'people' ) !== false || strpos( $lbl, 'max' ) !== false || strpos( $lbl, 'min' ) !== false || strpos( $lbl, 'مجموعة' ) !== false || strpos( $lbl, 'أشخاص' ) !== false ) {
+                        $prio = 60;
+                    } elseif ( strpos( $lbl, 'cancel' ) !== false || strpos( $lbl, 'cancellation' ) !== false || strpos( $lbl, 'refund' ) !== false || strpos( $lbl, 'إلغاء' ) !== false || strpos( $lbl, 'استرداد' ) !== false ) {
+                        $prio = 70;
+                    } elseif ( strpos( $lbl, 'ticket' ) !== false || strpos( $lbl, 'entry' ) !== false || strpos( $lbl, 'admission' ) !== false || strpos( $lbl, 'تذكرة' ) !== false || strpos( $lbl, 'دخول' ) !== false ) {
+                        $prio = 80;
+                    }
+                }
+                $trip_facts_items[ $i ]['_prio'] = $prio;
+                $trip_facts_items[ $i ]['_ord'] = $i;
+            }
+            usort( $trip_facts_items, function( $a, $b ) {
+                $pa = isset( $a['_prio'] ) ? intval( $a['_prio'] ) : 90;
+                $pb = isset( $b['_prio'] ) ? intval( $b['_prio'] ) : 90;
+                if ( $pa === $pb ) {
+                    $oa = isset( $a['_ord'] ) ? intval( $a['_ord'] ) : 0;
+                    $ob = isset( $b['_ord'] ) ? intval( $b['_ord'] ) : 0;
+                    return $oa <=> $ob;
+                }
+                return $pa <=> $pb;
+            } );
+            foreach ( $trip_facts_items as $i => $it ) {
+                if ( isset( $trip_facts_items[ $i ]['_prio'] ) ) unset( $trip_facts_items[ $i ]['_prio'] );
+                if ( isset( $trip_facts_items[ $i ]['_ord'] ) ) unset( $trip_facts_items[ $i ]['_ord'] );
+            }
+        }
         $has_trip_facts = ! empty( $trip_facts_items );
 
         // ── Tab Sections ──
