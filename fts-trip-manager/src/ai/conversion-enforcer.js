@@ -3699,7 +3699,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
 
   const resPkg = await airtableGet_('Packages', { filterByFormula: "FIND('" + convEnf_escapeFormulaString_(tripLink) + "', ARRAYJOIN({Trip}))", pageSize: 100 })
   const existingPkgs = resPkg && resPkg.records ? resPkg.records : []
-  const toDeleteOldGygDraftPkg = []
+  const toDeleteGygPkg = []
   const toDraftPkg = []
   const pkgIdsToDeletePrices = new Set()
   existingPkgs.forEach((r) => {
@@ -3707,8 +3707,8 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
     const st = String(f.Status || '').toLowerCase().trim()
     const pid = String(f.PackageID || '').trim()
     const isGyg = pid ? convEnf_isGygDerivedPackageId_(pid) : false
-    if (st === 'draft' && isGyg) {
-      toDeleteOldGygDraftPkg.push(r.id)
+    if (isGyg) {
+      toDeleteGygPkg.push(r.id)
       if (pid) pkgIdsToDeletePrices.add(pid)
       pkgIdsToDeletePrices.add(r.id)
       return
@@ -3730,7 +3730,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
   })
 
   if (toDeletePrice.length) await airtableBatchDelete_('Prices', toDeletePrice)
-  if (toDeleteOldGygDraftPkg.length) await airtableBatchDelete_('Packages', toDeleteOldGygDraftPkg)
+  if (toDeleteGygPkg.length) await airtableBatchDelete_('Packages', toDeleteGygPkg)
   if (toDraftPkg.length) {
     for (const id of toDraftPkg) {
       try {
@@ -3738,7 +3738,7 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
       } catch {
       }
     }
-    log('✅ Demoted old Packages to Draft to avoid publishing: Packages=' + String(toDraftPkg.length) + ' PricesDeleted=' + String(toDeletePrice.length) + ' OldGygDraftDeleted=' + String(toDeleteOldGygDraftPkg.length))
+    log('✅ Demoted old Packages to Draft to avoid publishing: Packages=' + String(toDraftPkg.length) + ' PricesDeleted=' + String(toDeletePrice.length) + ' GygPkgsDeleted=' + String(toDeleteGygPkg.length))
   }
 
   const pkgFieldsArray = []
