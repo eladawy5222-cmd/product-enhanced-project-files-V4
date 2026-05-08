@@ -45,6 +45,11 @@ contextBridge.exposeInMainWorld('fts', {
   schedulerStartAll: () => invokeWithCacheClear('scheduler:start-all'),
   schedulerStopAll: () => invokeWithCacheClear('scheduler:stop-all'),
 
+  reviewsGetStats: () => invokeWithCacheClear('reviews:stats'),
+  reviewsFetchRecent: (limit) => invokeWithCacheClear('reviews:recent', limit),
+  reviewsResetCursor: () => invokeWithCacheClear('reviews:reset-cursor'),
+  reviewsPublishTrip: (tripRecordId) => invokeWithCacheClear('reviews:publish-trip', tripRecordId),
+
   tripsFetchAll: () => invokeWithCacheClear('trips:fetch-all'),
   tripsFetchOne: (tripRecordId) => invokeWithCacheClear('trips:fetch-one', tripRecordId),
 

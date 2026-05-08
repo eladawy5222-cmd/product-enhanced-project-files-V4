@@ -112,7 +112,7 @@ async function runConversionEnforcer(data) {
     const existingExcludes = await convEnf_fetchIncExc_(tripId, tripNumber || '', 'TripExcludes Improvement With AI', 'ExcludeItem')
     const existingFaqs = await convEnf_fetchFaqs_(tripId, tripNumber || '')
     const existingPackages = await convEnf_fetchPackages_(tripId, tripNumber || '')
-    await convEnf_enforceTripFactsCore_(tripId, tripNumber || '', tripFields, existingIncludes, existingExcludes, existingItinerary)
+    await convEnf_enforceTripFactsCore_(tripId, tripNumber || '', tripFields, existingIncludes, existingExcludes, existingItinerary, rawCtx)
     log('Fetched Highlights count: ' + (existingHighlights && existingHighlights.items ? existingHighlights.items.length : 0))
     log('Fetched Itinerary count: ' + (existingItinerary && existingItinerary.steps ? existingItinerary.steps.length : 0))
     log('Fetched Includes count: ' + (existingIncludes && existingIncludes.items ? existingIncludes.items.length : 0))
@@ -172,6 +172,14 @@ async function runConversionEnforcer(data) {
     let standardContext = convEnf_buildStandardContext_(payload)
     if (rawCtx && rawCtx.evidence_text) {
       standardContext = convEnf_enrichStandardContextWithRawEvidence_(standardContext, rawCtx.evidence_text)
+    }
+    const extSignals = convEnf_getExternalSignals_(rawCtx)
+    if (standardContext) {
+      standardContext.external_signals = extSignals
+      if (extSignals && extSignals.pickup_included) {
+        standardContext.flags = standardContext.flags || {}
+        standardContext.flags.has_pickup = true
+      }
     }
     if (benchmarkInsights) {
       standardContext = standardContext || {}
@@ -234,17 +242,19 @@ async function runConversionEnforcer(data) {
     if (boldPromise && boldPromise.length >= 20) updateMain.AI_Bold_Promise = boldPromise
     let atAGlanceObj = convEnf_getObject_(ai, ['at_a_glance', 'value'])
     if (!atAGlanceObj) atAGlanceObj = convEnf_getObject_(ai, ['at_a_glance'])
+    let atAGlance = { duration: '', meeting_point: '', group_size: '', includes: '', excludes: '' }
     if (atAGlanceObj) {
-      const atAGlance = {
+      atAGlance = {
         duration: String(atAGlanceObj.duration || '').replace(/\s+/g, ' ').trim(),
         meeting_point: String(atAGlanceObj.meeting_point || atAGlanceObj.meeting || atAGlanceObj.meet || '').replace(/\s+/g, ' ').trim(),
         group_size: String(atAGlanceObj.group_size || atAGlanceObj.group || '').replace(/\s+/g, ' ').trim(),
         includes: String(atAGlanceObj.includes || atAGlanceObj.included || '').replace(/\s+/g, ' ').trim(),
         excludes: String(atAGlanceObj.excludes || atAGlanceObj.excluded || '').replace(/\s+/g, ' ').trim()
       }
-      const hasAnyAtAGlance = Object.keys(atAGlance).some((k) => Boolean(atAGlance[k]))
-      if (hasAnyAtAGlance) updateMain.AI_At_A_Glance = JSON.stringify(atAGlance)
     }
+    atAGlance = convEnf_finalizeAtAGlance_(atAGlance, payload, flags, entranceTruth, guideTruth, extSignals)
+    const hasAnyAtAGlance = Object.keys(atAGlance).some((k) => Boolean(atAGlance[k]))
+    if (hasAnyAtAGlance) updateMain.AI_At_A_Glance = JSON.stringify(atAGlance)
     log('📤 Writing updates to Airtable...')
     if (Object.keys(updateMain).length) {
       updateMain.AI_LastUpdated = nowIso
@@ -306,6 +316,11 @@ async function runConversionEnforcer(data) {
     }
     let newFaqs = convEnf_getArray_(ai, ['faqs', 'items'])
     newFaqs = convEnf_sanitizeFaqItems_(newFaqs, { max: 15 }, { included: newIncluded, excluded: newExcluded, flags, truth: rawCtx ? rawCtx.truth : null })
+    newFaqs = convEnf_sortFaqItems_(newFaqs)
+    const cancelHoursFromFields = convEnf_extractCancelHoursFromFields_(impFields, tripFields)
+    const cancelHours = cancelHoursFromFields || convEnf_extractCancelHoursFromExternal_(rawCtx)
+    if (!cancelHoursFromFields && isFinite(cancelHours) && cancelHours > 0) updateMain.Cancellation_Window_Hours = cancelHours
+    newFaqs = convEnf_ensureCoreFaqs_(newFaqs, { max: 15, flags, cancelHours, included: newIncluded, excluded: newExcluded })
     newFaqs = convEnf_sortFaqItems_(newFaqs)
     if (newFaqs && newFaqs.length >= 3) {
       log('✅ Improved FAQs:')
@@ -398,6 +413,79 @@ function convEnf_applyGuideTruthToText_(text, truth) {
     .replace(/\bexpert\s+guidance\b/ig, 'guiding (depending on the option selected)')
     .replace(/\bexpert\s+guide\b/ig, 'guide (depending on the option selected)')
   return s.replace(/\s+/g, ' ').trim()
+}
+
+function convEnf_finalizeAtAGlance_(atAGlance, payload, flags, entranceTruth, guideTruth, externalSignals) {
+  const a0 = atAGlance && typeof atAGlance === 'object' ? atAGlance : {}
+  const p = payload || {}
+  const trip = p.trip || {}
+  const incArr = Array.isArray(p.included) ? p.included : []
+  const excArr = Array.isArray(p.excluded) ? p.excluded : []
+  const incText = incArr.join(' | ').toLowerCase()
+  const excText = excArr.join(' | ').toLowerCase()
+  const f = flags && typeof flags === 'object' ? flags : {}
+  const et = entranceTruth && typeof entranceTruth === 'object' ? entranceTruth : { included: false, excluded: false, ambiguous: true }
+  const gt = guideTruth && typeof guideTruth === 'object' ? guideTruth : { included: false, optional: false, ambiguous: true }
+  const ex = externalSignals && typeof externalSignals === 'object' ? externalSignals : { pay_later: false, pickup_included: false, pickup_scope: '' }
+
+  function norm_(s) {
+    return String(s || '').replace(/\s+/g, ' ').trim()
+  }
+  function has_(t, re) {
+    return re.test(String(t || ''))
+  }
+  function formatDuration_() {
+    const unit = String(trip.Duration_Unit || '').toLowerCase()
+    const h = Number(trip.Duration_Hours || '')
+    const m = Number(trip.Duration_Minutes || '')
+    if (Number.isFinite(h) && h > 0) {
+      if (unit === 'day' || unit === 'days') return h === 1 ? '1 day' : `${h} days`
+      return h === 1 ? '1 hour' : `${h} hours`
+    }
+    if (Number.isFinite(m) && m > 0) return m === 1 ? '1 minute' : `${m} minutes`
+    return ''
+  }
+
+  const duration = formatDuration_() || norm_(a0.duration)
+  const hasPickup = has_(incText, /\b(pick\s*-?\s*up|pickup|hotel pickup|hotel pick-up|drop-?off)\b/) || !!ex.pickup_included
+  const meetingPoint = hasPickup ? (ex.pickup_scope ? ('Hotel pickup (' + ex.pickup_scope + ')') : 'Hotel pickup') : norm_(a0.meeting_point)
+
+  const hasTransport = has_(incText, /\b(air-?conditioned|a\/c|transportation|transport|vehicle|van|car)\b/)
+  const hasLunch = has_(incText, /\b(lunch|meal|meals)\b/) && !has_(incText, /\b(lunch|meal|meals).{0,40}\b(if selected|optional|depending on the option)\b/)
+  const hasWater = has_(incText, /\b(bottled water|water)\b/)
+
+  const includesParts = []
+  if (hasPickup) includesParts.push('Hotel pickup & drop-off')
+  if (hasTransport) includesParts.push('Air-conditioned transportation')
+  if (gt.included) includesParts.push('Egyptologist guide')
+  else if (gt.optional) includesParts.push('Guiding (depending on option selected)')
+  if (et.included) includesParts.push('Attraction entrance fees')
+  else if (et.ambiguous) includesParts.push('Attraction entrance fees (depending on option selected)')
+  if (hasLunch) includesParts.push('Lunch')
+  if (hasWater) includesParts.push('Bottled water')
+
+  const excludesParts = []
+  if (has_(excText, /\b(tips?|gratuities)\b/)) excludesParts.push('Tips/gratuities')
+  if (has_(excText, /\b(personal expenses?|shopping)\b/)) excludesParts.push('Personal expenses')
+  if (has_(excText, /\btravel insurance|insurance\b/)) excludesParts.push('Travel insurance')
+  if (et.excluded) excludesParts.push('Attraction entrance fees')
+
+  const includes = includesParts.length ? includesParts.join(', ') : norm_(a0.includes)
+  const excludes = excludesParts.length ? excludesParts.join(', ') : norm_(a0.excludes)
+
+  let groupSize = norm_(a0.group_size)
+  if (groupSize && /\b(language|languages|english|arabic|french|german|spanish|italian|russian)\b/i.test(groupSize)) groupSize = ''
+  if (groupSize && (f.has_group_size === false) && !/\d+/.test(groupSize) && !/\b(private|small|group|max|up to)\b/i.test(groupSize)) groupSize = ''
+
+  const out = {
+    duration,
+    meeting_point: meetingPoint,
+    group_size: groupSize,
+    includes,
+    excludes
+  }
+  if (ex.pay_later) out.payment = 'Reserve now & pay later'
+  return out
 }
 
 function convEnf_applyGuideTruthToHighlights_(highlights, truth) {
@@ -1280,9 +1368,17 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
         log('✅ Fixed FAQ: removed unsupported private claim')
       }
     }
-    if (/languages?\b/.test(qLc) && !hasLanguageEvidence) {
-      a = "Language availability is confirmed at booking."
+    if (/languages?\b/.test(qLc)) {
+      a = "English (Other languages on request). Language availability is confirmed at booking."
       log('✅ Fixed FAQ: normalized language answer')
+    }
+    if (/\b(cash|money)\b/.test(qLc) && /\b(entrance|ticket|tickets|admission)\b/.test(qLc)) {
+      const parts = ["Bring some cash for tips, personal purchases, and any optional extras."]
+      if (hasEntranceExcluded && !hasEntranceIncluded) parts.push("You'll also want cash/card for entrance tickets if they're not included.")
+      else if (hasEntranceIncluded && !hasEntranceExcluded) parts.push("You typically won't need cash for entrance tickets because they're included as listed in What's Included.")
+      else parts.push("Entrance-fee coverage depends on the option selected. Please refer to What's Included/Excluded.")
+      a = parts.join(' ')
+      log('✅ Fixed FAQ: normalized cash/tickets answer')
     }
     a = convEnf_fixOptionalExtrasAnswer_(q, a)
     if (truth) {
@@ -1316,6 +1412,114 @@ function convEnf_sanitizeFaqItems_(faqs, opts, ctx) {
     seen[key] = true
     out.push({ question: q, answer: a })
     if (max && out.length >= max) break
+  }
+  return out
+}
+
+function convEnf_extractCancelHoursFromExternal_(rawCtx) {
+  const r = rawCtx && typeof rawCtx === 'object' ? rawCtx : null
+  const t = r && r.truth && typeof r.truth === 'object' ? r.truth : null
+  const ex = t && t.external && typeof t.external === 'object' ? t.external : null
+  const s = ex && ex.signals && typeof ex.signals === 'object' ? ex.signals : null
+  const n = s && s.cancel_hours != null ? parseInt(String(s.cancel_hours).trim(), 10) : 0
+  if (Number.isFinite(n) && n > 0) return n
+  return 0
+}
+
+function convEnf_extractCancelHoursFromFields_(impFields, tripFields) {
+  const g = impFields && typeof impFields === 'object' ? impFields : {}
+  const t = tripFields && typeof tripFields === 'object' ? tripFields : {}
+  let v = g.Cancellation_Window_Hours || g['Cancellation_Window_Hours'] || g.CancellationHours || g['Cancellation Hours'] || ''
+  if (!v) v = t.Cancellation_Window_Hours || t['Cancellation_Window_Hours'] || t.CancellationHours || t['Cancellation Hours'] || ''
+  if (Array.isArray(v)) v = v.length ? v[0] : ''
+  const n = parseInt(String(v || '').trim(), 10)
+  if (Number.isFinite(n) && n > 0) return n
+  return 0
+}
+
+function convEnf_ensureCoreFaqs_(faqs, ctx) {
+  const list = Array.isArray(faqs) ? faqs.slice() : []
+  const c = ctx && typeof ctx === 'object' ? ctx : {}
+  const max = (typeof c.max === 'number' && isFinite(c.max) && c.max > 0) ? Math.floor(c.max) : 15
+  const flags = c.flags && typeof c.flags === 'object' ? c.flags : {}
+  const cancelHours = Number(c.cancelHours || 0)
+  const incText = (Array.isArray(c.included) ? c.included.join(' | ') : String(c.included || '')).toLowerCase()
+  const excText = (Array.isArray(c.excluded) ? c.excluded.join(' | ') : String(c.excluded || '')).toLowerCase()
+  const hasEntranceIncluded = /entrance|admission|ticket/.test(incText) && !/not included|excluded/.test(incText)
+  const hasEntranceExcluded = /entrance|admission|ticket/.test(excText) || (/entrance|admission|ticket/.test(incText) && /not included|excluded/.test(incText))
+
+  function norm_(s) { return String(s || '').replace(/\s+/g, ' ').trim() }
+  function qKey_(q) { return norm_(q).toLowerCase() }
+  function hasQ_(rx) {
+    for (let i = 0; i < list.length; i++) {
+      const q = qKey_((list[i] || {}).question)
+      if (rx.test(q)) return true
+    }
+    return false
+  }
+  function upsert_(question, answer, matchRx, insertAt) {
+    const q = norm_(question)
+    const a = norm_(answer)
+    if (!q || !a) return
+    const rx = matchRx || new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').toLowerCase())
+    for (let i = 0; i < list.length; i++) {
+      const q0 = qKey_((list[i] || {}).question)
+      if (!q0) continue
+      if (rx.test(q0)) {
+        list[i] = { question: q, answer: a }
+        return
+      }
+    }
+    const at = (typeof insertAt === 'number' && insertAt >= 0) ? Math.min(insertAt, list.length) : 0
+    list.splice(at, 0, { question: q, answer: a })
+  }
+
+  {
+    const a = cancelHours > 0
+      ? `Cancel up to ${cancelHours} hours before the tour for a full refund. Refer to your booking details to cancel or reschedule.`
+      : "Cancellation and rescheduling terms are shown during booking and in your confirmation details. Refer to your booking information to cancel or reschedule."
+    upsert_('What is the cancellation policy?', a, /\bcancellation\b|\bcancel\b|\brefund\b/, 0)
+  }
+
+  upsert_(
+    'What languages are available for the guide?',
+    'English (Other languages on request). Language availability is confirmed at booking.',
+    /\blanguages?\b|\blanguage\b/,
+    1
+  )
+
+  if (!hasQ_(/\bentrance\b|\btickets?\b|\badmission\b/) && (hasEntranceIncluded || hasEntranceExcluded || flags.has_tickets)) {
+    let a = "Please refer to the What's Included/Excluded section for whether attraction entrance fees are covered for your selected option."
+    if (hasEntranceIncluded && !hasEntranceExcluded) a = "Yes. Attraction entrance fees are included as listed in What's Included."
+    else if (hasEntranceExcluded && !hasEntranceIncluded) a = "No. Attraction entrance fees are not included as listed in What's Excluded."
+    upsert_(
+      'Are attraction entrance fees included?',
+      a,
+      /\bentrance\b|\btickets?\b|\badmission\b/,
+      2
+    )
+  }
+
+  if (flags.has_pickup && !hasQ_(/\bpick\s*-?\s*up\b|\bpickup\b|\bmeeting\b|\bhotel\b.*\bpick/)) {
+    upsert_(
+      'Where and when is the hotel pickup?',
+      "Pickup is from your hotel lobby in the morning. Exact timing is provided after booking.",
+      /\bpick\s*-?\s*up\b|\bpickup\b|\bmeeting\b|\bhotel\b.*\bpick/,
+      3
+    )
+  }
+
+  const out = []
+  const seen = {}
+  for (let i = 0; i < list.length; i++) {
+    const q = norm_((list[i] || {}).question)
+    const a = norm_((list[i] || {}).answer)
+    if (!q || !a) continue
+    const k = q.toLowerCase()
+    if (seen[k]) continue
+    seen[k] = true
+    out.push({ question: q, answer: a })
+    if (out.length >= max) break
   }
   return out
 }
@@ -1934,6 +2138,7 @@ async function convEnf_fetchExternalBenchmarkInsights_(tripFields, rawCtx) {
   try {
     if (rawCtx && rawCtx.truth && Array.isArray(pages) && pages.length) {
       convEnf_applyExternalTruthVotesToRawTruth_(rawCtx.truth, pages)
+      convEnf_applyExternalPolicySignalsToRawTruth_(rawCtx.truth, pages)
     }
   } catch {
   }
@@ -1947,6 +2152,111 @@ async function convEnf_fetchExternalBenchmarkInsights_(tripFields, rawCtx) {
     urls.map((u) => '- ' + u).join('\n'),
     brief
   ].join('\n')
+}
+
+function convEnf_extractCancelWindowHoursFromText_(text) {
+  const t = String(text || '')
+  if (!t.trim()) return 0
+  const head = t.slice(0, 20000)
+  const patterns = [
+    /\bcancel(?:lation)?\b[^\n\r]{0,80}\bup\s+to\s+(\d{1,3})\s*hours?\b/ig,
+    /\bfree\s+cancellation\b[^\n\r]{0,80}\b(\d{1,3})\s*hours?\b/ig,
+    /\bcancel\b[^\n\r]{0,120}\b(\d{1,3})\s*hours?\b[^\n\r]{0,60}\b(full\s+refund|refund)\b/ig,
+    /\b(\d{1,3})\s*hours?\b[^\n\r]{0,60}\b(before|in\s+advance)\b[^\n\r]{0,60}\b(full\s+refund|refund)\b/ig
+  ]
+  const votes = {}
+  for (const rx of patterns) {
+    let m = null
+    let guard = 0
+    while ((m = rx.exec(head)) !== null && guard++ < 25) {
+      const n = parseInt(String(m[1] || '').trim(), 10)
+      if (!Number.isFinite(n)) continue
+      if (n <= 0 || n > 720) continue
+      votes[n] = (votes[n] || 0) + 1
+    }
+  }
+  const keys = Object.keys(votes)
+  if (!keys.length) return 0
+  keys.sort((a, b) => {
+    const va = votes[a] || 0
+    const vb = votes[b] || 0
+    if (vb !== va) return vb - va
+    return parseInt(a, 10) - parseInt(b, 10)
+  })
+  return parseInt(keys[0], 10) || 0
+}
+
+function convEnf_extractPayLaterSignalFromText_(text) {
+  const lc = String(text || '').toLowerCase()
+  if (!lc.trim()) return false
+  return /\breserve\s+now\b[\s\S]{0,40}\bpay\s+later\b/.test(lc) || /\bpay\s+nothing\s+today\b/.test(lc) || /\bbook\s+now\b[\s\S]{0,40}\bpay\s+later\b/.test(lc)
+}
+
+function convEnf_extractPickupIncludedSignalFromText_(text) {
+  const lc = String(text || '').toLowerCase()
+  if (!lc.trim()) return false
+  return /\bpickup\s+included\b/.test(lc) || /\bhotel\s+pickup\b/.test(lc)
+}
+
+function convEnf_extractPickupScopeFromText_(text) {
+  const t = String(text || '')
+  if (!t.trim()) return ''
+  const head = t.slice(0, 20000)
+  const m = head.match(/\bpickup\s+location\s+options\s*:\s*([^\n\r]{0,200})/i)
+  const segment = (m && m[1]) ? String(m[1] || '') : head
+  const lc = segment.toLowerCase()
+  const hasCairo = /\bcairo\b/.test(lc)
+  const hasGiza = /\b(giza|al giza)\b/.test(lc)
+  if (hasCairo && hasGiza) return 'Cairo & Giza'
+  if (hasCairo) return 'Cairo'
+  if (hasGiza) return 'Giza'
+  return ''
+}
+
+function convEnf_applyExternalPolicySignalsToRawTruth_(truth, pages) {
+  const t = truth || {}
+  const p = Array.isArray(pages) ? pages : []
+  let cancelHours = 0
+  let payLater = false
+  let pickupIncluded = false
+  let pickupScope = ''
+  const sources = []
+
+  for (let i = 0; i < p.length; i++) {
+    const text = p[i] && p[i].text ? String(p[i].text) : ''
+    const ch = convEnf_extractCancelWindowHoursFromText_(text)
+    if (ch > 0) cancelHours = cancelHours > 0 ? Math.min(cancelHours, ch) : ch
+    if (!payLater && convEnf_extractPayLaterSignalFromText_(text)) payLater = true
+    if (!pickupIncluded && convEnf_extractPickupIncludedSignalFromText_(text)) pickupIncluded = true
+    if (!pickupScope) pickupScope = convEnf_extractPickupScopeFromText_(text)
+    if (p[i] && p[i].url) sources.push(String(p[i].url))
+  }
+
+  if (!t.external || typeof t.external !== 'object') t.external = { sources: [], votes: {}, decisions: {} }
+  const ex = t.external
+  ex.sources = Array.isArray(ex.sources) ? ex.sources : []
+  const srcMerged = ex.sources.concat(sources).filter(Boolean)
+  ex.sources = Array.from(new Set(srcMerged)).slice(0, 6)
+  ex.signals = {
+    cancel_hours: cancelHours || 0,
+    pay_later: !!payLater,
+    pickup_included: !!pickupIncluded,
+    pickup_scope: pickupScope || ''
+  }
+  t.external = ex
+}
+
+function convEnf_getExternalSignals_(rawCtx) {
+  const r = rawCtx && typeof rawCtx === 'object' ? rawCtx : null
+  const t = r && r.truth && typeof r.truth === 'object' ? r.truth : null
+  const ex = t && t.external && typeof t.external === 'object' ? t.external : null
+  const s = ex && ex.signals && typeof ex.signals === 'object' ? ex.signals : null
+  return {
+    cancel_hours: s && s.cancel_hours ? parseInt(String(s.cancel_hours).trim(), 10) || 0 : 0,
+    pay_later: !!(s && s.pay_later),
+    pickup_included: !!(s && s.pickup_included),
+    pickup_scope: s && s.pickup_scope ? String(s.pickup_scope).trim() : ''
+  }
 }
 
 function convEnf_extractExternalTruthVotes_(text) {
@@ -3612,14 +3922,68 @@ async function convEnf_fetchGygOptionsIntel_(tripFields) {
   const chosen = pickRes && pickRes.best ? pickRes.best : null
   if (!chosen || !chosen.url) return null
 
-  let url = String(chosen.url || '').trim()
-  if (dateFrom || pcs.length) {
-    const params = {}
-    if (dateFrom) params.date_from = dateFrom
-    if (pcs.length) params._pc = pcs
-    url = convEnf_appendQueryParams_(url, params)
+  function looksNoResults_(t) {
+    const lc = String(t || '').toLowerCase()
+    if (!lc) return false
+    if (lc.includes('no results found')) return true
+    if (lc.includes("couldn’t find any matching activities") || lc.includes("couldn't find any matching activities")) return true
+    if (lc.includes('we looked everywhere')) return true
+    return false
   }
-  url = convEnf_applyGygCurrencyToUrl_(url, currencyPref)
+
+  function buildUrl_(baseUrl, includeParams) {
+    let out = String(baseUrl || '').trim()
+    if (!out) return ''
+    if (includeParams && (dateFrom || pcs.length)) {
+      const params = {}
+      if (dateFrom) params.date_from = dateFrom
+      if (pcs.length) params._pc = pcs
+      out = convEnf_appendQueryParams_(out, params)
+    }
+    out = convEnf_applyGygCurrencyToUrl_(out, currencyPref)
+    return out
+  }
+
+  let candidateUrls = []
+  if (pickRes && Array.isArray(pickRes.scored) && pickRes.scored.length) {
+    candidateUrls = pickRes.scored
+      .map((x) => String(x && x.url ? x.url : '').trim())
+      .filter(Boolean)
+  }
+  if (!candidateUrls.length) candidateUrls = [String(chosen.url || '').trim()].filter(Boolean)
+
+  try {
+    const seedLc = String(seed || '').toLowerCase()
+    if (/\bcivilization\b|\bcivilisation\b/.test(seedLc)) {
+      const filtered = candidateUrls.filter((u) => {
+        const lc = String(u || '').toLowerCase()
+        return lc.includes('civilization') || lc.includes('civilisation')
+      })
+      if (filtered.length) candidateUrls = filtered
+    }
+  } catch {
+  }
+
+  let url = ''
+  for (const base of candidateUrls.slice(0, 6)) {
+    const trial = buildUrl_(base, true)
+    if (!trial) continue
+    try {
+      const scr = await convEnf_serperScrapeFull_(trial, apiKey)
+      if (scr && scr.text && looksNoResults_(scr.text)) {
+        const fallback = buildUrl_(base, false)
+        if (fallback) {
+          const scr2 = await convEnf_serperScrapeFull_(fallback, apiKey)
+          if (scr2 && scr2.text && !looksNoResults_(scr2.text)) { url = fallback; break }
+        }
+        continue
+      }
+      if (scr && scr.text) { url = trial; break }
+    } catch {
+    }
+  }
+  if (!url) url = buildUrl_(chosen.url, true)
+
   sources.push(url)
 
   if (wantPwOptions) {
@@ -3759,14 +4123,22 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
     const currency = String(p.Currency || '').trim()
     const cats = Array.isArray(p.PricingCategories) ? p.PricingCategories : []
     const internalLink = convEnf_buildTripPackagesLink_(pt)
+    const rawPkgRegular = (p.RegularPrice != null && isFinite(Number(p.RegularPrice))) ? Number(p.RegularPrice) : null
+    const rawPkgSale = (p.SalePrice != null && isFinite(Number(p.SalePrice))) ? Number(p.SalePrice) : null
+    const beforePkg = (rawPkgRegular != null && rawPkgRegular > 0) ? rawPkgRegular : null
+    const afterPkg =
+      (rawPkgSale != null && rawPkgSale > 0 && beforePkg != null && rawPkgSale < beforePkg) ? rawPkgSale :
+      (beforePkg != null ? beforePkg : ((rawPkgSale != null && rawPkgSale > 0) ? rawPkgSale : null))
+    const pkgRegularOut = beforePkg != null ? beforePkg : afterPkg
+    const pkgSaleOut = convEnf_inferSalePrice10_(afterPkg, null)
 
     pkgFieldsArray.push({
       Trip: [tripId],
       PackageID: pid,
       PackageTitle: pt,
       Currency: currency,
-      RegularPrice: (p.RegularPrice != null && isFinite(Number(p.RegularPrice))) ? Number(p.RegularPrice) : null,
-      SalePrice: (p.SalePrice != null && isFinite(Number(p.SalePrice))) ? Number(p.SalePrice) : null,
+      RegularPrice: pkgRegularOut,
+      SalePrice: pkgSaleOut,
       PricingCategories: '',
       PackageLink: internalLink,
       Status: 'Publish'
@@ -3778,14 +4150,19 @@ async function convEnf_writeGygReferenceOptionsToAirtable_(tripId, tripNumber, i
       const catId = convEnf_categoryIdFromLabel_(label)
       const rp = (c && c.regular_price != null && isFinite(Number(c.regular_price))) ? Number(c.regular_price) : null
       const spRaw = (c && c.sale_price != null && isFinite(Number(c.sale_price))) ? Number(c.sale_price) : null
-      const sp = convEnf_inferSalePrice10_(rp, spRaw)
+      const beforeCat = (rp != null && rp > 0) ? rp : null
+      const afterCat =
+        (spRaw != null && spRaw > 0 && beforeCat != null && spRaw < beforeCat) ? spRaw :
+        (beforeCat != null ? beforeCat : ((spRaw != null && spRaw > 0) ? spRaw : null))
+      const rpOut = beforeCat != null ? beforeCat : afterCat
+      const spOut = convEnf_inferSalePrice10_(afterCat, null)
       const priceRec = {
         Trip: [tripId],
         PackageID: pid,
         CategoryID: catId,
         Label: label,
-        RegularPrice: rp,
-        SalePrice: sp,
+        RegularPrice: rpOut,
+        SalePrice: spOut,
         Currency: String(c && c.currency ? c.currency : currency).trim(),
         PricingType: 'per-person',
         GroupPricing: ''
@@ -3883,6 +4260,12 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
     const currency = String(p.Currency || '').trim()
     const minPrice = (p.RegularPrice != null && isFinite(Number(p.RegularPrice))) ? Number(p.RegularPrice) : null
     const salePrice = (p.SalePrice != null && isFinite(Number(p.SalePrice))) ? Number(p.SalePrice) : null
+    const beforePkg = (minPrice != null && minPrice > 0) ? minPrice : null
+    const afterPkg =
+      (salePrice != null && salePrice > 0 && beforePkg != null && salePrice < beforePkg) ? salePrice :
+      (beforePkg != null ? beforePkg : ((salePrice != null && salePrice > 0) ? salePrice : null))
+    const pkgRegularOut = beforePkg != null ? beforePkg : afterPkg
+    const pkgSaleOut = convEnf_inferSalePrice10_(afterPkg, null)
     const internalLink = convEnf_buildTripPackagesLink_(pt)
 
     const cats = Array.isArray(p.PricingCategories) ? p.PricingCategories : []
@@ -3893,8 +4276,8 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
       PackageID: pid,
       PackageTitle: pt,
       Currency: currency,
-      RegularPrice: minPrice,
-      SalePrice: salePrice,
+      RegularPrice: pkgRegularOut,
+      SalePrice: pkgSaleOut,
       PricingCategories: '',
       PackageLink: internalLink,
       Status: 'Draft'
@@ -3908,13 +4291,19 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
         const rp = (c && c.regular_price != null && isFinite(Number(c.regular_price))) ? Number(c.regular_price) : null
         const sp = (c && c.sale_price != null && isFinite(Number(c.sale_price))) ? Number(c.sale_price) : null
         const catId = convEnf_categoryIdFromLabel_(label)
+        const beforeCat = (rp != null && rp > 0) ? rp : null
+        const afterCat =
+          (sp != null && sp > 0 && beforeCat != null && sp < beforeCat) ? sp :
+          (beforeCat != null ? beforeCat : ((sp != null && sp > 0) ? sp : null))
+        const rpOut = beforeCat != null ? beforeCat : afterCat
+        const spOut = convEnf_inferSalePrice10_(afterCat, null)
         const priceRec = {
           Trip: [tripId],
           PackageID: pid,
           CategoryID: catId,
           Label: label,
-          RegularPrice: rp,
-          SalePrice: convEnf_inferSalePrice10_(rp, sp),
+          RegularPrice: rpOut,
+          SalePrice: spOut,
           Currency: cur2,
           PricingType: 'per-person',
           GroupPricing: ''
@@ -3927,13 +4316,18 @@ async function convEnf_writeMissingGygOptionsDraftToAirtable_(tripId, tripNumber
       })
     } else if (minPrice != null) {
       const catId = convEnf_categoryIdFromLabel_('Adult')
+      const before = (minPrice != null && minPrice > 0) ? minPrice : null
+      const after =
+        (salePrice != null && salePrice > 0 && before != null && salePrice < before) ? salePrice :
+        (before != null ? before : ((salePrice != null && salePrice > 0) ? salePrice : null))
+      const base = before != null ? before : after
       priceFieldsArray.push({
         Trip: [tripId],
         PackageID: pid,
         CategoryID: catId,
         Label: 'Adult',
-        RegularPrice: minPrice,
-        SalePrice: convEnf_inferSalePrice10_(minPrice, salePrice),
+        RegularPrice: base,
+        SalePrice: convEnf_inferSalePrice10_(after, null),
         Currency: currency,
         MinPax: 1,
         MaxPax: 100,
@@ -4311,7 +4705,7 @@ function convEnf_inferPickupFactValue_(includedItems, excludedItems, tripFields)
   return 'Meeting point'
 }
 
-async function convEnf_enforceTripFactsCore_(tripId, tripNumber, tripFields, existingIncludes, existingExcludes, existingItinerary) {
+async function convEnf_enforceTripFactsCore_(tripId, tripNumber, tripFields, existingIncludes, existingExcludes, existingItinerary, rawCtx) {
   try {
     const recs = await convEnf_fetchRecordsByTrip_('TripFacts Improvement With AI', 'Trip', tripId, tripNumber || '', 50)
     if (!recs || !recs.length) return
@@ -4321,7 +4715,12 @@ async function convEnf_enforceTripFactsCore_(tripId, tripNumber, tripFields, exi
     const steps = (existingItinerary && Array.isArray(existingItinerary.steps)) ? existingItinerary.steps : []
 
     const desiredMeals = convEnf_inferMealsFactValue_(included, excluded, steps)
-    const desiredPickup = convEnf_inferPickupFactValue_(included, excluded, tripFields)
+    let desiredPickup = convEnf_inferPickupFactValue_(included, excluded, tripFields)
+    const extSignals = convEnf_getExternalSignals_(rawCtx)
+    if (extSignals && extSignals.pickup_included) {
+      if (extSignals.pickup_scope) desiredPickup = 'Hotel pickup (' + extSignals.pickup_scope + ')'
+      else desiredPickup = 'Hotel pickup'
+    }
 
     const nowIso = new Date().toISOString()
     let updated = 0

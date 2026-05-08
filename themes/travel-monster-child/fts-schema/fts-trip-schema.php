@@ -797,6 +797,27 @@ class FTS_Trip_Schema {
 	private static function fetch_reviews( $trip_id ) {
 		$out = array( 'reviews' => array(), 'average' => 0.0, 'count' => 0 );
 
+		$m = get_post_meta( $trip_id, 'fts_reviews_data', true );
+		if ( is_string( $m ) && trim( $m ) !== '' ) {
+			$decoded = json_decode( $m, true );
+			if ( is_array( $decoded ) ) $m = $decoded;
+		}
+		if ( is_object( $m ) ) {
+			$decoded = json_decode( wp_json_encode( $m ), true );
+			if ( is_array( $decoded ) ) $m = $decoded;
+		}
+		if ( is_array( $m ) ) {
+			$avg = isset( $m['average'] ) ? (float) $m['average'] : 0.0;
+			$cnt = isset( $m['count'] ) ? (int) $m['count'] : 0;
+			$rev = isset( $m['reviews'] ) && is_array( $m['reviews'] ) ? $m['reviews'] : array();
+			if ( $cnt > 0 && $avg > 0 && $avg <= 5 ) {
+				$out['average'] = $avg;
+				$out['count']   = $cnt;
+				$out['reviews'] = $rev;
+				return $out;
+			}
+		}
+
 		$comments = get_comments( array(
 			'post_id' => $trip_id,
 			'status'  => 'approve',

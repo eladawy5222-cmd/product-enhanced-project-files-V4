@@ -1029,6 +1029,34 @@ function mapAirtableToWordPress_(data, tripFields) {
   wte.trip_max_pax = '100';
   wte.trip_price_display = 'from'; // Show "From $XXX"
 
+  var boldPromise = String(g.AI_Bold_Promise || g.AI_BoldPromise || g['AI Bold Promise'] || '').replace(/\s+/g, ' ').trim();
+  if (boldPromise) {
+    wte.bold_promise = boldPromise;
+    payload.meta.AI_Bold_Promise = boldPromise;
+    payload.meta.ai_bold_promise = boldPromise;
+  }
+
+  var atRaw = g.AI_At_A_Glance || g.AI_AtAGlance || g['AI At A Glance'] || g['AI_At_A_Glance'] || '';
+  var atGlance = null;
+  if (atRaw && typeof atRaw === 'object') {
+    atGlance = atRaw;
+  } else {
+    var atStr = String(atRaw || '').trim();
+    if (atStr) {
+      try {
+        var parsed = JSON.parse(atStr);
+        if (parsed && typeof parsed === 'object') atGlance = parsed;
+      } catch {
+        atGlance = null;
+      }
+    }
+  }
+  if (atGlance && typeof atGlance === 'object') {
+    wte.at_a_glance = atGlance;
+    payload.meta.AI_At_A_Glance = JSON.stringify(atGlance);
+    payload.meta.ai_at_a_glance = JSON.stringify(atGlance);
+  }
+
   // Overview
   if (g.AI_Overview_Section_Title) wte.overview_section_title = g.AI_Overview_Section_Title;
   

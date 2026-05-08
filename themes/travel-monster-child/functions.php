@@ -94,6 +94,70 @@ add_filter( 'fts_v2_sidebar_trust_items', function( $items, $trip_id, $settings 
     return $out;
 }, 10, 3 );
 
+function fts_v2_get_trip_last_booked_timestamp( $trip_id = 0 ) {
+    $trip_id = intval( $trip_id );
+    if ( $trip_id <= 0 ) return 0;
+
+    $ts = intval( get_post_meta( $trip_id, 'fts_last_booked_ts', true ) );
+    if ( $ts > 0 ) return $ts;
+
+    $q = new WP_Query( array(
+        'post_type'              => 'booking',
+        'posts_per_page'         => 1,
+        'post_status'            => 'any',
+        'orderby'                => 'date',
+        'order'                  => 'DESC',
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+        'meta_query'             => array(
+            array(
+                'key'     => 'trip_id',
+                'value'   => $trip_id,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
+            ),
+        ),
+    ) );
+
+    if ( ! empty( $q->posts ) ) {
+        $p = $q->posts[0];
+        if ( $p && isset( $p->post_date_gmt ) && $p->post_date_gmt ) {
+            $t = strtotime( $p->post_date_gmt . ' GMT' );
+            if ( $t ) return intval( $t );
+        }
+        if ( $p && isset( $p->post_date ) && $p->post_date ) {
+            $t = strtotime( $p->post_date );
+            if ( $t ) return intval( $t );
+        }
+    }
+
+    return 0;
+}
+
+function fts_v2_get_trip_last_booked_minutes( $trip_id = 0 ) {
+    $ts = fts_v2_get_trip_last_booked_timestamp( $trip_id );
+    if ( $ts <= 0 ) return 0;
+    $now = time();
+    if ( $now < $ts ) return 0;
+    $mins = intval( floor( ( max( 0, $now - $ts ) ) / 60 ) );
+    if ( $mins < 1 ) $mins = 1;
+    if ( $mins > 10080 ) return 0;
+    return $mins;
+}
+
+add_filter( 'fts_v2_social_proof', function( $data, $trip_id, $settings ) {
+    $data = is_array( $data ) ? $data : array();
+    $mins = fts_v2_get_trip_last_booked_minutes( $trip_id );
+    if ( $mins > 0 ) $data['last_booked_minutes'] = $mins;
+    if ( ! isset( $data['viewer_count'] ) ) $data['viewer_count'] = 0;
+    return $data;
+}, 10, 3 );
+
+add_filter( 'fts_v2_enable_social_proof', function( $enabled, $trip_id, $settings ) {
+    return fts_v2_get_trip_last_booked_timestamp( $trip_id ) > 0;
+}, 10, 3 );
+
 
 /* ================ بيانات الريڤيو اليدوية ================ */
 function ft_static_trip_reviews() {
@@ -118,6 +182,8 @@ add_action('wp_travel_engine_after_booking_inserted', function($booking_id, $boo
     $trip_id = isset($booking_data['trip_id']) ? intval($booking_data['trip_id']) : 0;
 
     if ($trip_id > 0) {
+        update_post_meta($trip_id, 'fts_last_booked_ts', time());
+
         // 1. نحاول أولًا جلب Trip Code من حقل ACF أو WP Travel Engine
         $trip_code = '';
         
@@ -142,6 +208,96 @@ add_action('wp_travel_engine_after_booking_inserted', function($booking_id, $boo
         }
     }
 }, 10, 2);
+
+function fts_v2_touch_last_booked_ts_on_inventory_change( $meta_id, $object_id, $meta_key, $_meta_value ) {
+    if ( $meta_key !== '_booking_inventory' ) return;
+    $object_id = intval( $object_id );
+    if ( $object_id <= 0 ) return;
+    if ( get_post_type( $object_id ) !== 'trip' ) return;
+    update_post_meta( $object_id, 'fts_last_booked_ts', time() );
+}
+
+add_action( 'added_post_meta', 'fts_v2_touch_last_booked_ts_on_inventory_change', 10, 4 );
+add_action( 'updated_post_meta', 'fts_v2_touch_last_booked_ts_on_inventory_change', 10, 4 );
+
+function fts_v2_sync_last_booked_ts_from_inventory( $trip_id = 0 ) {
+    $trip_id = intval( $trip_id );
+    if ( $trip_id <= 0 ) return;
+
+    $inv = get_post_meta( $trip_id, '_booking_inventory', true );
+    $has_inv = is_array( $inv ) ? ! empty( $inv ) : ( trim( (string) $inv ) !== '' );
+    if ( ! $has_inv ) return;
+
+    $hash = md5( maybe_serialize( $inv ) );
+    $prev = (string) get_post_meta( $trip_id, 'fts_booking_inventory_hash', true );
+
+    if ( $prev !== $hash ) {
+        update_post_meta( $trip_id, 'fts_booking_inventory_hash', $hash );
+        update_post_meta( $trip_id, 'fts_last_booked_ts', time() );
+        return;
+    }
+
+    $ts = intval( get_post_meta( $trip_id, 'fts_last_booked_ts', true ) );
+    if ( $ts <= 0 ) {
+        update_post_meta( $trip_id, 'fts_last_booked_ts', time() );
+    }
+}
+
+add_action( 'wp', function() {
+    if ( ! is_singular( 'trip' ) ) return;
+    $trip_id = get_queried_object_id();
+    if ( ! $trip_id ) return;
+    fts_v2_sync_last_booked_ts_from_inventory( $trip_id );
+}, 9 );
+
+function fts_v2_trip_viewers_route() {
+    register_rest_route(
+        'fts/v1',
+        '/trip-viewers',
+        array(
+            'methods'             => 'GET',
+            'permission_callback' => '__return_true',
+            'callback'            => function( WP_REST_Request $req ) {
+                $trip_id   = intval( $req->get_param( 'trip_id' ) );
+                $viewer_id = (string) $req->get_param( 'viewer_id' );
+                $viewer_id = preg_replace( '/[^a-zA-Z0-9_-]/', '', $viewer_id );
+                if ( $trip_id <= 0 || $viewer_id === '' || strlen( $viewer_id ) > 64 ) {
+                    return new WP_REST_Response( array( 'viewer_count' => 0 ), 200 );
+                }
+
+                $key = 'fts_v2_viewers_' . $trip_id;
+                $now = time();
+
+                $data = get_site_transient( $key );
+                if ( ! is_array( $data ) ) $data = array();
+
+                $cutoff = $now - 120;
+                foreach ( $data as $k => $ts ) {
+                    if ( intval( $ts ) < $cutoff ) unset( $data[ $k ] );
+                }
+
+                $data[ $viewer_id ] = $now;
+
+                if ( count( $data ) > 250 ) {
+                    asort( $data );
+                    $data = array_slice( $data, -200, null, true );
+                }
+
+                set_site_transient( $key, $data, 10 * MINUTE_IN_SECONDS );
+
+                return new WP_REST_Response(
+                    array(
+                        'viewer_count' => count( $data ),
+                        'window_sec'   => 120,
+                    ),
+                    200
+                );
+            },
+        )
+    );
+}
+
+add_action( 'rest_api_init', 'fts_v2_trip_viewers_route' );
 // Register the "trip_code" meta to appear in the REST API response
 function register_trip_code_api_field() {
     register_rest_field('booking', 'trip_code', array(

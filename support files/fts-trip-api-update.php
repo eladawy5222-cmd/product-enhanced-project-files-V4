@@ -14,6 +14,20 @@ function fts_wpml_element_type_for_post_type($post_type) {
     return 'post_' . $post_type;
 }
 
+function fts_deep_normalize_meta_value($v) {
+    if (is_object($v)) {
+        $v = (array) $v;
+    }
+    if (is_array($v)) {
+        $out = [];
+        foreach ($v as $k => $vv) {
+            $out[$k] = fts_deep_normalize_meta_value($vv);
+        }
+        return $out;
+    }
+    return $v;
+}
+
 add_filter('wpml_use_advanced_translation_editor', function($use, $post_id) {
     if (get_post_type($post_id) === 'trip') {
         return false;
@@ -1012,6 +1026,7 @@ function fts_update_trip(WP_REST_Request $request) {
     }
     foreach ($meta_input as $key => $value) {
         $meta_key = sanitize_key($key);
+        $value = fts_deep_normalize_meta_value($value);
         $update_result = update_post_meta($trip_id, $meta_key, $value);
         $meta_keys_updated[] = $meta_key . ' (' . ($update_result ? 'updated' : 'unchanged') . ')';
     }

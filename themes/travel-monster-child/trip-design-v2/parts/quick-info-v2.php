@@ -23,6 +23,10 @@ $dest_names_list = ( ! empty( $destination_terms ) && ! is_wp_error( $destinatio
     ? wp_list_pluck( $destination_terms, 'name' )
     : array();
 $trending_location = ! empty( $dest_names_list ) ? implode( ', ', array_slice( $dest_names_list, 0, 2 ) ) : '';
+$hook_text = isset( $overview_excerpt ) ? trim( (string) $overview_excerpt ) : '';
+if ( $hook_text === '' && isset( $bold_promise ) ) {
+    $hook_text = trim( (string) $bold_promise );
+}
 $at_items = array();
 if ( ! empty( $has_trip_facts ) && ! empty( $trip_facts_items ) && is_array( $trip_facts_items ) ) {
     foreach ( $trip_facts_items as $tf ) {
@@ -55,7 +59,9 @@ $at_items = array_slice( $at_items, 0, 4 );
     <div class="fts-v2-container">
         <div class="fts-v2-quick-bar-inner">
             <div class="fts-v2-quick-text">
-                <p class="fts-v2-hook-text"><?php echo esc_html( $overview_excerpt ); ?></p>
+                <?php if ( $hook_text !== '' ) : ?>
+                <p class="fts-v2-hook-text"><?php echo esc_html( $hook_text ); ?></p>
+                <?php endif; ?>
                 <?php if ( ! empty( $at_items ) ) : ?>
                 <ul class="fts-v2-facts-list">
                     <?php foreach ( $at_items as $it ) :
@@ -102,15 +108,12 @@ $at_items = array_slice( $at_items, 0, 4 );
 </div>
 
 <!-- Social Proof -->
-<?php if ( ! empty( $social_proof_enabled ) ) : ?>
 <div class="fts-v2-social-proof">
     <div class="fts-v2-container">
-        <div class="fts-v2-proof-items">
-            <?php if ( ! empty( $viewer_count ) ) : ?>
-            <span class="fts-v2-proof-item fts-v2-proof-pulse"><svg class="fts-v2-icon-eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="fts-v2-viewer-count"><?php echo intval( $viewer_count ); ?></span> <?php echo esc_html__( 'people viewing now', 'fts' ); ?></span>
-            <?php endif; ?>
+        <div class="fts-v2-proof-items" data-trip-id="<?php echo intval( $trip_id ); ?>">
+            <span class="fts-v2-proof-item fts-v2-proof-pulse fts-v2-viewer-proof" style="<?php echo ! empty( $viewer_count ) ? '' : 'display:none;'; ?>"><svg class="fts-v2-icon-eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="fts-v2-viewer-count"><?php echo intval( $viewer_count ); ?></span> <?php echo esc_html__( 'people viewing now', 'fts' ); ?></span>
             <?php if ( ! empty( $last_booked_minutes ) ) : ?>
-            <span class="fts-v2-proof-item"><svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html( sprintf( __( 'Last booked %s minutes ago', 'fts' ), intval( $last_booked_minutes ) ) ); ?></span>
+            <span class="fts-v2-proof-item fts-v2-last-booked"><svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html( sprintf( __( 'Last booked %s minutes ago', 'fts' ), intval( $last_booked_minutes ) ) ); ?></span>
             <?php endif; ?>
             <?php if ( $trending_location ) : ?>
             <span class="fts-v2-proof-item"><svg class="fts-v2-icon-trend" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> <?php echo esc_html( sprintf( __( 'Trending in %s', 'fts' ), $trending_location ) ); ?></span>
@@ -118,7 +121,70 @@ $at_items = array_slice( $at_items, 0, 4 );
         </div>
     </div>
 </div>
-<?php endif; ?>
+<script>
+(function(){
+  var items=document.querySelector('.fts-v2-proof-items[data-trip-id]');
+  if(!items) return;
+  var tripId=items.getAttribute('data-trip-id');
+  if(!tripId) return;
+
+  function ensureViewerId(){
+    try{
+      var k='fts_v2_viewer_id';
+      var v=localStorage.getItem(k);
+      if(v) return v;
+      var r='';
+      if(window.crypto&&crypto.getRandomValues){
+        var a=new Uint8Array(16);
+        crypto.getRandomValues(a);
+        for(var i=0;i<a.length;i++) r+=a[i].toString(16).padStart(2,'0');
+      }else{
+        r=(Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2)).slice(0,32);
+      }
+      localStorage.setItem(k,r);
+      return r;
+    }catch(e){
+      return (Math.random().toString(16).slice(2)+Math.random().toString(16).slice(2)).slice(0,32);
+    }
+  }
+
+  function updateLastBooked(){
+    var url='/wp-json/fts/v1/trip/'+encodeURIComponent(tripId)+'?nocache=1';
+    fetch(url,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+      var meta=d&&d.meta?d.meta:null;
+      var ts=meta&&meta.fts_last_booked_ts?parseInt(meta.fts_last_booked_ts,10):0;
+      if(!ts||isNaN(ts)) return;
+      var mins=Math.floor((Date.now()/1000-ts)/60);
+      if(mins<1) mins=1;
+      if(mins>10080) return;
+      var existing=items.querySelector('.fts-v2-last-booked');
+      if(!existing){
+        existing=document.createElement('span');
+        existing.className='fts-v2-proof-item fts-v2-last-booked';
+        items.appendChild(existing);
+      }
+      existing.innerHTML='<svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> '+('Last booked '+mins+' minutes ago');
+    })['catch'](function(){});
+  }
+
+  function updateViewers(){
+    var viewerId=ensureViewerId();
+    var url='/wp-json/fts/v1/trip-viewers?trip_id='+encodeURIComponent(tripId)+'&viewer_id='+encodeURIComponent(viewerId)+'&t='+(Date.now());
+    fetch(url,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+      var c=d&&d.viewer_count?parseInt(d.viewer_count,10):0;
+      if(!c||isNaN(c)||c<1) return;
+      var wrap=items.querySelector('.fts-v2-viewer-proof');
+      var num=items.querySelector('.fts-v2-viewer-count');
+      if(wrap){ wrap.style.display='inline-flex'; }
+      if(num){ num.textContent=String(c); }
+    })['catch'](function(){});
+  }
+
+  updateLastBooked();
+  updateViewers();
+  setInterval(updateViewers, 20000);
+})();
+</script>
 
 <!-- Trust Badges (Dark Navy Bar) -->
 <div class="fts-v2-trust-bar">

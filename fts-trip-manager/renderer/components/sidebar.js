@@ -18,6 +18,7 @@ export function Sidebar(props) {
   const route = props && props.route ? String(props.route) : '/dashboard'
   const links = [
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/reviews', label: 'Reviews' },
     { to: '/import', label: 'Import' },
     { to: '/ai-pipeline', label: 'AI Pipeline' },
     { to: '/publisher', label: 'Publisher' },
@@ -43,4 +44,3 @@ export function Sidebar(props) {
     nav
   )
 }
-

@@ -17,7 +17,9 @@ const DEFAULT_SCHEDULES = {
   faqsEnhancer: { cron: '*/10 * * * *', enabled: false, fn: 'runAiFaqsBatch' },
   imagesEnhancer: { cron: '*/10 * * * *', enabled: false, fn: 'runAiImagesEnhancementBatch' },
   publisher: { cron: '*/15 * * * *', enabled: false, fn: 'runPublisherBatch' },
-  updater: { cron: '*/15 * * * *', enabled: false, fn: 'runUpdaterBatch' }
+  updater: { cron: '*/15 * * * *', enabled: false, fn: 'runUpdaterBatch' },
+  reviewsSync: { cron: '*/15 * * * *', enabled: false, fn: 'runReviewsSync' },
+  reviewsPublish: { cron: '0 0 * * *', enabled: false, fn: 'runReviewsPublish' }
 }
 
 function safeJsonParse(s) {

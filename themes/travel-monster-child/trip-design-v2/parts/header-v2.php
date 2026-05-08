@@ -35,6 +35,18 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         <?php if ( ! empty( $bold_promise ) ) : ?>
         <p class="fts-v2-bold-promise"><?php echo esc_html( $bold_promise ); ?></p>
         <?php endif; ?>
+        <?php if ( ! empty( $highlights ) && is_array( $highlights ) ) : ?>
+        <ul class="fts-v2-hero-benefits">
+            <?php foreach ( array_slice( $highlights, 0, 3 ) as $h ) : ?>
+                <?php $h = is_string( $h ) ? trim( $h ) : ''; ?>
+                <?php if ( $h === '' ) continue; ?>
+                <li>
+                    <svg class="fts-v2-hero-benefit-icon" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span><?php echo esc_html( $h ); ?></span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
 
         <!-- Meta Row -->
         <div class="fts-v2-meta-row">

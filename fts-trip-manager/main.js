@@ -105,12 +105,21 @@ async function createServices(rootDir, existing) {
   const { createMigrationTest } = require('./src/migration/migration-test')
 
   const { createTaskScheduler } = require('./src/scheduler/task-scheduler')
+  const { createReviewsIngest } = require('./src/reviews/reviews-ingest')
+  const { createReviewsMatcher } = require('./src/reviews/reviews-match')
+  const { createReviewsPublisher } = require('./src/reviews/reviews-publish')
 
   const config = getAppConfig({ rootDir })
   const store = existing && existing.store ? existing.store : createConfigStore({ filePath: path.resolve(rootDir, 'data', 'config-store.json') })
   const logger = existing && existing.logger ? existing.logger : createLogger({ rootDir, debug: config.DEBUG })
   const http = createHttpClient({ logger, debug: config.DEBUG })
   const airtable = createAirtableClient({ http, logger, baseId: config.AIRTABLE_BASE_ID, apiKey: config.AIRTABLE_API_KEY })
+  const airtableReviewsSource = createAirtableClient({
+    http,
+    logger,
+    baseId: config.REVIEWS_AIRTABLE_BASE_ID || config.AIRTABLE_BASE_ID,
+    apiKey: config.REVIEWS_AIRTABLE_API_KEY || config.AIRTABLE_API_KEY
+  })
   const lock = createLock()
   const state = createStateService({ store })
   const aiProvider = createAiProvider({ http, logger, config })
@@ -145,6 +154,10 @@ async function createServices(rootDir, existing) {
   const migrationRunner = createMigrationRunner({ airtable, http, config, logger, lock, store, orchestrator })
   const migrationTest = createMigrationTest({ airtable, http, config, logger, lock, store, orchestrator })
 
+  const reviewsIngest = createReviewsIngest({ airtableSource: airtableReviewsSource, airtableTarget: airtable, logger, config, store })
+  const reviewsMatcher = createReviewsMatcher({ airtable, logger, config, store, aiProvider })
+  const reviewsPublisher = createReviewsPublisher({ airtable, http, logger, config })
+
   const stageResetFieldMap = {
     seo: { table: 'Improvement With AI', field: 'AI_SEO_Status' },
     content: { table: 'Trips', field: 'AI_Status' },
@@ -174,7 +187,13 @@ async function createServices(rootDir, existing) {
     runAiFaqsBatch: async () => faqsEnhancer.runAiFaqsEnhancementBatch(),
 
     runPublisherBatch: async () => publisher.runPublisherBatch(),
-    runUpdaterBatch: async () => updater.runUpdaterBatch()
+    runUpdaterBatch: async () => updater.runUpdaterBatch(),
+    runReviewsSync: async () => {
+      await reviewsMatcher.runMatch()
+      await reviewsIngest.runIngest()
+      await reviewsMatcher.runMatch()
+    },
+    runReviewsPublish: async () => reviewsPublisher.runPublish()
   }
 
   const scheduler = createTaskScheduler({
@@ -247,6 +266,7 @@ async function createServices(rootDir, existing) {
     updater,
     migrationRunner,
     migrationTest,
+    reviewsPublisher,
     scheduler,
     resetTripStage
   }
@@ -422,6 +442,102 @@ function setup() {
   ipcMain.handle('scheduler:run-now', wrapTask('scheduler:run-now', async (name) => current().scheduler.runNow(String(name || ''))))
   ipcMain.handle('scheduler:start-all', wrapTask('scheduler:start-all', async () => current().scheduler.startAll()))
   ipcMain.handle('scheduler:stop-all', wrapTask('scheduler:stop-all', async () => current().scheduler.stopAll()))
+
+  ipcMain.handle('reviews:stats', async () => {
+    const s = current()
+    const airtable = s.airtable
+    const table = String((s.config && s.config.REVIEWS_TARGET_TABLE) || 'TripReviews')
+    const maxScan = 20_000
+
+    const counts = { Pending: 0, Matched: 0, NeedsReview: 0, Other: 0 }
+    let total = 0
+    let offset = null
+    try {
+      do {
+        const params = { pageSize: 100 }
+        if (offset) params.offset = offset
+        const res = await airtable.airtableGet(table, params)
+        const recs = res && res.records ? res.records : []
+        for (const r of recs) {
+          total++
+          const f = r && r.fields ? r.fields : {}
+          const st = String(f.MatchStatus || '').trim()
+          if (counts.hasOwnProperty(st)) counts[st]++
+          else counts.Other++
+          if (total >= maxScan) break
+        }
+        offset = res && res.offset ? res.offset : null
+      } while (offset && total < maxScan)
+    } catch (e) {
+      return { ok: false, error: String(e && e.message ? e.message : e) }
+    }
+
+    const before = String(s.store.getProperty('REVIEWS_LAST_INGEST_BEFORE_ISO') || '').trim()
+    const since = String(s.store.getProperty('REVIEWS_LAST_INGEST_SINCE_ISO') || '').trim()
+    const legacy = String(s.store.getProperty('REVIEWS_LAST_INGEST_ISO') || '').trim()
+    const cursor = before || since || legacy || ''
+
+    return {
+      ok: true,
+      total,
+      byStatus: counts,
+      truncated: !!offset,
+      cursor,
+      cursorBefore: before || '',
+      cursorSince: since || ''
+    }
+  })
+
+  ipcMain.handle('reviews:recent', async (_evt, limit) => {
+    const s = current()
+    const airtable = s.airtable
+    const table = String((s.config && s.config.REVIEWS_TARGET_TABLE) || 'TripReviews')
+    const max = Math.min(100, Math.max(1, Number(limit || 20)))
+    try {
+      const res = await airtable.airtableGet(table, {
+        pageSize: Math.min(100, max),
+        maxRecords: max,
+        'sort[0][field]': 'LastSeenAt',
+        'sort[0][direction]': 'desc'
+      })
+      const recs = res && res.records ? res.records : []
+      const out = []
+      for (const r of recs) {
+        const f = r && r.fields ? r.fields : {}
+        out.push({
+          id: r.id,
+          trip: f.SourceTripName || f.TripName || '',
+          booking: f['Booking Nr.'] || '',
+          customer: f.CustomerName || '',
+          date: f.ReviewDate || '',
+          stars: f.Stars || '',
+          status: f.MatchStatus || '',
+          method: f.MatchMethod || '',
+          score: f.MatchScore || '',
+          wpPublishedAt: f.WP_Published_At || ''
+        })
+      }
+      return { ok: true, records: out }
+    } catch (e) {
+      return { ok: false, error: String(e && e.message ? e.message : e) }
+    }
+  })
+
+  ipcMain.handle('reviews:reset-cursor', wrapTask('reviews:reset-cursor', async () => {
+    const s = current()
+    s.store.deleteProperty('REVIEWS_LAST_INGEST_BEFORE_ISO')
+    s.store.deleteProperty('REVIEWS_LAST_INGEST_ISO')
+    s.store.deleteProperty('REVIEWS_LAST_INGEST_SINCE_ISO')
+    return { ok: true }
+  }))
+
+  ipcMain.handle('reviews:publish-trip', wrapTask('reviews:publish-trip', async (tripRecordId) => {
+    const s = current()
+    if (!s.reviewsPublisher || typeof s.reviewsPublisher.runPublishTrip !== 'function') {
+      throw new Error('Reviews publisher is not available')
+    }
+    return s.reviewsPublisher.runPublishTrip(String(tripRecordId || '').trim(), { ignoreGate: true })
+  }))
 
   ipcMain.handle('trips:fetch-all', async () => {
     const airtable = current().airtable

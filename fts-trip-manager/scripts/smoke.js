@@ -34,6 +34,12 @@ async function main() {
     airtableClient = createAirtableClient({ http, logger, baseId: airtableBaseId, apiKey: airtableApiKey })
   }
 
+  const reviewsApiKey = String(process.env.REVIEWS_AIRTABLE_API_KEY || config.REVIEWS_AIRTABLE_API_KEY || airtableApiKey || '').trim()
+  const reviewsBaseId = String(process.env.REVIEWS_AIRTABLE_BASE_ID || config.REVIEWS_AIRTABLE_BASE_ID || airtableBaseId || '').trim()
+  const reviewsSourceClient = (reviewsApiKey && reviewsBaseId)
+    ? createAirtableClient({ http, logger, baseId: reviewsBaseId, apiKey: reviewsApiKey })
+    : null
+
   const services = await createServices(root, { logger })
 
   const { __test__ } = require('../src/ai/conversion-enforcer')
@@ -50,6 +56,54 @@ async function main() {
     convEnf_serperSearch_,
     convEnf_serperScrape_
   } = __test__
+
+  const wantReviewsFetch = String(process.env.SMOKE_RUN_REVIEWS_FETCH || '').trim() === '1'
+  if (wantReviewsFetch) {
+    if (!reviewsSourceClient) {
+      out('warn', 'Reviews smoke: skipped (REVIEWS_AIRTABLE_API_KEY / REVIEWS_AIRTABLE_BASE_ID not set)')
+    } else {
+      const sourceTable = String(process.env.REVIEWS_SOURCE_TABLE || config.REVIEWS_SOURCE_TABLE || 'List').trim() || 'List'
+      const limit = Math.min(50, Math.max(1, Number.parseInt(String(process.env.SMOKE_REVIEWS_LIMIT || '10'), 10) || 10))
+      out('info', `Reviews smoke: fetching ${limit} records from source table "${sourceTable}"`)
+      try {
+        const res = await reviewsSourceClient.airtableGet(sourceTable, {
+          maxRecords: limit,
+          pageSize: Math.min(100, limit)
+        })
+        const recs = res && res.records ? res.records : []
+        out('info', `Reviews smoke: got ${recs.length} records`)
+        const tripNameField = String(process.env.REVIEWS_SOURCE_TRIP_NAME_FIELD || config.REVIEWS_SOURCE_TRIP_NAME_FIELD || 'TripName')
+        const bookingNrField = String(process.env.REVIEWS_SOURCE_BOOKING_NR_FIELD || config.REVIEWS_SOURCE_BOOKING_NR_FIELD || 'Booking Nr.')
+        const customerField = String(process.env.REVIEWS_SOURCE_CUSTOMER_NAME_FIELD || config.REVIEWS_SOURCE_CUSTOMER_NAME_FIELD || 'CustomerName')
+        const dateField = String(process.env.REVIEWS_SOURCE_REVIEW_DATE_FIELD || config.REVIEWS_SOURCE_REVIEW_DATE_FIELD || 'ReviewDate')
+        const starsField = String(process.env.REVIEWS_SOURCE_STARS_FIELD || config.REVIEWS_SOURCE_STARS_FIELD || 'Stars')
+        const contentField = String(process.env.REVIEWS_SOURCE_CONTENT_FIELD || config.REVIEWS_SOURCE_CONTENT_FIELD || 'Content')
+        for (const r of recs) {
+          const f = (r && r.fields) ? r.fields : {}
+          const row = {
+            id: r && r.id ? r.id : '',
+            trip: f[tripNameField] || '',
+            booking: f[bookingNrField] || '',
+            customer: f[customerField] || '',
+            date: f[dateField] || '',
+            stars: f[starsField] || '',
+            content_chars: String(f[contentField] || '').length
+          }
+          out('info', JSON.stringify(row))
+        }
+      } catch (e) {
+        out('warn', 'Reviews smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    }
+  }
+
+  const smokeMode = String(process.env.SMOKE_MODE || '').trim().toLowerCase()
+  const reviewsOnlyMode = wantReviewsFetch && (smokeMode === '' || smokeMode === 'reviews' || smokeMode === 'reviews-only' || smokeMode === 'reviewsonly')
+  if (reviewsOnlyMode) {
+    out('info', 'Smoke mode: reviews-only (skipping other smoke steps)')
+    out('info', 'Smoke test ok')
+    return
+  }
 
   const basePayload = {
     trip: { id: 'rec_test', TripID: 'T-000', Title: 'Cairo City Tour', TourType: '', Slug: 'cairo-city-tour', Duration_Hours: '6', Duration_Minutes: '', Duration_Unit: 'hours' },
@@ -220,6 +274,20 @@ async function main() {
       }
     } else if (wantItinerary) {
       out('warn', 'Itinerary smoke: skipped (missing trip record or services)')
+    }
+
+    const wantTripFacts = String(process.env.SMOKE_RUN_TRIPFACTS || '').trim() === '1'
+    if (wantTripFacts && services && tripRecId) {
+      out('info', 'TripFacts smoke: resetting stage -> running trip facts enhancer batch')
+      try {
+        await services.resetTripStage(tripRecId, 'tripfacts')
+        await services.tripFactsEnhancer.runAiTripFactsEnhancementBatch()
+        out('info', 'TripFacts smoke: done')
+      } catch (e) {
+        out('warn', 'TripFacts smoke failed: ' + String(e && e.message ? e.message : e))
+      }
+    } else if (wantTripFacts) {
+      out('warn', 'TripFacts smoke: skipped (missing trip record or services)')
     }
 
     const wantConv = String(process.env.SMOKE_RUN_CONVERSION_ENFORCER || '').trim() === '1'

@@ -9,6 +9,8 @@ let lock
 let store
 let aiProvider
 
+const DEFAULT_LANGUAGE_FACT_VALUE = 'English (Other languages on request)'
+
 function initTripFactsEnhancer(options) {
   if (!options) throw new Error('createTripFactsEnhancer: missing options')
   airtable = options.airtable
@@ -428,7 +430,7 @@ async function buildTripFactsContext_(fields, tripId, improvedFields) {
   ctx.category = fields.Category || '';
 
   // Language
-  ctx.languages = Array.isArray(fields.Languages) ? fields.Languages.join(', ') : '';
+  ctx.languages = DEFAULT_LANGUAGE_FACT_VALUE;
 
   // Group size
   ctx.minGroupSize = fields.Min_Group_Size || '';
@@ -483,7 +485,7 @@ function buildTripFactsPrompt_(ctx) {
     "Location: " + (ctx.cities || ctx.countries || 'N/A') + "\n" +
     "Tour Type: " + (ctx.tourType || 'N/A') + "\n" +
     "Category: " + (ctx.category || 'N/A') + "\n" +
-    "Languages: " + (ctx.languages || 'N/A') + "\n" +
+    "Languages: " + DEFAULT_LANGUAGE_FACT_VALUE + "\n" +
     "Group Size: " + (ctx.minGroupSize || 'N/A') + " - " + (ctx.maxGroupSize || 'N/A') + "\n\n" +
 
     "IMPROVED AI CONTENT:\n" +
@@ -496,9 +498,10 @@ function buildTripFactsPrompt_(ctx) {
 
     "🎯 CRITICAL RULES:\n" +
     "1. Generate EXACTLY 6 facts\n" +
-    "2. RANDOMIZE fact selection - DO NOT use the same 6 facts for every trip\n" +
-    "3. Select facts based on AVAILABLE DATA in trip context\n" +
-    "4. NEVER use 'Not specified' - use sensible defaults:\n" +
+    "2. ALWAYS include these if possible: Duration (duration), Pickup & Drop Off (pickup__drop_off), Meals (meals), Language (language).\n" +
+    "3. RANDOMIZE the remaining facts - DO NOT use the same 6 facts for every trip\n" +
+    "4. Select facts based on AVAILABLE DATA in trip context\n" +
+    "5. NEVER use 'Not specified' - use sensible defaults:\n" +
     "   - If Meals unknown → 'Meals not included'\n" +
     "   - If Language unknown → 'English'\n" +
     "   - If Best season unknown → 'Year-round'\n" +
@@ -506,14 +509,14 @@ function buildTripFactsPrompt_(ctx) {
     "   - If Pickup & Drop Off unknown → 'Meeting point'\n" +
     "   - If Fitness level unknown → 'All levels'\n" +
     "   - If Permits unknown → 'Not required'\n" +
-    "5. Prefer facts with SPECIFIC data from context over generic defaults\n" +
-    "6. Keep values concise (max 50 characters)\n" +
-    "7. Output in ENGLISH ONLY (no Arabic)\n" +
-    "8. Do NOT invent specific details\n" +
-    "9. AVOID repeating 'Fitness level: All levels' if possible - use other facts\n" +
-    "10. The 'key' field in the JSON MUST always be one of the allowed FactKeys listed above.\n" +
+    "6. Prefer facts with SPECIFIC data from context over generic defaults\n" +
+    "7. Keep values concise (max 50 characters)\n" +
+    "8. Output in ENGLISH ONLY (no Arabic)\n" +
+    "9. Do NOT invent specific details\n" +
+    "10. AVOID repeating 'Fitness level: All levels' if possible - use other facts\n" +
+    "11. The 'key' field in the JSON MUST always be one of the allowed FactKeys listed above.\n" +
     "12. For meals and pickup__drop_off: NEVER output 'As per itinerary' or 'Available'.\n" +
-    "11. MUSEUM DISTINCTION & LOGIC (CRITICAL):\n" +
+    "13. MUSEUM DISTINCTION & LOGIC (CRITICAL):\n" +
     "    - The Egyptian Museum (Tahrir): Old museum, statues.\n" +
     "    - The Grand Egyptian Museum (GEM): New museum, Giza (Tutankhamun & Mummies as per user rule).\n" +
     "    - The National Museum of Egyptian Civilization (NMEC): Fustat (Civilization Museum).\n" +
@@ -619,12 +622,11 @@ function sanitizeFactValues_(facts, tripId, ctx) {
 
   var inferredMeals = (ctx && ctx.inferred_meals) ? String(ctx.inferred_meals || '').trim() : '';
   var inferredPickup = (ctx && ctx.inferred_pickup) ? String(ctx.inferred_pickup || '').trim() : '';
-  var ctxLanguages = (ctx && ctx.languages) ? String(ctx.languages || '').trim() : '';
   var ctxGroupSize = inferGroupSizeFactValue_(ctx);
 
   var DEFAULT_VALUES = {
     'meals': inferredMeals || 'Meals not included',
-    'language': ctxLanguages || 'English',
+    'language': DEFAULT_LANGUAGE_FACT_VALUE,
     'best_season': 'Year-round',
     'accomodation': 'As per itinerary',
     'pickup__drop_off': inferredPickup || 'Meeting point',
@@ -642,8 +644,8 @@ function sanitizeFactValues_(facts, tripId, ctx) {
     var key = normalizeFactKey_(fact.key || '');
     var valueLc = value.toLowerCase();
 
-    if (key === 'language' && ctxLanguages) {
-      facts[idx].value = ctxLanguages;
+    if (key === 'language') {
+      facts[idx].value = DEFAULT_LANGUAGE_FACT_VALUE;
     }
 
     if (valueLc.indexOf('not specified') !== -1 ||
@@ -687,7 +689,7 @@ function sanitizeFactValues_(facts, tripId, ctx) {
 
 function enforceRequiredFacts_(facts, tripId, ctx) {
   if (!Array.isArray(facts)) return facts;
-  var required = ['meals', 'pickup__drop_off'];
+  var required = ['duration', 'language', 'meals', 'pickup__drop_off'];
   var present = {};
 
   facts.forEach(function(f) {
@@ -716,6 +718,25 @@ function enforceRequiredFacts_(facts, tripId, ctx) {
   var inferredPickup = (ctx && ctx.inferred_pickup) ? String(ctx.inferred_pickup || '').trim() : '';
   var desiredMeals = inferredMeals || 'Meals not included';
   var desiredPickup = inferredPickup || 'Meeting point';
+  var desiredLanguage = DEFAULT_LANGUAGE_FACT_VALUE;
+  var desiredDuration = '';
+  try {
+    var du = String((ctx && ctx.durationUnit) ? ctx.durationUnit : '').toLowerCase().trim();
+    var dh = Number((ctx && ctx.durationHours != null) ? ctx.durationHours : 0);
+    var dm = Number((ctx && ctx.durationMinutes != null) ? ctx.durationMinutes : 0);
+    if (!isFinite(dh)) dh = 0;
+    if (!isFinite(dm)) dm = 0;
+    if (du.indexOf('day') !== -1) {
+      if (dh > 0) desiredDuration = String(dh) + ' days';
+    } else if (dh > 0) {
+      desiredDuration = String(dh) + ' hours';
+    }
+    if (desiredDuration && dm > 0 && du.indexOf('day') === -1) {
+      desiredDuration = desiredDuration + ' ' + String(dm) + ' minutes';
+    }
+  } catch {
+    desiredDuration = '';
+  }
 
   required.forEach(function(k) {
     if (present[k]) return;
@@ -725,6 +746,8 @@ function enforceRequiredFacts_(facts, tripId, ctx) {
     }
     if (idx === -1 && facts.length) idx = facts.length - 1;
     if (idx === -1) return;
+    if (k === 'duration' && desiredDuration) replaceWith_(idx, 'duration', FACT_TYPES.duration || 'Duration', desiredDuration);
+    if (k === 'language') replaceWith_(idx, 'language', FACT_TYPES.language || 'Language', desiredLanguage);
     if (k === 'meals') replaceWith_(idx, 'meals', FACT_TYPES.meals || 'Meals', desiredMeals);
     if (k === 'pickup__drop_off') replaceWith_(idx, 'pickup__drop_off', FACT_TYPES.pickup__drop_off || 'Pickup & Drop Off', desiredPickup);
     present[k] = true;

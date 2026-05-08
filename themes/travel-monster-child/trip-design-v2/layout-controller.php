@@ -257,9 +257,11 @@ class FTS_Trip_Redesign_V2 {
                 $has_sale   = method_exists( $trip_obj, 'has_sale' )       ? $trip_obj->has_sale()       : false;
             } catch ( \Throwable $e ) {}
         }
-        if ( ! $price ) {
-            $price      = floatval( get_post_meta( $trip_id, 'wp_travel_engine_setting_trip_price', true ) );
-            $sale_price = floatval( get_post_meta( $trip_id, 'wp_travel_engine_setting_trip_prev_price', true ) );
+        $meta_price = floatval( get_post_meta( $trip_id, 'wp_travel_engine_setting_trip_price', true ) );
+        $meta_sale  = floatval( get_post_meta( $trip_id, 'wp_travel_engine_setting_trip_actual_price', true ) );
+        if ( $meta_price > 0 ) {
+            $price      = $meta_price;
+            $sale_price = $meta_sale;
             $has_sale   = ( $sale_price > 0 && $sale_price < $price );
         }
         $display_price = $has_sale ? $sale_price : $price;
@@ -274,6 +276,26 @@ class FTS_Trip_Redesign_V2 {
         $avg_rating   = $review_data['average'] ?? 0;
         $review_count = $review_data['count']   ?? 0;
         $reviews      = $review_data['reviews'] ?? array();
+
+        $fts_reviews = get_post_meta( $trip_id, 'fts_reviews_data', true );
+        if ( is_string( $fts_reviews ) && trim( $fts_reviews ) !== '' ) {
+            $decoded = json_decode( $fts_reviews, true );
+            if ( is_array( $decoded ) ) $fts_reviews = $decoded;
+        }
+        if ( is_object( $fts_reviews ) ) {
+            $decoded = json_decode( wp_json_encode( $fts_reviews ), true );
+            if ( is_array( $decoded ) ) $fts_reviews = $decoded;
+        }
+        if ( is_array( $fts_reviews ) ) {
+            $m_avg = isset( $fts_reviews['average'] ) ? floatval( $fts_reviews['average'] ) : 0;
+            $m_cnt = isset( $fts_reviews['count'] ) ? intval( $fts_reviews['count'] ) : 0;
+            $m_rev = isset( $fts_reviews['reviews'] ) && is_array( $fts_reviews['reviews'] ) ? $fts_reviews['reviews'] : array();
+            if ( $m_cnt > 0 && $m_avg > 0 && $m_avg <= 5 ) {
+                $avg_rating   = $m_avg;
+                $review_count = $m_cnt;
+                $reviews      = $m_rev;
+            }
+        }
 
         // ── Custom WTE Tabs ──
         $reviews_tab_content = '';
@@ -863,12 +885,16 @@ class FTS_Trip_Redesign_V2 {
                                 }
                             }
                         }
+                        $features = array_values( array_filter( array_map( 'trim', (array) $features ), function( $v ) { return $v !== ''; } ) );
+                        $feature_count = count( $features );
 
                         $packages_list[] = array(
                             'id'            => $pkg_id,
                             'name'          => get_the_title( $pkg_id ),
                             'description'   => wp_trim_words( wp_strip_all_tags( $pkg_content ), 8, '' ),
                             'features'      => array_map( function( $f ) { return wp_trim_words( $f, 4, '' ); }, array_slice( $features, 0, 4 ) ),
+                            'features_full' => array_map( function( $f ) { return wp_trim_words( $f, 14, '' ); }, array_slice( $features, 0, 10 ) ),
+                            'feature_count' => $feature_count,
                             'display_price' => $f_dp,
                             'old_price'     => $f_old,
                             'discount_pct'  => $f_pct,
@@ -904,17 +930,31 @@ class FTS_Trip_Redesign_V2 {
         }
 
         if ( count( $packages_list ) > 1 ) {
-            $ch_idx = 0;
-            $ch_pr  = PHP_INT_MAX;
+            foreach ( $packages_list as $pi => &$p0 ) { $p0['badge'] = ''; }
+            unset( $p0 );
+
+            $n = count( $packages_list );
+            $best_idx = 0;
+            $best_score = -INF;
             foreach ( $packages_list as $pi => $pk ) {
-                if ( $pk['display_price'] > 0 && $pk['display_price'] < $ch_pr ) {
-                    $ch_pr  = $pk['display_price'];
-                    $ch_idx = $pi;
+                $p = floatval( $pk['display_price'] ?? 0 );
+                if ( $p <= 0 ) continue;
+                $fc = intval( $pk['feature_count'] ?? 0 );
+                $dp = intval( $pk['discount_pct'] ?? 0 );
+                $score = ( $fc * 1000.0 ) / max( 1.0, $p ) + ( $dp * 2.0 );
+                if ( $score > $best_score ) {
+                    $best_score = $score;
+                    $best_idx = $pi;
                 }
             }
-            $packages_list[ $ch_idx ]['badge'] = 'best_value';
-            if ( $packages_list[0]['badge'] === '' ) {
-                $packages_list[0]['badge'] = 'most_popular';
+            $packages_list[ $best_idx ]['badge'] = 'best_value';
+
+            $mp_idx = ( $n === 2 ) ? 1 : (int) floor( ( $n - 1 ) / 2 );
+            if ( $mp_idx === $best_idx ) {
+                $mp_idx = ( $mp_idx + 1 < $n ) ? ( $mp_idx + 1 ) : max( 0, $mp_idx - 1 );
+            }
+            if ( $packages_list[ $mp_idx ]['badge'] === '' ) {
+                $packages_list[ $mp_idx ]['badge'] = 'most_popular';
             }
         }
 
@@ -955,20 +995,59 @@ class FTS_Trip_Redesign_V2 {
             if ( is_bool( $raw_pp ) ) $pp_enabled = $raw_pp;
             else $pp_enabled = in_array( strtolower( (string) $raw_pp ), array( '1', 'yes', 'true', 'on' ), true );
         }
+        $pay_later_text = '';
+        if ( is_array( $at_a_glance ) && isset( $at_a_glance['payment'] ) ) {
+            $pay_later_text = trim( (string) $at_a_glance['payment'] );
+        }
 
         $default_sidebar_trust_items = array(
             array( 'type' => 'shield', 'text' => esc_html__( 'Secure Booking', 'fts' ) ),
         );
-        if ( $pp_enabled ) {
+        if ( $pay_later_text !== '' ) {
+            $default_sidebar_trust_items[] = array( 'type' => 'clock', 'text' => $pay_later_text );
+        } elseif ( $pp_enabled ) {
             $default_sidebar_trust_items[] = array( 'type' => 'clock', 'text' => esc_html__( 'Reserve now & pay later', 'fts' ) );
         }
         if ( is_string( $free_cancellation_text ) && trim( $free_cancellation_text ) !== '' ) {
             $default_sidebar_trust_items[] = array( 'type' => 'check', 'text' => trim( $free_cancellation_text ) );
         }
 
+        $tf_pickup = '';
+        $tf_lunch  = false;
+        $tf_tix    = false;
+        if ( is_array( $trip_facts_items ) ) {
+            foreach ( $trip_facts_items as $it ) {
+                if ( ! is_array( $it ) ) continue;
+                $lbl = strtolower( trim( (string) ( $it['label'] ?? '' ) ) );
+                $val = trim( (string) ( $it['value'] ?? '' ) );
+                if ( $lbl === '' || $val === '' ) continue;
+                if ( strpos( $lbl, 'pickup' ) !== false ) $tf_pickup = $val;
+                if ( strpos( $lbl, 'meal' ) !== false && stripos( $val, 'lunch' ) !== false ) $tf_lunch = true;
+            }
+        }
+        $ci_str = '';
+        if ( is_array( $cost_includes ) ) $ci_str = implode( "\n", $cost_includes );
+        else $ci_str = (string) $cost_includes;
+        $ci_lc = strtolower( $ci_str );
+        if ( $ci_lc !== '' ) {
+            if ( strpos( $ci_lc, 'lunch' ) !== false ) $tf_lunch = true;
+            if ( strpos( $ci_lc, 'entrance' ) !== false || strpos( $ci_lc, 'entry' ) !== false || strpos( $ci_lc, 'tickets' ) !== false ) $tf_tix = true;
+        }
+
+        $enriched_sidebar_trust_items = $default_sidebar_trust_items;
+        if ( $tf_pickup !== '' ) {
+            $enriched_sidebar_trust_items[] = array( 'type' => 'check', 'text' => esc_html__( 'Hotel pickup included', 'fts' ) );
+        }
+        if ( $tf_tix ) {
+            $enriched_sidebar_trust_items[] = array( 'type' => 'check', 'text' => esc_html__( 'Entry tickets included', 'fts' ) );
+        }
+        if ( $tf_lunch ) {
+            $enriched_sidebar_trust_items[] = array( 'type' => 'check', 'text' => esc_html__( 'Lunch included', 'fts' ) );
+        }
+
         $sidebar_trust_items = apply_filters(
             'fts_v2_sidebar_trust_items',
-            $default_sidebar_trust_items,
+            $enriched_sidebar_trust_items,
             $trip_id,
             $settings
         );
@@ -1089,6 +1168,8 @@ class FTS_Trip_Redesign_V2 {
             'checkoutUrl'    => $data['checkout_url'],
             'currencySymbol' => fts_v2_get_active_currency_symbol(),
             'i18n'           => array(
+                'from'              => __( 'From', 'fts' ),
+                'selected'          => __( 'Selected', 'fts' ),
                 'per_person'        => __( '/ person', 'fts' ),
                 'per_person_cap'    => __( '/ Person', 'fts' ),
                 'per_person_compact'=> __( '/person', 'fts' ),

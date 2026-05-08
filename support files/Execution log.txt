@@ -1,570 +1,552 @@
-2026-05-06T03:58:41.815Z
+2026-05-06T09:59:37.968Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:58:45.159Z
+2026-05-06T09:59:42.551Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:06.856Z
+2026-05-06T10:00:06.943Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:10.394Z
+2026-05-06T10:00:07.973Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:11.823Z
+2026-05-06T10:00:13.287Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:12.335Z
+2026-05-06T10:00:21.968Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:12.337Z
+2026-05-06T10:00:21.976Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:12.337Z
+2026-05-06T10:00:21.977Z
 INFO
 Updater: Starting batch...
-2026-05-06T03:59:12.337Z
+2026-05-06T10:00:21.977Z
 INFO
 VERBOSE LOGGING DISABLED
-2026-05-06T03:59:12.337Z
+2026-05-06T10:00:21.977Z
 INFO
 SUPPORTED LANGUAGES MAP UPDATED
-2026-05-06T03:59:13.200Z
+2026-05-06T10:00:22.274Z
 INFO
 Updater: Processing Trip recUDehvj1S32179Q (TripID: 23024, Type: WORDPRESS)
-2026-05-06T03:59:13.680Z
+2026-05-06T10:00:23.201Z
 INFO
 LANGUAGE RESOLVED: English -> en
-2026-05-06T03:59:13.680Z
+2026-05-06T10:00:23.201Z
 INFO
 TRANSLATION LANGUAGES LIST: ["en"]
-2026-05-06T03:59:14.947Z
+2026-05-06T10:00:23.618Z
 INFO
 Updater: Fetching General Improvement using Client-Side ID Check: recUDehvj1S32179Q
-2026-05-06T03:59:16.136Z
+2026-05-06T10:00:24.319Z
 INFO
 Updater: Found General Improvement record: recK4GDXe9yy5Fat9
-2026-05-06T03:59:16.764Z
+2026-05-06T10:00:24.987Z
 INFO
 Updater: Found TripDetails record: recDRsiZFDSTqxWaq
-2026-05-06T03:59:22.928Z
+2026-05-06T10:00:30.460Z
 INFO
 Updater: Starting AI classification for Activities...
-2026-05-06T03:59:22.929Z
+2026-05-06T10:00:30.462Z
 WARN
 AI: prompt placeholder leakage prevented
-2026-05-06T03:59:24.282Z
+2026-05-06T10:00:37.986Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T03:59:36.908Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T03:59:41.835Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T03:59:54.138Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:06.912Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:11.827Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:21.578Z
+2026-05-06T10:00:38.268Z
 INFO
 Updater: AI suggested activities: ["City Tours"]
-2026-05-06T04:00:21.578Z
+2026-05-06T10:00:38.269Z
 INFO
 Updater: Starting AI classification for Trip Types...
-2026-05-06T04:00:21.579Z
+2026-05-06T10:00:38.270Z
 WARN
 AI: prompt placeholder leakage prevented
-2026-05-06T04:00:24.132Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:36.911Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:41.830Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:42.605Z
+2026-05-06T10:00:42.212Z
 INFO
 Updater: AI suggested trip types: ["Day Trips","Guided Tours"]
-2026-05-06T04:00:42.606Z
+2026-05-06T10:00:42.217Z
 INFO
 Updater: Direct Mapping - dUnit: hours, dHours: 8, dMinutes: 0, tourType: single, Title: Cairo Day Tour: NMEC, Citadel & Old Cairo – All-Inclusive
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.218Z
 INFO
 Updater: trip_code resolved: FTS-23024
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.218Z
 INFO
 Updater: Language set to: en
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.218Z
 INFO
 Updater: Found 1 AI Activities. Mapping to payload...
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.219Z
 INFO
 Updater: Payload.activities set to: [400]
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.219Z
 INFO
 Updater: Found 2 AI Trip Types. Mapping to payload...
-2026-05-06T04:00:42.607Z
+2026-05-06T10:00:42.219Z
 INFO
 Updater: Payload.trip_types set to: [407,408]
-2026-05-06T04:00:42.613Z
+2026-05-06T10:00:42.234Z
 INFO
-Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
-2026-05-06T04:00:42.613Z
+Updater: Using AI_Fact_ID from Airtable: 69738162 for "Fitness level"
+2026-05-06T10:00:42.234Z
 INFO
-Updater: Adding new fact "Duration" (97932390) to template
-2026-05-06T04:00:42.613Z
+Updater: Adding new fact "Fitness level" (69738162) to template
+2026-05-06T10:00:42.234Z
 INFO
-Updater: Using AI_Fact_ID from Airtable: 97941245 for "Tour Location"
-2026-05-06T04:00:42.613Z
+Updater: Using AI_Fact_ID from Airtable: 35550118 for "Transportation"
+2026-05-06T10:00:42.235Z
 INFO
-Updater: Adding new fact "Tour Location" (97941245) to template
-2026-05-06T04:00:42.613Z
-INFO
-Updater: Using AI_Fact_ID from Airtable: 97943192 for "Tour Availability"
-2026-05-06T04:00:42.613Z
-INFO
-Updater: Adding new fact "Tour Availability" (97943192) to template
-2026-05-06T04:00:42.613Z
+Updater: Adding new fact "Transportation" (35550118) to template
+2026-05-06T10:00:42.235Z
 INFO
 Updater: Using AI_Fact_ID from Airtable: 69801669 for "Meals"
-2026-05-06T04:00:42.613Z
+2026-05-06T10:00:42.235Z
 INFO
 Updater: Adding new fact "Meals" (69801669) to template
-2026-05-06T04:00:42.613Z
-INFO
-Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
-2026-05-06T04:00:42.613Z
-INFO
-Updater: Adding new fact "Language" (12647846) to template
-2026-05-06T04:00:42.613Z
+2026-05-06T10:00:42.235Z
 INFO
 Updater: Using AI_Fact_ID from Airtable: 97950890 for "Pickup & Drop Off"
-2026-05-06T04:00:42.613Z
+2026-05-06T10:00:42.235Z
 INFO
 Updater: Adding new fact "Pickup & Drop Off" (97950890) to template
-2026-05-06T04:00:42.613Z
+2026-05-06T10:00:42.235Z
+INFO
+Updater: Using AI_Fact_ID from Airtable: 12647846 for "Language"
+2026-05-06T10:00:42.235Z
+INFO
+Updater: Adding new fact "Language" (12647846) to template
+2026-05-06T10:00:42.235Z
+INFO
+Updater: Using AI_Fact_ID from Airtable: 97932390 for "Duration"
+2026-05-06T10:00:42.235Z
+INFO
+Updater: Adding new fact "Duration" (97932390) to template
+2026-05-06T10:00:42.235Z
 INFO
 Updater: Trip Facts structure ready with 8 fields
-2026-05-06T04:00:42.614Z
+2026-05-06T10:00:42.236Z
 INFO
 SCHEMA SOURCE RESOLVED (en, TouristTrip meta): title=core.title desc=AI_Short_Summary
-2026-05-06T04:00:42.614Z
+2026-05-06T10:00:42.236Z
 INFO
 SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip)
-2026-05-06T04:00:42.614Z
+2026-05-06T10:00:42.239Z
 INFO
 SCHEMA SOURCE RESOLVED (en, FAQPage meta): title=rank_math_title desc=rank_math_description
-2026-05-06T04:00:44.029Z
+2026-05-06T10:00:42.588Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:00:42.597Z
 INFO
 Updater: Payload.destinations set to: [58,56]
-2026-05-06T04:00:44.029Z
+2026-05-06T10:00:42.598Z
 INFO
 Updater: PRESERVING existing slug for primary trip: cairo-egyptian-civilization-museum-citadel
-2026-05-06T04:00:44.029Z
+2026-05-06T10:00:42.599Z
 INFO
 Updater: Updating existing WordPress trip 23024
-2026-05-06T04:00:54.288Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:00:54.537Z
+2026-05-06T10:00:52.034Z
 INFO
 Updater: Throttling before publish packages for 2200 ms
-2026-05-06T04:01:07.285Z
+2026-05-06T10:01:04.672Z
+WARN
+HTTP error for https://api.airtable.com/v0/apphGHAvy5IhAWVw9/Trips?pageSize=100 attempt 0: AggregateError
+2026-05-06T10:01:07.973Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:01:11.818Z
+2026-05-06T10:01:12.592Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:01:21.784Z
+2026-05-06T10:01:16.671Z
+WARN
+HTTP error for https://api.airtable.com/v0/apphGHAvy5IhAWVw9/Packages?pageSize=100&filterByFormula=FIND('recUDehvj1S32179Q'%2C%20ARRAYJOIN(%7BTrip%7D)) attempt 0: AggregateError
+2026-05-06T10:01:37.981Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:01:39.627Z
 INFO
 Updater: Found 2 packages and 6 prices for Trip recUDehvj1S32179Q
-2026-05-06T04:01:21.784Z
+2026-05-06T10:01:39.629Z
 INFO
 Updater: Skipping category Infant because price is 0 and no valid group pricing
-2026-05-06T04:01:21.784Z
+2026-05-06T10:01:39.629Z
 INFO
-NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (package ): airtable_pkg=rec0bXKJa4Ka9NS5k
-2026-05-06T04:01:21.784Z
-INFO
-Updater: Sending package "Shared Tour in English with Entry Tickets" to WP...
-2026-05-06T04:01:21.784Z
-INFO
-Updater: Package copy -> excerpt_chars=109, content_html_chars=379
-2026-05-06T04:01:21.785Z
-INFO
-PACKAGE ENDPOINT ATTEMPT: https://ftstravels.com/wp-json/fts/v1/packages
-2026-05-06T04:01:22.900Z
-INFO
-PACKAGE ENDPOINT RESOLVED: https://ftstravels.com/wp-json/fts/v1/packages
-2026-05-06T04:01:22.900Z
-INFO
-Updater: Created Package 33605
-2026-05-06T04:01:22.900Z
-INFO
-Updater: Package created with ID: 33605. Updating Airtable...
-2026-05-06T04:01:23.439Z
-INFO
-Updater: Updated Packages table for record rec0bXKJa4Ka9NS5k
-2026-05-06T04:01:23.439Z
-INFO
-Updater: Updating 3 prices with new PackageID 33605...
-2026-05-06T04:01:24.031Z
-INFO
-Updater: Updated Price recT9pLAEdwz9MaF9 with PackageID 33605
-2026-05-06T04:01:24.134Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:01:25.962Z
-INFO
-Updater: Updated Price recns8g7fXo2klEQu with PackageID 33605
-2026-05-06T04:01:27.353Z
-INFO
-Updater: Updated Price recunAY4VRiCyp5v8 with PackageID 33605
-2026-05-06T04:01:27.766Z
-INFO
-Updater: Skipping category Infant because price is 0 and no valid group pricing
-2026-05-06T04:01:27.767Z
-INFO
-NEW OBJECT CREATED BECAUSE NO EXISTING TARGET FOUND (package ): airtable_pkg=recPHRFy9qy0hqQn3
-2026-05-06T04:01:27.767Z
+CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33608
+2026-05-06T10:01:39.629Z
 INFO
 Updater: Sending package "Private Tour with Entry Tickets" to WP...
-2026-05-06T04:01:27.767Z
+2026-05-06T10:01:39.629Z
 INFO
 Updater: Package copy -> excerpt_chars=110, content_html_chars=380
-2026-05-06T04:01:27.767Z
+2026-05-06T10:01:39.630Z
 INFO
-PACKAGE ENDPOINT ATTEMPT: https://ftstravels.com/wp-json/fts/v1/packages
-2026-05-06T04:01:28.713Z
+PACKAGE ENDPOINT ATTEMPT: https://ftstravels.com/wp-json/fts/v1/packages/33608
+2026-05-06T10:01:41.222Z
 INFO
-PACKAGE ENDPOINT RESOLVED: https://ftstravels.com/wp-json/fts/v1/packages
-2026-05-06T04:01:28.713Z
+PACKAGE ENDPOINT RESOLVED: https://ftstravels.com/wp-json/fts/v1/packages/33608
+2026-05-06T10:01:41.222Z
 INFO
-Updater: Created Package 33606
-2026-05-06T04:01:28.714Z
+Updater: Updated Package 33608
+2026-05-06T10:01:41.222Z
 INFO
-Updater: Package created with ID: 33606. Updating Airtable...
-2026-05-06T04:01:29.790Z
+EXISTING OBJECT REUSED AND REFRESHED (package ): 33608
+2026-05-06T10:01:41.223Z
 INFO
-Updater: Updated Packages table for record recPHRFy9qy0hqQn3
-2026-05-06T04:01:29.790Z
+EXISTING TRANSLATED CONTENT REFRESHED (package airtable record recileFXBeYWBfEDy)
+2026-05-06T10:01:41.223Z
 INFO
-Updater: Updating 3 prices with new PackageID 33606...
-2026-05-06T04:01:30.571Z
+Updater: Updating 3 prices with new PackageID 33608...
+2026-05-06T10:01:41.223Z
 INFO
-Updater: Updated Price rec5SdSnMZarXPaH3 with PackageID 33606
-2026-05-06T04:01:31.390Z
+Updater: Price rec5oxXb7iLBQ27f2 already has correct PackageID
+2026-05-06T10:01:41.223Z
 INFO
-Updater: Updated Price rec8a8kUcMLuMvtdC with PackageID 33606
-2026-05-06T04:01:32.225Z
+Updater: Price recPYDrUpwUjQVpWb already has correct PackageID
+2026-05-06T10:01:41.223Z
 INFO
-Updater: Updated Price recYK6RzCpgGZyaMw with PackageID 33606
-2026-05-06T04:01:36.897Z
+Updater: Price reciei1m0QO5dZE3n already has correct PackageID
+2026-05-06T10:01:41.223Z
+INFO
+Updater: Skipping category Infant because price is 0 and no valid group pricing
+2026-05-06T10:01:41.223Z
+INFO
+CACHE HIT - CREATE SKIPPED, UPDATE CONTINUES (package ): 33609
+2026-05-06T10:01:41.223Z
+INFO
+Updater: Sending package "Shared Tour in English with Entry Tickets" to WP...
+2026-05-06T10:01:41.223Z
+INFO
+Updater: Package copy -> excerpt_chars=109, content_html_chars=379
+2026-05-06T10:01:41.223Z
+INFO
+PACKAGE ENDPOINT ATTEMPT: https://ftstravels.com/wp-json/fts/v1/packages/33609
+2026-05-06T10:01:42.099Z
+INFO
+PACKAGE ENDPOINT RESOLVED: https://ftstravels.com/wp-json/fts/v1/packages/33609
+2026-05-06T10:01:42.100Z
+INFO
+Updater: Updated Package 33609
+2026-05-06T10:01:42.100Z
+INFO
+EXISTING OBJECT REUSED AND REFRESHED (package ): 33609
+2026-05-06T10:01:42.100Z
+INFO
+EXISTING TRANSLATED CONTENT REFRESHED (package airtable record recx27LrZtwv4jJmw)
+2026-05-06T10:01:42.100Z
+INFO
+Updater: Updating 3 prices with new PackageID 33609...
+2026-05-06T10:01:42.100Z
+INFO
+Updater: Price rec7JhNhx9MJwFpQG already has correct PackageID
+2026-05-06T10:01:42.101Z
+INFO
+Updater: Price rec9ENrmwlYyXCUmC already has correct PackageID
+2026-05-06T10:01:42.101Z
+INFO
+Updater: Price recDSBK2J3GRaRqFn already has correct PackageID
+2026-05-06T10:01:42.101Z
+INFO
+Updater: Trip headline price (from Packages) regular=85 sale=68 source=Private Tour with Entry Tickets
+2026-05-06T10:01:42.588Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:01:41.831Z
+2026-05-06T10:01:54.830Z
 INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:01:45.829Z
-INFO
-Updater: Linked packages 33605,33606 to Trip 23024
-2026-05-06T04:01:45.829Z
+Updater: Linked packages 33608,33609 to Trip 23024
+2026-05-06T10:01:54.830Z
 INFO
 Updater: Throttling before publish images for 2200 ms
-2026-05-06T04:01:54.288Z
+2026-05-06T10:02:07.984Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:02:07.286Z
+2026-05-06T10:02:12.590Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:02:12.287Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:02:17.354Z
+2026-05-06T10:02:24.716Z
 INFO
 IMAGES LOOKUP FIELD USED: SourceTrip
-2026-05-06T04:02:18.646Z
+2026-05-06T10:02:25.030Z
 INFO
 Updater: Image record rec13Cw66ivm82IsG Type raw value: "Gallery", wpMediaId: 30661
-2026-05-06T04:02:18.751Z
+2026-05-06T10:02:25.144Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:18.752Z
+2026-05-06T10:02:25.144Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:18.752Z
+2026-05-06T10:02:25.145Z
 INFO
 Updater: Throttling before update media 30661 for 900 ms
-2026-05-06T04:02:19.666Z
+2026-05-06T10:02:26.050Z
 INFO
 Updater: Media 30661 update payload: {"title":"Facade of the National Museum of Egyptian Civilization","caption":"The entrance of the National Museum of Egyptian Civilization in Cairo.","alt_text":"Exterior view of the National Museum of Egyptian Civilization","description":"The image showcases the modern facade of the National Museum of Egyptian Civilization featuring the museum's name prominently displayed in both English and Arabic Surrounding the entrance are neatly arranged plants and flowers contributing to the inviting atmosphere."}
-2026-05-06T04:02:21.264Z
+2026-05-06T10:02:27.524Z
 INFO
 Updater: Updated Media 30661 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:21.893Z
+2026-05-06T10:02:28.181Z
 INFO
 Updater: Throttling before ensure filename 30661 for 1400 ms
-2026-05-06T04:02:24.281Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:02:24.614Z
+2026-05-06T10:02:30.507Z
 INFO
 Updater: Filename ensured for Media 30661
-2026-05-06T04:02:25.758Z
+2026-05-06T10:02:30.839Z
 INFO
 Updater: Image record rec2wxKB5Yv1Qj3nX Type raw value: "Featured", wpMediaId: 30663
-2026-05-06T04:02:25.863Z
+2026-05-06T10:02:30.957Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:25.863Z
+2026-05-06T10:02:30.958Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:25.863Z
+2026-05-06T10:02:30.958Z
 INFO
 Updater: Throttling before update media 30663 for 900 ms
-2026-05-06T04:02:26.771Z
+2026-05-06T10:02:31.873Z
 INFO
 Updater: Media 30663 update payload: {"title":"Ancient Egyptian Statue at the Museum","caption":"A detailed statue of an ancient Egyptian figure stands prominently.","alt_text":"Statue of an ancient Egyptian figure in a museum setting.","description":"This striking statue crafted from dark stone depicts an ancient Egyptian figure holding a scepter The intricate details of the figure's attire and headdress highlight the artistry of the civilization The background features soft lighting and museum displays enhancing the atmosphere of historical"}
-2026-05-06T04:02:27.745Z
+2026-05-06T10:02:32.878Z
 INFO
 Updater: Updated Media 30663 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:28.372Z
+2026-05-06T10:02:33.505Z
 INFO
 Updater: Throttling before ensure filename 30663 for 1400 ms
-2026-05-06T04:02:33.932Z
+2026-05-06T10:02:37.988Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:02:42.519Z
 INFO
 Updater: Filename ensured for Media 30663
-2026-05-06T04:02:35.149Z
+2026-05-06T10:02:42.591Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:02:42.838Z
 INFO
 Updater: Image record recKeMiuRdnuHRUMG Type raw value: "Gallery", wpMediaId: 30658
-2026-05-06T04:02:35.266Z
+2026-05-06T10:02:42.953Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:35.267Z
+2026-05-06T10:02:42.954Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:35.267Z
+2026-05-06T10:02:42.954Z
 INFO
 Updater: Throttling before update media 30658 for 900 ms
-2026-05-06T04:02:36.180Z
+2026-05-06T10:02:43.861Z
 INFO
 Updater: Media 30658 update payload: {"title":"Panoramic View of Cairo at Sunset","caption":"A stunning sunset view over Cairo's skyline and historic architecture.","alt_text":"Sunset view of Cairo with historic mosque and skyline.","description":"This image captures a breathtaking sunset over Cairo showcasing the city's skyline with its mix of modern and historic buildings Prominent structures include a mosque with multiple minarets and domes set against a backdrop of vibrant clouds."}
-2026-05-06T04:02:37.205Z
+2026-05-06T10:02:44.989Z
 INFO
 Updater: Updated Media 30658 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:37.292Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:02:37.827Z
+2026-05-06T10:02:45.634Z
 INFO
 Updater: Throttling before ensure filename 30658 for 1400 ms
-2026-05-06T04:02:40.098Z
+2026-05-06T10:02:48.352Z
 INFO
 Updater: Filename ensured for Media 30658
-2026-05-06T04:02:41.206Z
+2026-05-06T10:02:48.670Z
 INFO
 Updater: Image record recN9pLfqJj5Yd2oJ Type raw value: "Gallery", wpMediaId: 30662
-2026-05-06T04:02:41.309Z
+2026-05-06T10:02:48.782Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:41.309Z
+2026-05-06T10:02:48.782Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:41.309Z
+2026-05-06T10:02:48.783Z
 INFO
 Updater: Throttling before update media 30662 for 900 ms
-2026-05-06T04:02:42.219Z
+2026-05-06T10:02:49.686Z
 INFO
 Updater: Media 30662 update payload: {"title":"Silhouetted Mosque Against a Sunset Sky","caption":"The mosque stands majestically against a vibrant sunset.","alt_text":"Grand mosque with domes and minarets at sunset","description":"This image captures a grand mosque with multiple domes and tall minarets silhouetted against a striking orange and purple sunset Surrounding palm trees and historical structures enhance the scene's beauty."}
-2026-05-06T04:02:42.285Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:02:43.181Z
+2026-05-06T10:02:50.633Z
 INFO
 Updater: Updated Media 30662 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:43.795Z
+2026-05-06T10:02:51.245Z
 INFO
 Updater: Throttling before ensure filename 30662 for 1400 ms
-2026-05-06T04:02:46.133Z
+2026-05-06T10:02:53.552Z
 INFO
 Updater: Filename ensured for Media 30662
-2026-05-06T04:02:47.349Z
+2026-05-06T10:02:53.893Z
 INFO
 Updater: Image record recSatmqOiGB1c5Dr Type raw value: "Gallery", wpMediaId: 30657
-2026-05-06T04:02:47.474Z
+2026-05-06T10:02:54.000Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:47.475Z
+2026-05-06T10:02:54.000Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:47.475Z
+2026-05-06T10:02:54.001Z
 INFO
 Updater: Throttling before update media 30657 for 900 ms
-2026-05-06T04:02:48.384Z
+2026-05-06T10:02:54.906Z
 INFO
 Updater: Media 30657 update payload: {"title":"Exhibits Inside the National Museum of Egyptian Civilization","caption":"The museum showcases various ancient artifacts in glass displays.","alt_text":"Glass display cases with ancient artifacts on display in a museum","description":"Inside the National Museum of Egyptian Civilization glass display cases hold a variety of ancient artifacts The exhibits include intricately designed metalwork and pottery all set against a backdrop of smooth light-colored walls."}
-2026-05-06T04:02:49.328Z
+2026-05-06T10:02:55.869Z
 INFO
 Updater: Updated Media 30657 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:49.934Z
+2026-05-06T10:02:56.477Z
 INFO
 Updater: Throttling before ensure filename 30657 for 1400 ms
-2026-05-06T04:02:54.243Z
+2026-05-06T10:03:00.668Z
 INFO
 Updater: Filename ensured for Media 30657
-2026-05-06T04:02:55.379Z
+2026-05-06T10:03:00.993Z
 INFO
 Updater: Image record recWaxKsTaRQN2cra Type raw value: "Gallery", wpMediaId: 30660
-2026-05-06T04:02:55.491Z
+2026-05-06T10:03:01.144Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:02:55.491Z
+2026-05-06T10:03:01.144Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:02:55.491Z
+2026-05-06T10:03:01.144Z
 INFO
 Updater: Throttling before update media 30660 for 900 ms
-2026-05-06T04:02:56.402Z
+2026-05-06T10:03:02.047Z
 INFO
 Updater: Media 30660 update payload: {"title":"Statue at National Museum of Egyptian Civilization","caption":"The museum showcases remarkable ancient Egyptian sculptures.","alt_text":"Statues displayed","description":"This image features a prominent statue of a seated figure holding smaller figures surrounded by various other artifacts The spacious museum interior is illuminated highlighting the intricate details of the sculptures on display."}
-2026-05-06T04:02:57.275Z
+2026-05-06T10:03:03.026Z
 INFO
 Updater: Updated Media 30660 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:02:57.908Z
+2026-05-06T10:03:03.650Z
 INFO
 Updater: Throttling before ensure filename 30660 for 1400 ms
-2026-05-06T04:03:02.227Z
+2026-05-06T10:03:07.983Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:03:08.076Z
 INFO
 Updater: Filename ensured for Media 30660
-2026-05-06T04:03:03.400Z
+2026-05-06T10:03:08.402Z
 INFO
 Updater: Image record recczwOfgtJNn2huV Type raw value: "Gallery", wpMediaId: 30664
-2026-05-06T04:03:03.509Z
+2026-05-06T10:03:08.503Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:03:03.509Z
+2026-05-06T10:03:08.503Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:03:03.509Z
+2026-05-06T10:03:08.503Z
 INFO
 Updater: Throttling before update media 30664 for 900 ms
-2026-05-06T04:03:04.412Z
+2026-05-06T10:03:09.411Z
 INFO
 Updater: Media 30664 update payload: {"title":"Intricate Artifacts from Ancient Egypt","caption":"A display of beautifully crafted ancient Egyptian artifacts.","alt_text":"Ancient Egyptian artifacts including a chair and painted boxes","description":"This exhibit features a variety of ancient Egyptian artifacts including a decorated chair and intricately painted boxes The items are arranged on a light-colored display highlighting their detailed craftsmanship and historical significance."}
-2026-05-06T04:03:05.288Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:03:05.332Z
+2026-05-06T10:03:10.364Z
 INFO
 Updater: Updated Media 30664 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:03:05.947Z
+2026-05-06T10:03:10.974Z
 INFO
 Updater: Throttling before ensure filename 30664 for 1400 ms
-2026-05-06T04:03:06.905Z
+2026-05-06T10:03:12.590Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:03:08.253Z
+2026-05-06T10:03:13.393Z
 INFO
 Updater: Filename ensured for Media 30664
-2026-05-06T04:03:09.425Z
+2026-05-06T10:03:13.726Z
 INFO
 Updater: Image record recnM4buw0XoNyxq9 Type raw value: "Gallery", wpMediaId: 30656
-2026-05-06T04:03:09.537Z
+2026-05-06T10:03:13.833Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:03:09.537Z
+2026-05-06T10:03:13.833Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:03:09.537Z
+2026-05-06T10:03:13.833Z
 INFO
 Updater: Throttling before update media 30656 for 900 ms
-2026-05-06T04:03:10.451Z
+2026-05-06T10:03:14.742Z
 INFO
 Updater: Media 30656 update payload: {"title":"Museum at National Museum of Egyptian Civilization","caption":"The National Museum of Egyptian Civilization shines brightly against the night sky.","alt_text":"Night view of the National Museum of Egyptian Civilization with palm trees","description":"This image showcases the National Museum of Egyptian Civilization beautifully illuminated at night The museum's modern architecture features a pyramid-shaped roof surrounded by palm trees and a serene waterway reflecting its glow."}
-2026-05-06T04:03:11.346Z
+2026-05-06T10:03:15.885Z
 INFO
 Updater: Updated Media 30656 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:03:11.835Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:03:11.966Z
+2026-05-06T10:03:16.493Z
 INFO
 Updater: Throttling before ensure filename 30656 for 1400 ms
-2026-05-06T04:03:14.294Z
+2026-05-06T10:03:18.768Z
 INFO
 Updater: Filename ensured for Media 30656
-2026-05-06T04:03:15.418Z
+2026-05-06T10:03:19.086Z
 INFO
 Updater: Image record recvEqbg6yq8tkpuE Type raw value: "Gallery", wpMediaId: 30659
-2026-05-06T04:03:15.542Z
+2026-05-06T10:03:19.194Z
 INFO
 ENGLISH IMAGE METADATA SOURCE: airtable_ai
-2026-05-06T04:03:15.542Z
+2026-05-06T10:03:19.194Z
 INFO
 ENGLISH IMAGE METADATA FALLBACK SKIPPED BECAUSE AI TABLE HAS DATA
-2026-05-06T04:03:15.542Z
+2026-05-06T10:03:19.194Z
 INFO
 Updater: Throttling before update media 30659 for 900 ms
-2026-05-06T04:03:16.447Z
+2026-05-06T10:03:20.096Z
 INFO
 Updater: Media 30659 update payload: {"title":"Artifacts at National Museum of Egyptian Civilization","caption":"A collection of ancient artifacts showcases Egypt's rich history.","alt_text":"Ancient artifacts including pottery and decorative boxes","description":"This image features a variety of ancient artifacts including decorative boxes pottery and small statues The items are arranged on display highlighting the craftsmanship and cultural significance of these historical pieces."}
-2026-05-06T04:03:17.334Z
+2026-05-06T10:03:21.354Z
 INFO
 Updater: Updated Media 30659 metadata (Title: Yes, Alt: Yes)
-2026-05-06T04:03:17.972Z
+2026-05-06T10:03:21.988Z
 INFO
 Updater: Throttling before ensure filename 30659 for 1400 ms
-2026-05-06T04:03:24.133Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:03:26.806Z
+2026-05-06T10:03:26.179Z
 INFO
 Updater: Filename ensured for Media 30659
-2026-05-06T04:03:36.738Z
+2026-05-06T10:03:36.075Z
 INFO
 Updater: Published Images for Trip 23024 (Featured: 30663, Gallery: 8)
-2026-05-06T04:03:36.849Z
+2026-05-06T10:03:36.191Z
 INFO
 SCHEMA SOURCE RESOLVED (en, TouristTrip): title=rank_math_title desc=rank_math_description
-2026-05-06T04:03:36.849Z
+2026-05-06T10:03:36.191Z
 INFO
 SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_description
-2026-05-06T04:03:36.849Z
+2026-05-06T10:03:36.191Z
 INFO
 SCHEMA BYPASSED STALE FALLBACK (en, TouristTrip): used rank_math_title
-2026-05-06T04:03:36.850Z
+2026-05-06T10:03:36.193Z
 INFO
 SCHEMA SOURCE RESOLVED (en, FAQPage): title=rank_math_title desc=rank_math_description
-2026-05-06T04:03:36.850Z
+2026-05-06T10:03:36.193Z
 INFO
 SCHEMA BYPASSED STALE FALLBACK (en, FAQPage): used rank_math_description
-2026-05-06T04:03:36.953Z
+2026-05-06T10:03:37.988Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:03:42.286Z
+2026-05-06T10:03:42.579Z
 INFO
 Updater: Cleared in-memory caches
-2026-05-06T04:03:45.698Z
+2026-05-06T10:03:46.221Z
 INFO
 TRIP SCHEMA GENERATED (en)
-2026-05-06T04:03:45.813Z
+2026-05-06T10:03:46.343Z
 INFO
 CANONICAL PRIMARY LANDMARK RESOLVED: museum_family=civilization source=wp_core
-2026-05-06T04:03:47.223Z
+2026-05-06T10:03:48.022Z
 INFO
 REUSING CACHED WORDPRESS TRIP INFO
-2026-05-06T04:03:54.294Z
-INFO
-Updater: Cleared in-memory caches
-2026-05-06T04:03:58.111Z
+2026-05-06T10:03:59.089Z
 INFO
 Updater: Successfully published Trip recUDehvj1S32179Q
-2026-05-06T04:03:58.129Z
+2026-05-06T10:03:59.113Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:03:59.129Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:04:07.984Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:04:12.579Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:04:38.294Z
+INFO
+Updater: Cleared in-memory caches
+2026-05-06T10:04:43.285Z
 INFO
 Updater: Cleared in-memory caches

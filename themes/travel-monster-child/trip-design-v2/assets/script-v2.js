@@ -47,6 +47,24 @@
         var excludedDatesYearly = data.excludedDatesYearly || {};
         var tripId    = data.tripId        || 0;
 
+        function ftsTrack(name, props) {
+            try {
+                var w = (typeof window !== 'undefined') ? window : null;
+                if (!w) return;
+                if (!w.dataLayer) w.dataLayer = [];
+                var p = props && typeof props === 'object' ? props : {};
+                var evt = {
+                    event: 'fts_event',
+                    event_name: String(name || ''),
+                    trip_id: tripId || 0,
+                    url: (w.location && w.location.href) ? String(w.location.href) : '',
+                    ts: Date.now()
+                };
+                for (var k in p) { if (Object.prototype.hasOwnProperty.call(p, k)) evt[k] = p[k]; }
+                w.dataLayer.push(evt);
+            } catch (e) {}
+        }
+
         function isDateExcluded(dateKey) {
             if (excludedDates[dateKey]) return true;
             var md = dateKey.replace(/-/g, '').substring(4);
@@ -73,9 +91,96 @@
         var ageAdultText = ftsT('age_adult', 'Age 12+');
         var ageYearsText = ftsT('age_years', 'years');
         var discountOffTpl = ftsT('discount_off', '%s OFF');
+        var mobFromText = ftsT('from', 'From');
+        var mobSelectedText = ftsT('selected', 'Selected');
         var monthsShort = ftsTArray('months_short', 12);
         var daysFull = ftsTArray('days_full', 7);
         var daysMin = ftsTArray('days_min', 7);
+
+        var mobSymbol = data.currencySymbol || '$';
+        function fmtPriceCompact(amt) {
+            var n = parseFloat(amt) || 0;
+            var whole = Math.round(n);
+            return mobSymbol + whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        var _decodeEl2 = document.createElement('textarea');
+        function decodeHtml2(str) {
+            _decodeEl2.innerHTML = str || '';
+            return _decodeEl2.value;
+        }
+        var mobBar = {
+            $bar: null,
+            init: function() {
+                if ($(window).width() > 768) return;
+                if ($('.fts-v2-mobile-book-bar').length) return;
+
+                var pkgs = data.packages || [];
+                var minPkg = null;
+                for (var i = 0; i < pkgs.length; i++) {
+                    var p = parseFloat(pkgs[i].display_price) || 0;
+                    if (p <= 0) continue;
+                    if (!minPkg || p < (parseFloat(minPkg.display_price) || 0)) minPkg = pkgs[i];
+                }
+
+                var curPriceText = '';
+                var oldPriceText = '';
+                if (minPkg) {
+                    curPriceText = fmtPriceCompact(minPkg.display_price);
+                } else {
+                    curPriceText = $('.fts-v2-booking-current-price').first().text() || '';
+                    oldPriceText = $('.fts-v2-booking-old-price').first().text() || '';
+                }
+
+                var barHtml = '<div class="fts-v2-mobile-book-bar" data-mode="' + (minPkg ? 'from' : 'price') + '">' +
+                    '<div class="fts-v2-mob-left">' +
+                        '<div class="fts-v2-mob-price-row">' +
+                            (minPkg ? '<span class="fts-v2-mob-from">' + mobFromText + '</span> ' : '') +
+                            (oldPriceText ? '<span class="fts-v2-mob-old">' + oldPriceText + '</span> ' : '') +
+                            '<span class="fts-v2-mob-current">' + curPriceText + '</span>' +
+                            '<span class="fts-v2-mob-per"> ' + mobPerPerson + '</span>' +
+                        '</div>' +
+                        '<div class="fts-v2-mob-pkg" style="display:none"></div>' +
+                        '<div class="fts-v2-mob-cancel">' +
+                            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' +
+                            ' ' + mobFreeCancellation +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="#" class="fts-v2-mob-btn fts-bm-trigger">' + mobBookNow + '</a>' +
+                '</div>';
+
+                $('body').append(barHtml);
+                this.$bar = $('.fts-v2-mobile-book-bar').last();
+
+                if (minPkg) {
+                    this.setFrom(minPkg);
+                }
+            },
+            setFrom: function(pkg) {
+                if (!this.$bar || !this.$bar.length) return;
+                if (!pkg) return;
+                this.$bar.attr('data-mode', 'from');
+                this.$bar.find('.fts-v2-mob-old').remove();
+                if (!this.$bar.find('.fts-v2-mob-from').length) {
+                    this.$bar.find('.fts-v2-mob-price-row').prepend('<span class="fts-v2-mob-from">' + mobFromText + '</span> ');
+                }
+                this.$bar.find('.fts-v2-mob-current').text(fmtPriceCompact(pkg.display_price));
+                this.$bar.find('.fts-v2-mob-pkg').hide().text('');
+            },
+            setSelected: function(pkg) {
+                if (!this.$bar || !this.$bar.length) return;
+                if (!pkg) return;
+                this.$bar.attr('data-mode', 'selected');
+                this.$bar.find('.fts-v2-mob-old').remove();
+                this.$bar.find('.fts-v2-mob-from').remove();
+                this.$bar.find('.fts-v2-mob-current').text(fmtPriceCompact(pkg.display_price));
+                var name = decodeHtml2(pkg.name || '');
+                if (name) {
+                    this.$bar.find('.fts-v2-mob-pkg').text(mobSelectedText + ': ' + name).show();
+                } else {
+                    this.$bar.find('.fts-v2-mob-pkg').hide().text('');
+                }
+            }
+        };
 
         function ensureBookingModalFallbackStyles() {
             if (document.getElementById('fts-bm-js-fallback-style')) return;
@@ -298,16 +403,19 @@
         /* ══════════════════════════════════════════════
            Social Proof Counters
            ══════════════════════════════════════════════ */
-        var viewerCounts = [8, 11, 14, 9, 16, 12, 7, 13, 10, 15];
-        var viewerIdx    = 0;
-        setInterval(function() {
-            viewerIdx = (viewerIdx + 1) % viewerCounts.length;
-            $('.fts-v2-viewer-count').text(viewerCounts[viewerIdx]);
-        }, 8000);
+        var hasRealTripSocialProof = document.querySelector('.fts-v2-proof-items[data-trip-id]');
+        if ( ! hasRealTripSocialProof ) {
+            var viewerCounts = [8, 11, 14, 9, 16, 12, 7, 13, 10, 15];
+            var viewerIdx    = 0;
+            setInterval(function() {
+                viewerIdx = (viewerIdx + 1) % viewerCounts.length;
+                $('.fts-v2-viewer-count').text(viewerCounts[viewerIdx]);
+            }, 8000);
 
-        setInterval(function() {
-            $('.fts-v2-last-booked').text(Math.floor(Math.random() * 40) + 5);
-        }, 15000);
+            setInterval(function() {
+                $('.fts-v2-last-booked').text(Math.floor(Math.random() * 40) + 5);
+            }, 15000);
+        }
 
         /* ══════════════════════════════════════════════
            Itinerary Accordion (single-open)
@@ -606,6 +714,7 @@
             var tCounts     = {};
             var currentStep = 1;
             var completedSteps = {};
+            var bmOpenSource = '';
 
             function fmtPrice(amt) {
                 var n = parseFloat(amt) || 0;
@@ -882,11 +991,16 @@
                 }
                 if (!pkg) return;
                 selectedPkg = pkg;
+                try { window.ftsV2SelectedPackageId = String(pkgId); } catch (e) {}
+                mobBar.setSelected(pkg);
                 $('.fts-bm-package-card').removeClass('selected');
                 $('.fts-bm-package-card[data-package-id="' + pkgId + '"]').addClass('selected');
                 $('input[name="fts_bm_package"][value="' + pkgId + '"]').prop('checked', true);
                 $('#fts-bm-pkg-name-btn').text(decodeHtml(pkg.name));
                 if (!skipRender) bmRenderTravelers(pkg.categories);
+                if ($bm.hasClass('active')) {
+                    ftsTrack('booking_modal_package_select', { package_id: String(pkgId), package_name: decodeHtml(pkg.name) });
+                }
             }
 
             /* ── Price Calculation & Breakdown ── */
@@ -1276,7 +1390,9 @@
             function bmOpen() {
                 $bm.removeClass('closing');
                 $bm.addClass('active');
+                $('body').addClass('fts-v2-bm-open');
                 lockScroll();
+                ftsTrack('booking_modal_open', { source: bmOpenSource || 'unknown', package_id: selectedPkg ? String(selectedPkg.id) : '' });
 
                 if (packages.length > 0 && !selectedPkg) bmSelectPkg(packages[0].id);
 
@@ -1348,10 +1464,12 @@
                     $bm.addClass('closing');
                     setTimeout(function() {
                         $bm.removeClass('active closing');
+                        $('body').removeClass('fts-v2-bm-open');
                         unlockScroll();
                     }, 350);
                 } else {
                     $bm.removeClass('active');
+                    $('body').removeClass('fts-v2-bm-open');
                     unlockScroll();
                 }
             }
@@ -1363,6 +1481,7 @@
                 e.stopPropagation();
                 var pkgId = $(this).data('package-id');
                 if (pkgId && packages.length > 0) bmSelectPkg(pkgId);
+                bmOpenSource = $(this).closest('#fts-v2-booking-sidebar').length ? 'sidebar' : ($(this).closest('.fts-v2-mobile-book-bar').length ? 'mobile_bar' : 'page');
                 bmOpen();
             });
 
@@ -1412,6 +1531,7 @@
                     cartTotal += esCounts[esKey] * esInfo.cost;
                 }
 
+                ftsTrack('booking_submit', { source: 'booking_modal', package_id: String(selectedPkg.id), date: String(selDate), total: cartTotal });
                 var ajaxUrl = bmData.wpXHR + '?action=wte_add_trip_to_cart&cart_version=' + encodeURIComponent(bmData.cartVersion || '4.0') + '&_nonce=' + encodeURIComponent(bmData.nonce);
 
                 $.ajax({
@@ -1427,15 +1547,18 @@
                     }),
                     success: function(resp) {
                         if (resp.success && resp.data && resp.data.redirect) {
+                            ftsTrack('booking_submit_success', { redirect: String(resp.data.redirect || '') });
                             window.location.href = resp.data.redirect;
                         } else {
                             var msg = (resp.data && resp.data.message) ? String(resp.data.message) : errorGenericText;
                             if (msg) alert(msg);
+                            ftsTrack('booking_submit_fail', { message: msg ? String(msg) : '' });
                             bmResetSubmit(cartTotal);
                         }
                     },
                     error: function() {
                         if (errorConnectionText) alert(errorConnectionText);
+                        ftsTrack('booking_submit_error', { message: String(errorConnectionText || '') });
                         bmResetSubmit(cartTotal);
                     }
                 });
@@ -1474,6 +1597,7 @@
         $(document).on('click', '.fts-v2-meta-tidx, .fts-v2-trust-tidx-row, .fts-bm-trust-tidx', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            ftsTrack('scroll_to_reviews_click', { source: $(this).hasClass('fts-bm-trust-tidx') ? 'booking_modal' : 'page' });
 
             if ($('#fts-booking-modal').hasClass('active')) {
                 $(document).trigger('ftsBookingModalClose');
@@ -1483,6 +1607,76 @@
             if ($target.length) {
                 $('html, body').animate({ scrollTop: $target.offset().top - 80 }, 500);
             }
+        });
+
+        /* ══════════════════════════════════════════════
+           Packages — Compare Toggle
+           ══════════════════════════════════════════════ */
+        $('.fts-v2-pkg-compare-toggle').each(function() {
+            var $btn = $(this);
+            var $sec = $('#fts-v2-sec-pricing');
+            if (!$sec.length) return;
+            var $box = $sec.find('.fts-v2-package-compare').first();
+            if (!$box.length) return;
+
+            function setState(state) {
+                var isExpanded = state === 'expanded';
+                $btn.attr('data-state', isExpanded ? 'expanded' : 'collapsed');
+                $btn.attr('aria-expanded', isExpanded ? 'true' : 'false');
+                $box.attr('data-state', isExpanded ? 'expanded' : 'collapsed');
+                $box.toggleClass('is-open', isExpanded);
+                var more = $btn.attr('data-more') || 'Compare packages';
+                var less = $btn.attr('data-less') || 'Hide comparison';
+                $btn.text(isExpanded ? less : more);
+                if (isExpanded) {
+                    $('html, body').animate({ scrollTop: $box.offset().top - 80 }, 400);
+                }
+            }
+
+            setState(String($btn.attr('data-state') || 'collapsed'));
+
+            $btn.on('click', function() {
+                var cur = String($btn.attr('data-state') || 'collapsed');
+                var next = (cur === 'expanded') ? 'collapsed' : 'expanded';
+                setState(next);
+                ftsTrack('packages_compare_toggle', { state: next });
+            });
+        });
+
+        /* ══════════════════════════════════════════════
+           Reviews — View All Toggle
+           ══════════════════════════════════════════════ */
+        $('.fts-v2-reviews-items[data-limit]').each(function() {
+            var $wrap = $(this);
+            var limit = parseInt($wrap.attr('data-limit'), 10);
+            if (!limit || limit < 1) limit = 6;
+
+            var $items = $wrap.find('.fts-v2-review-item');
+            if ($items.length <= limit) return;
+
+            var $btn = $wrap.find('.fts-v2-reviews-toggle').first();
+            if (!$btn.length) return;
+
+            function setState(state) {
+                var isExpanded = state === 'expanded';
+                $btn.attr('data-state', isExpanded ? 'expanded' : 'collapsed');
+                $items.each(function(i) {
+                    if (i < limit) return;
+                    $(this).toggleClass('is-hidden', !isExpanded);
+                });
+                var more = $btn.attr('data-more') || 'View all reviews';
+                var less = $btn.attr('data-less') || 'Show less';
+                $btn.text(isExpanded ? less : more);
+            }
+
+            setState(String($btn.attr('data-state') || 'collapsed'));
+
+            $btn.on('click', function() {
+                var cur = String($btn.attr('data-state') || 'collapsed');
+                var next = (cur === 'expanded') ? 'collapsed' : 'expanded';
+                setState(next);
+                ftsTrack('reviews_toggle', { state: next, total: $items.length, limit: limit });
+            });
         });
 
         var ftsTiBadHost = 'admin.trustindex.test';
@@ -1527,27 +1721,16 @@
         /* ══════════════════════════════════════════════
            Mobile Sticky Book Now Bar
            ══════════════════════════════════════════════ */
-        if ($(window).width() <= 768) {
-            var curPrice = $('.fts-v2-booking-current-price').first().text() || '';
-            var oldPrice = $('.fts-v2-booking-old-price').first().text() || '';
-
-            var barHtml = '<div class="fts-v2-mobile-book-bar">' +
-                '<div class="fts-v2-mob-left">' +
-                    '<div class="fts-v2-mob-price-row">' +
-                        (oldPrice ? '<span class="fts-v2-mob-old">' + oldPrice + '</span> ' : '') +
-                        '<span class="fts-v2-mob-current">' + curPrice + '</span>' +
-                        '<span class="fts-v2-mob-per"> ' + mobPerPerson + '</span>' +
-                    '</div>' +
-                    '<div class="fts-v2-mob-cancel">' +
-                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' +
-                        ' ' + mobFreeCancellation +
-                    '</div>' +
-                '</div>' +
-                '<a href="#" class="fts-v2-mob-btn fts-bm-trigger">' + mobBookNow + '</a>' +
-            '</div>';
-
-            $('body').append(barHtml);
-        }
+        mobBar.init();
+        try {
+            var selId = window.ftsV2SelectedPackageId ? String(window.ftsV2SelectedPackageId) : '';
+            if (selId) {
+                var pkgs2 = data.packages || [];
+                for (var i2 = 0; i2 < pkgs2.length; i2++) {
+                    if (String(pkgs2[i2].id) === selId) { mobBar.setSelected(pkgs2[i2]); break; }
+                }
+            }
+        } catch (e) {}
 
     }
 

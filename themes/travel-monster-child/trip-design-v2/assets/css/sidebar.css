@@ -49,7 +49,13 @@
     font-size: 11px !important;
     font-weight: 700 !important;
     color: #fff !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
 }
+.fts-v2-booking-rating:hover { text-decoration: underline !important; }
 .fts-v2-booking-rating i {
     color: var(--v2-secondary) !important;
     font-size: 11px !important;
@@ -652,7 +658,32 @@
 }
 
 /* ═══════════════════════════════════════
-   8. PAYMENT ICONS
+   8. MICRO OBJECTIONS (under CTA)
+   ═══════════════════════════════════════ */
+.fts-v2-booking-micro {
+    padding: 4px 14px 10px !important;
+    display: grid !important;
+    gap: 6px !important;
+}
+.fts-v2-booking-micro-item {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+    color: var(--v2-text-light) !important;
+    line-height: 1.35 !important;
+}
+.fts-v2-booking-micro-item i {
+    color: var(--v2-text-muted) !important;
+    font-size: 12px !important;
+    margin-top: 1px !important;
+    width: 14px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* ═══════════════════════════════════════
+   9. PAYMENT ICONS
    ═══════════════════════════════════════ */
 .fts-v2-payment-icons {
     display: flex !important;
@@ -676,7 +707,7 @@
 }
 
 /* ═══════════════════════════════════════
-   9. ENQUIRY CARD
+   10. ENQUIRY CARD
    ═══════════════════════════════════════ */
 .fts-v2-enquiry-card {
     background: var(--v2-bg) !important;

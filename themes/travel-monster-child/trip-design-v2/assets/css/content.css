@@ -51,6 +51,42 @@
     margin: 0 !important;
     letter-spacing: -0.3px !important;
 }
+
+.fts-v2-bold-promise {
+    margin: 0 0 12px 0 !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: var(--v2-text) !important;
+    max-width: 920px !important;
+}
+
+.fts-v2-hero-benefits {
+    list-style: none !important;
+    margin: 0 0 14px 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px 14px !important;
+    max-width: 980px !important;
+}
+.fts-v2-hero-benefits li {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    background: var(--v2-bg) !important;
+    border: 1px solid var(--v2-border) !important;
+    border-radius: var(--v2-radius-sm) !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    color: var(--v2-dark) !important;
+}
+.fts-v2-hero-benefit-icon {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+}
 .fts-v2-title-actions {
     flex-shrink: 0 !important;
 }

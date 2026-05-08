@@ -17,10 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <div class="fts-v2-booking-price-header">
                     <div class="fts-v2-booking-from"><?php echo esc_html__( 'From', 'fts' ); ?></div>
                     <?php if ( $avg_rating > 0 ) : ?>
-                    <div class="fts-v2-booking-rating">
+                    <a class="fts-v2-booking-rating fts-v2-meta-tidx" href="#fts-v2-sec-reviews">
                         <i class="fa fa-star"></i> <?php echo esc_html( number_format( (float) $avg_rating, 1 ) ); ?>
                         <span>(<?php echo intval( $review_count ); ?>)</span>
-                    </div>
+                    </a>
                     <?php endif; ?>
                 </div>
                 <div class="fts-v2-booking-price-row">
@@ -120,10 +120,25 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 $ci_raw = $cost_includes ?? '';
                 if ( is_array( $ci_raw ) ) $ci_raw = implode( "\n", $ci_raw );
                 if ( is_string( $ci_raw ) && trim( $ci_raw ) !== '' ) {
+                    $existing = array();
+                    if ( ! empty( $sidebar_trust_items ) && is_array( $sidebar_trust_items ) ) {
+                        foreach ( $sidebar_trust_items as $ti ) {
+                            if ( ! is_array( $ti ) ) continue;
+                            $txt = isset( $ti['text'] ) ? trim( (string) $ti['text'] ) : '';
+                            if ( $txt === '' ) continue;
+                            $existing[] = strtolower( preg_replace( '/\s+/', ' ', $txt ) );
+                        }
+                    }
                     $lines = preg_split( "/\r\n|\r|\n/", $ci_raw );
                     foreach ( $lines as $ln ) {
                         $t = trim( (string) $ln );
                         if ( $t === '' ) continue;
+                        $tn = strtolower( preg_replace( '/\s+/', ' ', $t ) );
+                        $skip = false;
+                        foreach ( $existing as $ex ) {
+                            if ( $ex !== '' && ( strpos( $tn, $ex ) !== false || strpos( $ex, $tn ) !== false ) ) { $skip = true; break; }
+                        }
+                        if ( $skip ) continue;
                         $mini_includes[] = $t;
                         if ( count( $mini_includes ) >= 4 ) break;
                     }
@@ -173,6 +188,62 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                         class="fts-v2-check-btn fts-bm-trigger"
                 ><?php echo esc_html__( 'Check Availability', 'fts' ); ?></button>
             </div>
+
+            <?php
+                $micro_items = array();
+
+                $pickup_value = '';
+                if ( ! empty( $trip_facts_items ) && is_array( $trip_facts_items ) ) {
+                    foreach ( $trip_facts_items as $it ) {
+                        if ( ! is_array( $it ) ) continue;
+                        $lbl = isset( $it['label'] ) ? strtolower( trim( (string) $it['label'] ) ) : '';
+                        $val = isset( $it['value'] ) ? trim( (string) $it['value'] ) : '';
+                        if ( $val === '' ) continue;
+                        if ( $lbl === '' ) continue;
+                        if ( strpos( $lbl, 'pickup' ) !== false || strpos( $lbl, 'pick up' ) !== false || strpos( $lbl, 'drop' ) !== false || strpos( $lbl, 'meeting' ) !== false || strpos( $lbl, 'الالتقاط' ) !== false || strpos( $lbl, 'الاستلام' ) !== false ) {
+                            $pickup_value = $val;
+                            break;
+                        }
+                    }
+                }
+
+                $duration_value = '';
+                if ( isset( $duration_text ) && is_string( $duration_text ) && trim( $duration_text ) !== '' ) {
+                    $duration_value = trim( $duration_text );
+                } elseif ( isset( $duration ) && is_numeric( $duration ) ) {
+                    $du = isset( $duration_unit ) ? strtolower( (string) $duration_unit ) : '';
+                    $duration_value = trim( (string) intval( $duration ) . ' ' . ( $du ? $du : 'days' ) );
+                }
+
+                if ( $pickup_value !== '' ) {
+                    $micro_items[] = array(
+                        'icon' => 'fa-map-marker',
+                        'text' => sprintf( esc_html__( 'Pickup: %s', 'fts' ), $pickup_value ),
+                    );
+                }
+                if ( $duration_value !== '' ) {
+                    $micro_items[] = array(
+                        'icon' => 'fa-clock-o',
+                        'text' => sprintf( esc_html__( 'Duration: %s', 'fts' ), $duration_value ),
+                    );
+                }
+                if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) {
+                    $micro_items[] = array(
+                        'icon' => 'fa-undo',
+                        'text' => sprintf( esc_html__( 'Free cancellation up to %sh', 'fts' ), intval( $cancel_hours ) ),
+                    );
+                }
+            ?>
+            <?php if ( ! empty( $micro_items ) ) : ?>
+            <div class="fts-v2-booking-micro">
+                <?php foreach ( array_slice( $micro_items, 0, 3 ) as $mi ) : ?>
+                    <div class="fts-v2-booking-micro-item">
+                        <i class="fa <?php echo esc_attr( $mi['icon'] ); ?>"></i>
+                        <span><?php echo esc_html( $mi['text'] ); ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
 
             <!-- Payment — Visa | Mastercard | PayPal -->
             <div class="fts-v2-payment-icons">

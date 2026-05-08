@@ -213,6 +213,42 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         ?>
         <?php if ( ! empty( $packages_list ) ) : ?>
         <p class="fts-v2-section-subtitle"><?php echo esc_html__( 'Compare inclusions like transfers, guide & lunch below.', 'fts' ); ?></p>
+        <?php
+            $pkg_min_price = null;
+            foreach ( (array) $packages_list as $p0 ) {
+                $p0_price = floatval( $p0['display_price'] ?? 0 );
+                if ( $p0_price <= 0 ) continue;
+                if ( $pkg_min_price === null || $p0_price < $pkg_min_price ) $pkg_min_price = $p0_price;
+            }
+
+            $pkg_feature_maps = array();
+            $pkg_feature_freq = array();
+            foreach ( (array) $packages_list as $pi => $pk0 ) {
+                $m = array();
+                $ff = $pk0['features_full'] ?? ( $pk0['features'] ?? array() );
+                foreach ( (array) $ff as $f0 ) {
+                    $label = trim( (string) $f0 );
+                    if ( $label === '' ) continue;
+                    $k = strtolower( $label );
+                    $m[ $k ] = true;
+                    if ( ! isset( $pkg_feature_freq[ $k ] ) ) $pkg_feature_freq[ $k ] = array( 'label' => $label, 'count' => 0 );
+                    $pkg_feature_freq[ $k ]['count']++;
+                }
+                $pkg_feature_maps[ $pi ] = $m;
+            }
+            uasort( $pkg_feature_freq, function( $a, $b ) {
+                $ca = intval( $a['count'] ?? 0 );
+                $cb = intval( $b['count'] ?? 0 );
+                if ( $ca !== $cb ) return $cb <=> $ca;
+                return strcasecmp( (string) ( $a['label'] ?? '' ), (string) ( $b['label'] ?? '' ) );
+            } );
+            $pkg_compare_rows = array_slice( $pkg_feature_freq, 0, 10, true );
+        ?>
+        <div class="fts-v2-packages-actions">
+            <button type="button" class="fts-v2-pkg-compare-toggle" data-state="collapsed" data-more="<?php echo esc_attr__( 'Compare packages', 'fts' ); ?>" data-less="<?php echo esc_attr__( 'Hide comparison', 'fts' ); ?>">
+                <?php echo esc_html__( 'Compare packages', 'fts' ); ?>
+            </button>
+        </div>
         <div class="fts-v2-packages-grid">
             <?php foreach ( $packages_list as $pkg ) :
                 $card_cls = 'fts-v2-package-card';
@@ -239,6 +275,22 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                     <span class="fts-v2-pkg-per"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
                 </div>
 
+                <?php if ( ! empty( $pkg['discount_pct'] ) && intval( $pkg['discount_pct'] ) > 0 ) : ?>
+                    <div class="fts-v2-pkg-save"><?php echo esc_html( sprintf( __( 'Save %s%%', 'fts' ), intval( $pkg['discount_pct'] ) ) ); ?></div>
+                <?php endif; ?>
+
+                <?php
+                    $dp = floatval( $pkg['display_price'] ?? 0 );
+                    $diff = ( $pkg_min_price !== null && $dp > 0 ) ? ( $dp - floatval( $pkg_min_price ) ) : 0;
+                ?>
+                <?php if ( $pkg_min_price !== null && $dp > 0 ) : ?>
+                    <?php if ( $diff <= 0.01 ) : ?>
+                        <div class="fts-v2-pkg-delta is-lowest"><?php echo esc_html__( 'Lowest price', 'fts' ); ?></div>
+                    <?php else : ?>
+                        <div class="fts-v2-pkg-delta"><?php echo esc_html( sprintf( __( '+%s vs lowest', 'fts' ), wte_get_formated_price( $diff ) ) ); ?></div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
                 <?php if ( ! empty( $pkg['features'] ) ) : ?>
                 <ul class="fts-v2-package-features">
                     <?php foreach ( $pkg['features'] as $feat ) : ?>
@@ -254,6 +306,41 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if ( ! empty( $pkg_compare_rows ) ) : ?>
+        <div class="fts-v2-package-compare" data-state="collapsed" style="--fts-v2-pkg-cols: <?php echo esc_attr( count( (array) $packages_list ) ); ?>;">
+            <div class="fts-v2-package-compare-inner" role="region" aria-label="<?php echo esc_attr__( 'Package comparison', 'fts' ); ?>">
+                <div class="fts-v2-package-compare-head">
+                    <div class="fts-v2-package-compare-cell fts-v2-package-compare-feature"><?php echo esc_html__( 'Inclusions', 'fts' ); ?></div>
+                    <?php foreach ( (array) $packages_list as $pkh ) : ?>
+                        <div class="fts-v2-package-compare-cell">
+                            <div class="fts-v2-package-compare-name"><?php echo esc_html( $pkh['name'] ?? '' ); ?></div>
+                            <?php if ( ! empty( $pkh['display_price'] ) ) : ?>
+                                <div class="fts-v2-package-compare-price"><?php echo esc_html( wte_get_formated_price( $pkh['display_price'] ) ); ?></div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php foreach ( $pkg_compare_rows as $k => $row ) : ?>
+                    <div class="fts-v2-package-compare-row">
+                        <div class="fts-v2-package-compare-cell fts-v2-package-compare-feature"><?php echo esc_html( $row['label'] ?? '' ); ?></div>
+                        <?php foreach ( (array) $packages_list as $pi => $pkc ) : ?>
+                            <?php $hasf = ! empty( $pkg_feature_maps[ $pi ][ $k ] ); ?>
+                            <div class="fts-v2-package-compare-cell">
+                                <?php if ( $hasf ) : ?>
+                                    <span class="fts-v2-compare-yes" aria-label="<?php echo esc_attr__( 'Included', 'fts' ); ?>">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    </span>
+                                <?php else : ?>
+                                    <span class="fts-v2-compare-no" aria-hidden="true">&mdash;</span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php else : ?>
         <div class="fts-v2-single-price-card">
             <div class="fts-v2-booking-form-wrap">
@@ -287,39 +374,96 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <section id="fts-v2-sec-reviews" class="fts-v2-section">
         <h2 class="fts-v2-section-title"><?php echo esc_html__( 'What Travelers Say', 'fts' ); ?></h2>
 
-        <?php if ( $review_count > 0 && empty( $reviews_tab_content ) ) : ?>
-        <div class="fts-v2-reviews-header">
-            <div class="fts-v2-reviews-score">
-                <span class="fts-v2-score-num"><?php echo number_format( $avg_rating, 1 ); ?></span>
-                <div class="fts-v2-score-stars">
-                    <?php for ( $i = 1; $i <= 5; $i++ ) : ?>
-                        <i class="fa fa-star<?php echo $i <= round( $avg_rating ) ? '' : '-o'; ?>"></i>
-                    <?php endfor; ?>
-                </div>
-                <span class="fts-v2-score-count">(<?php echo intval( $review_count ); ?>)</span>
-            </div>
-        </div>
-        <div class="fts-v2-reviews-list">
-            <?php foreach ( array_slice( $reviews, 0, 6 ) as $rev ) : ?>
-            <div class="fts-v2-review-card">
-                <div class="fts-v2-review-header">
-                    <div class="fts-v2-review-avatar"><?php echo mb_strtoupper( mb_substr( $rev['title'] ?: 'R', 0, 1 ) ); ?></div>
-                    <div class="fts-v2-review-meta">
-                        <strong><?php echo esc_html( $rev['title'] ?: __( 'Traveler', 'fts' ) ); ?></strong>
-                        <div class="fts-v2-review-stars">
-                            <?php for ( $s = 1; $s <= 5; $s++ ) : ?>
-                                <i class="fa fa-star<?php echo $s <= ( $rev['stars'] ?? 5 ) ? '' : '-o'; ?>"></i>
+        <?php if ( $review_count > 0 ) : ?>
+        <?php
+            $stars_dist = array( 1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0 );
+            foreach ( (array) $reviews as $rev0 ) {
+                $s0 = isset( $rev0['stars'] ) ? intval( $rev0['stars'] ) : 0;
+                if ( $s0 < 1 || $s0 > 5 ) continue;
+                $stars_dist[ $s0 ]++;
+            }
+        ?>
+        <div class="fts-v2-reviews-shell">
+            <div class="fts-v2-reviews-summary">
+                <div class="fts-v2-reviews-scoreline">
+                    <div class="fts-v2-score-big"><?php echo number_format( (float) $avg_rating, 1 ); ?></div>
+                    <div class="fts-v2-score-meta">
+                        <div class="fts-v2-score-stars">
+                            <?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+                                <i class="fa fa-star<?php echo $i <= round( (float) $avg_rating ) ? '' : '-o'; ?>"></i>
                             <?php endfor; ?>
                         </div>
+                        <div class="fts-v2-score-count"><?php echo esc_html( sprintf( _n( '%s review', '%s reviews', (int) $review_count, 'fts' ), number_format_i18n( (int) $review_count ) ) ); ?></div>
                     </div>
                 </div>
-                <p class="fts-v2-review-text"><?php echo esc_html( wp_trim_words( $rev['content'] ?? '', 40 ) ); ?></p>
+                <div class="fts-v2-reviews-breakdown">
+                    <?php for ( $r = 5; $r >= 1; $r-- ) : ?>
+                        <?php
+                            $cnt = isset( $stars_dist[ $r ] ) ? intval( $stars_dist[ $r ] ) : 0;
+                            $pct = $review_count > 0 ? ( $cnt * 100.0 / $review_count ) : 0;
+                        ?>
+                        <div class="fts-v2-break-row">
+                            <div class="fts-v2-break-label"><?php echo esc_html( $r ); ?></div>
+                            <div class="fts-v2-break-stars"><i class="fa fa-star"></i></div>
+                            <div class="fts-v2-break-bar" aria-hidden="true">
+                                <span class="fts-v2-break-fill" style="width: <?php echo esc_attr( max( 0, min( 100, $pct ) ) ); ?>%;"></span>
+                            </div>
+                            <div class="fts-v2-break-count"><?php echo esc_html( number_format_i18n( $cnt ) ); ?></div>
+                        </div>
+                    <?php endfor; ?>
+                </div>
             </div>
-            <?php endforeach; ?>
+            <?php $fts_reviews_limit = 6; ?>
+            <div class="fts-v2-reviews-items" data-limit="<?php echo esc_attr( (int) $fts_reviews_limit ); ?>">
+                <?php foreach ( (array) $reviews as $idx => $rev ) : ?>
+                    <?php
+                        $author = isset( $rev['title'] ) ? (string) $rev['title'] : '';
+                        $author = trim( $author ) !== '' ? $author : __( 'Traveler', 'fts' );
+                        $first  = mb_strtoupper( mb_substr( $author, 0, 1 ) );
+                        $stars  = isset( $rev['stars'] ) ? intval( $rev['stars'] ) : 5;
+                        $stars  = $stars >= 1 && $stars <= 5 ? $stars : 5;
+                        $d_raw  = isset( $rev['date'] ) ? (string) $rev['date'] : '';
+                        $d_txt  = '';
+                        if ( $d_raw !== '' ) {
+                            $ts = strtotime( $d_raw );
+                            if ( $ts ) $d_txt = date_i18n( 'M j, Y', $ts );
+                        }
+                        $content = isset( $rev['content'] ) ? (string) $rev['content'] : '';
+                    ?>
+                    <article class="fts-v2-review-item<?php echo $idx >= $fts_reviews_limit ? ' is-hidden' : ''; ?>">
+                        <div class="fts-v2-review-top">
+                            <div class="fts-v2-review-avatar"><?php echo esc_html( $first !== '' ? $first : 'R' ); ?></div>
+                            <div class="fts-v2-review-head">
+                                <div class="fts-v2-review-headline">
+                                    <strong class="fts-v2-review-name"><?php echo esc_html( $author ); ?></strong>
+                                    <?php if ( $d_txt !== '' ) : ?>
+                                        <span class="fts-v2-review-date"><?php echo esc_html( $d_txt ); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="fts-v2-review-stars">
+                                    <?php for ( $s = 1; $s <= 5; $s++ ) : ?>
+                                        <i class="fa fa-star<?php echo $s <= $stars ? '' : '-o'; ?>"></i>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fts-v2-review-body">
+                            <p class="fts-v2-review-text"><?php echo esc_html( wp_trim_words( $content, 45 ) ); ?></p>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+                <?php if ( $review_count > $fts_reviews_limit ) : ?>
+                    <div class="fts-v2-reviews-actions">
+                        <button type="button" class="fts-v2-reviews-toggle" data-state="collapsed" data-more="<?php echo esc_attr__( 'View all reviews', 'fts' ); ?>" data-less="<?php echo esc_attr__( 'Show less', 'fts' ); ?>">
+                            <?php echo esc_html__( 'View all reviews', 'fts' ); ?>
+                        </button>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endif; ?>
 
-        <?php if ( ! empty( $reviews_tab_content ) ) : ?>
+        <?php if ( $review_count <= 0 && ! empty( $reviews_tab_content ) ) : ?>
         <div class="fts-v2-reviews-tab-content">
             <?php echo do_shortcode( $reviews_tab_content ); ?>
         </div>

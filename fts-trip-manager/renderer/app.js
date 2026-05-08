@@ -7,6 +7,7 @@ import { MigrationPage } from './pages/migration.js'
 import { SchedulerPage } from './pages/scheduler.js'
 import { SettingsPage } from './pages/settings.js'
 import { LogsPage } from './pages/logs.js'
+import { ReviewsPage } from './pages/reviews.js'
 
 function el(tag, attrs, ...children) {
   const node = document.createElement(tag)
@@ -70,6 +71,7 @@ const state = {
 
 const routes = {
   '/dashboard': DashboardPage,
+  '/reviews': ReviewsPage,
   '/import': ImportPage,
   '/ai-pipeline': AiPipelinePage,
   '/publisher': PublisherPage,
@@ -189,6 +191,7 @@ function render() {
 
   const headerTitle = {
     '/dashboard': 'Dashboard',
+    '/reviews': 'Reviews',
     '/import': 'Import',
     '/ai-pipeline': 'AI Pipeline',
     '/publisher': 'Publisher',

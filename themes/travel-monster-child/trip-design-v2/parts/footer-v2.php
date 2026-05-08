@@ -60,7 +60,7 @@ $from_text = ! empty( $dest_names ) ? $dest_names[0] : esc_html__( 'This Destina
                 }
 
                 $r_price_raw = floatval( get_post_meta( $r_id, 'wp_travel_engine_setting_trip_price', true ) );
-                $r_sale_raw  = floatval( get_post_meta( $r_id, 'wp_travel_engine_setting_trip_prev_price', true ) );
+                $r_sale_raw  = floatval( get_post_meta( $r_id, 'wp_travel_engine_setting_trip_actual_price', true ) );
                 $r_has_sale  = false;
                 if ( $r_trip && method_exists( $r_trip, 'has_sale' ) ) {
                     try { $r_has_sale = $r_trip->has_sale(); } catch ( \Throwable $e ) {}

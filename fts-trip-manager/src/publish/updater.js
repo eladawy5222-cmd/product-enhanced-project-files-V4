@@ -2990,6 +2990,34 @@ function mapAirtableToWordPress_Updater_(data, tripFields, overrideLang) {
   wte.trip_max_pax = '100';
   wte.trip_price_display = 'from'; // Show "From $XXX"
 
+  var boldPromise = String(g.AI_Bold_Promise || g.AI_BoldPromise || g['AI Bold Promise'] || '').replace(/\s+/g, ' ').trim();
+  if (boldPromise) {
+    wte.bold_promise = boldPromise;
+    payload.meta.AI_Bold_Promise = boldPromise;
+    payload.meta.ai_bold_promise = boldPromise;
+  }
+
+  var atRaw = g.AI_At_A_Glance || g.AI_AtAGlance || g['AI At A Glance'] || g['AI_At_A_Glance'] || '';
+  var atGlance = null;
+  if (atRaw && typeof atRaw === 'object') {
+    atGlance = atRaw;
+  } else {
+    var atStr = String(atRaw || '').trim();
+    if (atStr) {
+      try {
+        var parsed = JSON.parse(atStr);
+        if (parsed && typeof parsed === 'object') atGlance = parsed;
+      } catch {
+        atGlance = null;
+      }
+    }
+  }
+  if (atGlance && typeof atGlance === 'object') {
+    wte.at_a_glance = atGlance;
+    payload.meta.AI_At_A_Glance = JSON.stringify(atGlance);
+    payload.meta.ai_at_a_glance = JSON.stringify(atGlance);
+  }
+
   // Overview
   if (g.AI_Overview_Section_Title) wte.overview_section_title = g.AI_Overview_Section_Title;
   
@@ -10313,6 +10341,40 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
 
     // 4. Link Packages to Trip
     if (generatedPackageIds.length > 0) {
+       // NEW: Trip "From" price should match the lowest available OPTION (package) price from Airtable Packages table,
+       // not the lowest category price from the Prices table.
+       //
+       // WTE uses:
+       // - wp_travel_engine_setting.trip_price         => regular (before discount)
+       // - wp_travel_engine_setting.trip_actual_price  => sale (after discount)
+       //
+       // We compute per option:
+       // effective = SalePrice (if >0) else RegularPrice, and take the minimum effective.
+       var minTripRegular = 0;
+       var minTripSale = 0;
+       var minTripEffective = 0;
+       var minTripSourcePkg = '';
+       for (var pk2 = 0; pk2 < (pkgRecords || []).length; pk2++) {
+         var pf = pkgRecords[pk2] && pkgRecords[pk2].fields ? pkgRecords[pk2].fields : {};
+         var r = Number(pf.RegularPrice);
+         var s = Number(pf.SalePrice);
+         var rr = isFinite(r) ? r : 0;
+         var ss = isFinite(s) ? s : 0;
+         var eff = (ss > 0 ? ss : (rr > 0 ? rr : 0));
+         if (eff <= 0) continue;
+         if (minTripEffective === 0 || eff < minTripEffective) {
+           minTripEffective = eff;
+           minTripRegular = rr;
+           minTripSale = ss;
+           minTripSourcePkg = String(pf.PackageTitle || pf.Title || pkgRecords[pk2].id || '');
+         }
+       }
+       if (minTripEffective > 0) {
+         if (minTripRegular <= 0) minTripRegular = minTripEffective;
+         if (!(minTripSale > 0 && minTripSale < minTripRegular)) minTripSale = 0;
+         log('Updater: Trip headline price (from Packages) regular=' + minTripRegular + ' sale=' + (minTripSale || 0) + ' source=' + minTripSourcePkg);
+       }
+
        var metaUpdate = {
          meta: {
            packages_ids: generatedPackageIds,
@@ -10321,6 +10383,12 @@ async function publishPackagesSafe_Updater_(tripId, wpTripId, opts) {
            }
          }
        };
+       if (minTripEffective > 0) {
+         metaUpdate.meta.wp_travel_engine_setting.trip_price = String(minTripRegular);
+         if (minTripSale > 0) metaUpdate.meta.wp_travel_engine_setting.trip_actual_price = String(minTripSale);
+         metaUpdate.meta.wp_travel_engine_setting_trip_price = String(minTripRegular);
+         if (minTripSale > 0) metaUpdate.meta.wp_travel_engine_setting_trip_actual_price = String(minTripSale);
+       }
        await pushToWordPress_Updater_(wpTripId, metaUpdate);
        log('Updater: Linked packages ' + generatedPackageIds.join(',') + ' to Trip ' + wpTripId);
     }

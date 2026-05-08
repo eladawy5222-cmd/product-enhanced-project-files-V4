@@ -22,6 +22,10 @@
     .fts-v2-title-actions { align-self: flex-start !important; }
     .fts-v2-action-btn { font-size: 12px !important; }
 
+    .fts-v2-bold-promise { font-size: 13px !important; margin-bottom: 10px !important; }
+    .fts-v2-hero-benefits { grid-template-columns: 1fr !important; gap: 8px !important; margin-bottom: 12px !important; }
+    .fts-v2-hero-benefits li { padding: 10px 12px !important; font-size: 12px !important; }
+
     .fts-v2-meta-row { gap: 2px !important; font-size: 11px !important; }
     .fts-v2-meta-sep { margin: 0 6px !important; font-size: 12px !important; }
     .fts-v2-meta-item { font-size: 11px !important; gap: 4px !important; }
@@ -206,6 +210,9 @@
         align-items: center !important;
         border-top: 1px solid var(--v2-border, #e9ecef) !important;
     }
+    body.fts-v2-bm-open .fts-v2-mobile-book-bar {
+        display: none !important;
+    }
     .fts-v2-mob-left {
         display: flex !important;
         flex-direction: column !important;
@@ -217,6 +224,11 @@
         gap: 6px !important;
         flex-wrap: wrap !important;
     }
+    .fts-v2-mob-from {
+        font-size: 11px !important;
+        color: var(--v2-text-muted, #718096) !important;
+        font-weight: 700 !important;
+    }
     .fts-v2-mob-old {
         font-size: 13px !important;
         color: var(--v2-text-muted, #718096) !important;
@@ -233,6 +245,15 @@
         color: var(--v2-text-light, #4a5568) !important;
         font-weight: 400 !important;
     }
+    .fts-v2-mob-pkg {
+        font-size: 11px !important;
+        color: var(--v2-text-muted, #718096) !important;
+        line-height: 1.2 !important;
+        max-width: 56vw !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
     .fts-v2-mob-cancel {
         display: flex !important;
         align-items: center !important;
