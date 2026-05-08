@@ -29,6 +29,7 @@ add_action( 'wp_enqueue_scripts', 'child_theme_configurator_css', 20 );
 
 add_action( 'wp_enqueue_scripts', function() {
     if ( ! is_singular( 'trip' ) ) return;
+    if ( has_action( 'wp_enqueue_scripts', array( 'FTS_Trip_Redesign_V2', 'enqueue_assets' ) ) ) return;
     if ( ! function_exists( 'get_field' ) ) return;
     $trip_id = get_the_ID();
     if ( ! $trip_id ) return;
@@ -37,7 +38,7 @@ add_action( 'wp_enqueue_scripts', function() {
     if ( trim( $code ) === '' ) return;
 
     wp_enqueue_script(
-        'fts-trustindex-loader',
+        'fts-trustindex-loader-legacy',
         'https://cdn.trustindex.io/loader.js?49f81de492564412a126bfa9e75',
         array(),
         null,

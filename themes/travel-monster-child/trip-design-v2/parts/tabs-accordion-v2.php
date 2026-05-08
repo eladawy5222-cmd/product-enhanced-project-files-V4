@@ -154,7 +154,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <div class="fts-v2-cta-actions">
                 <a href="#" class="fts-v2-cta-btn-primary fts-bm-trigger"><?php echo esc_html__( 'Book Now', 'fts' ); ?></a>
                 <?php if ( ! empty( $whatsapp_number ) ) : ?>
-                <a href="https://wa.me/<?php echo esc_attr( $whatsapp_number ); ?>" target="_blank" class="fts-v2-cta-btn-secondary"><i class="fa fa-whatsapp"></i> <?php echo esc_html__( 'Chat on WhatsApp', 'fts' ); ?></a>
+                <?php $wa_number = preg_replace( '/[^0-9]/', '', (string) $whatsapp_number ); ?>
+                <a href="https://wa.me/<?php echo esc_attr( $wa_number ); ?>" target="_blank" rel="noopener noreferrer nofollow" class="fts-v2-cta-btn-secondary" data-fts-wa-source="cta_banner"><i class="fa fa-whatsapp"></i> <?php echo esc_html__( 'Chat on WhatsApp', 'fts' ); ?></a>
                 <?php endif; ?>
             </div>
         </div>

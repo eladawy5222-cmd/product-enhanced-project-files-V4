@@ -1054,7 +1054,7 @@ class FTS_Trip_Redesign_V2 {
 
         // ── Enquiry / WhatsApp ──
         $enquiry_enabled = get_post_meta( $trip_id, '_fts_enable_enquiry_sidebar', true );
-        $whatsapp_number = apply_filters( 'fts_whatsapp_number', '' );
+        $whatsapp_number = apply_filters( 'fts_whatsapp_number', '+201000479285' );
 
         self::$trip_data = compact(
             'trip_id', 'settings', 'trip_obj',
@@ -1152,6 +1152,11 @@ class FTS_Trip_Redesign_V2 {
             $packages_for_js[] = $pkg_js;
         }
 
+        $whatsapp_number_js = '';
+        if ( isset( $data['whatsapp_number'] ) && is_string( $data['whatsapp_number'] ) ) {
+            $whatsapp_number_js = preg_replace( '/\D+/', '', $data['whatsapp_number'] );
+        }
+
         wp_localize_script( 'fts-trip-v2-script', 'ftsV2Data', array(
             'tripId'         => $data['trip_id'],
             'galleryUrls'    => $data['all_urls'],
@@ -1167,6 +1172,7 @@ class FTS_Trip_Redesign_V2 {
             'extraServices'  => $data['extra_services'],
             'checkoutUrl'    => $data['checkout_url'],
             'currencySymbol' => fts_v2_get_active_currency_symbol(),
+            'whatsappNumber' => $whatsapp_number_js,
             'i18n'           => array(
                 'from'              => __( 'From', 'fts' ),
                 'selected'          => __( 'Selected', 'fts' ),
@@ -1230,6 +1236,108 @@ class FTS_Trip_Redesign_V2 {
             echo '</div>';
 
             self::safe_include( $base . 'footer-v2.php', $data );
+
+            $schemas = array();
+            try {
+                $trip_url = get_permalink( $data['trip_id'] );
+                $trip_title = get_the_title( $data['trip_id'] );
+                $img = get_the_post_thumbnail_url( $data['trip_id'], 'full' );
+                $desc_src = isset( $data['overview_excerpt'] ) ? trim( (string) $data['overview_excerpt'] ) : '';
+                if ( $desc_src === '' ) $desc_src = isset( $data['bold_promise'] ) ? trim( (string) $data['bold_promise'] ) : '';
+                $desc = $desc_src !== '' ? wp_strip_all_tags( $desc_src ) : '';
+
+                $price_schema = isset( $data['display_price'] ) ? floatval( fts_v2_convert_price( $data['display_price'] ) ) : 0;
+                $currency_code = fts_v2_get_active_currency_code();
+
+                $product = array(
+                    '@context' => 'https://schema.org',
+                    '@type'    => 'Product',
+                    'name'     => $trip_title ? (string) $trip_title : '',
+                    'description' => $desc,
+                    'url'      => is_string( $trip_url ) ? $trip_url : '',
+                );
+                if ( is_string( $img ) && $img !== '' ) $product['image'] = array( $img );
+                if ( $price_schema > 0 && is_string( $currency_code ) && $currency_code !== '' ) {
+                    $product['offers'] = array(
+                        '@type' => 'Offer',
+                        'url'   => is_string( $trip_url ) ? $trip_url : '',
+                        'priceCurrency' => $currency_code,
+                        'price' => $price_schema,
+                        'availability' => 'https://schema.org/InStock',
+                    );
+                }
+
+                $avg = isset( $data['avg_rating'] ) ? floatval( $data['avg_rating'] ) : 0;
+                $cnt = isset( $data['review_count'] ) ? intval( $data['review_count'] ) : 0;
+                if ( $cnt > 0 && $avg > 0 && $avg <= 5 ) {
+                    $product['aggregateRating'] = array(
+                        '@type' => 'AggregateRating',
+                        'ratingValue' => round( $avg, 1 ),
+                        'reviewCount' => $cnt,
+                    );
+
+                    $reviews = array();
+                    $rev_src = isset( $data['reviews'] ) && is_array( $data['reviews'] ) ? $data['reviews'] : array();
+                    foreach ( array_slice( $rev_src, 0, 5 ) as $r ) {
+                        if ( ! is_array( $r ) ) continue;
+                        $body = isset( $r['content'] ) ? trim( (string) $r['content'] ) : '';
+                        if ( $body === '' ) continue;
+                        $author = isset( $r['title'] ) ? trim( (string) $r['title'] ) : '';
+                        if ( $author === '' ) $author = __( 'Traveler', 'fts' );
+                        $stars = isset( $r['stars'] ) ? intval( $r['stars'] ) : 0;
+                        if ( $stars < 1 || $stars > 5 ) $stars = 5;
+                        $date_raw = isset( $r['date'] ) ? trim( (string) $r['date'] ) : '';
+                        $date_iso = '';
+                        if ( $date_raw !== '' ) {
+                            $ts = strtotime( $date_raw );
+                            if ( $ts ) $date_iso = gmdate( 'c', $ts );
+                        }
+                        $rv = array(
+                            '@type' => 'Review',
+                            'author' => array( '@type' => 'Person', 'name' => $author ),
+                            'reviewBody' => wp_strip_all_tags( wp_trim_words( $body, 60, '' ) ),
+                            'reviewRating' => array( '@type' => 'Rating', 'ratingValue' => $stars, 'bestRating' => 5 ),
+                        );
+                        if ( $date_iso !== '' ) $rv['datePublished'] = $date_iso;
+                        $reviews[] = $rv;
+                    }
+                    if ( ! empty( $reviews ) ) $product['review'] = $reviews;
+                }
+
+                if ( ! empty( $product['name'] ) ) {
+                    $schemas[] = $product;
+                }
+
+                $faq_titles = isset( $data['faq_titles'] ) && is_array( $data['faq_titles'] ) ? $data['faq_titles'] : array();
+                $faq_content = isset( $data['faq_content'] ) && is_array( $data['faq_content'] ) ? $data['faq_content'] : array();
+                $faq_entities = array();
+                foreach ( array_slice( $faq_titles, 0, 10, true ) as $k => $q ) {
+                    $q_txt = trim( wp_strip_all_tags( (string) $q ) );
+                    if ( $q_txt === '' ) continue;
+                    $a_raw = isset( $faq_content[ $k ] ) ? (string) $faq_content[ $k ] : '';
+                    $a_txt = trim( wp_strip_all_tags( $a_raw ) );
+                    if ( $a_txt === '' ) continue;
+                    $faq_entities[] = array(
+                        '@type' => 'Question',
+                        'name'  => $q_txt,
+                        'acceptedAnswer' => array(
+                            '@type' => 'Answer',
+                            'text'  => wp_trim_words( $a_txt, 80, '' ),
+                        ),
+                    );
+                }
+                if ( ! empty( $faq_entities ) ) {
+                    $schemas[] = array(
+                        '@context' => 'https://schema.org',
+                        '@type'    => 'FAQPage',
+                        'mainEntity' => $faq_entities,
+                    );
+                }
+            } catch ( \Throwable $e ) {}
+
+            if ( ! empty( $schemas ) ) {
+                echo '<script type="application/ld+json">' . wp_json_encode( $schemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>';
+            }
 
         echo '</div>';
 

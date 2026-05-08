@@ -115,6 +115,8 @@
                 if ($('.fts-v2-mobile-book-bar').length) return;
 
                 var pkgs = data.packages || [];
+                var waNumber = data.whatsappNumber ? String(data.whatsappNumber) : '';
+                var waLink = waNumber ? ('https://wa.me/' + waNumber) : '';
                 var minPkg = null;
                 for (var i = 0; i < pkgs.length; i++) {
                     var p = parseFloat(pkgs[i].display_price) || 0;
@@ -145,7 +147,10 @@
                             ' ' + mobFreeCancellation +
                         '</div>' +
                     '</div>' +
-                    '<a href="#" class="fts-v2-mob-btn fts-bm-trigger">' + mobBookNow + '</a>' +
+                    '<div class="fts-v2-mob-actions">' +
+                        (waLink ? '<a href="' + waLink + '" target="_blank" rel="noopener noreferrer nofollow" class="fts-v2-mob-wa" aria-label="WhatsApp"><i class="fa fa-whatsapp"></i></a>' : '') +
+                        '<a href="#" class="fts-v2-mob-btn fts-bm-trigger">' + mobBookNow + '</a>' +
+                    '</div>' +
                 '</div>';
 
                 $('body').append(barHtml);
@@ -153,6 +158,12 @@
 
                 if (minPkg) {
                     this.setFrom(minPkg);
+                }
+
+                if (waLink) {
+                    this.$bar.find('.fts-v2-mob-wa').on('click', function() {
+                        ftsTrack('whatsapp_click', { source: 'mobile_bar' });
+                    });
                 }
             },
             setFrom: function(pkg) {
@@ -1607,6 +1618,11 @@
             if ($target.length) {
                 $('html, body').animate({ scrollTop: $target.offset().top - 80 }, 500);
             }
+        });
+
+        $(document).on('click', 'a[data-fts-wa-source]', function() {
+            var src = String($(this).attr('data-fts-wa-source') || '');
+            ftsTrack('whatsapp_click', { source: src || 'unknown' });
         });
 
         /* ══════════════════════════════════════════════

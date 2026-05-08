@@ -97,7 +97,7 @@ $at_items = array_slice( $at_items, 0, 4 );
                 <div class="fts-v2-quick-cta-buttons">
                     <a href="#" class="fts-v2-book-now-btn fts-bm-trigger"><?php echo esc_html__( 'Check Availability', 'fts' ); ?></a>
                     <?php if ( $whatsapp_link ) : ?>
-                        <a href="<?php echo esc_url( $whatsapp_link ); ?>" target="_blank" rel="noopener" class="fts-v2-quick-whatsapp-btn">
+                        <a href="<?php echo esc_url( $whatsapp_link ); ?>" target="_blank" rel="noopener noreferrer nofollow" class="fts-v2-quick-whatsapp-btn" data-fts-wa-source="quick_bar">
                             <i class="fa fa-whatsapp"></i> <?php echo esc_html__( 'WhatsApp', 'fts' ); ?>
                         </a>
                     <?php endif; ?>
@@ -110,7 +110,7 @@ $at_items = array_slice( $at_items, 0, 4 );
 <!-- Social Proof -->
 <div class="fts-v2-social-proof">
     <div class="fts-v2-container">
-        <div class="fts-v2-proof-items" data-trip-id="<?php echo intval( $trip_id ); ?>">
+        <div class="fts-v2-proof-items" data-trip-id="<?php echo intval( $trip_id ); ?>" data-last-booked-tpl="<?php echo esc_attr__( 'Last booked %s minutes ago', 'fts' ); ?>">
             <span class="fts-v2-proof-item fts-v2-proof-pulse fts-v2-viewer-proof" style="<?php echo ! empty( $viewer_count ) ? '' : 'display:none;'; ?>"><svg class="fts-v2-icon-eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="fts-v2-viewer-count"><?php echo intval( $viewer_count ); ?></span> <?php echo esc_html__( 'people viewing now', 'fts' ); ?></span>
             <?php if ( ! empty( $last_booked_minutes ) ) : ?>
             <span class="fts-v2-proof-item fts-v2-last-booked"><svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <?php echo esc_html( sprintf( __( 'Last booked %s minutes ago', 'fts' ), intval( $last_booked_minutes ) ) ); ?></span>
@@ -163,7 +163,8 @@ $at_items = array_slice( $at_items, 0, 4 );
         existing.className='fts-v2-proof-item fts-v2-last-booked';
         items.appendChild(existing);
       }
-      existing.innerHTML='<svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> '+('Last booked '+mins+' minutes ago');
+      var tpl=items.getAttribute('data-last-booked-tpl')||'Last booked %s minutes ago';
+      existing.innerHTML='<svg class="fts-v2-icon-clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> '+tpl.replace('%s', String(mins));
     })['catch'](function(){});
   }
 

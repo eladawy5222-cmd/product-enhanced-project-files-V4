@@ -276,6 +276,25 @@
         white-space: nowrap !important;
         flex-shrink: 0 !important;
     }
+    .fts-v2-mob-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-shrink: 0 !important;
+    }
+    .fts-v2-mob-wa {
+        width: 38px !important;
+        height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        background: rgba(56, 161, 105, 0.14) !important;
+        border: 1px solid rgba(56, 161, 105, 0.25) !important;
+        color: #1f7a4a !important;
+        text-decoration: none !important;
+        font-size: 18px !important;
+    }
 }
 
 /* Print-friendly */
