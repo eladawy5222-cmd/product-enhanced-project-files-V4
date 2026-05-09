@@ -625,7 +625,7 @@ class FTS_Trip_Schema {
 
 	private static function build_organization() {
 		$node = array(
-			'@type' => 'Organization',
+			'@type' => array( 'Organization', 'TravelAgency' ),
 			'@id'   => home_url( '/' ) . '#organization',
 			'name'  => self::clean_org_name( get_bloginfo( 'name' ) ),
 			'url'   => home_url( '/' ),
@@ -645,6 +645,13 @@ class FTS_Trip_Schema {
 					if ( ! empty( $meta['height'] ) ) $logo['height'] = (int) $meta['height'];
 				}
 				$node['logo'] = $logo;
+				$node['image'] = $logo_url;
+			}
+		}
+		if ( empty( $node['image'] ) ) {
+			$site_icon = get_site_icon_url( 512 );
+			if ( is_string( $site_icon ) && $site_icon !== '' ) {
+				$node['image'] = $site_icon;
 			}
 		}
 
@@ -667,6 +674,22 @@ class FTS_Trip_Schema {
 				break;
 			}
 		}
+		if ( empty( $node['telephone'] ) ) {
+			$node['telephone'] = '+201000479285';
+		}
+
+		$addr_raw = trim( (string) get_option( 'fts_company_address', '13H W/5, El Menshawy Street, Takseem El Lasilky, Maadi District, Cairo Governorate, 11824, Egypt' ) );
+		if ( $addr_raw !== '' ) {
+			$node['address'] = array(
+				'@type'           => 'PostalAddress',
+				'streetAddress'   => $addr_raw,
+				'addressLocality' => 'Cairo',
+				'addressRegion'   => 'Cairo Governorate',
+				'postalCode'      => '11824',
+				'addressCountry'  => 'EG',
+			);
+		}
+		$node['priceRange'] = '€';
 
 		// Social URLs from theme mods (best-effort, conservative)
 		$same_as = self::collect_social_urls();

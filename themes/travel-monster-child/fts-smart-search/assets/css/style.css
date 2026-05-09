@@ -32,6 +32,9 @@
 .fts-ss-trigger i {
     font-size: 18px;
 }
+.fts-ss-trigger .fts-ss-icon {
+    display: block;
+}
 
 /* Tooltip / Card Popup */
 .fts-ss-tooltip {
@@ -293,4 +296,10 @@
     to {
         opacity: 1;
     }
+}
+.fts-ss-submit-btn .fts-ss-icon {
+    display: block;
+}
+.fts-ss-close-btn .fts-ss-icon {
+    display: block;
 }

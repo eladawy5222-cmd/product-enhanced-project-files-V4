@@ -2,6 +2,8 @@
    FTS V2 - Responsive Breakpoints & Mobile Styles
    ============================================================================ */
 
+.fts-v2-mobile-book-bar { display: none !important; }
+
 @media (max-width: 992px) {
     .fts-v2-main-layout { flex-direction: column !important; }
     .fts-v2-sidebar-col { width: 100% !important; }
@@ -13,10 +15,10 @@
     /* Hide desktop sidebar -- replaced by mobile sticky bar */
     .fts-v2-sidebar-col { display: none !important; }
 
-    body.single-trip { padding-bottom: 80px !important; }
+    body.single-trip { padding-bottom: 96px !important; }
 
     /* Header */
-    .fts-v2-breadcrumbs { font-size: 11px !important; }
+    .fts-v2-breadcrumbs { display: none !important; }
     .fts-v2-trip-title { font-size: 20px !important; }
     .fts-v2-title-row { flex-direction: column !important; gap: 8px !important; }
     .fts-v2-title-actions { align-self: flex-start !important; }
@@ -25,6 +27,7 @@
     .fts-v2-bold-promise { font-size: 13px !important; margin-bottom: 10px !important; }
     .fts-v2-hero-benefits { grid-template-columns: 1fr !important; gap: 8px !important; margin-bottom: 12px !important; }
     .fts-v2-hero-benefits li { padding: 10px 12px !important; font-size: 12px !important; }
+    .fts-v2-hero-benefits li:nth-child(n+3) { display: none !important; }
 
     .fts-v2-meta-row { gap: 2px !important; font-size: 11px !important; }
     .fts-v2-meta-sep { margin: 0 6px !important; font-size: 12px !important; }
@@ -54,16 +57,24 @@
     .fts-v2-quick-bar-inner { flex-direction: column !important; text-align: center !important; gap: 12px !important; }
     .fts-v2-quick-price-cta { flex-direction: column !important; align-items: center !important; }
     .fts-v2-hook-text { font-size: 12px !important; }
+    .fts-v2-hook-text {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+    .fts-v2-facts-list { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; padding-bottom: 2px !important; justify-content: flex-start !important; }
+    .fts-v2-fact { flex: 0 0 auto !important; }
     .fts-v2-price-current { font-size: 20px !important; }
     .fts-v2-price-old { font-size: 12px !important; }
     .fts-v2-price-person { font-size: 11px !important; }
     .fts-v2-book-now-btn { padding: 10px 24px !important; font-size: 13px !important; }
 
     /* Social Proof & Trust */
-    .fts-v2-proof-items { gap: 8px !important; }
-    .fts-v2-proof-item { font-size: 11px !important; }
-    .fts-v2-trust-items { gap: 10px !important; }
-    .fts-v2-trust-item { font-size: 11px !important; gap: 4px !important; }
+    .fts-v2-proof-items { gap: 10px !important; flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; justify-content: flex-start !important; }
+    .fts-v2-proof-item { font-size: 11px !important; white-space: nowrap !important; flex: 0 0 auto !important; }
+    .fts-v2-trust-items { gap: 10px !important; flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; justify-content: flex-start !important; }
+    .fts-v2-trust-item { font-size: 11px !important; gap: 4px !important; white-space: nowrap !important; flex: 0 0 auto !important; }
     .fts-v2-trust-item svg { width: 12px !important; height: 12px !important; }
     .fts-v2-proof-item svg { width: 12px !important; height: 12px !important; }
 
@@ -75,7 +86,7 @@
     .fts-v2-section { margin-bottom: 12px !important; padding: 20px 16px !important; }
     .fts-v2-section-title { font-size: 18px !important; margin-bottom: 16px !important; }
     .fts-v2-subsection-title { font-size: 14px !important; }
-    .fts-v2-overview-text { font-size: 13px !important; }
+    .fts-v2-overview-text { font-size: 14px !important; line-height: 1.75 !important; }
     .fts-v2-highlight-item { font-size: 12px !important; padding: 10px 12px !important; }
     .fts-v2-highlights { padding: 16px !important; }
     .fts-v2-highlights-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
@@ -151,6 +162,8 @@
 }
 
 @media (max-width: 480px) {
+    .fts-v2-breadcrumbs { display: none !important; }
+
     .fts-v2-tabs-nav { top: 44px !important; }
     .fts-v2-trip-title { font-size: 17px !important; line-height: 1.3 !important; }
     .fts-v2-meta-row { flex-wrap: wrap !important; }
@@ -163,7 +176,51 @@
     }
     .fts-v2-meta-item:last-child::after { content: none !important; }
 
-    .fts-v2-gallery-grid { grid-template-rows: 180px !important; }
+    .fts-v2-bold-promise { font-size: 12px !important; margin-bottom: 8px !important; }
+    .fts-v2-hero-benefits { gap: 6px !important; margin-bottom: 10px !important; }
+    .fts-v2-hero-benefits li { padding: 8px 10px !important; font-size: 11px !important; }
+    .fts-v2-hero-benefits li:nth-child(n+3) { display: none !important; }
+
+    .fts-v2-gallery-grid { grid-template-rows: 150px !important; }
+    .fts-v2-gallery-more { font-size: 11px !important; padding: 7px 10px !important; }
+
+    .fts-v2-quick-bar { padding: 10px 0 !important; }
+    .fts-v2-quick-bar-inner { gap: 10px !important; }
+    .fts-v2-hook-text {
+        font-size: 11px !important;
+        line-height: 1.45 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+    .fts-v2-facts-list { flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; padding-bottom: 2px !important; }
+    .fts-v2-fact { padding: 6px 8px !important; gap: 6px !important; flex: 0 0 auto !important; }
+    .fts-v2-fact-icon { width: 22px !important; height: 22px !important; }
+    .fts-v2-fact-icon i { font-size: 12px !important; }
+    .fts-v2-fact-label { font-size: 10px !important; }
+    .fts-v2-fact-value { font-size: 11px !important; }
+
+    .fts-v2-quick-price-cta { gap: 12px !important; }
+    .fts-v2-price-current { font-size: 18px !important; }
+    .fts-v2-price-old { font-size: 11px !important; }
+    .fts-v2-price-person { font-size: 11px !important; }
+    .fts-v2-discount-badge { font-size: 11px !important; }
+    .fts-v2-book-now-btn { padding: 10px 18px !important; font-size: 12px !important; }
+    .fts-v2-quick-whatsapp-btn { padding: 10px 12px !important; font-size: 12px !important; gap: 6px !important; }
+    .fts-v2-quick-whatsapp-btn i { font-size: 14px !important; }
+    .fts-v2-quick-cta-buttons { flex-direction: column !important; width: 100% !important; }
+    .fts-v2-book-now-btn, .fts-v2-quick-whatsapp-btn { width: 100% !important; justify-content: center !important; }
+
+    .fts-v2-social-proof { padding: 6px 0 !important; }
+    .fts-v2-proof-items { gap: 10px !important; flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; justify-content: flex-start !important; }
+    .fts-v2-proof-item { font-size: 10px !important; white-space: nowrap !important; flex: 0 0 auto !important; }
+    .fts-v2-proof-item svg { width: 12px !important; height: 12px !important; }
+    .fts-v2-proof-item:nth-child(3) { display: none !important; }
+
+    .fts-v2-trust-bar { padding: 10px 0 !important; }
+    .fts-v2-trust-items { gap: 10px !important; flex-wrap: nowrap !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; justify-content: flex-start !important; }
+    .fts-v2-trust-item { font-size: 10px !important; white-space: nowrap !important; flex: 0 0 auto !important; }
 
     .fts-v2-section-title { font-size: 16px !important; }
     .fts-v2-overview-text { font-size: 12px !important; }
@@ -196,16 +253,37 @@
 
 /* Mobile Sticky Book Now Bar */
 @media (max-width: 768px) {
+    .fts-v2-root { padding-bottom: 0 !important; }
     .fts-v2-mobile-book-bar {
+        --fts-mobbar-pad-top: 10px;
+        --fts-mobbar-pad-bottom: 10px;
+        --fts-mobbar-pad-x: 16px;
+        --fts-mobbar-gap: 12px;
+        --fts-mobbar-min-h: 64px;
+        --fts-mobbar-from: 11px;
+        --fts-mobbar-old: 13px;
+        --fts-mobbar-current: 20px;
+        --fts-mobbar-per: 12px;
+        --fts-mobbar-cancel: 11px;
+        --fts-mobbar-btn-font: 14px;
+        --fts-mobbar-btn-pad-y: 12px;
+        --fts-mobbar-btn-pad-x: 22px;
+        --fts-mobbar-wa: 38px;
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
         background: var(--v2-bg, #fff) !important;
-        padding: 10px 16px !important;
+        min-height: var(--fts-mobbar-min-h) !important;
+        padding-top: var(--fts-mobbar-pad-top) !important;
+        padding-bottom: calc(var(--fts-mobbar-pad-bottom) + env(safe-area-inset-bottom)) !important;
+        padding-left: calc(var(--fts-mobbar-pad-x) + env(safe-area-inset-left)) !important;
+        padding-right: calc(var(--fts-mobbar-pad-x) + env(safe-area-inset-right)) !important;
+        box-sizing: border-box !important;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.12) !important;
         z-index: 99999 !important;
         display: flex !important;
+        gap: var(--fts-mobbar-gap) !important;
         justify-content: space-between !important;
         align-items: center !important;
         border-top: 1px solid var(--v2-border, #e9ecef) !important;
@@ -217,6 +295,8 @@
         display: flex !important;
         flex-direction: column !important;
         gap: 2px !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
     }
     .fts-v2-mob-price-row {
         display: flex !important;
@@ -225,23 +305,23 @@
         flex-wrap: wrap !important;
     }
     .fts-v2-mob-from {
-        font-size: 11px !important;
+        font-size: var(--fts-mobbar-from) !important;
         color: var(--v2-text-muted, #718096) !important;
         font-weight: 700 !important;
     }
     .fts-v2-mob-old {
-        font-size: 13px !important;
+        font-size: var(--fts-mobbar-old) !important;
         color: var(--v2-text-muted, #718096) !important;
         text-decoration: line-through !important;
     }
     .fts-v2-mob-current {
         font-family: var(--v2-font-heading, 'Poppins', sans-serif) !important;
         font-weight: 800 !important;
-        font-size: 20px !important;
+        font-size: var(--fts-mobbar-current) !important;
         color: var(--v2-dark, #1a2332) !important;
     }
     .fts-v2-mob-per {
-        font-size: 12px !important;
+        font-size: var(--fts-mobbar-per) !important;
         color: var(--v2-text-light, #4a5568) !important;
         font-weight: 400 !important;
     }
@@ -258,7 +338,7 @@
         display: flex !important;
         align-items: center !important;
         gap: 4px !important;
-        font-size: 11px !important;
+        font-size: var(--fts-mobbar-cancel) !important;
         color: #38a169 !important;
         font-weight: 500 !important;
     }
@@ -268,11 +348,11 @@
     .fts-v2-mobile-book-bar .fts-v2-mob-btn {
         background: #e8501e !important;
         color: #fff !important;
-        padding: 12px 24px !important;
+        padding: var(--fts-mobbar-btn-pad-y) var(--fts-mobbar-btn-pad-x) !important;
         border-radius: 8px !important;
         font-weight: 700 !important;
         text-decoration: none !important;
-        font-size: 14px !important;
+        font-size: var(--fts-mobbar-btn-font) !important;
         white-space: nowrap !important;
         flex-shrink: 0 !important;
     }
@@ -283,8 +363,8 @@
         flex-shrink: 0 !important;
     }
     .fts-v2-mob-wa {
-        width: 38px !important;
-        height: 38px !important;
+        width: var(--fts-mobbar-wa) !important;
+        height: var(--fts-mobbar-wa) !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -293,10 +373,74 @@
         border: 1px solid rgba(56, 161, 105, 0.25) !important;
         color: #1f7a4a !important;
         text-decoration: none !important;
-        font-size: 18px !important;
+    }
+
+    .fts-v2-mob-wa svg {
+        width: calc(var(--fts-mobbar-wa) - 18px) !important;
+        height: calc(var(--fts-mobbar-wa) - 18px) !important;
+        display: block !important;
     }
 }
 
+@media (max-width: 360px) {
+    .fts-v2-mobile-book-bar {
+        --fts-mobbar-pad-top: 8px;
+        --fts-mobbar-pad-bottom: 8px;
+        --fts-mobbar-pad-x: 12px;
+        --fts-mobbar-gap: 10px;
+        --fts-mobbar-min-h: 58px;
+        --fts-mobbar-from: 10px;
+        --fts-mobbar-old: 12px;
+        --fts-mobbar-current: 18px;
+        --fts-mobbar-per: 11px;
+        --fts-mobbar-cancel: 10px;
+        --fts-mobbar-btn-font: 12px;
+        --fts-mobbar-btn-pad-y: 10px;
+        --fts-mobbar-btn-pad-x: 14px;
+        --fts-mobbar-wa: 34px;
+    }
+
+    .fts-v2-mob-pkg { max-width: 52vw !important; }
+}
+
+@media (min-width: 361px) and (max-width: 430px) {
+    .fts-v2-mobile-book-bar {
+        --fts-mobbar-pad-top: 9px;
+        --fts-mobbar-pad-bottom: 9px;
+        --fts-mobbar-pad-x: 14px;
+        --fts-mobbar-gap: 12px;
+        --fts-mobbar-min-h: 62px;
+        --fts-mobbar-from: 11px;
+        --fts-mobbar-old: 12px;
+        --fts-mobbar-current: 19px;
+        --fts-mobbar-per: 11px;
+        --fts-mobbar-cancel: 11px;
+        --fts-mobbar-btn-font: 13px;
+        --fts-mobbar-btn-pad-y: 11px;
+        --fts-mobbar-btn-pad-x: 18px;
+        --fts-mobbar-wa: 36px;
+    }
+}
+
+@media (min-width: 431px) and (max-width: 768px) {
+    .fts-v2-mobile-book-bar {
+        --fts-mobbar-pad-top: 12px;
+        --fts-mobbar-pad-bottom: 12px;
+        --fts-mobbar-pad-x: 18px;
+        --fts-mobbar-gap: 14px;
+        --fts-mobbar-min-h: 70px;
+        --fts-mobbar-from: 12px;
+        --fts-mobbar-old: 14px;
+        --fts-mobbar-current: 21px;
+        --fts-mobbar-per: 12px;
+        --fts-mobbar-cancel: 11px;
+        --fts-mobbar-btn-font: 14px;
+        --fts-mobbar-btn-pad-y: 12px;
+        --fts-mobbar-btn-pad-x: 24px;
+        --fts-mobbar-wa: 40px;
+    }
+}
+
 /* Print-friendly */
 @media print {
     .fts-v2-tabs-nav, .fts-v2-social-proof, .fts-v2-sidebar-col,

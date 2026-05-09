@@ -5,12 +5,14 @@
 
 body.single-trip {
     background: var(--v2-bg-page, #F8F7F4) !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip .site-content {
     padding: 0 !important;
     margin: 0 !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip .site-content > .container,
 body.single-trip .site-content > .container-full {
@@ -18,7 +20,8 @@ body.single-trip .site-content > .container-full {
     width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip .site-content .main-content-wrapper {
     max-width: 100% !important;
@@ -27,18 +30,21 @@ body.single-trip .site-content .main-content-wrapper {
     margin: 0 !important;
     display: block !important;
     float: none !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip #primary {
     width: 100% !important;
     padding: 0 !important;
     float: none !important;
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip #primary > article,
 body.single-trip #page,
 body.single-trip .fts-v2-root {
-    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
 }
 body.single-trip #secondary {
     display: none !important;

@@ -36,6 +36,13 @@
             $langButton.attr('aria-expanded', 'false');
         }
 
+        function closeCurrencyDropdown() {
+            var $open = $('.fts-currency-switcher.open');
+            if (!$open.length) return;
+            $open.removeClass('open');
+            $open.find('.fts-cs-current').attr('aria-expanded', 'false');
+        }
+
         function openLangDropdown() {
             if (!$langWrap.length || !$langButton.length) return;
 
@@ -71,6 +78,7 @@
 
         function closeAllMenus() {
             closeLangDropdown();
+            closeCurrencyDropdown();
             closeMobileMenu();
         }
 
@@ -111,6 +119,44 @@
                 e.preventDefault();
                 e.stopPropagation();
                 toggleLangDropdown();
+            });
+
+            $langButton.on('keydown', function(e) {
+                var key = e.key || e.keyCode;
+                if (key === 'ArrowDown' || key === 'Down' || key === 40) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!$langWrap.hasClass('open')) {
+                        closeAllMenus();
+                        openLangDropdown();
+                    }
+                    var $first = $langDropdown.find('a').first();
+                    if ($first.length) $first.trigger('focus');
+                }
+            });
+        }
+
+        if ($langDropdown.length) {
+            $langDropdown.find('a').on('click', function() {
+                var $a = $(this);
+                var code = String($a.attr('hreflang') || $a.attr('lang') || '').trim().toUpperCase();
+                if (code) {
+                    $langButton.find('.fts-v2-switcher-code').text(code);
+                }
+                var $img = $a.find('img').first();
+                if ($img.length) {
+                    var src = $img.attr('src');
+                    if (src) $langButton.find('img.fts-v2-lang-flag').attr('src', src);
+                }
+                closeLangDropdown();
+            });
+
+            $langDropdown.on('keydown', function(e) {
+                var key = e.key || e.keyCode;
+                if (key === 'Escape' || key === 'Esc' || key === 27) {
+                    closeAllMenus();
+                    if ($langButton.length) $langButton.trigger('focus');
+                }
             });
         }
 

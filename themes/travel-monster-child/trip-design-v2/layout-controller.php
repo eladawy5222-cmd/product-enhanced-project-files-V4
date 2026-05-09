@@ -31,6 +31,8 @@ if ( ! function_exists( 'fts_v2_get_currency_symbol' ) ) {
     function fts_v2_get_currency_symbol( $code ) {
         $code = is_string( $code ) ? trim( $code ) : '';
         if ( $code === '' ) return '';
+        $cc = strtoupper( $code );
+        if ( $cc === 'EGP' ) return 'E£';
         if ( function_exists( 'wp_travel_engine_get_currency_symbol' ) ) {
             $raw = (string) wp_travel_engine_get_currency_symbol( $code );
             if ( $raw !== '' ) {
@@ -864,6 +866,10 @@ class FTS_Trip_Redesign_V2 {
                         }
 
                         $pkg_content = get_post_field( 'post_content', $pkg_id );
+                        $pkg_desc_raw = trim( wp_strip_all_tags( (string) $pkg_content ) );
+                        if ( $pkg_desc_raw !== '' ) {
+                            $pkg_desc_raw = preg_replace( '/:([^\s])/', ': $1', $pkg_desc_raw );
+                        }
                         $features = array();
                         if ( ! empty( $pkg_content ) ) {
                             if ( preg_match_all( '/<li[^>]*>(.*?)<\/li>/si', $pkg_content, $fm ) ) {
@@ -891,9 +897,9 @@ class FTS_Trip_Redesign_V2 {
                         $packages_list[] = array(
                             'id'            => $pkg_id,
                             'name'          => get_the_title( $pkg_id ),
-                            'description'   => wp_trim_words( wp_strip_all_tags( $pkg_content ), 8, '' ),
-                            'features'      => array_map( function( $f ) { return wp_trim_words( $f, 4, '' ); }, array_slice( $features, 0, 4 ) ),
-                            'features_full' => array_map( function( $f ) { return wp_trim_words( $f, 14, '' ); }, array_slice( $features, 0, 10 ) ),
+                            'description'   => wp_trim_words( $pkg_desc_raw, 10, '…' ),
+                            'features'      => array_map( function( $f ) { return wp_trim_words( $f, 18, '…' ); }, array_slice( $features, 0, 4 ) ),
+                            'features_full' => array_map( function( $f ) { return wp_trim_words( $f, 40, '…' ); }, array_slice( $features, 0, 10 ) ),
                             'feature_count' => $feature_count,
                             'display_price' => $f_dp,
                             'old_price'     => $f_old,
@@ -1113,7 +1119,30 @@ class FTS_Trip_Redesign_V2 {
        ───────────────────────────────────────────────── */
     public static function render_nuclear_custom_layout() {
         $base = get_stylesheet_directory() . '/trip-design-v2/parts/';
-        $data = self::get_trip_data();
+        try {
+            $data = self::get_trip_data();
+        } catch ( \Throwable $e ) {
+            error_log( 'FTS V2 trip_data error: ' . $e->getMessage() );
+            $data = array();
+        }
+        if ( ! is_array( $data ) ) {
+            $data = array();
+        }
+        if ( empty( $data['trip_id'] ) ) {
+            $data['trip_id'] = get_the_ID();
+        }
+        if ( empty( $data['terms_url'] ) ) {
+            $data['terms_url'] = home_url( '/terms-and-conditions/' );
+        }
+        if ( ! isset( $data['all_urls'] ) || ! is_array( $data['all_urls'] ) ) $data['all_urls'] = array();
+        if ( ! isset( $data['all_thumbs'] ) || ! is_array( $data['all_thumbs'] ) ) $data['all_thumbs'] = array();
+        if ( ! isset( $data['all_titles'] ) || ! is_array( $data['all_titles'] ) ) $data['all_titles'] = array();
+        if ( ! isset( $data['packages_list'] ) || ! is_array( $data['packages_list'] ) ) $data['packages_list'] = array();
+        if ( ! isset( $data['reviews'] ) || ! is_array( $data['reviews'] ) ) $data['reviews'] = array();
+        if ( ! isset( $data['fsd_dates'] ) || ! is_array( $data['fsd_dates'] ) ) $data['fsd_dates'] = array();
+        if ( ! isset( $data['excluded_dates_map'] ) || ! is_array( $data['excluded_dates_map'] ) ) $data['excluded_dates_map'] = array();
+        if ( ! isset( $data['excluded_dates_yearly'] ) || ! is_array( $data['excluded_dates_yearly'] ) ) $data['excluded_dates_yearly'] = array();
+        if ( ! isset( $data['extra_services'] ) || ! is_array( $data['extra_services'] ) ) $data['extra_services'] = array();
 
         self::$debug = isset( $_GET['fts_debug'] ) && current_user_can( 'manage_options' );
         register_shutdown_function( array( __CLASS__, 'catch_fatal' ) );
@@ -1129,10 +1158,13 @@ class FTS_Trip_Redesign_V2 {
             }
         }
 
-        $bm_raw = ! empty( $data['booking_modal_data'] ) ? json_decode( $data['booking_modal_data'], true ) : array();
+        $bm_data_src = isset( $data['booking_modal_data'] ) && is_string( $data['booking_modal_data'] ) ? $data['booking_modal_data'] : '';
+        $bm_raw = $bm_data_src !== '' ? json_decode( $bm_data_src, true ) : array();
+        if ( ! is_array( $bm_raw ) ) $bm_raw = array();
 
         $packages_for_js = array();
         foreach ( $data['packages_list'] as $pkg_js ) {
+            if ( ! is_array( $pkg_js ) ) continue;
             $pkg_js['display_price'] = fts_v2_convert_price( $pkg_js['display_price'] );
             $pkg_js['old_price']     = fts_v2_convert_price( $pkg_js['old_price'] );
             if ( ! empty( $pkg_js['categories'] ) ) {
@@ -1256,6 +1288,14 @@ class FTS_Trip_Redesign_V2 {
                     'description' => $desc,
                     'url'      => is_string( $trip_url ) ? $trip_url : '',
                 );
+                $site_name = (string) get_bloginfo( 'name' );
+                if ( $site_name !== '' ) {
+                    $product['brand'] = array(
+                        '@type' => 'Brand',
+                        'name'  => $site_name,
+                    );
+                }
+                $product['sku'] = (string) intval( $data['trip_id'] );
                 if ( is_string( $img ) && $img !== '' ) $product['image'] = array( $img );
                 if ( $price_schema > 0 && is_string( $currency_code ) && $currency_code !== '' ) {
                     $product['offers'] = array(
@@ -1265,6 +1305,13 @@ class FTS_Trip_Redesign_V2 {
                         'price' => $price_schema,
                         'availability' => 'https://schema.org/InStock',
                     );
+                    if ( $site_name !== '' ) {
+                        $product['offers']['seller'] = array(
+                            '@type' => 'Organization',
+                            'name'  => $site_name,
+                            'url'   => esc_url_raw( home_url( '/' ) ),
+                        );
+                    }
                 }
 
                 $avg = isset( $data['avg_rating'] ) ? floatval( $data['avg_rating'] ) : 0;
@@ -1308,31 +1355,6 @@ class FTS_Trip_Redesign_V2 {
                     $schemas[] = $product;
                 }
 
-                $faq_titles = isset( $data['faq_titles'] ) && is_array( $data['faq_titles'] ) ? $data['faq_titles'] : array();
-                $faq_content = isset( $data['faq_content'] ) && is_array( $data['faq_content'] ) ? $data['faq_content'] : array();
-                $faq_entities = array();
-                foreach ( array_slice( $faq_titles, 0, 10, true ) as $k => $q ) {
-                    $q_txt = trim( wp_strip_all_tags( (string) $q ) );
-                    if ( $q_txt === '' ) continue;
-                    $a_raw = isset( $faq_content[ $k ] ) ? (string) $faq_content[ $k ] : '';
-                    $a_txt = trim( wp_strip_all_tags( $a_raw ) );
-                    if ( $a_txt === '' ) continue;
-                    $faq_entities[] = array(
-                        '@type' => 'Question',
-                        'name'  => $q_txt,
-                        'acceptedAnswer' => array(
-                            '@type' => 'Answer',
-                            'text'  => wp_trim_words( $a_txt, 80, '' ),
-                        ),
-                    );
-                }
-                if ( ! empty( $faq_entities ) ) {
-                    $schemas[] = array(
-                        '@context' => 'https://schema.org',
-                        '@type'    => 'FAQPage',
-                        'mainEntity' => $faq_entities,
-                    );
-                }
             } catch ( \Throwable $e ) {}
 
             if ( ! empty( $schemas ) ) {
@@ -1406,7 +1428,15 @@ class FTS_Trip_Redesign_V2 {
 
             if ( ! is_singular( 'trip' ) ) return;
 
-            $trip_data = self::get_trip_data();
+            try {
+                $trip_data = self::get_trip_data();
+            } catch ( \Throwable $e ) {
+                error_log( 'FTS V2 trip_data error: ' . $e->getMessage() );
+                $trip_data = array();
+            }
+            if ( ! is_array( $trip_data ) ) {
+                $trip_data = array();
+            }
             if ( ! empty( $trip_data['trustindex_loader'] ) ) {
                 wp_enqueue_script(
                     'fts-trustindex-loader',
@@ -1453,6 +1483,9 @@ class FTS_Trip_Redesign_V2 {
                 'body.single-trip .entry-content>*:not(.fts-v2-root){overflow:visible!important}' .
                 '.fts-v2-sidebar-wrapper{position:sticky!important;top:100px!important;align-self:flex-start!important}' .
                 '.fts-v2-tabs-nav{position:sticky!important;top:56px!important;z-index:1000!important}' .
+                '.fts-v2-hero-benefit-icon{width:18px!important;height:18px!important;flex:0 0 18px!important}' .
+                '.fts-v2-gallery-slide img{display:block!important;max-width:100%!important}' .
+                '@media(max-width:992px){.fts-v2-gallery-slider{display:block!important}.fts-v2-gallery-grid{display:none!important}.fts-v2-gallery-slide{height:220px!important}.fts-v2-gallery-dots{display:flex!important}}' .
                 '#fts-booking-modal .fts-bm-step-header{display:flex!important;align-items:center!important;gap:12px!important;margin-bottom:16px!important;font-size:28px!important;font-weight:700!important;line-height:1.2!important;color:#1a2332!important}' .
                 '#fts-booking-modal .fts-bm-step-num{width:34px!important;height:34px!important;border-radius:50%!important;background:var(--v2-primary,#ff6b35)!important;color:#fff!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:18px!important;font-weight:700!important;flex:0 0 34px!important}' .
                 '#fts-booking-modal .fts-bm-package-inner{display:grid!important;grid-template-columns:auto 1fr auto!important;gap:14px!important;align-items:flex-start!important;padding:16px!important}' .

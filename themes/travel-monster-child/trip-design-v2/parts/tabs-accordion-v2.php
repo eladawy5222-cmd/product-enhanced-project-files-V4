@@ -249,6 +249,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <button type="button" class="fts-v2-pkg-compare-toggle" data-state="collapsed" data-more="<?php echo esc_attr__( 'Compare packages', 'fts' ); ?>" data-less="<?php echo esc_attr__( 'Hide comparison', 'fts' ); ?>">
                 <?php echo esc_html__( 'Compare packages', 'fts' ); ?>
             </button>
+            <div class="fts-v2-pkg-compare-hint" aria-hidden="true"></div>
         </div>
         <div class="fts-v2-packages-grid">
             <?php foreach ( $packages_list as $pkg ) :

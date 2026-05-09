@@ -18,10 +18,12 @@ class FTS_Smart_Search {
     }
 
     public function enqueue_assets() {
-        // Use time() as version to force cache clearing during development
-        $version = time(); 
-        wp_enqueue_style( 'fts-smart-search-style', get_stylesheet_directory_uri() . '/fts-smart-search/assets/css/style.css', array(), $version );
-        wp_enqueue_script( 'fts-smart-search-script', get_stylesheet_directory_uri() . '/fts-smart-search/assets/js/script.js', array( 'jquery' ), $version, true );
+        $css_file = get_stylesheet_directory() . '/fts-smart-search/assets/css/style.css';
+        $js_file  = get_stylesheet_directory() . '/fts-smart-search/assets/js/script.js';
+        $css_ver  = file_exists( $css_file ) ? (string) filemtime( $css_file ) : null;
+        $js_ver   = file_exists( $js_file ) ? (string) filemtime( $js_file ) : null;
+        wp_enqueue_style( 'fts-smart-search-style', get_stylesheet_directory_uri() . '/fts-smart-search/assets/css/style.css', array(), $css_ver );
+        wp_enqueue_script( 'fts-smart-search-script', get_stylesheet_directory_uri() . '/fts-smart-search/assets/js/script.js', array( 'jquery' ), $js_ver, true );
     }
 
     public function render_search_tool() {
@@ -30,14 +32,14 @@ class FTS_Smart_Search {
         <div class="fts-smart-search-wrapper">
             <!-- Trigger Icon -->
             <div class="fts-ss-trigger" title="Search Trips">
-                <i class="fas fa-search"></i>
+                <svg class="fts-ss-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
             </div>
             
             <!-- Tooltip Popup -->
             <div class="fts-ss-tooltip">
                 <div class="fts-ss-tooltip-inner">
                     <!-- Close Button (Mobile Only) -->
-                    <div class="fts-ss-close-btn"><i class="fas fa-times"></i></div>
+                        <div class="fts-ss-close-btn"><svg class="fts-ss-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"></path><path d="M6 6 18 18"></path></svg></div>
 
                     <!-- Search Form -->
                     <form role="search" method="get" class="fts-ss-form" action="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -45,7 +47,7 @@ class FTS_Smart_Search {
                         <div class="fts-ss-input-group">
                             <input type="search" class="fts-ss-input" placeholder="Where do you want to go?" value="<?php echo get_search_query(); ?>" name="s" autocomplete="off" />
                             <button type="submit" class="fts-ss-submit-btn">
-                                <i class="fas fa-search"></i>
+                                <svg class="fts-ss-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
                             </button>
                         </div>
                     </form>

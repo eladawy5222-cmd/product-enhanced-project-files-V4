@@ -21,8 +21,21 @@
     height: 36px;
     box-sizing: border-box;
     /* No shadow as requested */
+    appearance: none;
 }
 
+.fts-cs-current:focus-visible {
+    outline: 2px solid rgba(255, 127, 80, 0.65);
+    outline-offset: 2px;
+}
+
+.fts-cs-label {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
 .fts-cs-current:hover {
     border-color: #ff7f50;
     /* Orange Theme Color */
@@ -44,7 +57,8 @@
 }
 
 .fts-cs-arrow {
-    font-size: 10px;
+    width: 12px;
+    height: 12px;
     color: #94a3b8;
     transition: transform 0.2s ease;
 }
@@ -98,8 +112,17 @@
     color: #475569;
     font-size: 14px;
     font-weight: 400;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
 }
 
+.fts-cs-item:focus-visible {
+    outline: 2px solid rgba(255, 127, 80, 0.65);
+    outline-offset: 2px;
+}
+
 .fts-cs-item:hover,
 .fts-cs-item.active {
     background-color: #fff1eb;

@@ -1,0 +1,1269 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: currency-sync.spec.js >> Currency state sync >> Currency switcher opens on click
+- Location: tests\currency-sync.spec.js:59:3
+
+# Error details
+
+```
+Error: expect(locator).toHaveClass(expected) failed
+
+Locator: locator('.fts-currency-switcher')
+Expected pattern: /open/
+Received string:  "fts-currency-switcher"
+Timeout: 5000ms
+
+Call log:
+  - Expect "toHaveClass" with timeout 5000ms
+  - waiting for locator('.fts-currency-switcher')
+    8 × locator resolved to <div class="fts-currency-switcher">…</div>
+      - unexpected value "fts-currency-switcher"
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - 'link "FTS Travels: Best Egypt Tours & Nile Cruise Packages" [ref=e5] [cursor=pointer]':
+        - /url: https://ftstravels.com/
+        - 'img "FTS Travels: Best Egypt Tours & Nile Cruise Packages" [ref=e7]'
+      - navigation "Trip page navigation" [ref=e8]:
+        - list [ref=e9]:
+          - listitem [ref=e10]:
+            - link "Home" [ref=e11] [cursor=pointer]:
+              - /url: https://ftstravels.com/
+          - listitem [ref=e12]:
+            - link "Travel Packages" [ref=e13] [cursor=pointer]:
+              - /url: https://ftstravels.com/packages/
+            - list [ref=e14]:
+              - listitem [ref=e15]:
+                - link "Egypt Travel Packages" [ref=e16] [cursor=pointer]:
+                  - /url: https://ftstravels.com/packages/egypt-travel-packages/
+              - listitem [ref=e17]:
+                - link "Egypt Christmas Holidays" [ref=e18] [cursor=pointer]:
+                  - /url: https://ftstravels.com/packages/egypt-christmas-holidays/
+              - listitem [ref=e19]:
+                - link "Egypt Easter Tours" [ref=e20] [cursor=pointer]:
+                  - /url: https://ftstravels.com/packages/egypt-easter-tours/
+          - listitem [ref=e21]:
+            - link "Destination" [ref=e22] [cursor=pointer]:
+              - /url: https://ftstravels.com/destination/
+            - list [ref=e23]:
+              - listitem [ref=e24]:
+                - link "Hurghada" [ref=e25] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/hurghada/
+              - listitem [ref=e26]:
+                - link "Cairo" [ref=e27] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/cairo/
+              - listitem [ref=e28]:
+                - link "Sharm el-Sheikh" [ref=e29] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/sharm-el-sheikh/
+              - listitem [ref=e30]:
+                - link "Luxor" [ref=e31] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/luxor/
+              - listitem [ref=e32]:
+                - link "Marsa Alam" [ref=e33] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/marsa-alam/
+          - listitem [ref=e34]:
+            - link "Things to do" [ref=e35] [cursor=pointer]:
+              - /url: https://ftstravels.com/trip-types/
+          - listitem [ref=e36]:
+            - link "Blog" [ref=e37] [cursor=pointer]:
+              - /url: https://ftstravels.com/blog/
+          - listitem [ref=e38]:
+            - link "Contact Us" [ref=e39] [cursor=pointer]:
+              - /url: https://ftstravels.com/contact-us/
+      - generic [ref=e40]:
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - text: € EUR
+            - img [ref=e44]
+          - list [ref=e46]:
+            - listitem [ref=e47]: € EUR
+            - listitem [ref=e48]: $ USD
+            - listitem [ref=e49]: £ GBP
+            - listitem [ref=e50]: EGP EGP
+            - listitem [ref=e51]: $ AUD
+        - generic [ref=e53]:
+          - button "EN" [ref=e54]:
+            - text: EN
+            - img [ref=e55]
+          - list [ref=e57]:
+            - listitem [ref=e58]:
+              - link "简体中文" [ref=e59] [cursor=pointer]:
+                - /url: https://ftstravels.com/zh-hans/
+            - listitem [ref=e60]:
+              - link "Українська" [ref=e61] [cursor=pointer]:
+                - /url: https://ftstravels.com/uk/
+            - listitem [ref=e62]:
+              - link "Türkçe" [ref=e63] [cursor=pointer]:
+                - /url: https://ftstravels.com/tr/
+            - listitem [ref=e64]:
+              - link "Русский" [ref=e65] [cursor=pointer]:
+                - /url: https://ftstravels.com/ru/
+            - listitem [ref=e66]:
+              - link "Română" [ref=e67] [cursor=pointer]:
+                - /url: https://ftstravels.com/ro/
+            - listitem [ref=e68]:
+              - link "Português" [ref=e69] [cursor=pointer]:
+                - /url: https://ftstravels.com/pt-br/
+            - listitem [ref=e70]:
+              - link "Polski" [ref=e71] [cursor=pointer]:
+                - /url: https://ftstravels.com/pl/
+            - listitem [ref=e72]:
+              - link "Nederlands" [ref=e73] [cursor=pointer]:
+                - /url: https://ftstravels.com/nl/
+            - listitem [ref=e74]:
+              - link "한국어" [ref=e75] [cursor=pointer]:
+                - /url: https://ftstravels.com/ko/
+            - listitem [ref=e76]:
+              - link "日本語" [ref=e77] [cursor=pointer]:
+                - /url: https://ftstravels.com/ja/
+            - listitem [ref=e78]:
+              - link "Italiano" [ref=e79] [cursor=pointer]:
+                - /url: https://ftstravels.com/it/
+            - listitem [ref=e80]:
+              - link "Magyar" [ref=e81] [cursor=pointer]:
+                - /url: https://ftstravels.com/hu/
+            - listitem [ref=e82]:
+              - link "Français" [ref=e83] [cursor=pointer]:
+                - /url: https://ftstravels.com/fr/
+            - listitem [ref=e84]:
+              - link "Español" [ref=e85] [cursor=pointer]:
+                - /url: https://ftstravels.com/es/
+            - listitem [ref=e86]:
+              - link "English" [ref=e87] [cursor=pointer]:
+                - /url: https://ftstravels.com/tours/hurghada-cairo-giza-by-bus/
+            - listitem [ref=e88]:
+              - link "Deutsch" [ref=e89] [cursor=pointer]:
+                - /url: https://ftstravels.com/de/
+            - listitem [ref=e90]:
+              - link "Čeština" [ref=e91] [cursor=pointer]:
+                - /url: https://ftstravels.com/cs/
+        - generic [ref=e93]:
+          - generic "Search Trips" [ref=e94]:
+            - img [ref=e95]
+          - generic [ref=e99]:
+            - img [ref=e101]
+            - search [ref=e104]:
+              - generic [ref=e105]:
+                - searchbox "Where do you want to go?" [ref=e106]
+                - button [ref=e107]:
+                  - img [ref=e108]
+            - generic [ref=e111]:
+              - text: Popular Activities
+              - generic [ref=e112]:
+                - link "Pyramids & History" [ref=e113] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/historical-tours/
+                - link "Boat Cruises" [ref=e114] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/boat-cruises/
+                - link "City Tours" [ref=e115] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/city-tours/
+                - link "Snorkeling" [ref=e116] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/snorkeling/
+                - link "Desert Safaris" [ref=e117] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/desert-safari/
+                - link "Camel Riding" [ref=e118] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/camel-ride/
+                - link "Quads & ATVs" [ref=e119] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/quad-bike-safari/
+                - link "For Kids" [ref=e120] [cursor=pointer]:
+                  - /url: https://ftstravels.com/categories/family-activities/
+      - button "Menu" [ref=e121]
+  - generic [ref=e122]:
+    - generic [ref=e124]:
+      - navigation [ref=e125]:
+        - link "Home" [ref=e126] [cursor=pointer]:
+          - /url: https://ftstravels.com
+        - text: /
+        - link "Egypt" [ref=e127] [cursor=pointer]:
+          - /url: https://ftstravels.com/destinations/egypt/
+        - text: /
+        - link "Hurghada" [ref=e128] [cursor=pointer]:
+          - /url: https://ftstravels.com/destinations/egypt/hurghada/
+        - text: / City Tours
+      - generic [ref=e129]:
+        - heading "From Hurghada To Cairo & Giza Top Attractions Day Tour by Van" [level=1] [ref=e130]
+        - button "Share" [ref=e132]:
+          - img [ref=e133]
+          - text: Share
+      - list [ref=e139]:
+        - listitem [ref=e140]:
+          - img [ref=e141]
+          - text: Marvel at the colossal Sphinx guarding the Giza Plateau, feeling the weight of millennia as you stand before this legendary limestone sentinel.
+        - listitem [ref=e143]:
+          - img [ref=e144]
+          - text: Savor authentic Egyptian cuisine during a relaxed lunch at a local Cairo restaurant, tasting traditional flavors in a genuine neighborhood setting.
+        - listitem [ref=e146]:
+          - img [ref=e147]
+          - text: Explore the Valley Temple's granite chambers where ancient priests prepared pharaohs for the afterlife, touching the same stones they used millennia ago.
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - img [ref=e151]
+          - text: 19 Hours
+        - text: "|"
+        - generic [ref=e154]:
+          - img [ref=e155]
+          - text: Egypt → Hurghada
+    - generic [ref=e159]:
+      - generic [ref=e161]:
+        - img "Family at the Pyramids of Giza during their hurghada to cairo" [ref=e164]
+        - img "Group photo at Giza Pyramids hurghada to cairo bus, hurghada cairo tour" [ref=e167]
+        - img "Group of travelers by van hurghada to cairo bus, hurghada cairo tour" [ref=e170]
+        - img "Visitors walking near the Giza Pyramids on a desert tour, hurghada to cairo bus, egyptian museum tour" [ref=e173]
+        - img "Travelers by van on their hurghada to cairo bus, tour hurghada cairo" [ref=e176]
+        - img "Couple at Giza Pyramids hurghada to cairo bus, egyptian museum tour" [ref=e179]
+        - img "Visitors at the Egyptian Museum hurghada to cairo bus, egyptian museum tour" [ref=e182]
+        - img "Bus at the Pyramids hurghada to cairo bus, tour hurghada cairo" [ref=e185]
+        - img "Giza Pyramids view hurghada to cairo bus, tour hurghada cairo" [ref=e188]
+        - img "Group at the Pyramids of Giza hurghada to cairo bus, tour hurghada cairo" [ref=e191]
+        - img "Traveler at the Giza Pyramids hurghada to cairo bus, cairo nile boat" [ref=e194]
+        - img "Interior view of the Egyptian Museum showcasing artifacts from ancient Egypt, hur hurghada to cairo bus, egyptian museum tour" [ref=e197]
+        - img "Travelers at FTS Travels van hurghada to cairo bus, egyptian museum tour" [ref=e200]
+        - img "Visitors at the Great Sphinx of Giza hurghada to cairo bus, hurghada cairo tour" [ref=e203]
+        - img "Egyptian Museum entrance hurghada to cairo bus, tour hurghada cairo" [ref=e206]
+        - img "Pyramids of Giza in the desert hurghada to cairo bus, cairo nile boat" [ref=e209]
+        - img "Tourists on camels at the Pyramids of Giza hurghada to cairo bus, cairo nile boat" [ref=e212]
+        - img "Giza Pyramids and Sphinx hurghada to cairo bus, hurghada cairo tour" [ref=e215]
+        - img "Traveler at the Giza Pyramids hurghada to cairo bus, cairo nile boat" [ref=e218]
+        - img "Couple at the Pyramids of Giza hurghada to cairo bus, cairo nile boat" [ref=e221]
+        - img "Group enjoying a Nile boat tour hurghada to cairo bus, tour hurghada cairo" [ref=e224]
+        - img "Visitors at the Giza Pyramids hurghada to cairo bus, hurghada cairo tour" [ref=e227]
+        - img "Cairo Tower at sunset hurghada to cairo bus, egyptian museum tour" [ref=e230]
+        - img "Visitors at the Pyramids of Giza hurghada to cairo bus, tour hurghada cairo" [ref=e233]
+        - img "Intricate ancient Egyptian artifacts at the museum, hurghada to cairo bus, egyptian museum tour" [ref=e236]
+      - generic [ref=e237]:
+        - img "Family at the Pyramids of Giza during their hurghada to cairo" [ref=e240]
+        - img "Group photo at Giza Pyramids hurghada to cairo bus, hurghada cairo tour" [ref=e243]
+        - generic [ref=e244]:
+          - img "Group of travelers by van hurghada to cairo bus, hurghada cairo tour" [ref=e246]
+          - generic [ref=e247]:
+            - img [ref=e248]
+            - text: +22 photos
+    - generic [ref=e252]:
+      - button "Close" [ref=e253]:
+        - img [ref=e254]
+      - button "Previous" [ref=e257]:
+        - img [ref=e258]
+      - button "Next" [ref=e260]:
+        - img [ref=e261]
+    - generic [ref=e264]:
+      - button "×" [ref=e265]
+      - iframe [ref=e267]:
+        
+    - generic [ref=e270]:
+      - generic [ref=e271]:
+        - paragraph [ref=e272]: Embark on an unforgettable journey from Hurghada to Cairo, exploring Egypt’s most iconic treasures in one seamless day. This expertly curated tour takes you from the Red Sea coast to...
+        - list [ref=e273]:
+          - listitem [ref=e274]:
+            - generic [ref=e275]: Duration 19 hours 30 minutes
+          - listitem [ref=e276]:
+            - generic [ref=e277]: Pickup & Drop Off Hotel pickup included
+          - listitem [ref=e278]:
+            - generic [ref=e279]: Meals Lunch included
+          - listitem [ref=e280]:
+            - generic [ref=e281]: Language English, French, German, Spanish, Italian
+      - generic [ref=e282]:
+        - generic [ref=e283]: €89 / person
+        - generic [ref=e284]:
+          - link "Check Availability" [ref=e285] [cursor=pointer]:
+            - /url: "#"
+          - link "WhatsApp" [ref=e286] [cursor=pointer]:
+            - /url: https://wa.me/201000479285?text=Hi%2C%20I%20have%20a%20question%20about%3A%20From%20Hurghada%20To%20Cairo%20%26%23038%3B%20Giza%20Top%20Attractions%20Day%20Tour%20by%20Van
+            - text: WhatsApp
+    - generic [ref=e289]:
+      - generic [ref=e290]:
+        - img [ref=e291]
+        - generic [ref=e294]: "4"
+        - text: people viewing now
+      - generic [ref=e295]:
+        - img [ref=e296]
+        - text: Last booked 3949 minutes ago
+      - generic [ref=e299]:
+        - img [ref=e300]
+        - text: Trending in Egypt, Hurghada
+    - generic [ref=e305]:
+      - link "Overview" [ref=e306] [cursor=pointer]:
+        - /url: "#fts-v2-sec-overview"
+      - link "Highlights" [ref=e307] [cursor=pointer]:
+        - /url: "#fts-v2-sec-highlights"
+      - link "Itinerary" [ref=e308] [cursor=pointer]:
+        - /url: "#fts-v2-sec-itinerary"
+      - link "What's Included" [ref=e309] [cursor=pointer]:
+        - /url: "#fts-v2-sec-includes"
+      - link "Good to Know" [ref=e310] [cursor=pointer]:
+        - /url: "#fts-v2-sec-facts"
+      - link "Why People Love This Trip" [ref=e311] [cursor=pointer]:
+        - /url: "#fts-v2-sec-why-love"
+      - link "Prices & Details" [ref=e312] [cursor=pointer]:
+        - /url: "#fts-v2-sec-pricing"
+      - link "Gallery" [ref=e313] [cursor=pointer]:
+        - /url: "#fts-v2-sec-gallery"
+      - link "FAQ" [ref=e314] [cursor=pointer]:
+        - /url: "#fts-v2-sec-faq"
+    - generic [ref=e315]:
+      - generic [ref=e317]:
+        - generic [ref=e318]:
+          - heading "Trip Overview" [level=2] [ref=e319]
+          - generic [ref=e320]:
+            - paragraph [ref=e321]: Embark on an unforgettable journey from Hurghada to Cairo, exploring Egypt’s most iconic treasures in one seamless day. This expertly curated tour takes you from the Red Sea coast to the heart of ancient civilization.
+            - paragraph [ref=e322]: Experience the magic of a Hurghada to Cairo adventure without the stress of planning. Your day includes comfortable transportation, expert guidance, and visits to world-famous landmarks.
+            - paragraph [ref=e323]: Stand before the majestic Pyramids of Giza and the enigmatic Sphinx. Discover priceless artifacts at the Grand Egyptian Museum, home to Tutankhamun’s treasures.
+            - paragraph [ref=e324]: This Hurghada to Cairo tour offers the perfect blend of history, culture, and convenience. Enjoy authentic Egyptian cuisine during lunch at a local restaurant.
+            - paragraph [ref=e325]: Let us handle all the details while you create lifelong memories. Book your Hurghada to Cairo experience today and step into ancient history.
+        - generic [ref=e326]:
+          - heading "Highlights" [level=2] [ref=e327]
+          - generic [ref=e329]:
+            - generic [ref=e330]: Marvel at the colossal Sphinx guarding the Giza Plateau, feeling the weight of millennia as you stand before this legendary limestone sentinel.
+            - generic [ref=e331]: Savor authentic Egyptian cuisine during a relaxed lunch at a local Cairo restaurant, tasting traditional flavors in a genuine neighborhood setting.
+            - generic [ref=e332]: Explore the Valley Temple's granite chambers where ancient priests prepared pharaohs for the afterlife, touching the same stones they used millennia ago.
+            - generic [ref=e333]: Discover King Tutankhamun's golden treasures and royal mummies at the Grand Egyptian Museum, where ancient history comes vividly to life.
+            - generic [ref=e334]: Wander through the Egyptian Museum's treasure-filled halls, where countless artifacts reveal the daily life and beliefs of ancient Egyptian civilization.
+            - generic [ref=e335]: Glide along the Nile on a scenic boat trip, watching Cairo's skyline drift by as you experience the river that shaped this ancient civilization.
+            - generic [ref=e336]: Step inside the Great Pyramid's ancient chambers on an optional interior visit, experiencing the remarkable engineering and atmosphere of this 4,500-year-old wonder.
+        - generic [ref=e337]:
+          - heading "Day Itinerary" [level=2] [ref=e338]
+          - generic [ref=e339]:
+            - generic [ref=e340]:
+              - generic [ref=e341]: "1"
+              - generic [ref=e342]:
+                - generic [ref=e344]:
+                  - text: Early Morning
+                  - heading "Early Morning (6 hours) – Journey from Red Sea to Nile | 🚐 Transfer" [level=3] [ref=e345]
+                - generic [ref=e346]: Your adventure begins with a comfortable van journey from your Hurghada hotel. Watch the dramatic Egyptian landscape transform from coastal resorts to desert highways as you travel toward the historic Nile Valley. This is your perfect opportunity to relax, chat with fellow travelers, and anticipate the ancient wonders awaiting you in Cairo.
+            - generic [ref=e347]:
+              - generic [ref=e348]: "2"
+              - generic [ref=e349]:
+                - generic [ref=e351]:
+                  - text: Late Morning
+                  - heading "Late Morning (2 hours) – Grand Egyptian Museum | 🏛️ Visit | ⭐ Highlight" [level=3] [ref=e352]
+                - generic [ref=e353]: Step into the magnificent Grand Egyptian Museum, where the treasures of the pharaohs await. You'll be surrounded by countless artifacts that reveal the daily life, beliefs, and artistry of ancient Egyptian civilization. The undisputed highlight is discovering King Tutankhamun's golden treasures and the royal mummies, where ancient history comes vividly to life before your eyes.
+            - generic [ref=e354]:
+              - generic [ref=e355]: "3"
+              - generic [ref=e356]:
+                - generic [ref=e358]:
+                  - text: Midday
+                  - heading "Midday (1.5 hours) – Authentic Egyptian Lunch | 🍽️ Meal" [level=3] [ref=e359]
+                - generic [ref=e360]: Savor authentic Egyptian cuisine during a relaxed lunch at a local Cairo restaurant. Taste traditional flavors like koshari, grilled meats, or fresh salads in a genuine neighborhood setting. This midday break offers delicious nourishment and a chance to experience Cairo's culinary culture before continuing your exploration.
+            - generic [ref=e361]:
+              - generic [ref=e362]: "4"
+              - generic [ref=e363]:
+                - generic [ref=e365]:
+                  - text: Early Afternoon
+                  - heading "Early Afternoon (30 minutes) – Scenic Nile Boat Trip | 🎯 Activity" [level=3] [ref=e366]
+                - generic [ref=e367]: Glide along the legendary Nile River on a scenic boat trip, watching Cairo's modern skyline and historic landmarks drift by. Feel the gentle breeze as you experience the river that shaped this ancient civilization, providing a peaceful contrast to the bustling city. This short cruise offers perfect photo opportunities and a unique perspective of Egypt's lifeline.
+            - generic [ref=e368]:
+              - generic [ref=e369]: "5"
+              - generic [ref=e370]:
+                - generic [ref=e372]:
+                  - text: Afternoon
+                  - heading "Afternoon (30 minutes) – Organic Oils Discovery | 🛍️ Shopping" [level=3] [ref=e373]
+                - generic [ref=e374]: Discover a wonderful selection of organic oils and traditional Egyptian products. Learn about their uses in aromatherapy, cooking, and skincare from local experts. This stop offers a chance to find unique, authentic souvenirs to bring home—a sensory memory of your Egyptian journey.
+            - generic [ref=e375]:
+              - generic [ref=e376]: "6"
+              - generic [ref=e377]:
+                - generic [ref=e379]:
+                  - text: Mid-Afternoon
+                  - heading "Mid-Afternoon (30 minutes) – Transfer to Giza Plateau | 🚐 Transfer" [level=3] [ref=e380]
+                - generic [ref=e381]: Travel from Cairo to the legendary Giza Plateau, where the world's most iconic ancient monuments await. As you approach, you'll catch your first glimpses of the pyramids rising from the desert—a sight that has captivated travelers for millennia. The anticipation builds with every kilometer closer to these ancient wonders.
+            - generic [ref=e382]:
+              - generic [ref=e383]: "7"
+              - generic [ref=e384]:
+                - generic [ref=e386]:
+                  - text: Late Afternoon
+                  - heading "Late Afternoon (2 hours) – Great Pyramids of Giza | 🏛️ Visit | ⭐ Highlight" [level=3] [ref=e387]
+                - generic [ref=e388]: Stand in awe before the iconic Great Pyramids of Giza—Khufu, Khafre, and Menkaure—marveling at their colossal scale and perfect geometry. You can step inside the Great Pyramid's ancient chambers, experiencing the remarkable engineering and atmosphere of this 4,500-year-old wonder. Feel the weight of history as you touch the same stones that have stood since the age of the pharaohs.
+            - generic [ref=e389]:
+              - generic [ref=e390]: "8"
+              - generic [ref=e391]:
+                - generic [ref=e393]:
+                  - text: Late Afternoon
+                  - heading "Late Afternoon (30 minutes) – The Great Sphinx | 📸 Photo Stop | ⭐ Highlight" [level=3] [ref=e394]
+                - generic [ref=e395]: Marvel at the colossal Sphinx guarding the Giza Plateau, feeling the weight of millennia as you stand before this legendary limestone sentinel. Gaze at the mysterious human-headed lion that has watched over the pyramids for thousands of years. This is your chance to capture the perfect photograph with Egypt's most enigmatic monument.
+            - generic [ref=e396]:
+              - generic [ref=e397]: "9"
+              - generic [ref=e398]:
+                - generic [ref=e400]:
+                  - text: Evening
+                  - heading "Evening (30 minutes) – Valley Temple Exploration | 🏛️ Visit" [level=3] [ref=e401]
+                - generic [ref=e402]: Explore the Valley Temple's granite chambers where ancient priests prepared pharaohs for the afterlife. Touch the same massive stones they used millennia ago, feeling the cool, polished surfaces that have witnessed sacred rituals. This site offers incredible insight into the mortuary practices and spiritual beliefs of ancient Egypt.
+            - generic [ref=e403]:
+              - generic [ref=e404]: "10"
+              - generic [ref=e405]:
+                - generic [ref=e407]:
+                  - text: Night
+                  - heading "Night (6 hours) – Return Journey to Hurghada | 🚐 Transfer" [level=3] [ref=e408]
+                - generic [ref=e409]: Relax during your comfortable return journey from Giza back to your Hurghada hotel. Reflect on the incredible experiences of your day—from Tutankhamun's gold to the pyramids' grandeur—as the Egyptian night unfolds outside your window. You'll arrive back with memories that will last a lifetime, having experienced the best of ancient Egypt in a single, unforgettable day.
+        - generic [ref=e410]:
+          - heading "What's Included" [level=2] [ref=e411]
+          - generic [ref=e412]:
+            - generic [ref=e413]:
+              - heading "Included" [level=3] [ref=e414]: Included
+              - list [ref=e415]:
+                - listitem [ref=e416]: Entry fees to all attractions listed in the itinerary (if option selected)
+                - listitem [ref=e417]: Interior visit to the Great Pyramid (if option selected)
+                - listitem [ref=e418]: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+                - listitem [ref=e419]: Guided tour with a knowledgeable tour guide
+                - listitem [ref=e420]: Shared Photographer per person (Optional add-on - $30)
+                - listitem [ref=e421]: Comfortable air-conditioned transportation between Hurghada and Cairo
+                - listitem [ref=e422]: FTS Scarve (Optional add-on - $10)
+                - listitem [ref=e423]: Optional Nile boat trip for a scenic experience (if option selected)
+                - listitem [ref=e424]: FTS Organic oils - 100% pure (Optional add-on - $10)
+                - listitem [ref=e425]: Hotel pickup and drop-off in Hurghada for a seamless travel experience
+            - generic [ref=e426]:
+              - heading "Not Included" [level=3] [ref=e427]: Not Included
+              - list [ref=e428]:
+                - listitem [ref=e429]: Camel or horse ride (available as an add-on)
+                - listitem [ref=e430]: Drinks and Travel insurance
+                - listitem [ref=e431]: Gratuities and tips and Personal expenses and shopping
+                - listitem [ref=e432]: Pick-up and drop-off from Safaga or Soma Bay (8 USD extra per person) and Pick-up and drop-off from Makadi Bay, Sahl
+          - generic [ref=e433]:
+            - generic [ref=e434]:
+              - heading "Ready to Book This Trip?" [level=3] [ref=e435]
+              - paragraph [ref=e436]: Secure your spot now. Free cancellation available.
+            - generic [ref=e437]:
+              - link "Book Now" [ref=e438] [cursor=pointer]:
+                - /url: "#"
+              - link "Chat on WhatsApp" [ref=e439] [cursor=pointer]:
+                - /url: https://wa.me/201000479285
+                - text: Chat on WhatsApp
+        - generic [ref=e440]:
+          - heading "Good to Know" [level=2] [ref=e441]
+          - generic [ref=e442]:
+            - generic [ref=e444]:
+              - generic [ref=e445]: Duration
+              - generic [ref=e446]: 19 hours 30 minutes
+            - generic [ref=e448]:
+              - generic [ref=e449]: Pickup & Drop Off
+              - generic [ref=e450]: Hotel pickup included
+            - generic [ref=e452]:
+              - generic [ref=e453]: Meals
+              - generic [ref=e454]: Lunch included
+            - generic [ref=e456]:
+              - generic [ref=e457]: Language
+              - generic [ref=e458]: English, French, German, Spanish, Italian
+            - generic [ref=e460]:
+              - generic [ref=e461]: Tour Location
+              - generic [ref=e462]: Cairo, Giza
+            - generic [ref=e464]:
+              - generic [ref=e465]: Transportation
+              - generic [ref=e466]: Air-conditioned vehicle
+        - generic [ref=e467]:
+          - heading "Why People Love This Trip" [level=2] [ref=e468]
+          - generic [ref=e469]:
+            - heading "Why People Love This Trip" [level=3] [ref=e470]
+            - paragraph [ref=e471]: "*Witness Ancient Wonders in One Day* ⭐"
+            - paragraph [ref=e472]: Travelers rave about seeing both the Pyramids and Grand Egyptian Museum in a single, perfectly planned day. This Hurghada to Cairo tour delivers Egypt’s greatest hits without the hassle of overnight stays.
+            - paragraph [ref=e473]: "*Stress-Free Door-to-Door Service* 🚐"
+            - paragraph [ref=e474]: From hotel pickup to drop-off, every detail is handled for you. No navigating buses or arranging transfers—just pure enjoyment from Hurghada to Cairo and back.
+            - paragraph [ref=e475]: "*Expert Guides Bring History Alive* 👨‍🏫"
+            - paragraph [ref=e476]: Our certified Egyptologists transform ancient stones into captivating stories. Guests love how our guides make 5,000-year-old history feel immediate and thrilling.
+            - paragraph [ref=e477]: "*Incredible Value, Unforgettable Memories* 💰"
+            - paragraph [ref=e478]: Compare organizing this yourself versus our all-inclusive Hurghada to Cairo tour. We include transportation, entry fees, lunch, and guiding—saving you time, money, and stress.
+            - paragraph [ref=e479]: "*Exclusive Access & Flexible Options* 🎯"
+            - paragraph [ref=e480]: We offer interior pyramid visits and Nile boat trips that others don’t include. Customize your Hurghada to Cairo experience with add-ons that match your interests.
+            - paragraph [ref=e481]: "*The Feeling of Standing Before History* ❤️"
+            - paragraph [ref=e482]: That moment when you first see the Pyramids—travelers describe it as breathtaking. This Hurghada to Cairo journey creates emotional memories that last a lifetime.
+            - paragraph [ref=e483]: "*Perfect for Time-Constrained Travelers* 👨‍👩‍👧‍👦"
+            - paragraph [ref=e484]: If you’re based in Hurghada with limited time, this is your ideal solution. Experience Cairo’s highlights without sacrificing multiple days of your beach vacation.
+        - generic [ref=e485]:
+          - heading "Choose Your Package" [level=2] [ref=e486]
+          - paragraph [ref=e487]: Compare inclusions like transfers, guide & lunch below.
+          - button "Compare packages" [ref=e489]
+          - generic [ref=e490]:
+            - generic [ref=e491]:
+              - generic [ref=e492]: ⚡ Best Value
+              - heading "Small Group Cairo Pyramids, Sphinx, GEM Day Trip" [level=3] [ref=e493]
+              - generic [ref=e494]: €89 €79 / person
+              - generic [ref=e495]: Save 11%
+              - generic [ref=e496]: Lowest price
+              - list [ref=e497]:
+                - listitem [ref=e498]:
+                  - img [ref=e499]
+                  - text: Entry fees to all attractions listed in the itinerary (if option selected)
+                - listitem [ref=e501]:
+                  - img [ref=e502]
+                  - text: Interior visit to the Great Pyramid (if option selected)
+                - listitem [ref=e504]:
+                  - img [ref=e505]
+                  - text: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+                - listitem [ref=e507]:
+                  - img [ref=e508]
+                  - text: Guided tour with a knowledgeable tour guide
+              - link "Select Package" [ref=e510] [cursor=pointer]:
+                - /url: "#"
+            - generic [ref=e511]:
+              - generic [ref=e512]: ★ Most Popular
+              - heading "Small Group Pyramids, Sphinx ,GEM, Nile Boat" [level=3] [ref=e513]
+              - generic [ref=e514]: €103 €89 / person
+              - generic [ref=e515]: Save 14%
+              - generic [ref=e516]: +€10 vs lowest
+              - list [ref=e517]:
+                - listitem [ref=e518]:
+                  - img [ref=e519]
+                  - text: Entry fees to all attractions listed in the itinerary (if option selected)
+                - listitem [ref=e521]:
+                  - img [ref=e522]
+                  - text: Interior visit to the Great Pyramid (if option selected)
+                - listitem [ref=e524]:
+                  - img [ref=e525]
+                  - text: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+                - listitem [ref=e527]:
+                  - img [ref=e528]
+                  - text: Guided tour with a knowledgeable tour guide
+              - link "Select Package" [ref=e530] [cursor=pointer]:
+                - /url: "#"
+            - generic [ref=e531]:
+              - heading "Cairo Pyramids, Sphinx & GEM & Inside Pyramid" [level=3] [ref=e532]
+              - generic [ref=e533]: €130 €119 / person
+              - generic [ref=e534]: Save 9%
+              - generic [ref=e535]: +€40 vs lowest
+              - list [ref=e536]:
+                - listitem [ref=e537]:
+                  - img [ref=e538]
+                  - text: Entry fees to all attractions listed in the itinerary (if option selected)
+                - listitem [ref=e540]:
+                  - img [ref=e541]
+                  - text: Interior visit to the Great Pyramid (if option selected)
+                - listitem [ref=e543]:
+                  - img [ref=e544]
+                  - text: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+                - listitem [ref=e546]:
+                  - img [ref=e547]
+                  - text: Guided tour with a knowledgeable tour guide
+              - link "Select Package" [ref=e549] [cursor=pointer]:
+                - /url: "#"
+          - region "Package comparison" [ref=e551]:
+            - generic [ref=e552]:
+              - generic [ref=e553]: Inclusions
+              - generic [ref=e554]:
+                - generic [ref=e555]: Small Group Cairo Pyramids, Sphinx, GEM Day Trip
+                - generic [ref=e556]: €79
+              - generic [ref=e557]:
+                - generic [ref=e558]: Small Group Pyramids, Sphinx ,GEM, Nile Boat
+                - generic [ref=e559]: €89
+              - generic [ref=e560]:
+                - generic [ref=e561]: Cairo Pyramids, Sphinx & GEM & Inside Pyramid
+                - generic [ref=e562]: €119
+            - generic [ref=e563]:
+              - generic [ref=e564]: Comfortable air-conditioned transportation between Hurghada and Cairo
+              - generic "Included" [ref=e566]:
+                - img [ref=e567]
+              - generic "Included" [ref=e570]:
+                - img [ref=e571]
+              - generic "Included" [ref=e574]:
+                - img [ref=e575]
+            - generic [ref=e577]:
+              - generic [ref=e578]: Entry fees to all attractions listed in the itinerary (if option selected)
+              - generic "Included" [ref=e580]:
+                - img [ref=e581]
+              - generic "Included" [ref=e584]:
+                - img [ref=e585]
+              - generic "Included" [ref=e588]:
+                - img [ref=e589]
+            - generic [ref=e591]:
+              - generic [ref=e592]: FTS Organic oils - 100% pure (Optional add-on - $10)
+              - generic "Included" [ref=e594]:
+                - img [ref=e595]
+              - generic "Included" [ref=e598]:
+                - img [ref=e599]
+              - generic "Included" [ref=e602]:
+                - img [ref=e603]
+            - generic [ref=e605]:
+              - generic [ref=e606]: FTS Scarve (Optional add-on - $10)
+              - generic "Included" [ref=e608]:
+                - img [ref=e609]
+              - generic "Included" [ref=e612]:
+                - img [ref=e613]
+              - generic "Included" [ref=e616]:
+                - img [ref=e617]
+            - generic [ref=e619]:
+              - generic [ref=e620]: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+              - generic "Included" [ref=e622]:
+                - img [ref=e623]
+              - generic "Included" [ref=e626]:
+                - img [ref=e627]
+              - generic "Included" [ref=e630]:
+                - img [ref=e631]
+            - generic [ref=e633]:
+              - generic [ref=e634]: Guided tour with a knowledgeable tour guide
+              - generic "Included" [ref=e636]:
+                - img [ref=e637]
+              - generic "Included" [ref=e640]:
+                - img [ref=e641]
+              - generic "Included" [ref=e644]:
+                - img [ref=e645]
+            - generic [ref=e647]:
+              - generic [ref=e648]: Hotel pickup and drop-off in Hurghada for a seamless travel experience
+              - generic "Included" [ref=e650]:
+                - img [ref=e651]
+              - generic "Included" [ref=e654]:
+                - img [ref=e655]
+              - generic "Included" [ref=e658]:
+                - img [ref=e659]
+            - generic [ref=e661]:
+              - generic [ref=e662]: Interior visit to the Great Pyramid (if option selected)
+              - generic "Included" [ref=e664]:
+                - img [ref=e665]
+              - generic "Included" [ref=e668]:
+                - img [ref=e669]
+              - generic "Included" [ref=e672]:
+                - img [ref=e673]
+            - generic [ref=e675]:
+              - generic [ref=e676]: Optional Nile boat trip for a scenic experience (if option selected)
+              - generic "Included" [ref=e678]:
+                - img [ref=e679]
+              - generic "Included" [ref=e682]:
+                - img [ref=e683]
+              - generic "Included" [ref=e686]:
+                - img [ref=e687]
+            - generic [ref=e689]:
+              - generic [ref=e690]: Shared Photographer per person (Optional add-on - $30)
+              - generic "Included" [ref=e692]:
+                - img [ref=e693]
+              - generic "Included" [ref=e696]:
+                - img [ref=e697]
+              - generic "Included" [ref=e700]:
+                - img [ref=e701]
+        - generic [ref=e703]:
+          - heading "Photo Gallery" [level=2] [ref=e704]
+          - generic [ref=e705]:
+            - img "Family at the Pyramids of Giza during their hurghada to cairo" [ref=e708]
+            - img "Group photo at Giza Pyramids hurghada to cairo bus, hurghada cairo tour" [ref=e711]
+            - img "Group of travelers by van hurghada to cairo bus, hurghada cairo tour" [ref=e714]
+            - img "Visitors walking near the Giza Pyramids on a desert tour, hurghada to cairo bus, egyptian museum tour" [ref=e717]
+            - img "Travelers by van on their hurghada to cairo bus, tour hurghada cairo" [ref=e720]
+            - img "Couple at Giza Pyramids hurghada to cairo bus, egyptian museum tour" [ref=e723]
+            - img "Visitors at the Egyptian Museum hurghada to cairo bus, egyptian museum tour" [ref=e726]
+            - img "Bus at the Pyramids hurghada to cairo bus, tour hurghada cairo" [ref=e729]
+        - generic [ref=e730]:
+          - heading "Frequently Asked Questions" [level=2] [ref=e731]
+          - generic [ref=e732]:
+            - generic [ref=e733]:
+              - generic [ref=e734]: How much extra money should I bring for the day?
+              - generic [ref=e735]: We recommend bringing cash (Egyptian Pounds or USD) for personal expenses like drinks, optional add-ons (like the Great Pyramid interior visit or a camel ride), souvenirs, and tips for your guide and driver. All major entry fees are covered if you select the inclusive option when booking.
+            - generic [ref=e736]:
+              - generic [ref=e737]: Do we get free time at the pyramids or is it all guided?
+              - generic [ref=e738]: The tour is a mix of guided exploration and free time. Your guide will provide a comprehensive tour of the Giza Plateau and the Grand Egyptian Museum, explaining the history and significance. You'll also have designated free time to take photos, explore at your leisure, or opt for add-on experiences like a camel ride.
+            - generic [ref=e739]:
+              - generic [ref=e740]: Where and when is the hotel pickup for this tour?
+              - generic [ref=e741]: We provide convenient hotel pickup directly from your hotel lobby at 3:00 AM. Your guide will meet you there with comfortable air-conditioned transportation, ensuring a hassle-free start. You’ll receive confirmation details after booking.
+            - generic [ref=e742]:
+              - generic [ref=e743]: Is lunch included and can you accommodate dietary restrictions?
+              - generic [ref=e744]: Yes, a delicious lunch at a local Cairo restaurant featuring authentic Egyptian cuisine is included. If you have dietary restrictions (vegetarian, gluten-free, allergies), please inform us at the time of booking so we can arrange suitable meals with the restaurant in advance.
+            - generic [ref=e745]:
+              - generic [ref=e746]: What languages are the guided tours available in?
+              - generic [ref=e747]: Our knowledgeable tour guides are fluent in English, French, German, Spanish, and Italian. You'll receive insightful commentary at the Great Pyramids, the Sphinx, and the Grand Egyptian Museum, bringing ancient Egyptian history vividly to life in your preferred language.
+            - generic [ref=e748]:
+              - generic [ref=e749]: How do I book the Cairo & Giza day tour from Hurghada?
+              - generic [ref=e750]: You can book directly online for instant confirmation and secure your spot. We recommend booking at least a few days in advance, especially during peak travel seasons, to guarantee availability for your preferred date.
+            - generic [ref=e751]:
+              - generic [ref=e752]: Will we visit the Egyptian Museum in Tahrir or the new museum?
+              - generic [ref=e753]: You will visit the new Grand Egyptian Museum (GEM) in Giza. This stunning modern museum houses the complete Tutankhamun collection, including his golden mask, and the royal mummies. It's a world-class experience located near the pyramids, making your day much more efficient and immersive.
+            - generic [ref=e754]:
+              - generic [ref=e755]: What should I wear and bring for the day?
+              - generic [ref=e756]: Wear comfortable walking shoes, light layers, and a hat for sun protection at the pyramids. Bring sunscreen, a refillable water bottle, local currency for souvenirs or extras, and your camera—you'll want to capture the Sphinx and King Tutankhamun's treasures at the Grand Egyptian Museum.
+            - generic [ref=e757]:
+              - generic [ref=e758]: What happens if I need to cancel my booking?
+              - generic [ref=e759]: If you need to cancel your booking, don’t worry—you can cancel at any time. You’ll receive a full refund if you cancel at least 24 hours before the scheduled trip. Please contact our customer service team and we’ll be happy to help you cancel or reschedule.
+            - generic [ref=e760]:
+              - generic [ref=e761]: Is this tour suitable for children or elderly travelers?
+              - generic [ref=e762]: Yes, this tour is designed for most fitness levels, with comfortable transportation and guided walks. There is a fair amount of walking on the Giza Plateau and inside the Grand Egyptian Museum, but you can proceed at your own pace. Please note the optional interior visit to the Great Pyramid involves a narrow, sloping passageway.
+            - generic [ref=e763]:
+              - generic [ref=e764]: Does this tour include entry inside any pyramid?
+              - generic [ref=e765]: Your guided visit includes the main pyramid sites listed in the itinerary with plenty of time for photos and explanations. Entry inside any pyramid requires a separate ticket and is not included unless explicitly stated.
+            - generic [ref=e766]:
+              - generic [ref=e767]: Is it safe to travel from Hurghada to Cairo for the day?
+              - generic [ref=e768]: Yes, your safety is our priority. You will travel in a private, air-conditioned vehicle with a professional driver and be accompanied by a licensed tour guide throughout the day in Cairo and Giza. Our guides are experienced in navigating the sites and ensuring a smooth, secure experience for all guests.
+      - generic [ref=e772]:
+        - generic [ref=e773]:
+          - generic [ref=e775]: From
+          - generic [ref=e776]: €89 / person
+        - link "Cancellation policy (terms apply)" [ref=e777] [cursor=pointer]:
+          - /url: https://ftstravels.com/terms-and-conditions/
+          - generic [ref=e778]:
+            - img [ref=e779]
+            - text: Cancellation policy (terms apply)
+        - generic [ref=e782]:
+          - button "Select Date Tap to choose your travel date" [ref=e783]:
+            - generic [ref=e784]:
+              - img [ref=e786]
+              - generic [ref=e788]: Select Date Tap to choose your travel date
+            - img [ref=e789]
+          - generic [ref=e792]:
+            - generic [ref=e793]: Low availability
+            - generic [ref=e794]: Best price
+        - generic [ref=e795]:
+          - button "Travelers 1 Adult" [ref=e796]:
+            - generic [ref=e797]:
+              - img [ref=e799]
+              - generic [ref=e804]: Travelers 1 Adult
+            - img [ref=e805]
+          - generic [ref=e807]:
+            - generic [ref=e808]:
+              - generic [ref=e809]: Adults Age 12+
+              - generic [ref=e810]:
+                - button "−" [ref=e811]
+                - text: "1"
+                - button "+" [ref=e812]
+            - generic [ref=e813]:
+              - generic [ref=e814]: Children Age 2–11
+              - generic [ref=e815]:
+                - button "−" [ref=e816]
+                - text: "0"
+                - button "+" [ref=e817]
+        - generic [ref=e818]:
+          - generic [ref=e819]:
+            - img [ref=e820]
+            - text: Entry fees to all attractions listed in the itinerary (if option selected)
+          - generic [ref=e822]:
+            - img [ref=e823]
+            - text: Interior visit to the Great Pyramid (if option selected)
+          - generic [ref=e825]:
+            - img [ref=e826]
+            - text: Guided tour of the Giza Plateau including the Pyramids and Sphinx
+          - generic [ref=e828]:
+            - img [ref=e829]
+            - text: Guided tour with a knowledgeable tour guide
+        - generic [ref=e831]:
+          - generic [ref=e832]: Secure Booking
+          - generic [ref=e833]: Reserve now & pay later
+          - generic [ref=e834]: Hotel pickup included
+          - generic [ref=e835]: Entry tickets included
+          - generic [ref=e836]: Lunch included
+        - button "Check Availability" [ref=e838]
+        - generic [ref=e839]:
+          - generic [ref=e840]: Book with confidence
+          - generic [ref=e841]: "Pickup: Hotel pickup included"
+          - generic [ref=e842]: "Duration: 19 Hours"
+          - link "Support via WhatsApp" [ref=e844] [cursor=pointer]:
+            - /url: https://wa.me/201000479285
+        - generic [ref=e845]: Visa | Mastercard | PayPal
+    - generic [ref=e846]:
+      - heading "More trips from Egypt" [level=2] [ref=e847]
+      - generic [ref=e848]:
+        - 'link "Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner 7 Hours €35 From €45 View" [ref=e849] [cursor=pointer]':
+          - /url: https://ftstravels.com/tours/sahl-hasheesh-desert-tour-stargazing-bbq/
+          - 'img "Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner" [ref=e852]'
+          - generic [ref=e853]:
+            - 'heading "Desert Tour: Sahl Hasheesh Stargazing & BBQ Dinner" [level=3] [ref=e854]'
+            - generic [ref=e856]: 7 Hours
+            - generic [ref=e857]: €35 From €45
+            - generic [ref=e858]: View
+        - 'link "Wadi Rum Jeep Tour: Hurghada Desert Safari & Fire Show Wadi Rum Jeep Tour: Hurghada Desert Safari & Fire Show 7 Hours €26 From €30 View" [ref=e859] [cursor=pointer]':
+          - /url: https://ftstravels.com/tours/wadi-rum-jeep-tour-hurghada-desert-safari/
+          - 'img "Wadi Rum Jeep Tour: Hurghada Desert Safari & Fire Show" [ref=e862]'
+          - generic [ref=e863]:
+            - 'heading "Wadi Rum Jeep Tour: Hurghada Desert Safari & Fire Show" [level=3] [ref=e864]'
+            - generic [ref=e866]: 7 Hours
+            - generic [ref=e867]: €26 From €30
+            - generic [ref=e868]: View
+        - 'link "Bianca Island Tour: Hurghada Cruise to Utopia w/ Lunch Bianca Island Tour: Hurghada Cruise to Utopia w/ Lunch 7 Hours €68 From €80 View" [ref=e869] [cursor=pointer]':
+          - /url: https://ftstravels.com/tours/bianca-island-tour-hurghada-cruise-utopia/
+          - 'img "Bianca Island Tour: Hurghada Cruise to Utopia w/ Lunch" [ref=e871]'
+          - generic [ref=e872]:
+            - 'heading "Bianca Island Tour: Hurghada Cruise to Utopia w/ Lunch" [level=3] [ref=e873]'
+            - generic [ref=e875]: 7 Hours
+            - generic [ref=e876]: €68 From €80
+            - generic [ref=e877]: View
+        - 'link "Scuba Diving Egypt Hurghada: Beginners Day Trip with Lunch Scuba Diving Egypt Hurghada: Beginners Day Trip with Lunch 7 Hours €31 From €43 View" [ref=e878] [cursor=pointer]':
+          - /url: https://ftstravels.com/tours/scuba-diving-egypt-hurghada-beginners-day/
+          - 'img "Scuba Diving Egypt Hurghada: Beginners Day Trip with Lunch" [ref=e881]'
+          - generic [ref=e882]:
+            - 'heading "Scuba Diving Egypt Hurghada: Beginners Day Trip with Lunch" [level=3] [ref=e883]'
+            - generic [ref=e885]: 7 Hours
+            - generic [ref=e886]: €31 From €43
+            - generic [ref=e887]: View
+  - generic [ref=e889]:
+    - generic [ref=e890]:
+      - generic [ref=e891]:
+        - img [ref=e892]
+        - generic [ref=e894]:
+          - heading "From Hurghada To Cairo & Giza Top Attractions Day Tour by Van" [level=2] [ref=e895]
+          - paragraph [ref=e896]: Pyramids, Sphinx & Museum
+      - button "Close" [ref=e897]: ×
+    - generic [ref=e898]:
+      - generic [ref=e899]:
+        - img [ref=e900]
+        - text: Free Cancellation
+      - text: ·
+      - generic [ref=e902]:
+        - img [ref=e903]
+        - text: Secure Payment
+      - text: ·
+      - generic "Spots left" [ref=e905]:
+        - img [ref=e906]
+        - strong [ref=e908]: "4"
+      - generic "Currently viewing" [ref=e909]:
+        - img [ref=e910]
+        - strong [ref=e913]: "18"
+    - generic [ref=e915]: Date Travelers Package Book
+    - generic [ref=e916]:
+      - generic [ref=e917]:
+        - generic [ref=e918]:
+          - generic [ref=e919]:
+            - text: "1"
+            - img [ref=e920]
+          - generic [ref=e922]: Choose a Date
+          - text: Edit
+          - img [ref=e923]
+        - generic [ref=e925]:
+          - generic [ref=e926]:
+            - heading "Choose your date" [level=3] [ref=e927]
+            - paragraph [ref=e928]: Lock in your preferred departure date before continuing to the rest of the booking details.
+          - generic [ref=e929]:
+            - paragraph [ref=e930]: Select your preferred travel date
+            - generic [ref=e931]:
+              - generic:
+                - generic "Travel date calendar"
+              - generic [ref=e932]:
+                - generic [ref=e933]: Low availability
+                - generic [ref=e934]: Best price
+          - button "Continue →" [disabled] [ref=e935]
+      - generic [ref=e936]:
+        - generic [ref=e937]:
+          - generic [ref=e938]:
+            - text: "2"
+            - img [ref=e939]
+          - generic [ref=e941]: Number of Travelers
+          - text: Edit
+          - img [ref=e942]
+        - generic [ref=e944]:
+          - generic [ref=e945]:
+            - heading "Travelers" [level=3] [ref=e946]
+            - paragraph [ref=e947]: After choosing the date, the traveler adjusts the party size using the same familiar counters before moving to the available package cards.
+          - button "Continue — 1 traveler →" [ref=e948]
+      - generic [ref=e949]:
+        - generic [ref=e950]:
+          - generic [ref=e951]:
+            - text: "3"
+            - img [ref=e952]
+          - generic [ref=e954]: Select a Package
+          - text: Edit
+          - img [ref=e955]
+        - generic [ref=e957]:
+          - generic [ref=e958]:
+            - heading "Choose your package" [level=3] [ref=e959]
+            - paragraph [ref=e960]: The package cards stay visually identical, but they now appear after date and traveller selection so the total value can be understood in context.
+          - generic [ref=e961]:
+            - img [ref=e963]
+            - text: ·
+            - img [ref=e966]
+          - generic [ref=e969]:
+            - generic [ref=e970]:
+              - generic [ref=e971]: BEST VALUE
+              - generic [ref=e972]:
+                - radio [checked] [ref=e974]
+                - generic [ref=e975]:
+                  - heading "Small Group Cairo Pyramids, Sphinx, GEM Day Trip" [level=3] [ref=e976]
+                  - paragraph [ref=e977]: Includes Entry fees to all attractions listed in the itinerary (if option selected) • Interior visit to the Great Pyramid (if option selected) • Guided tour of the Giza Plateau including the Pyramids and Sphinx • Guided tour with a knowledgeable tour guide
+                - generic [ref=e978]: €89 -11% €79 / person
+            - generic [ref=e979]:
+              - generic [ref=e980]: ★ MOST POPULAR
+              - generic [ref=e981]:
+                - radio [ref=e983]
+                - generic [ref=e984]:
+                  - heading "Small Group Pyramids, Sphinx ,GEM, Nile Boat" [level=3] [ref=e985]
+                  - paragraph [ref=e986]: Includes Entry fees to all attractions listed in the itinerary (if option selected) • Interior visit to the Great Pyramid (if option selected) • Guided tour of the Giza Plateau including the Pyramids and Sphinx • Guided tour with a knowledgeable tour guide
+                - generic [ref=e987]: €103 -14% €89 / person
+            - generic [ref=e989]:
+              - radio [ref=e991]
+              - generic [ref=e992]:
+                - heading "Cairo Pyramids, Sphinx & GEM & Inside Pyramid" [level=3] [ref=e993]
+                - paragraph [ref=e994]: Includes Entry fees to all attractions listed in the itinerary (if option selected) • Interior visit to the Great Pyramid (if option selected) • Guided tour of the Giza Plateau including the Pyramids and Sphinx • Guided tour with a knowledgeable tour guide
+              - generic [ref=e995]: €130 -9% €119 / person
+          - button "Continue with →" [ref=e996]:
+            - text: Continue with
+            - text: →
+      - generic [ref=e997]:
+        - generic [ref=e998]:
+          - generic [ref=e999]:
+            - text: "4"
+            - img [ref=e1000]
+          - generic [ref=e1002]: Review & Book
+          - img [ref=e1003]
+        - generic [ref=e1005]:
+          - generic [ref=e1006]:
+            - heading "Checkout" [level=3] [ref=e1007]
+            - paragraph [ref=e1008]: The final step keeps the calm review layout while presenting the booking details and primary payment action in one focused checkout screen.
+          - generic [ref=e1009]:
+            - generic [ref=e1010]:
+              - img [ref=e1011]
+              - text: Add Extra Services (optional)
+            - generic [ref=e1013]:
+              - generic [ref=e1014]:
+                - strong [ref=e1015]: FTS Organic oils " Organic 100%
+                - text: €10/unit
+              - generic [ref=e1016]:
+                - button "−" [disabled] [ref=e1017]
+                - text: "0"
+                - button "+" [ref=e1018]
+            - generic [ref=e1019]:
+              - generic [ref=e1020]:
+                - strong [ref=e1021]: Shared Photographer per person
+                - text: €30/unit
+              - generic [ref=e1022]:
+                - button "−" [disabled] [ref=e1023]
+                - text: "0"
+                - button "+" [ref=e1024]
+            - generic [ref=e1025]:
+              - generic [ref=e1026]:
+                - strong [ref=e1027]: FTS Scarve
+                - text: €10/person
+              - generic [ref=e1028]:
+                - button "−" [disabled] [ref=e1029]
+                - text: "0"
+                - button "+" [ref=e1030]
+          - generic [ref=e1031]:
+            - generic [ref=e1032]:
+              - generic [ref=e1033]:
+                - strong [ref=e1034]: Date
+                - text: —
+              - button "Edit" [ref=e1035]
+            - generic [ref=e1036]:
+              - generic [ref=e1037]:
+                - strong [ref=e1038]: Travelers
+                - text: —
+              - button "Edit" [ref=e1039]
+            - generic [ref=e1040]:
+              - generic [ref=e1041]:
+                - strong [ref=e1042]: Package
+                - text: —
+              - button "Edit" [ref=e1043]
+            - generic [ref=e1044]:
+              - strong [ref=e1046]: Total due now
+              - strong [ref=e1047]: €0
+          - generic [ref=e1048]:
+            - generic [ref=e1049]:
+              - generic [ref=e1050]:
+                - strong [ref=e1051]: Lead traveller
+                - text: Full name, phone, and WhatsApp
+              - text: Checkout form
+            - generic [ref=e1052]:
+              - generic [ref=e1053]:
+                - strong [ref=e1054]: Payment
+                - text: Secure confirmation after review
+              - text: Next action
+          - button "Secure Booking — €0" [ref=e1055]:
+            - img [ref=e1056]
+            - generic [ref=e1058]: Secure Booking — €0
+          - generic [ref=e1059]:
+            - generic [ref=e1060]:
+              - img [ref=e1061]
+              - text: SSL Secured
+            - text: ·
+            - generic [ref=e1063]:
+              - img [ref=e1064]
+              - text: Visa / MC / PayPal
+            - text: ·
+            - generic [ref=e1066]:
+              - img [ref=e1067]
+              - text: Free Cancellation
+    - generic [ref=e1071]:
+      - generic [ref=e1072]:
+        - generic [ref=e1073]:
+          - text: Total —
+          - paragraph
+        - button "Back" [ref=e1074]
+      - button "Continue to travelers" [ref=e1075]
+  - contentinfo [ref=e1076]:
+    - generic [ref=e1077]:
+      - generic [ref=e1078]:
+        - generic [ref=e1081]:
+          - figure [ref=e1082]
+          - paragraph [ref=e1085]: Trusted by thousands of travelers worldwide. Over 20,000 glowing reviews highlighting our exceptional service and unforgettable experiences.
+        - list [ref=e1088]:
+          - listitem [ref=e1089]:
+            - link "Facebook-f" [ref=e1090] [cursor=pointer]:
+              - /url: https://www.facebook.com/ftstravelsegypttours
+              - text: Facebook-f
+              - img [ref=e1091]
+          - listitem [ref=e1093]:
+            - link "Instagram" [ref=e1094] [cursor=pointer]:
+              - /url: https://www.instagram.com/fts.travels_egypt.tours/
+              - text: Instagram
+              - img [ref=e1095]
+          - listitem [ref=e1097]:
+            - link "Youtube" [ref=e1098] [cursor=pointer]:
+              - /url: https://www.youtube.com/@FTSTravels
+              - text: Youtube
+              - img [ref=e1099]
+          - listitem [ref=e1101]:
+            - link "X-twitter" [ref=e1102] [cursor=pointer]:
+              - /url: https://share.google/PlSyaIZprWL1SIC9O
+              - text: X-twitter
+              - img [ref=e1103]
+          - listitem [ref=e1105]:
+            - link "Tumblr" [ref=e1106] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@fts.travels.egypt
+              - text: Tumblr
+              - img [ref=e1107]
+      - generic [ref=e1109]:
+        - heading "Destination" [level=6] [ref=e1112]
+        - generic [ref=e1114]:
+          - navigation "Menu" [ref=e1115]:
+            - list [ref=e1116]:
+              - listitem [ref=e1117]:
+                - link "Hurghada" [ref=e1118] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/hurghada/
+              - listitem [ref=e1119]:
+                - link "Cairo" [ref=e1120] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/cairo/
+              - listitem [ref=e1121]:
+                - link "Luxor" [ref=e1122] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/luxor/
+              - listitem [ref=e1123]:
+                - link "Sharm el-Sheikh" [ref=e1124] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/sharm-el-sheikh/
+              - listitem [ref=e1125]:
+                - link "Marsa Alam" [ref=e1126] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/marsa-alam/
+          - navigation [ref=e1127]:
+            - list [ref=e1128]:
+              - listitem [ref=e1129]:
+                - link [ref=e1130] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/hurghada/
+                  - text: Hurghada
+              - listitem [ref=e1131]:
+                - link [ref=e1132] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/cairo/
+                  - text: Cairo
+              - listitem [ref=e1133]:
+                - link [ref=e1134] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/luxor/
+                  - text: Luxor
+              - listitem [ref=e1135]:
+                - link [ref=e1136] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/sharm-el-sheikh/
+                  - text: Sharm el-Sheikh
+              - listitem [ref=e1137]:
+                - link [ref=e1138] [cursor=pointer]:
+                  - /url: https://ftstravels.com/destinations/egypt/marsa-alam/
+                  - text: Marsa Alam
+      - generic [ref=e1139]:
+        - heading "Customer Support" [level=6] [ref=e1142]
+        - list [ref=e1145]:
+          - listitem [ref=e1146]:
+            - link "About FTS Travels" [ref=e1147] [cursor=pointer]:
+              - /url: https://ftstravels.com/about-us/
+          - listitem [ref=e1148]:
+            - link "Privacy Policy" [ref=e1149] [cursor=pointer]:
+              - /url: https://ftstravels.com/privacy/
+          - listitem [ref=e1150]:
+            - link "Terms and Conditions" [ref=e1151] [cursor=pointer]:
+              - /url: https://ftstravels.com/terms-and-conditions/
+          - listitem [ref=e1152]:
+            - link "Contact Us" [ref=e1153] [cursor=pointer]:
+              - /url: https://ftstravels.com/contact-us/
+          - listitem [ref=e1154]:
+            - link "ISO Certification" [ref=e1155] [cursor=pointer]:
+              - /url: https://ftstravels.com/iso-certification/
+      - generic [ref=e1156]:
+        - heading "Get In Touch" [level=6] [ref=e1159]
+        - generic [ref=e1162]:
+          - generic:
+            - link:
+              - /url: https://maps.app.goo.gl/dZA7omr4tJf7rVXK8
+          - paragraph [ref=e1164]: 13hW/5, Elmenshawy St, Taksem Ellasilky, Maadi District, Cairo Governorate
+        - paragraph [ref=e1169]:
+          - link "(+20) 1281255556" [ref=e1170] [cursor=pointer]:
+            - /url: tel:+201281255556
+          - link "(+20) 1000479285" [ref=e1171] [cursor=pointer]:
+            - /url: tel:+201000479285
+        - generic [ref=e1174]:
+          - img [ref=e1177]
+          - paragraph [ref=e1180]:
+            - link "booking@ftstravels.com" [ref=e1181] [cursor=pointer]:
+              - /url: mailto:booking@ftstravels.com
+    - paragraph [ref=e1186]: © 2025 FTS Travel. All rights reserved.
+    - contentinfo [ref=e1190]:
+      - generic [ref=e1192]:
+        - generic [ref=e1193]:
+          - generic [ref=e1194]:
+            - generic [ref=e1195]:
+              - generic [ref=e1196]: F
+              - generic [ref=e1197]: T
+              - generic [ref=e1198]: S
+            - generic [ref=e1199]: Travels
+          - paragraph [ref=e1200]: Trusted by thousands of travelers worldwide. Over 20,000 glowing reviews highlighting our exceptional service and unforgettable experiences.
+          - generic [ref=e1201]:
+            - link "Facebook" [ref=e1202] [cursor=pointer]:
+              - /url: https://facebook.com/ftstravels
+              - img [ref=e1203]
+            - link "Instagram" [ref=e1205] [cursor=pointer]:
+              - /url: https://instagram.com/ftstravels
+              - img [ref=e1206]
+            - link "YouTube" [ref=e1209] [cursor=pointer]:
+              - /url: https://youtube.com/ftstravels
+              - img [ref=e1210]
+            - link "Twitter" [ref=e1213] [cursor=pointer]:
+              - /url: https://twitter.com/ftstravels
+              - img [ref=e1214]
+        - generic [ref=e1216]:
+          - heading "Destinations" [level=4] [ref=e1217]
+          - list [ref=e1218]:
+            - listitem [ref=e1219]:
+              - link "Hurghada" [ref=e1220] [cursor=pointer]:
+                - /url: https://ftstravels.com/destinations/egypt/hurghada/
+            - listitem [ref=e1221]:
+              - link "Cairo" [ref=e1222] [cursor=pointer]:
+                - /url: https://ftstravels.com/destinations/egypt/cairo/
+            - listitem [ref=e1223]:
+              - link "Luxor" [ref=e1224] [cursor=pointer]:
+                - /url: https://ftstravels.com/destinations/egypt/luxor/
+            - listitem [ref=e1225]:
+              - link "Sharm el-Sheikh" [ref=e1226] [cursor=pointer]:
+                - /url: https://ftstravels.com/destinations/egypt/sharm-el-sheikh/
+            - listitem [ref=e1227]:
+              - link "Marsa Alam" [ref=e1228] [cursor=pointer]:
+                - /url: https://ftstravels.com/destinations/egypt/marsa-alam/
+        - generic [ref=e1229]:
+          - heading "Quick Links" [level=4] [ref=e1230]
+          - list [ref=e1231]:
+            - listitem [ref=e1232]:
+              - link "About FTS Travels" [ref=e1233] [cursor=pointer]:
+                - /url: https://ftstravels.com/about/
+            - listitem [ref=e1234]:
+              - link "Travel Packages" [ref=e1235] [cursor=pointer]:
+                - /url: https://ftstravels.com/travel-packages/
+            - listitem [ref=e1236]:
+              - link "Blog" [ref=e1237] [cursor=pointer]:
+                - /url: https://ftstravels.com/blog/
+            - listitem [ref=e1238]:
+              - link "Privacy Policy" [ref=e1239] [cursor=pointer]:
+                - /url: https://ftstravels.com/privacy-policy/
+            - listitem [ref=e1240]:
+              - link "Terms & Conditions" [ref=e1241] [cursor=pointer]:
+                - /url: https://ftstravels.com/terms-and-conditions/
+            - listitem [ref=e1242]:
+              - link "ISO Certification" [ref=e1243] [cursor=pointer]:
+                - /url: https://ftstravels.com/iso-certification/
+        - generic [ref=e1244]:
+          - heading "Contact Us" [level=4] [ref=e1245]
+          - list [ref=e1246]:
+            - listitem [ref=e1247]:
+              - link "(+20) 128 125 5556" [ref=e1248] [cursor=pointer]:
+                - /url: tel:+201281255556
+                - img [ref=e1249]
+                - text: (+20) 128 125 5556
+            - listitem [ref=e1251]:
+              - link "(+20) 100 047 9285" [ref=e1252] [cursor=pointer]:
+                - /url: tel:+201000479285
+                - img [ref=e1253]
+                - text: (+20) 100 047 9285
+            - listitem [ref=e1255]:
+              - link "booking@ftstravels.com" [ref=e1256] [cursor=pointer]:
+                - /url: mailto:booking@ftstravels.com
+                - img [ref=e1257]
+                - text: booking@ftstravels.com
+            - listitem [ref=e1260]:
+              - generic [ref=e1261]:
+                - img [ref=e1262]
+                - text: Hurghada, Red Sea, Egypt
+            - listitem [ref=e1265]:
+              - generic [ref=e1266]:
+                - img [ref=e1267]
+                - text: Available 24/7
+      - generic [ref=e1271]:
+        - paragraph [ref=e1272]: © 2026 FTS Travels. All rights reserved.
+        - generic [ref=e1273]:
+          - generic [ref=e1274]: "Payment Methods:"
+          - generic [ref=e1275]: Visa
+          - generic [ref=e1276]: MC
+          - generic [ref=e1277]: PayPal
+  - img [ref=e1281] [cursor=pointer]
+```
+
+# Test source
+
+```ts
+  1  | const { test, expect } = require('playwright/test');
+  2  | 
+  3  | function cookieBase(urlString) {
+  4  |   const u = new URL(urlString);
+  5  |   return { domain: u.hostname, path: '/', secure: u.protocol === 'https:' };
+  6  | }
+  7  | 
+  8  | function validateBaseUrl() {
+  9  |   const raw = process.env.BASE_URL;
+  10 |   if (!raw) return { ok: false, reason: 'missing' };
+  11 |   let u;
+  12 |   try {
+  13 |     u = new URL(raw);
+  14 |   } catch (e) {
+  15 |     return { ok: false, reason: 'invalid' };
+  16 |   }
+  17 |   if (u.hostname === 'your-staging-domain.com') return { ok: false, reason: 'placeholder' };
+  18 |   return { ok: true, url: u.toString().replace(/\/+$/, '') };
+  19 | }
+  20 | 
+  21 | test.describe('Currency state sync', () => {
+  22 |   const v = validateBaseUrl();
+  23 |   test.skip(!v.ok, v.reason === 'placeholder'
+  24 |     ? 'BASE_URL is set to a placeholder. Set BASE_URL to a real deployed domain (staging/live).'
+  25 |     : 'Set BASE_URL to a real deployed domain (staging/live) that includes these code changes.'
+  26 |   );
+  27 | 
+  28 |   test('Currency switcher header matches active currency cookies', async ({ page, context, baseURL }) => {
+  29 |   const base = baseURL;
+  30 |   const c = cookieBase(base);
+  31 |   const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30;
+  32 | 
+  33 |   await context.addCookies([
+  34 |     { ...c, name: 'cc_code', value: 'EUR', expires },
+  35 |     { ...c, name: 'wte_currency_code', value: 'USD', expires },
+  36 |   ]);
+  37 | 
+  38 |   await page.goto('/tours/hurghada-cairo-giza-by-bus/', { waitUntil: 'domcontentloaded' });
+  39 | 
+  40 |   await expect(page.locator('.fts-currency-switcher .fts-cs-code')).toHaveText('EUR');
+  41 |   await expect(page.locator('.fts-v2-booking-current-price')).toContainText('€');
+  42 |   });
+  43 | 
+  44 |   test('wte_cc query parameter takes precedence for currency display', async ({ page, context, baseURL }) => {
+  45 |   const base = baseURL;
+  46 |   const c = cookieBase(base);
+  47 |   const expires = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30;
+  48 | 
+  49 |   await context.addCookies([
+  50 |     { ...c, name: 'cc_code', value: 'EUR', expires },
+  51 |     { ...c, name: 'wte_currency_code', value: 'EUR', expires },
+  52 |   ]);
+  53 | 
+  54 |   await page.goto('/tours/hurghada-cairo-giza-by-bus/?wte_cc=USD', { waitUntil: 'domcontentloaded' });
+  55 | 
+  56 |   await expect(page.locator('.fts-currency-switcher .fts-cs-code')).toHaveText('USD');
+  57 |   });
+  58 | 
+  59 |   test('Currency switcher opens on click', async ({ page, baseURL }) => {
+  60 |     await page.goto('/tours/hurghada-cairo-giza-by-bus/', { waitUntil: 'domcontentloaded' });
+  61 |     const pill = page.locator('.fts-currency-switcher .fts-cs-current');
+  62 |     await expect(pill).toBeVisible();
+  63 |     await pill.click();
+> 64 |     await expect(page.locator('.fts-currency-switcher')).toHaveClass(/open/);
+     |                                                          ^ Error: expect(locator).toHaveClass(expected) failed
+  65 |   });
+  66 | 
+  67 |   test('Currency switcher selection navigates with wte_cc', async ({ page }) => {
+  68 |     await page.goto('/tours/hurghada-cairo-giza-by-bus/', { waitUntil: 'domcontentloaded' });
+  69 |     await page.locator('.fts-currency-switcher .fts-cs-current').click();
+  70 |     const firstItem = page.locator('.fts-currency-switcher .fts-cs-item').first();
+  71 |     const code = (await firstItem.getAttribute('data-currency')) || '';
+  72 |     await Promise.all([
+  73 |       page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+  74 |       firstItem.click(),
+  75 |     ]);
+  76 |     await expect(page).toHaveURL(new RegExp(`[?&]wte_cc=${code}`));
+  77 |   });
+  78 | });
+  79 | 
+```

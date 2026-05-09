@@ -46,6 +46,25 @@ add_action( 'wp_enqueue_scripts', function() {
     );
 }, 99 );
 
+add_filter( 'template_include', function( $template ) {
+    if ( ! is_singular( 'trip' ) ) return $template;
+    $custom = get_stylesheet_directory() . '/wp-travel-engine/single-trip.php';
+    if ( file_exists( $custom ) ) return $custom;
+    return $template;
+}, 999 );
+
+add_action( 'wp_enqueue_scripts', function() {
+    if ( ! is_singular( 'trip' ) ) return;
+    if ( ! function_exists( 'get_rocket_option' ) ) return;
+    add_filter( 'pre_get_rocket_option_async_css', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_minify_css', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_combine_css', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_minify_js', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_combine_js', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_defer_all_js', '__return_zero' );
+    add_filter( 'pre_get_rocket_option_delay_js', '__return_zero' );
+}, 0 );
+
 
 function fts_v2_default_free_cancellation_text( $trip_id = 0 ) {
 

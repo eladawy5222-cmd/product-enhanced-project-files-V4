@@ -98,7 +98,9 @@
 .fts-v2-packages-actions {
     display: flex !important;
     justify-content: flex-end !important;
+    align-items: center !important;
     margin: 6px 0 16px !important;
+    gap: 10px !important;
 }
 .fts-v2-pkg-compare-toggle {
     background: #fff !important;
@@ -146,13 +148,22 @@
     border: 1px solid var(--v2-border) !important;
     border-radius: 14px !important;
     background: #fff !important;
-    overflow: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+    touch-action: pan-x pan-y !important;
+    overscroll-behavior-x: auto !important;
 }
 .fts-v2-package-compare.is-open {
     display: block !important;
 }
 .fts-v2-package-compare-inner {
+    width: max-content !important;
     min-width: 720px !important;
+    max-width: none !important;
 }
 .fts-v2-package-compare-head,
 .fts-v2-package-compare-row {
@@ -162,6 +173,9 @@
 .fts-v2-package-compare-head {
     background: var(--v2-bg-gray) !important;
     border-bottom: 1px solid var(--v2-border) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
 }
 .fts-v2-package-compare-row {
     border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
@@ -183,6 +197,15 @@
     text-align: left !important;
     font-weight: 700 !important;
     color: var(--v2-dark) !important;
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    background: #fff !important;
+    box-shadow: 8px 0 10px rgba(15, 23, 42, 0.04) !important;
+}
+.fts-v2-package-compare-head .fts-v2-package-compare-feature {
+    background: var(--v2-bg-gray) !important;
+    z-index: 4 !important;
 }
 .fts-v2-package-compare-name {
     font-weight: 800 !important;
@@ -201,6 +224,17 @@
 .fts-v2-compare-no {
     color: #cbd5e1 !important;
     font-weight: 800 !important;
+}
+
+.fts-v2-pkg-compare-hint {
+    display: none !important;
+    font-size: 12px !important;
+    color: var(--v2-text-muted) !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+}
+.fts-v2-package-compare.is-open ~ .fts-v2-packages-grid {
+    margin-top: 0 !important;
 }
 
 /* ─── Features List ─── */
@@ -247,6 +281,26 @@
     color: #fff !important;
     transform: translateY(-1px) !important;
 }
+
+@media (max-width: 768px) {
+    .fts-v2-packages-actions {
+        justify-content: flex-start !important;
+    }
+    .fts-v2-pkg-compare-toggle {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    .fts-v2-pkg-compare-hint { display: none !important; }
+    .fts-v2-package-compare-inner { min-width: 0 !important; width: 100% !important; }
+    .fts-v2-package-compare-head,
+    .fts-v2-package-compare-row { grid-template-columns: 1.25fr repeat(var(--fts-v2-pkg-cols, 2), 0.9fr) !important; }
+    .fts-v2-package-compare-cell {
+        padding: 10px 10px !important;
+        font-size: 12px !important;
+    }
+    .fts-v2-package-compare-feature { position: static !important; left: auto !important; box-shadow: none !important; }
+    .fts-v2-package-compare-head { position: static !important; top: auto !important; }
+}
 .fts-v2-package-popular .fts-v2-package-select-btn {
     background: var(--v2-primary) !important;
 }

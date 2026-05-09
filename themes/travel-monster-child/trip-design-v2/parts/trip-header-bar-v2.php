@@ -178,9 +178,11 @@ if ( ! function_exists( 'fts_get_language_switcher_items' ) ) {
             $site_base = home_url();
             $langs = array(
                 array( 'code' => 'en',      'name' => 'English',  'url' => $site_base . '/',          'flag' => $flag_base . 'en.svg', 'active' => true  ),
+                array( 'code' => 'ar',      'name' => 'العربية',  'url' => $site_base . '/ar/',       'flag' => $flag_base . 'ar.svg', 'active' => false ),
                 array( 'code' => 'de',      'name' => 'Deutsch',  'url' => $site_base . '/de/',       'flag' => $flag_base . 'de.svg', 'active' => false ),
                 array( 'code' => 'es',      'name' => 'Español',  'url' => $site_base . '/es/',       'flag' => $flag_base . 'es.svg', 'active' => false ),
                 array( 'code' => 'fr',      'name' => 'Français', 'url' => $site_base . '/fr/',       'flag' => $flag_base . 'fr.svg', 'active' => false ),
+                array( 'code' => 'it',      'name' => 'Italiano', 'url' => $site_base . '/it/',       'flag' => $flag_base . 'it.svg', 'active' => false ),
                 array( 'code' => 'ro',      'name' => 'Română',   'url' => $site_base . '/ro/',       'flag' => $flag_base . 'ro.svg', 'active' => false ),
                 array( 'code' => 'ru',      'name' => 'Русский',  'url' => $site_base . '/ru/',       'flag' => $flag_base . 'ru.svg', 'active' => false ),
                 array( 'code' => 'tr',      'name' => 'Türkçe',   'url' => $site_base . '/tr/',       'flag' => $flag_base . 'tr.svg', 'active' => false ),
@@ -327,19 +329,20 @@ $mobile_menu_html  = fts_normalize_menu_html( $mobile_menu_html, $labels );
             <!-- Language Switcher -->
             <div class="fts-v2-thb-item fts-v2-thb-lang">
                 <div class="fts-v2-lang-switcher" id="fts-v2-lang-switcher">
-                    <button type="button" class="fts-v2-lang-current" aria-expanded="false" aria-haspopup="true" aria-controls="fts-v2-lang-dropdown">
-                        <img class="fts-v2-lang-flag" src="<?php echo esc_url( $current_lang['flag'] ); ?>" alt="" width="18" height="14">
-                        <span><?php echo esc_html( strtoupper( $current_lang['code'] ) ); ?></span>
+                    <button type="button" class="fts-v2-lang-current" id="fts-v2-lang-current" aria-expanded="false" aria-haspopup="menu" aria-controls="fts-v2-lang-dropdown">
+                        <span class="fts-v2-switcher-label">Language</span>
+                        <img class="fts-v2-lang-flag" src="<?php echo esc_url( $current_lang['flag'] ); ?>" alt="" width="18" height="14" decoding="async">
+                        <span class="fts-v2-switcher-code"><?php echo esc_html( strtoupper( $current_lang['code'] ) ); ?></span>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                             <path d="m6 9 6 6 6-6"/>
                         </svg>
                     </button>
 
-                    <ul class="fts-v2-lang-dropdown" id="fts-v2-lang-dropdown">
+                    <ul class="fts-v2-lang-dropdown" id="fts-v2-lang-dropdown" role="menu" aria-labelledby="fts-v2-lang-current">
                         <?php foreach ( $fts_langs as $fl ) : ?>
                             <li class="<?php echo ! empty( $fl['active'] ) ? 'active' : ''; ?>">
-                                <a href="<?php echo esc_url( $fl['url'] ); ?>" hreflang="<?php echo esc_attr( $fl['code'] ); ?>" lang="<?php echo esc_attr( $fl['code'] ); ?>">
-                                    <img class="fts-v2-lang-flag" src="<?php echo esc_url( $fl['flag'] ); ?>" alt="" width="18" height="14">
+                                <a href="<?php echo esc_url( $fl['url'] ); ?>" hreflang="<?php echo esc_attr( $fl['code'] ); ?>" lang="<?php echo esc_attr( $fl['code'] ); ?>" role="menuitem">
+                                    <img class="fts-v2-lang-flag" src="<?php echo esc_url( $fl['flag'] ); ?>" alt="" width="18" height="14" decoding="async">
                                     <span class="fts-v2-lang-native"><?php echo esc_html( $fl['name'] ); ?></span>
                                 </a>
                             </li>

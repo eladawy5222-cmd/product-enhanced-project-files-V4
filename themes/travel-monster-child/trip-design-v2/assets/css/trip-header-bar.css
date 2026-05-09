@@ -58,8 +58,7 @@
 
 #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
 #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
-#fts-v2-trip-header .fts-v2-thb-currency .current-currency,
-#fts-v2-trip-header .fts-v2-thb-currency button {
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -80,8 +79,7 @@
 /* hover currency */
 #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current:hover,
 #fts-v2-trip-header .fts-v2-thb-currency .selected-currency:hover,
-#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover,
-#fts-v2-trip-header .fts-v2-thb-currency button:hover {
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover {
     background: rgba(255,255,255,0.1) !important;
     border-color: rgba(255,255,255,0.2) !important;
 }
@@ -304,8 +302,7 @@
     #fts-v2-trip-header .fts-v2-lang-current,
     #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
     #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency button {
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency {
         height: 30px !important;
         min-height: 30px !important;
         padding: 0 8px !important;

@@ -25,9 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 </div>
                 <div class="fts-v2-booking-price-row">
                     <?php if ( $old_price > 0 ) : ?>
-                        <span class="fts-v2-booking-old-price"><?php echo wte_get_formated_price( $old_price ); ?></span>
+                        <span class="fts-v2-booking-old-price"><?php echo esc_html( wte_get_formated_price( $old_price ) ); ?></span>
                     <?php endif; ?>
-                    <span class="fts-v2-booking-current-price"><?php echo wte_get_formated_price( $display_price ); ?></span>
+                    <span class="fts-v2-booking-current-price"><?php echo esc_html( wte_get_formated_price( $display_price ) ); ?></span>
                     <span class="fts-v2-booking-per-person"><?php echo esc_html__( '/ person', 'fts' ); ?></span>
                 </div>
                 <?php if ( $discount_pct > 0 ) : ?>
@@ -148,7 +148,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <div class="fts-v2-booking-trust">
                 <?php foreach ( $mini_includes as $mi ) : ?>
                 <div class="fts-v2-booking-trust-item">
-                    <svg class="fts-v2-trust-svg" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <svg class="fts-v2-trust-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                     <?php echo esc_html( $mi ); ?>
                 </div>
                 <?php endforeach; ?>
@@ -158,9 +158,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <!-- Trust Points -->
             <?php if ( ! empty( $sidebar_trust_items ) && is_array( $sidebar_trust_items ) ) :
                 $icons = array(
-                    'check' => '<svg class="fts-v2-trust-svg" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
-                    'clock' => '<svg class="fts-v2-trust-svg" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
-                    'shield' => '<svg class="fts-v2-trust-svg" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>',
+                    'check' => '<svg class="fts-v2-trust-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+                    'clock' => '<svg class="fts-v2-trust-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+                    'shield' => '<svg class="fts-v2-trust-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#43a047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>',
                 );
                 $trust_rendered = array();
                 foreach ( $sidebar_trust_items as $ti ) {
@@ -227,19 +227,32 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                         'text' => sprintf( esc_html__( 'Duration: %s', 'fts' ), $duration_value ),
                     );
                 }
-                if ( isset( $cancel_hours ) && intval( $cancel_hours ) > 0 ) {
+
+                $wa_raw = trim( (string) apply_filters( 'fts_whatsapp_number', '+201000479285' ) );
+                $wa_digits = preg_replace( '/\D+/', '', $wa_raw );
+                if ( $wa_digits ) {
                     $micro_items[] = array(
-                        'icon' => 'fa-undo',
-                        'text' => sprintf( esc_html__( 'Free cancellation up to %sh', 'fts' ), intval( $cancel_hours ) ),
+                        'icon' => 'fa-whatsapp',
+                        'text' => esc_html__( 'Support via WhatsApp', 'fts' ),
+                        'url'  => 'https://wa.me/' . $wa_digits,
+                        'rel'  => 'noopener noreferrer nofollow',
+                        'source' => 'sidebar_micro',
                     );
                 }
             ?>
             <?php if ( ! empty( $micro_items ) ) : ?>
             <div class="fts-v2-booking-micro">
+                <div class="fts-v2-booking-micro-title"><?php echo esc_html__( 'Book with confidence', 'fts' ); ?></div>
                 <?php foreach ( array_slice( $micro_items, 0, 3 ) as $mi ) : ?>
                     <div class="fts-v2-booking-micro-item">
                         <i class="fa <?php echo esc_attr( $mi['icon'] ); ?>"></i>
-                        <span><?php echo esc_html( $mi['text'] ); ?></span>
+                        <?php if ( isset( $mi['url'] ) && is_string( $mi['url'] ) && $mi['url'] !== '' ) : ?>
+                            <a class="fts-v2-booking-micro-link" href="<?php echo esc_url( $mi['url'] ); ?>" target="_blank" rel="<?php echo esc_attr( $mi['rel'] ?? 'noopener noreferrer nofollow' ); ?>"<?php echo ! empty( $mi['source'] ) ? ' data-fts-wa-source="' . esc_attr( $mi['source'] ) . '"' : ''; ?>>
+                                <?php echo esc_html( $mi['text'] ); ?>
+                            </a>
+                        <?php else : ?>
+                            <span><?php echo esc_html( $mi['text'] ); ?></span>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>

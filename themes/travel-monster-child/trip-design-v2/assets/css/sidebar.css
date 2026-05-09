@@ -665,6 +665,13 @@
     display: grid !important;
     gap: 6px !important;
 }
+.fts-v2-booking-micro-title {
+    font-family: var(--v2-font-heading) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: var(--v2-dark) !important;
+    margin: 2px 0 2px !important;
+}
 .fts-v2-booking-micro-item {
     display: flex !important;
     align-items: flex-start !important;
@@ -680,6 +687,14 @@
     width: 14px !important;
     text-align: center !important;
     flex-shrink: 0 !important;
+}
+.fts-v2-booking-micro-link {
+    color: var(--v2-primary) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+}
+.fts-v2-booking-micro-link:hover {
+    text-decoration: underline !important;
 }
 
 /* ═══════════════════════════════════════

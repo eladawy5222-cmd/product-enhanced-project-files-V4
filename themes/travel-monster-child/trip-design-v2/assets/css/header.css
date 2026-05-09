@@ -196,6 +196,8 @@
 
 #fts-v2-trip-header .fts-v2-thb-currency {
     position: relative !important;
+    z-index: 10005 !important;
+    pointer-events: auto !important;
 }
 
 #fts-v2-trip-header .fts-v2-thb-currency .fts-currency-switcher,
@@ -203,12 +205,12 @@
     position: relative !important;
     display: flex !important;
     align-items: center !important;
+    pointer-events: auto !important;
 }
 
 #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
 #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
-#fts-v2-trip-header .fts-v2-thb-currency .current-currency,
-#fts-v2-trip-header .fts-v2-thb-currency button {
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -228,10 +230,22 @@
     transition: background 0.2s ease, border-color 0.2s ease !important;
 }
 
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current:focus-visible,
+#fts-v2-trip-header .fts-v2-thb-lang .fts-v2-lang-current:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7) !important;
+    outline-offset: 2px !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
 #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current:hover,
 #fts-v2-trip-header .fts-v2-thb-currency .selected-currency:hover,
-#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover,
-#fts-v2-trip-header .fts-v2-thb-currency button:hover {
+#fts-v2-trip-header .fts-v2-thb-currency .current-currency:hover {
     background: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
@@ -271,6 +285,17 @@
     border-radius: 12px !important;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16) !important;
     z-index: 1003 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(8px) !important;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease !important;
+}
+
+#fts-v2-trip-header .fts-v2-thb-currency .fts-currency-switcher.open .fts-cs-dropdown,
+#fts-v2-trip-header .fts-v2-thb-currency .currency-switcher.open .fts-cs-dropdown {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
 }
 
 #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item {
@@ -283,6 +308,10 @@
     font-weight: 600 !important;
     color: #334155 !important;
     cursor: pointer !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: 0 !important;
+    text-align: left !important;
     transition: background 0.15s ease, color 0.15s ease !important;
 }
 
@@ -336,6 +365,21 @@
     color: #ffffff !important;
 }
 
+#fts-v2-trip-header .fts-v2-lang-current .fts-v2-switcher-label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+#fts-v2-trip-header .fts-v2-lang-current .fts-v2-switcher-code {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.2px !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
 #fts-v2-trip-header .fts-v2-lang-current svg {
     stroke: currentColor !important;
     color: currentColor !important;
@@ -363,13 +407,21 @@
     border-radius: 12px !important;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16) !important;
     z-index: 1003 !important;
-    display: none !important;
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 6px !important;
+    display: grid !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(8px) !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease !important;
 }
 
 #fts-v2-trip-header .fts-v2-lang-switcher.open .fts-v2-lang-dropdown {
-    display: grid !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
 }
 
 #fts-v2-trip-header .fts-v2-lang-dropdown li {
@@ -392,6 +444,12 @@
     transition: background 0.15s ease, color 0.15s ease !important;
 }
 
+#fts-v2-trip-header .fts-v2-lang-dropdown a:focus-visible,
+#fts-v2-trip-header .fts-v2-thb-currency .fts-cs-item:focus-visible {
+    outline: 2px solid rgba(232, 80, 30, 0.6) !important;
+    outline-offset: 2px !important;
+}
+
 #fts-v2-trip-header .fts-v2-lang-dropdown a:hover {
     background: #f8fafc !important;
 }
@@ -399,6 +457,17 @@
 #fts-v2-trip-header .fts-v2-lang-dropdown li.active a {
     color: #e8501e !important;
     font-weight: 700 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #fts-v2-trip-header .fts-v2-thb-menu .sub-menu,
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-dropdown,
+    #fts-v2-trip-header .fts-v2-lang-dropdown,
+    #fts-v2-trip-header .fts-v2-thb-burger span,
+    #fts-v2-trip-header .fts-v2-thb-mobile-menu {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
 }
 
 /* ==========================================================================
@@ -664,8 +733,7 @@
     #fts-v2-trip-header .fts-v2-lang-current,
     #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
     #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency button {
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency {
         height: 32px !important;
         min-height: 32px !important;
         padding: 0 9px !important;
@@ -714,8 +782,7 @@
     #fts-v2-trip-header .fts-v2-lang-current,
     #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-current,
     #fts-v2-trip-header .fts-v2-thb-currency .selected-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency .current-currency,
-    #fts-v2-trip-header .fts-v2-thb-currency button {
+    #fts-v2-trip-header .fts-v2-thb-currency .current-currency {
         height: 30px !important;
         min-height: 30px !important;
         padding: 0 8px !important;
@@ -733,5 +800,17 @@
     #fts-v2-trip-header .fts-v2-lang-dropdown {
         min-width: 228px !important;
         max-width: 240px !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-search {
+        display: none !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-lang-current span {
+        display: none !important;
+    }
+
+    #fts-v2-trip-header .fts-v2-thb-currency .fts-cs-code {
+        display: none !important;
     }
 }

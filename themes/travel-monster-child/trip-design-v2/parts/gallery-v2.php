@@ -10,6 +10,30 @@ if ( empty( $all_images ) ) return;
 
 <div class="fts-v2-gallery-section">
     <div class="fts-v2-container">
+        <?php if ( count( $all_images ) > 1 ) : ?>
+        <div class="fts-v2-gallery-slider" data-count="<?php echo esc_attr( count( $all_images ) ); ?>">
+            <div class="fts-v2-gallery-slider-track">
+                <?php foreach ( $all_images as $sidx => $simg_id ) :
+                    $simg_url = wp_get_attachment_image_url( $simg_id, 'large' );
+                    if ( ! $simg_url ) continue;
+                    $salt = get_post_meta( $simg_id, '_wp_attachment_image_alt', true ) ?: get_the_title();
+                ?>
+                <div class="fts-v2-gallery-slide" data-index="<?php echo esc_attr( $sidx ); ?>">
+                    <img src="<?php echo esc_url( $simg_url ); ?>" alt="<?php echo esc_attr( $salt ); ?>" loading="eager"<?php echo $sidx === 0 ? ' fetchpriority="high"' : ''; ?>>
+                    <?php if ( $sidx === 0 && ! empty( $video_url ) ) : ?>
+                    <div class="fts-v2-video-play" data-video="<?php echo esc_url( $video_url ); ?>">
+                        <div class="fts-v2-play-circle">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="fts-v2-gallery-dots" aria-hidden="true"></div>
+        </div>
+        <?php endif; ?>
+
         <div class="fts-v2-gallery-grid fts-v2-gallery-count-<?php echo intval( $grid_count ); ?>">
             <?php foreach ( $grid_images as $idx => $img_id ) :
                 $img_url = wp_get_attachment_image_url( $img_id, 'large' );
@@ -37,12 +61,6 @@ if ( empty( $all_images ) ) return;
             </div>
             <?php endforeach; ?>
         </div>
-        <?php if ( count( $all_images ) > 1 ) : ?>
-        <div class="fts-v2-gallery-show-all" data-action="lightbox">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <?php echo esc_html( sprintf( __( 'Show all %d photos', 'fts' ), count( $all_images ) ) ); ?>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
 
